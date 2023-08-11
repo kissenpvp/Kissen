@@ -1,3 +1,0 @@
-[20:43:37] [main/INFO] [main]: Could not find existing server.properties. Creating with default values...
-[20:43:37] [main/WARN] [main]: Failed to load eula.txt
-[20:43:37] [main/INFO] [main]: You need to agree to the EULA in order to run the server. Go to eula.txt for more info.
