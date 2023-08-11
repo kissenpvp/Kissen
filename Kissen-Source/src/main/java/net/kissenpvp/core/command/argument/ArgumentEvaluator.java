@@ -1,0 +1,205 @@
+package net.kissenpvp.core.command.argument;
+
+import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.command.CommandPayload;
+import net.kissenpvp.core.api.command.exception.CommandException;
+import net.kissenpvp.core.api.command.exception.TemporaryDeserializationException;
+import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.command.KissenCommandImplementation;
+import org.jetbrains.annotations.NotNull;
+
+import java.lang.reflect.Array;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * The {@code ArgumentEvaluator} class is responsible for parsing command arguments
+ * according to predefined rules and argument handler. It works in conjunction with
+ * the {@code Argument} and {@code CommandPayload} to achieve this.
+ *
+ * @see Argument
+ * @see CommandPayload
+ */
+public record ArgumentEvaluator<S>(@NotNull List<Argument<?>> arguments) {
+
+    /**
+     * This method is used to parse command arguments.
+     * It translates the command payload into an array of objects that correspond
+     * to the list of arguments provided to this {@link ArgumentEvaluator}.
+     *
+     * @param commandPayload the input to be parsed
+     * @return array of parsed objects
+     * @throws TemporaryDeserializationException is thrown when an error occurs during parsing.
+     */
+    public @NotNull Object[] parseArguments(@NotNull CommandPayload<S> commandPayload) throws TemporaryDeserializationException {
+
+        Object[] parameters = new Object[0];
+        AtomicInteger currentArgumentIndex = new AtomicInteger(0);
+        KissenCommandImplementation kissenCommandImplementation = KissenCore.getInstance()
+                .getImplementation(KissenCommandImplementation.class);
+
+        for (Argument<?> argument : arguments) {
+            if (CommandPayload.class.isAssignableFrom(argument.type())) {
+                parameters = kissenCommandImplementation.add(parameters, commandPayload);
+                continue;
+            }
+
+            Optional<String> argumentOptional = readFullString(argument, currentArgumentIndex, commandPayload);
+
+            if (argumentOptional.isEmpty()) {
+                parameters = handleEmptyArgument(parameters, argument, currentArgumentIndex);
+                continue;
+            }
+
+            Object object = argument.isArray() ?
+                    processArrayArgument(argumentOptional.get(), argument, commandPayload, currentArgumentIndex) :
+                    deserialize(argumentOptional.get(), argument.argumentParser());
+            parameters = kissenCommandImplementation.add(parameters, object);
+        }
+
+        return parameters;
+    }
+
+    /**
+     * This private method is an internal helper used by the parseArguments function.
+     * It expresses the behaviour when an argumentOptional is empty.
+     *
+     * @param parameters           the current parameters
+     * @param argument             the argument
+     * @param currentArgumentIndex the index tracked of the current argument
+     * @return a new array that includes the parameter
+     * @throws CommandException if the argument is not nullable
+     */
+    private @NotNull Object[] handleEmptyArgument(@NotNull Object[] parameters, @NotNull Argument<?> argument, @NotNull AtomicInteger currentArgumentIndex) throws CommandException {
+        if (!argument.isNullable()) {
+            throw new CommandException(String.format("The argument '%s' cannot be null or undefined.", argument.type()
+                    .getName()), new NullPointerException());
+        }
+
+        currentArgumentIndex.incrementAndGet();
+        return KissenCore.getInstance()
+                .getImplementation(KissenCommandImplementation.class)
+                .add(parameters, argument.defaultValue());
+    }
+
+    /**
+     * Helper method that processes an array argument.
+     *
+     * @param argument             the argument specification
+     * @param commandPayload       the command payload
+     * @param currentArgumentIndex the current argument index
+     * @return parsed array object
+     */
+    private @NotNull Object processArrayArgument(@NotNull String argumentValue, @NotNull Argument<?> argument, @NotNull CommandPayload<S> commandPayload, @NotNull AtomicInteger currentArgumentIndex) {
+        Object object = Array.newInstance(argument.type(), 0);
+
+        do {
+            object = KissenCore.getInstance()
+                    .getImplementation(KissenCommandImplementation.class)
+                    .add(
+                            (Object[]) object,
+                            deserialize(argumentValue, argument.argumentParser())
+                    );
+        } while ((argumentValue = readFullString(argument, currentArgumentIndex, commandPayload).orElse(null)) != null);
+
+        return object;
+    }
+
+    /**
+     * This method is used to deserialize a string using an ArgumentParser.
+     *
+     * @param input          the input string to be deserialized
+     * @param argumentParser the parser to use for deserialization
+     * @return the object deserialized from the input
+     * @throws TemporaryDeserializationException if any exception occurs during deserialization
+     */
+    private @NotNull Object deserialize(@NotNull String input, @NotNull ArgumentParser<?> argumentParser) {
+        try {
+            return argumentParser.deserialize(input);
+        } catch (Exception exception) {
+            argumentParser.processError(input, exception);
+            throw new TemporaryDeserializationException(exception);
+        }
+    }
+
+    /**
+     * Helper method for parsing argument string values.
+     *
+     * @param argument        the argument specification
+     * @param currentArgument the current argument value tracked
+     * @param commandPayload  the command payload
+     * @return the parsed argument string encapsulated in an Optional
+     */
+    private @NotNull Optional<String> readFullString(@NotNull Argument<?> argument, @NotNull AtomicInteger currentArgument, CommandPayload<S> commandPayload) {
+        return commandPayload.getArgument(currentArgument.get()).map(argumentValue -> {
+            currentArgument.incrementAndGet();
+            if (!argument.ignoreQuote() && argumentValue.charAt(0) == '"') {
+                final StringBuilder builder = new StringBuilder(argumentValue.substring(1));
+                Optional<String> nextArgument;
+                while ((nextArgument = commandPayload.getArgument(currentArgument.get())).isPresent()) {
+                    currentArgument.incrementAndGet();
+                    if (readArgumentString(argumentValue, builder, nextArgument.get())) {
+                        break;
+                    }
+                }
+
+                return builder.toString().replace("\\\"", "\"");
+            }
+            return argumentValue;
+        });
+    }
+
+    /**
+     * Processes an argument value for quotable parameters and builds up the argument's string value.
+     *
+     * @param argumentValue the current argument value
+     * @param builder       the StringBuilder for building the argument
+     * @param nextArgument  the next argument value
+     * @return true if the next argument value ends with an unescaped quote, false otherwise
+     */
+    private boolean readArgumentString(@NotNull String argumentValue, @NotNull StringBuilder builder, @NotNull String nextArgument) {
+        builder.append(" ");
+        final int length = nextArgument.length();
+        if (nextArgument.charAt(length - 1) == '"' && (length == 1 || nextArgument.charAt(length - 2) != '\\')) {
+            builder.append(nextArgument, 0, length - 1);
+            return true;
+        }
+        builder.append(argumentValue);
+        return false;
+    }
+
+    /**
+     * This method builds a user-friendly usage string for commands based on the given command name
+     * and the argument list.
+     *
+     * @param name the command name
+     * @return a string representation of how to properly use the command
+     */
+    public @NotNull String buildUsage(@NotNull String name) {
+        final StringBuilder builder = new StringBuilder(name);
+        for (Argument<?> argument : arguments) {
+            if (CommandPayload.class.isAssignableFrom(argument.type())) continue;
+
+            builder.append(argument.isNullable() ? " [" : " <");
+            builder.append(uncapitalize(argument.type().getSimpleName()));
+
+            if (argument.isArray()) builder.append("...");
+
+            builder.append(argument.isNullable() ? "]" : ">");
+        }
+
+        return builder.toString();
+    }
+
+    /**
+     * Transforms the first character of the given string to lower case.
+     *
+     * @param str the string to be transformed
+     * @return a transformed string where the first character is made lower case
+     */
+    private @NotNull String uncapitalize(@NotNull String str) {
+        if (str.isBlank()) return str;
+        return Character.toLowerCase(str.charAt(0)) + str.substring(1);
+    }
+}

@@ -1,0 +1,185 @@
+/*
+ * Copyright 2023 KissenPvP
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.kissenpvp.core.message;
+
+import net.kissenpvp.core.api.config.ConfigurationImplementation;
+import net.kissenpvp.core.api.message.ColorProvider;
+import net.kissenpvp.core.api.message.ComponentSerializer;
+import net.kissenpvp.core.api.message.Theme;
+import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.message.settings.*;
+import net.kyori.adventure.text.BuildableComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.format.TextColor;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+public class DefaultTheme implements Theme
+{
+
+    @Override
+    public @NotNull TextColor getPrimaryAccentColor()
+    {
+        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultPrimaryColor.class);
+    }
+
+    @Override
+    public @NotNull TextColor getSecondaryAccentColor()
+    {
+        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultSecondaryColor.class);
+    }
+
+    @Override
+    public @NotNull TextColor getDefaultColor()
+    {
+        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultColor.class);
+    }
+
+    @Override
+    public @NotNull TextColor getEnabledColor()
+    {
+        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultEnabledColor.class);
+    }
+
+    @Override
+    public @NotNull TextColor getDisabledColor()
+    {
+        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultDisabledColor.class);
+    }
+
+    public @NotNull Component replaceColors(@NotNull String... strings)
+    {
+        return Component.join(JoinConfiguration.noSeparators(), Arrays.stream(strings).map(this::transformString).toList());
+    }
+
+    public @NotNull Component transformString(@NotNull String string)
+    {
+        return KissenComponentSerializer.getInstance().getLegacySerializer().deserialize(string);
+    }
+
+    public @NotNull String transformJson(@NotNull String input)
+    {
+        return KissenComponentSerializer.getInstance().getJsonSerializer().serialize(
+                KissenComponentSerializer.getInstance().getLegacySerializer().deserialize(
+                        KissenComponentSerializer.getInstance().getLegacySerializer().serialize(
+                                KissenComponentSerializer.getInstance().getJsonSerializer().deserialize(
+                                        input))));
+    }
+
+    /**
+     * Replaces the colors of the provided components with personalized colors based on their current color values.
+     * This method converts each component's color by mapping it to a personalized color obtained from the
+     * ColorProviderImplementation.
+     *
+     * @param component the components to replace colors for.
+     * @return a new Component with the replaced colors.
+     * @throws NullPointerException if the component array or any of its elements are null.
+     */
+    public @NotNull Component replaceColors(@NotNull Component... component)
+    {
+        return Component.join(JoinConfiguration.noSeparators(), Arrays.stream(component).map(this::transformComponent).toList());
+    }
+
+    /**
+     * Converts a Component by replacing its color with a personalized color based on the current color value.
+     * This method retrieves the personalized color by querying the ColorProviderImplementation.
+     *
+     * @param component the Component to convert.
+     * @return the converted Component with the personalized color.
+     * @throws NullPointerException if the component is null.
+     */
+    private @NotNull Component transformComponent(@NotNull Component component)
+    {
+        return Component.empty().append(component).toBuilder().mapChildrenDeep(this::transformSpecifiedComponent).asComponent();
+    }
+
+    /**
+     * Transforms a specified {@link BuildableComponent} by replacing its color with a personalized color based on
+     * the current color value.
+     *
+     * @param buildableComponent the {@link BuildableComponent} to transform.
+     * @return the transformed {@link BuildableComponent} with the personalized color.
+     * @throws NullPointerException if the buildableComponent is null.
+     */
+    private @NotNull BuildableComponent<?, ?> transformSpecifiedComponent(@NotNull BuildableComponent<?, ?> buildableComponent)
+    {
+        buildableComponent = legacyColorCodeResolver(buildableComponent);
+        TextColor textColor = buildableComponent.color();
+        if (textColor != null)
+        {
+            return (BuildableComponent<?, ?>) buildableComponent.color(getPersonalColorByCode(textColor.value()));
+        }
+        return buildableComponent;
+    }
+
+    @NotNull private BuildableComponent<?, ?> legacyColorCodeResolver(@NotNull BuildableComponent<?, ?> buildableComponent)
+    {
+        Map<String, TextColor> replacements = new HashMap<>();
+        String legacy = ComponentSerializer.getInstance().getLegacySerializer().serialize(buildableComponent);
+        for (String textPassage : legacy.split("§"))
+        {
+            if (textPassage.length() > 1)
+            {
+                if (legacy.startsWith(textPassage) && !textPassage.startsWith("§")) {
+                    continue;
+                }
+                switch (textPassage.substring(0, 1).toLowerCase()) {
+                    case "p" -> replacements.put(textPassage.substring(1), getPrimaryAccentColor());
+                    case "s" -> replacements.put(textPassage.substring(1), getSecondaryAccentColor());
+                    case "t" -> replacements.put(textPassage.substring(1), getDefaultColor());
+                    case "+" -> replacements.put(textPassage.substring(1), getEnabledColor());
+                    case "-" -> replacements.put(textPassage.substring(1), getDisabledColor());
+                }
+            }
+        }
+
+        for (Map.Entry<String, TextColor> stringTextColorEntry : replacements.entrySet())
+        {
+            buildableComponent = (BuildableComponent<?, ?>) buildableComponent.replaceText(config ->
+            {
+                config.matchLiteral(stringTextColorEntry.getKey());
+                config.replacement(Component.text(stringTextColorEntry.getKey()).color(stringTextColorEntry.getValue()));
+            });
+        }
+
+        return buildableComponent;
+    }
+
+    /**
+     * Retrieves a personalized TextColor based on the given color value.
+     * This method queries the ColorProviderImplementation to obtain the personalized TextColor.
+     *
+     * @param value the color value to retrieve the personalized TextColor for.
+     * @return the personalized TextColor.
+     * @throws NullPointerException if the ColorProviderImplementation is null.
+     */
+    private @NotNull TextColor getPersonalColorByCode(int value)
+    {
+        return ((KissenColorProvider) ColorProvider.getInstance()).getColor(value).map(provider -> switch (provider)
+        {
+            case PRIMARY -> getPrimaryAccentColor();
+            case SECONDARY -> getSecondaryAccentColor();
+            case DEFAULT -> getDefaultColor();
+            case ENABLED -> getEnabledColor();
+            case DISABLED -> getDisabledColor();
+        }).orElseGet(() -> TextColor.color(value));
+    }
+}

@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Thu, 10 Aug 2023 01:15:01 +0200
+Subject: [PATCH] Added kissen to gradle
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index fb98936bb8a5488db75d676c5bcb4060597fbbf8..71a806fe93614cf2160b41f30a06b72f3cc0dab2 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -13,8 +13,12 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
+ val alsoShade: Configuration by configurations.creating
+ 
+ dependencies {
+-    implementation(project(":paper-api"))
+-    implementation(project(":paper-mojangapi"))
++    // KissenPaper start
++    implementation(project(":kissenpaper-api"))
++    implementation("io.papermc.paper:paper-mojangapi:${project.version}") {
++        exclude("io.papermc.paper", "paper-api")
++    }
++    // KissenPaper end
+     // Paper start
+     implementation("org.jline:jline-terminal-jansi:3.21.0")
+     implementation("net.minecrell:terminalconsoleappender:1.3.0")
+@@ -31,6 +35,12 @@ dependencies {
+     runtimeOnly(log4jPlugins.output)
+     alsoShade(log4jPlugins.output)
+     implementation("io.netty:netty-codec-haproxy:4.1.87.Final") // Paper - Add support for proxy protocol
++
++    // KissenPaper start
++    implementation("net.kissenpvp:kissen-core-api:1.0.0-SNAPSHOT")
++    implementation("net.kissenpvp:kissen-core-source:1.0.0-SNAPSHOT")
++    // KissenPaper end
++
+     // Paper end
+     implementation("org.apache.logging.log4j:log4j-iostreams:2.19.0") // Paper - remove exclusion
+     implementation("org.ow2.asm:asm:9.4")

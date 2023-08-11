@@ -1,0 +1,381 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Fri, 11 Aug 2023 16:31:02 +0200
+Subject: [PATCH] Update commands logic, adjust type casting
+
+Made updates in the command execution logic and adjusted type casting. Removed unnecessary import statements in KissenPaperAbstractCommand.java and KissenPaperCommandImplementation.java. Made changes in the getExecutor method in KissenPaperAbstractCommand.java to ensure not null. Removed a forced type cast in KissenPaperAbstractCommand.java.
+
+These changes were necessary to reduce redundancy, improve code readability and ensure not null safety. With these changes, unnecessary reliance on type casting is reduced and more efficient solutions are used.
+
+diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
+index a6b230a62bc7da369503f24d8d0df9143721beb0..31340c6b82396ca668acb74a8fbb464552cd30c7 100644
+--- a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
++++ b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
+@@ -9,6 +9,7 @@ import net.kissenpvp.core.command.KissenCommandImplementation;
+ import net.kissenpvp.core.command.argument.MethodEvaluator;
+ import net.kissenpvp.paper.api.command.KissenCommand;
+ import net.kissenpvp.paper.api.command.PaperCommandImplementation;
++import net.kissenpvp.paper.command.command.KissenPaperAbstractCommand;
+ import net.kissenpvp.paper.command.command.plugin.KissenPaperPluginCommand;
+ import net.kissenpvp.paper.command.command.system.KissenPaperCommand;
+ import net.kissenpvp.paper.command.executor.KissenPaperCommandExecutor;
+@@ -46,13 +47,19 @@ public class KissenPaperCommandImplementation extends KissenCommandImplementatio
+      * Kissen Paper command implementation for evaluating command methods and validating command execution targets.
+      */
+     public KissenPaperCommandImplementation() {
++        super();
++
+         this.methodEvaluator = new MethodEvaluator();
+         this.kissenPaperTargetValidator = new KissenPaperTargetValidator();
+     }
+ 
+     @Override
+-    public @NotNull Optional<Command> getCommand(@NotNull String name) {
+-        return Optional.ofNullable(getCommandMap().getCommand(name));
++    public @NotNull Optional<KissenCommand> getCommand(@NotNull String name) {
++        Command command = getCommandMap().getCommand(name);
++        if (command instanceof KissenPaperAbstractCommand<?> kissenPaperAbstractCommand) {
++            return Optional.of(kissenPaperAbstractCommand);
++        }
++        return Optional.empty();
+     }
+ 
+     @Override
+@@ -85,7 +92,7 @@ public class KissenPaperCommandImplementation extends KissenCommandImplementatio
+     public boolean unregisterCommand(@NotNull String name) {
+         Command command = getCommandMap().getCommand(name);
+         return command != null && command.unregister(getCommandMap()) && getCommandMap().getKnownCommands()
+-            .remove(name) != null;
++                .remove(name) != null;
+     }
+ 
+     /**
+@@ -162,21 +169,44 @@ public class KissenPaperCommandImplementation extends KissenCommandImplementatio
+      * @throws NullPointerException If any of the {@code plugin}, {@code commandData}, or {@code commandConsumer} parameters is null.
+      */
+     private @NotNull KissenPaperPluginCommand internalCommandRegister(@NotNull Plugin plugin, @NotNull CommandData commandData, @NotNull Consumer<KissenPaperPluginCommand> commandConsumer) {
+-        return (KissenPaperPluginCommand) registerCommandObject(new KissenPaperPluginCommand(plugin, commandData.name()
+-            .split("\\.")[0], 0), plugin.getName());
++        return (KissenPaperPluginCommand) registerCommandObject(commandData, new RootCommandFactory() {
++            @Override
++            public @NotNull KissenPaperAbstractCommand<?> constructCommand(@NotNull String name) {
++                return new KissenPaperPluginCommand(plugin, commandData.name().split("\\.")[0], 0);
++            }
++        }, plugin.getName());
+     }
+ 
+     private @NotNull KissenPaperCommand internalCommandRegister(@NotNull CommandData commandData, @NotNull Consumer<KissenPaperCommand> commandConsumer) {
++        return (KissenPaperCommand) registerCommandObject(commandData, new RootCommandFactory() {
++            @Override
++            public @NotNull KissenPaperAbstractCommand<?> constructCommand(@NotNull String name) {
++                return new KissenPaperCommand(commandData.name().split("\\.")[0], 0);
++            }
++        }, "kissenpaper");
++    }
+ 
+-        return (KissenPaperCommand) registerCommandObject(new KissenPaperCommand(commandData.name()
+-            .split("\\.")[0], 0), "kissenpaper");
++    private @NotNull KissenCommand registerCommandObject(@NotNull CommandData commandData, @NotNull KissenPaperCommandImplementation.RootCommandFactory rootCommandFactory, @NotNull String fallback) {
++        String rootName = commandData.name().split("\\.")[0];
++        KissenPaperAbstractCommand<?> command = (KissenPaperAbstractCommand<?>) getCommand(rootName).orElseGet(() ->
++        {
++            CommandMap commandMap = getCommandMap();
++            KissenCommand kissenCommand = rootCommandFactory.constructCommand(rootName);
++            kissenCommand.register(commandMap);
++            commandMap.register(fallback, kissenCommand);
++            ((CraftServer) Bukkit.getServer()).syncCommands();
++            return kissenCommand;
++        });
++
++        if (!commandData.name().equals(rootName)) {
++            command = command.createRecursive(commandData.name());
++        }
++        return command;
+     }
+ 
+-    private KissenCommand registerCommandObject(@NotNull KissenCommand kissenCommand, @NotNull String fallback) {
+-        kissenCommand.register(getCommandMap());
+-        getCommandMap().register(fallback, kissenCommand);
+-        ((CraftServer) Bukkit.getServer()).syncCommands();
+-        return kissenCommand;
++    @FunctionalInterface
++    private interface RootCommandFactory {
++        @NotNull KissenPaperAbstractCommand<?> constructCommand(@NotNull String name);
+     }
+ 
+     private @NotNull CommandMap getCommandMap() {
+diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
+index e0f0607a39d39f8c24308aa9a6045c22c10c9d4f..be3cf48bd2e75f0ababedf161dd37c20dd9c57cf 100644
+--- a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
++++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
+@@ -2,7 +2,6 @@ package net.kissenpvp.paper.command.command;
+ 
+ import net.kissenpvp.core.api.command.executor.CommandExecutor;
+ import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
+-import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+ import net.kissenpvp.core.command.CommandHolder;
+ import net.kissenpvp.core.command.CommandInfo;
+ import net.kissenpvp.paper.api.command.KissenCommand;
+@@ -44,7 +43,6 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+     public KissenPaperAbstractCommand(@NotNull String name, int position) {
+         super(name);
+         this.position = position;
+-
+         this.children = new ArrayList<>();
+     }
+ 
+@@ -54,7 +52,7 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+     }
+ 
+     @Override
+-    public CommandExecutor<CommandSender> getExecutor() {
++    public @NotNull CommandExecutor<CommandSender> getExecutor() {
+         return commandExecutor;
+     }
+ 
+@@ -92,7 +90,7 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+             return false;
+         }
+ 
+-        final KissenPaperCommandContext kissenPaperCommandContext = new KissenPaperCommandContext(commandLabel, sender, getTargetValidator().parseSender((ServerEntity) sender), //safe cast
++        final KissenPaperCommandContext kissenPaperCommandContext = new KissenPaperCommandContext(commandLabel, sender, getTargetValidator().parseSender(sender),
+                 args, this);
+         //TODO maybe async
+         return commandExecutor.execute(kissenPaperCommandContext);
+@@ -106,7 +104,7 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+         }
+ 
+         if (tabExecutor != null) {
+-            result.addAll(tabExecutor.execute(new KissenPaperCommandContext(alias, sender, getTargetValidator().parseSender((ServerEntity) sender), //safe cast
++            result.addAll(tabExecutor.execute(new KissenPaperCommandContext(alias, sender, getTargetValidator().parseSender(sender),
+                     args, this)));
+             return result;
+         }
+@@ -115,7 +113,7 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+             List<String> matchedChildCommands = new ArrayList<>();
+ 
+             for (C command : getChildCommandList()) {
+-                if ((command.getName()
++                if (command.getPosition() == args.length && (command.getName()
+                         .toLowerCase()
+                         .startsWith(args[args.length - 1].toLowerCase())) && command.testPermissionSilent(sender)) {
+                     matchedChildCommands.add(command.getName());
+diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandContext.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandContext.java
+index af4f0b52a420aaeaaedab0d3efc64bdf3b4377b5..560091331e8e2922af00af30951d0c7c861bd57d 100644
+--- a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandContext.java
++++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandContext.java
+@@ -1,11 +1,11 @@
+ package net.kissenpvp.paper.command.command;
+ 
++import net.kissenpvp.core.api.command.ArgumentParser;
++import net.kissenpvp.core.api.command.CommandPayload;
+ import net.kissenpvp.core.api.command.CommandTarget;
+-import net.kissenpvp.core.api.command.Context;
+ import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+ import net.kissenpvp.core.api.permission.PermissionEntry;
+ import net.kissenpvp.core.command.CommandHolder;
+-import net.kissenpvp.core.command.argument.ArgumentParser;
+ import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
+ import org.bukkit.Bukkit;
+ import org.bukkit.command.CommandSender;
+@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
+ 
+ import java.lang.reflect.Array;
+ 
+-public class KissenPaperCommandContext implements Context<CommandSender> {
++public class KissenPaperCommandContext implements CommandPayload<CommandSender> {
+ 
+     private final String label;
+     private final CommandSender sender;
+@@ -57,13 +57,13 @@ public class KissenPaperCommandContext implements Context<CommandSender> {
+     public <T> @NotNull T[] getArgument(int from, int to, @NotNull Class<T> type) throws ArrayIndexOutOfBoundsException {
+ 
+         KissenPaperCommandImplementation kissenPaperCommandImplementation = Bukkit.getKissen()
+-            .getImplementation(KissenPaperCommandImplementation.class);
++                .getImplementation(KissenPaperCommandImplementation.class);
+ 
+         final ArgumentParser<?> adapter = kissenPaperCommandImplementation.getParserList().get(type);
+         final T[] instance = (T[]) Array.newInstance(type, to - from);
+ 
+         for (int i = from; i <= to; i++) {
+-            instance[i - from] = (T) adapter.deserialize(getArgument(i).orElseThrow(IllegalArgumentException::new));
++            instance[i - from] = (T) kissenPaperCommandImplementation.deserialize(getArgument(i).orElseThrow(IllegalArgumentException::new), adapter);
+         }
+ 
+         return instance;
+@@ -73,7 +73,7 @@ public class KissenPaperCommandContext implements Context<CommandSender> {
+     public boolean validate(@NotNull ServerEntity serverEntity) {
+ 
+         if (getCommandHolder().getCommandInfo()
+-            .isPermissionRequired() && serverEntity instanceof PermissionEntry<?> permissionEntry) {
++                .isPermissionRequired() && serverEntity instanceof PermissionEntry<?> permissionEntry) {
+ 
+             if (!permissionEntry.hasPermission(getCommandHolder().getCommandInfo().getPermission())) {
+                 return false;
+@@ -81,7 +81,7 @@ public class KissenPaperCommandContext implements Context<CommandSender> {
+         }
+ 
+         KissenPaperCommandImplementation kissenPaperCommandImplementation = Bukkit.getKissen()
+-            .getImplementation(KissenPaperCommandImplementation.class);
++                .getImplementation(KissenPaperCommandImplementation.class);
+         return kissenPaperCommandImplementation.getKissenPaperTargetValidator().validate(getTarget(), serverEntity);
+     }
+ }
+diff --git a/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCommandExecutor.java b/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCommandExecutor.java
+index 032114a5c87a4b5374fc96aac9d18422f89c7503..ddc79d3d53009bdee0505bc7ec0eba88e62834e2 100644
+--- a/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCommandExecutor.java
++++ b/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCommandExecutor.java
+@@ -1,6 +1,6 @@
+ package net.kissenpvp.paper.command.executor;
+ 
+-import net.kissenpvp.core.api.command.Context;
++import net.kissenpvp.core.api.command.CommandPayload;
+ import net.kissenpvp.core.api.command.exception.CommandException;
+ import net.kissenpvp.core.api.command.executor.CommandExecutor;
+ import net.kissenpvp.core.command.argument.ArgumentEvaluator;
+@@ -35,15 +35,15 @@ public class KissenPaperCommandExecutor implements CommandExecutor<CommandSender
+         this.holder = holder;
+ 
+         this.evaluator = new ArgumentEvaluator<>(Bukkit.getKissen()
+-            .getImplementation(KissenPaperCommandImplementation.class)
+-            .getMethodEvaluator()
+-            .evaluateMethod(method));
++                .getImplementation(KissenPaperCommandImplementation.class)
++                .getMethodEvaluator()
++                .evaluateMethod(method));
+ 
+         useMethodValue = returnType.equals(Boolean.TYPE);
+     }
+ 
+     @Override
+-    public boolean execute(@NotNull Context<CommandSender> context) {
++    public boolean execute(@NotNull CommandPayload<CommandSender> context) {
+         return invokeCommand(context);
+     }
+ 
+@@ -53,12 +53,12 @@ public class KissenPaperCommandExecutor implements CommandExecutor<CommandSender
+      * This method is used to invoke a command method based on the given command context.
+      * The command method is typically defined in a class and is invoked based on the evaluation of command arguments and conditions.
+      *
+-     * @param context The {@link Context} representing the command execution context, containing the command sender and arguments. Must not be null.
++     * @param context The {@link CommandPayload} representing the command execution context, containing the command sender and arguments. Must not be null.
+      * @return {@code true} if the command method was successfully invoked, {@code false} if no method value is expected and the method was invoked successfully.
+      * @throws CommandException     If an error occurs while processing the command, such as an illegal access or invocation target exception.
+      * @throws NullPointerException If the provided {@code context} parameter is null.
+      */
+-    public boolean invokeCommand(@NotNull Context<CommandSender> context) {
++    public boolean invokeCommand(@NotNull CommandPayload<CommandSender> context) {
+         try {
+             if (evaluator.arguments().isEmpty()) {
+                 if (useMethodValue) {
+@@ -69,16 +69,35 @@ public class KissenPaperCommandExecutor implements CommandExecutor<CommandSender
+             }
+ 
+             Object[] parameter = evaluator.parseArguments(context);
++
+             if (useMethodValue) {
+                 return (boolean) method.invoke(holder, parameter);
+             }
+             method.invoke(holder, parameter);
+             return true;
++        } catch (CommandException commandException) {
++            processError(context, commandException.getCause());
++            return false;
+         } catch (IllegalAccessException | InvocationTargetException exception) {
+             throw new CommandException(String.format("An error occurred while processing the command '%s'.", context.getLabel()), exception);
+         }
+     }
+ 
++    /**
++     * Processes the specified error, typically thrown during command invocation, by applying a defined error handling strategy.
++     * <p>
++     * The {@code processError} method is a private helper method used within this class to isolate the error processing logic from the main command invocation logic implemented in the {@code invokeCommand} method.
++     * This method gets invoked when a {@link CommandException} is caught in the main method and is handed the cause of the exception for further processing.
++     * This method currently has no implementation (TODO) and hence no error processing is performed at the moment. A suitable implementation could, for example, entail logging the error in a specific way, transforming
++     * the error into another form, or handling the error based on its type or content, etc.
++     *
++     * @param cause The {@link Throwable} that caused the method invocation to fail. This parameter must not be null.
++     * @throws NullPointerException If the provided {@code cause} parameter is null.
++     */
++    private void processError(@NotNull CommandPayload<CommandSender> context, @NotNull Throwable cause) {
++        throw new CommandException(cause);
++    }
++
+     public @NotNull ArgumentEvaluator<CommandSender> getEvaluator() {
+         return evaluator;
+     }
+diff --git a/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCompleteExecutor.java b/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCompleteExecutor.java
+index 5ef1cb740614b03d178a3fb2001cefdb8f8d82a6..78b5c4029816403517767b01372e0a156eb2d49d 100644
+--- a/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCompleteExecutor.java
++++ b/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCompleteExecutor.java
+@@ -1,6 +1,6 @@
+ package net.kissenpvp.paper.command.executor;
+ 
+-import net.kissenpvp.core.api.command.Context;
++import net.kissenpvp.core.api.command.CommandPayload;
+ import net.kissenpvp.core.api.command.exception.CommandException;
+ import net.kissenpvp.core.api.command.exception.IllegalParameterException;
+ import net.kissenpvp.core.api.command.exception.IllegalReturnValueException;
+@@ -26,8 +26,8 @@ public class KissenPaperCompleteExecutor implements TabCompleterExecutor<Command
+             throw new IllegalReturnValueException(returnType, List.class);
+         }
+ 
+-        if (parameters.length > 1 || (parameters.length == 1 && !Context.class.isAssignableFrom(parameters[0]))) {
+-            throw new IllegalParameterException(parameters[0], Context.class);
++        if (parameters.length > 1 || (parameters.length == 1 && !CommandPayload.class.isAssignableFrom(parameters[0]))) {
++            throw new IllegalParameterException(parameters[0], CommandPayload.class);
+         }
+ 
+         this.method = method;
+@@ -35,14 +35,14 @@ public class KissenPaperCompleteExecutor implements TabCompleterExecutor<Command
+     }
+ 
+     @Override
+-    public @NotNull Set<String> execute(@NotNull Context<CommandSender> context) {
++    public @NotNull Set<String> execute(@NotNull CommandPayload<CommandSender> context) {
+         final Class<?>[] types = method.getParameterTypes();
+         try {
+             if (types.length == 0) {
+                 return (Set<String>) method.invoke(holder);
+             }
+ 
+-            if (types.length == 1 && types[0] == Context.class) {
++            if (types.length == 1 && types[0] == CommandPayload.class) {
+                 return (Set<String>) method.invoke(holder, context);
+             }
+ 
+diff --git a/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java b/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java
+index 217f3d97fefaa3ccbed105fc4b07b1347ed28d3b..247583731ed0056c7a5808e0c7f6420bc5100dcf 100644
+--- a/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java
++++ b/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java
+@@ -1,21 +1,21 @@
+ package net.kissenpvp.paper.permission;
+ 
+-import net.kissenpvp.core.api.command.Context;
++import net.kissenpvp.core.api.command.CommandPayload;
+ import net.kissenpvp.core.api.command.annotations.CommandData;
+-import net.kissenpvp.core.api.event.EventCancelledException;
+ import org.bukkit.command.CommandSender;
+-import org.bukkit.entity.Player;
++import org.jetbrains.annotations.NotNull;
+ 
+ public class PermissionCommand {
+ 
+ 
+     @CommandData(name = "test")
+-    public void test(Context<CommandSender> commandSender, String permission) {
+-        try {
+-            ((Player) commandSender.getSender()).getPermissible().setPermission(permission, true);
+-        } catch (EventCancelledException e) {
+-            throw new RuntimeException(e);
+-        }
++    public void test(@NotNull CommandPayload<CommandSender> commandSender, @NotNull String permission) {
++        commandSender.getSender().sendMessage(permission);
++    }
++
++    @CommandData(name = "test.group")
++    public void testGroup(@NotNull CommandPayload<CommandSender> commandSender, @NotNull String group) {
++        commandSender.getSender().sendMessage(group);
+     }
+ 
+ }
