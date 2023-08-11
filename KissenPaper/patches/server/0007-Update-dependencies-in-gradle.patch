@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Fri, 11 Aug 2023 20:37:30 +0200
+Subject: [PATCH] Update dependencies in gradle
+
+Updated the Kissen-Core-API and Kissen-Core-Source dependencies in the build.gradle.kts of both KissenPaper-Server and KissenPaper-API. Instead of using the versioned jar dependency, the project dependencies are now directly referenced. This change facilitates rapid development and testing as it eliminates the need to rebuild and publish the core libraries every time a change is made.
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index 4edda159b12943f83994a361a6236292487295b2..369ff7ccd84ad0d3ddecc109e086eea4f92fd74d 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -37,8 +37,8 @@ dependencies {
+     implementation("io.netty:netty-codec-haproxy:4.1.87.Final") // Paper - Add support for proxy protocol
+ 
+     // KissenPaper start
+-    implementation("net.kissenpvp:kissen-core-api:1.0.0-SNAPSHOT")
+-    implementation("net.kissenpvp:kissen-core-source:1.0.0-SNAPSHOT")
++    implementation(project(":kissen-api") )
++    implementation(project(":kissen-source") )
+     // KissenPaper end
+ 
+     // Paper end
