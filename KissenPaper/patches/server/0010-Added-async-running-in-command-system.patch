@@ -1,0 +1,18 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Sun, 13 Aug 2023 02:54:46 +0200
+Subject: [PATCH] Added async running in command system
+
+
+diff --git a/src/main/java/net/kissenpvp/paper/command/command/plugin/KissenPaperPluginCommand.java b/src/main/java/net/kissenpvp/paper/command/command/plugin/KissenPaperPluginCommand.java
+index ec8178bc1688301d9272ec366eef96a0294f93ba..6df71a9f9ba7664270c8049a8658af00272ab874 100644
+--- a/src/main/java/net/kissenpvp/paper/command/command/plugin/KissenPaperPluginCommand.java
++++ b/src/main/java/net/kissenpvp/paper/command/command/plugin/KissenPaperPluginCommand.java
+@@ -3,6 +3,7 @@ package net.kissenpvp.paper.command.command.plugin;
+ import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+ import net.kissenpvp.core.api.command.CommandPayload;
+ import net.kissenpvp.paper.command.command.KissenPaperAbstractCommand;
++import org.bukkit.Bukkit;
+ import org.bukkit.command.CommandException;
+ import org.bukkit.command.CommandSender;
+ import org.bukkit.plugin.Plugin;
