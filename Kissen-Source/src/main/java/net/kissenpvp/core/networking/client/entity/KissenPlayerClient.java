@@ -232,11 +232,6 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     @Override
-    public @NotNull UUID getUniqueId() {
-        return UUID.fromString(getUser().getRawID());
-    }
-
-    @Override
     public @NotNull Theme getTheme() {
         return new PlayerTheme(this);
     }
