@@ -17,6 +17,7 @@
 package net.kissenpvp.core.api.ban;
 
 import net.kissenpvp.core.api.base.Implementation;
+import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -44,10 +45,10 @@ import java.util.UUID;
  *
  * @see Implementation
  * @see Ban
- * @see PlayerBan
+ * @see Punishment
  * @see BanType
  */
-public interface BanImplementation extends Implementation {
+public interface BanImplementation<B extends Ban, P extends Punishment<?>> extends Implementation {
     
     /**
      * Returns an unmodifiable set containing all bans created using {@link #createBan(int, Map)} or {@link #createBan(int, String, BanType, Duration)}.
@@ -59,7 +60,7 @@ public interface BanImplementation extends Implementation {
      * @see #createBan(int, String, BanType, Duration)
      * @see Ban#delete()
      */
-    @NotNull @Unmodifiable Set<Ban> getBanSet();
+    @NotNull @Unmodifiable Set<B> getBanSet();
 
     /**
      * Returns an {@link Optional} containing a previously created ban with the given ID using {@link #createBan(int, Map)} or {@link #createBan(int, String, BanType, Duration)}.
@@ -74,7 +75,7 @@ public interface BanImplementation extends Implementation {
      * @see #createBan(int, String, BanType, Duration)
      * @see #getBanSet()
      */
-    @NotNull Optional<@Nullable Ban> getBan(int id);
+    @NotNull Optional<@Nullable B> getBan(int id);
 
     /**
      * Creates a new ban with the given ID and data. The data is a map of ban properties such as reason, type, and duration.
@@ -86,7 +87,7 @@ public interface BanImplementation extends Implementation {
      * @throws NullPointerException if the data map is null.
      * @see Ban
      */
-    @NotNull Ban createBan(int id, @NotNull Map<String, String> data);
+    @NotNull B createBan(int id, @NotNull Map<String, String> data) throws BackendException;
 
     /**
      * Creates a new ban with the given ID, name, type, and duration. The ban is returned as a {@link Ban} object.
@@ -99,29 +100,7 @@ public interface BanImplementation extends Implementation {
      * @throws NullPointerException if the name or banType is null.
      * @see Ban
      */
-    @NotNull Ban createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable Duration duration);
-
-    /**
-     * Applies the specified {@link Ban} to the player identified by the given {@code totalID} and returns a {@link PlayerBan} object that represents the newly applied ban.
-     * If a reason for the ban is provided, it will be included in the {@link PlayerBan} object for future reference.
-     * <p>
-     * If no reason is given, use {@link #ban(UUID, Ban, BanOperator)} instead.
-     * </p>
-     * <p>
-     * The punishment specified by the {@link Ban} object will be executed immediately and will affect all players who have the same {@link PlayerClient#getTotalID()} as the one provided.
-     * </p>
-     *
-     * @param totalID     the UUID of the player to be banned
-     * @param ban         the {@link Ban} object containing details of the ban to be applied
-     * @param banOperator the name of the team member who is applying the ban
-     * @param reason      an optional reason for the ban, which will be included in the {@link PlayerBan} object
-     * @return a {@link PlayerBan} object representing the newly applied ban
-     * @throws NullPointerException if either totalID, ban, or banner is null
-     * @see Ban
-     * @see PlayerBan
-     * @see #ban(UUID, Ban, BanOperator)
-     */
-    @NotNull PlayerBan ban(@NotNull UUID totalID, @NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable Component reason);
+    @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable Duration duration) throws BackendException;
 
     /**
      * Applies the specified {@link Ban} to the player with the given UUID, without providing a reason for the ban.
@@ -136,13 +115,35 @@ public interface BanImplementation extends Implementation {
      * @param totalID     the UUID of the player to be banned.
      * @param ban         the {@link Ban} object containing details of the ban to be applied.
      * @param banOperator the name of the team member who is applying the ban.
-     * @return a {@link PlayerBan} object representing the newly applied ban.
+     * @return a {@link Punishment} object representing the newly applied ban.
      * @throws NullPointerException if either totalID, ban or banner are null.
      * @see Ban
-     * @see PlayerBan
+     * @see Punishment
      * @see #ban(UUID, Ban, BanOperator, Component)
      */
-    @NotNull PlayerBan ban(@NotNull UUID totalID, @NotNull Ban ban, @NotNull BanOperator banOperator);
+    @NotNull P ban(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator) throws BackendException;
+
+    /**
+     * Applies the specified {@link Ban} to the player identified by the given {@code totalID} and returns a {@link Punishment} object that represents the newly applied ban.
+     * If a reason for the ban is provided, it will be included in the {@link Punishment} object for future reference.
+     * <p>
+     * If no reason is given, use {@link #ban(UUID, Ban, BanOperator)} instead.
+     * </p>
+     * <p>
+     * The punishment specified by the {@link Ban} object will be executed immediately and will affect all players who have the same {@link PlayerClient#getTotalID()} as the one provided.
+     * </p>
+     *
+     * @param totalID     the UUID of the player to be banned
+     * @param ban         the {@link Ban} object containing details of the ban to be applied
+     * @param banOperator the name of the team member who is applying the ban
+     * @param reason      an optional reason for the ban, which will be included in the {@link Punishment} object
+     * @return a {@link Punishment} object representing the newly applied ban
+     * @throws NullPointerException if either totalID, ban, or banner is null
+     * @see Ban
+     * @see Punishment
+     * @see #ban(UUID, Ban, BanOperator)
+     */
+    @NotNull P ban(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException;
 
     /**
      * Returns the most recent valid ban associated with the player having the specified {@link PlayerClient#getTotalID()}.
@@ -157,15 +158,15 @@ public interface BanImplementation extends Implementation {
      * </p>
      *
      * @param totalID the UUID of the player for whom to search for bans.
-     * @return an {@link Optional} containing the most recent {@link PlayerBan} object representing a valid ban for the specified player,
+     * @return an {@link Optional} containing the most recent {@link Punishment} object representing a valid ban for the specified player,
      * or an empty {@link Optional} if no valid bans are found.
      * @throws NullPointerException if {@code totalID} is null.
-     * @see PlayerBan#isValid()
+     * @see Punishment#isValid()
      * @see #ban(UUID, Ban, BanOperator, Component)
      * @see #ban(UUID, Ban, BanOperator)
      * @see #getCurrentBan(UUID, BanType)
      */
-    @NotNull Optional<@Nullable PlayerBan> getCurrentBan(@NotNull UUID totalID);
+    @NotNull Optional<@Nullable P> getCurrentBan(@NotNull UUID totalID) throws BackendException;
 
     /**
      * Returns the most recent valid ban of the specified type associated with the player having the specified {@link PlayerClient#getTotalID()}.
@@ -181,15 +182,15 @@ public interface BanImplementation extends Implementation {
      *
      * @param totalID the UUID of the player for whom to search for bans.
      * @param banType the type of ban to search for.
-     * @return an {@link Optional} containing the most recent {@link PlayerBan} object representing a valid ban of the specified type for the specified player.
+     * @return an {@link Optional} containing the most recent {@link Punishment} object representing a valid ban of the specified type for the specified player.
      * Returns an empty {@link Optional} if no valid bans of the specified type are found.
      * @throws NullPointerException if {@code totalID} or {@code banType} are null.
-     * @see PlayerBan#isValid()
+     * @see Punishment#isValid()
      * @see #getCurrentBan(UUID)
      * @see #ban(UUID, Ban, BanOperator, Component)
      * @see #ban(UUID, Ban, BanOperator)
      */
-    @NotNull Optional<@Nullable PlayerBan> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType);
+    @NotNull Optional<@Nullable P> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType) throws BackendException;
 
     /**
      * Returns an unmodifiable set of all the bans associated with the player having the specified {@link PlayerClient#getTotalID()}.
@@ -203,12 +204,12 @@ public interface BanImplementation extends Implementation {
      * </p>
      *
      * @param totalID the UUID of the player for whom to retrieve the set of bans.
-     * @return an unmodifiable {@link Set} of all the {@link PlayerBan} objects associated with the specified player.
+     * @return an unmodifiable {@link Set} of all the {@link Punishment} objects associated with the specified player.
      * @throws NullPointerException if {@code totalID} is null.
      * @see #getCurrentBan(UUID)
      * @see #getCurrentBan(UUID, BanType)
      */
-    @NotNull @Unmodifiable Set<PlayerBan> getPlayerBanSet(@NotNull UUID totalID);
+    @NotNull @Unmodifiable Set<P> getPlayerBanSet(@NotNull UUID totalID) throws BackendException;
 
     /**
      * Returns an unmodifiable set of all the bans associated with any player.
@@ -222,10 +223,11 @@ public interface BanImplementation extends Implementation {
      * Attempting to modify the set will result in an {@link UnsupportedOperationException} being thrown.
      * </p>
      *
-     * @return an unmodifiable {@link Set} of all the {@link PlayerBan} objects associated with any player.
+     * @return an unmodifiable {@link Set} of all the {@link Punishment} objects associated with any player.
      * @see #getPlayerBanSet(UUID)
      * @see #getCurrentBan(UUID)
      * @see #getCurrentBan(UUID, BanType)
      */
-    @NotNull @Unmodifiable Set<PlayerBan> getPlayerBanSet();
+    @NotNull @Unmodifiable Set<P> getPlayerBanSet() throws BackendException;
+
 }

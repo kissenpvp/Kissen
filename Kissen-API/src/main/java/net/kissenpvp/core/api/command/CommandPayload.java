@@ -28,7 +28,7 @@ public interface CommandPayload<S> {
         }
     }
 
-    default String[] getArgs(int from, int to) throws ArrayIndexOutOfBoundsException {
+    default String[] getArguments(int from, int to) throws ArrayIndexOutOfBoundsException {
         return Arrays.copyOfRange(getArguments(), from, to);
     }
 

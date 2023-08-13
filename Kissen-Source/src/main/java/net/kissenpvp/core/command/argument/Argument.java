@@ -4,7 +4,7 @@ import lombok.Builder;
 import net.kissenpvp.core.api.command.ArgumentParser;
 
 @Builder
-public record Argument<T>(String name, Class<?> type, T defaultValue,
-                          ArgumentParser<T> argumentParser, boolean isNullable, boolean isArray,
+public record Argument<T, S>(String name, Class<?> type, T defaultValue,
+                          ArgumentParser<T, S> argumentParser, boolean isNullable, ArgumentType argumentType,
                           boolean ignoreQuote) {
 }

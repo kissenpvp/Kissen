@@ -37,7 +37,7 @@ import java.util.Locale;
  * </p>
  *
  * @see Ban
- * @see PlayerBan
+ * @see Punishment
  */
 public enum BanType implements Serializable
 {

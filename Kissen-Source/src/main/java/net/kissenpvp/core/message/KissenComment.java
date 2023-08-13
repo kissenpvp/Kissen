@@ -51,7 +51,7 @@ public class KissenComment implements Comment {
     public @Unmodifiable @NotNull List<Component> getEdits() {
         return commentNode.messages()
                 .stream()
-                .map(message -> ComponentSerializer.getInstance().getJsonSerializer().deserialize(message))
+                .map(message -> ComponentSerializer.getInstance().getJsonSerializer().deserialize(message.message()))
                 .toList();
     }
 
@@ -59,7 +59,7 @@ public class KissenComment implements Comment {
     public @NotNull Component getText() {
         return ComponentSerializer.getInstance()
                 .getJsonSerializer()
-                .deserialize(commentNode.messages().get(commentNode.messages().size() - 1));
+                .deserialize(commentNode.messages().get(commentNode.messages().size() - 1).message());
     }
 
     @Override
@@ -73,7 +73,7 @@ public class KissenComment implements Comment {
             throw new UnsupportedOperationException("This object is immutable.");
         }
 
-        commentNode.messages().add(ComponentSerializer.getInstance().getJsonSerializer().serialize(component));
+        commentNode.messages().add(new CommentMessageNode(ComponentSerializer.getInstance().getJsonSerializer().serialize(component), System.currentTimeMillis()));
         dataWriter.update(commentNode);
     }
 

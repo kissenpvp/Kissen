@@ -9,8 +9,8 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface BaseValue {
+public @interface Default {
 
-    @NotNull String[] defaultValue() default {};
+    @NotNull String[] value();
 
 }

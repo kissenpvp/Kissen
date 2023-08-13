@@ -24,7 +24,8 @@ import org.jetbrains.annotations.NotNull;
 
 @AllArgsConstructor
 public class PlayerTheme extends DefaultTheme {
-    private final @NotNull PlayerClient<?> playerClient;
+
+    private final @NotNull PlayerClient<?, ?, ?> playerClient;
 
     @Override
     public @NotNull TextColor getPrimaryAccentColor() {

@@ -20,5 +20,5 @@ import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 
 public interface User extends Savable {
-    PlayerClient<?> getPlayerClient();
+    PlayerClient<?, ?, ?> getPlayerClient();
 }

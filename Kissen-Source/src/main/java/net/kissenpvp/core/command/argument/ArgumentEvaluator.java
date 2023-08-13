@@ -7,6 +7,7 @@ import net.kissenpvp.core.api.command.exception.TemporaryDeserializationExceptio
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.command.KissenCommandImplementation;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.reflect.Array;
 import java.util.List;
@@ -21,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @see Argument
  * @see CommandPayload
  */
-public record ArgumentEvaluator<S>(@NotNull List<Argument<?>> arguments) {
+public record ArgumentEvaluator<S>(@NotNull @Unmodifiable List<Argument<?, S>> arguments) {
 
     /**
      * This method is used to parse command arguments.
@@ -39,7 +40,7 @@ public record ArgumentEvaluator<S>(@NotNull List<Argument<?>> arguments) {
         KissenCommandImplementation kissenCommandImplementation = KissenCore.getInstance()
                 .getImplementation(KissenCommandImplementation.class);
 
-        for (Argument<?> argument : arguments) {
+        for (Argument<?, S> argument : arguments) {
             if (CommandPayload.class.isAssignableFrom(argument.type())) {
                 parameters = kissenCommandImplementation.add(parameters, commandPayload);
                 continue;
@@ -52,9 +53,12 @@ public record ArgumentEvaluator<S>(@NotNull List<Argument<?>> arguments) {
                 continue;
             }
 
-            Object object = argument.isArray() ?
-                    processArrayArgument(argumentOptional.get(), argument, commandPayload, currentArgumentIndex) :
-                    deserialize(argumentOptional.get(), argument.argumentParser());
+            Object object = switch (argument.argumentType())
+            {
+                case ARRAY -> processArrayArgument(argumentOptional.get(), argument, commandPayload, currentArgumentIndex);
+                case OPTIONAL -> Optional.of(deserialize(argumentOptional.get(), argument.argumentParser()));
+                case NONE -> deserialize(argumentOptional.get(), argument.argumentParser());
+            };
             parameters = kissenCommandImplementation.add(parameters, object);
         }
 
@@ -71,7 +75,7 @@ public record ArgumentEvaluator<S>(@NotNull List<Argument<?>> arguments) {
      * @return a new array that includes the parameter
      * @throws CommandException if the argument is not nullable
      */
-    private @NotNull Object[] handleEmptyArgument(@NotNull Object[] parameters, @NotNull Argument<?> argument, @NotNull AtomicInteger currentArgumentIndex) throws CommandException {
+    private @NotNull Object[] handleEmptyArgument(@NotNull Object[] parameters, @NotNull Argument<?, S> argument, @NotNull AtomicInteger currentArgumentIndex) throws CommandException {
         if (!argument.isNullable()) {
             throw new CommandException(String.format("The argument '%s' cannot be null or undefined.", argument.type()
                     .getName()), new NullPointerException());
@@ -91,7 +95,7 @@ public record ArgumentEvaluator<S>(@NotNull List<Argument<?>> arguments) {
      * @param currentArgumentIndex the current argument index
      * @return parsed array object
      */
-    private @NotNull Object processArrayArgument(@NotNull String argumentValue, @NotNull Argument<?> argument, @NotNull CommandPayload<S> commandPayload, @NotNull AtomicInteger currentArgumentIndex) {
+    private @NotNull Object processArrayArgument(@NotNull String argumentValue, @NotNull Argument<?, S> argument, @NotNull CommandPayload<S> commandPayload, @NotNull AtomicInteger currentArgumentIndex) {
         Object object = Array.newInstance(argument.type(), 0);
 
         do {
@@ -114,7 +118,7 @@ public record ArgumentEvaluator<S>(@NotNull List<Argument<?>> arguments) {
      * @return the object deserialized from the input
      * @throws TemporaryDeserializationException if any exception occurs during deserialization
      */
-    private @NotNull Object deserialize(@NotNull String input, @NotNull ArgumentParser<?> argumentParser) {
+    private @NotNull Object deserialize(@NotNull String input, @NotNull ArgumentParser<?, ?> argumentParser) {
         try {
             return argumentParser.deserialize(input);
         } catch (Exception exception) {
@@ -131,7 +135,7 @@ public record ArgumentEvaluator<S>(@NotNull List<Argument<?>> arguments) {
      * @param commandPayload  the command payload
      * @return the parsed argument string encapsulated in an Optional
      */
-    private @NotNull Optional<String> readFullString(@NotNull Argument<?> argument, @NotNull AtomicInteger currentArgument, CommandPayload<S> commandPayload) {
+    private @NotNull Optional<String> readFullString(@NotNull Argument<?, S> argument, @NotNull AtomicInteger currentArgument, CommandPayload<S> commandPayload) {
         return commandPayload.getArgument(currentArgument.get()).map(argumentValue -> {
             currentArgument.incrementAndGet();
             if (!argument.ignoreQuote() && argumentValue.charAt(0) == '"') {
@@ -178,13 +182,13 @@ public record ArgumentEvaluator<S>(@NotNull List<Argument<?>> arguments) {
      */
     public @NotNull String buildUsage(@NotNull String name) {
         final StringBuilder builder = new StringBuilder(name);
-        for (Argument<?> argument : arguments) {
+        for (Argument<?, S> argument : arguments) {
             if (CommandPayload.class.isAssignableFrom(argument.type())) continue;
 
             builder.append(argument.isNullable() ? " [" : " <");
             builder.append(uncapitalize(argument.type().getSimpleName()));
 
-            if (argument.isArray()) builder.append("...");
+            if (argument.argumentType().equals(ArgumentType.ARRAY)) builder.append("...");
 
             builder.append(argument.isNullable() ? "]" : ">");
         }

@@ -24,8 +24,8 @@ import java.util.Objects;
 
 
 public record KissenPlayerRankNode(@NotNull String id, @NotNull String rankID, long start,
-                                   @NotNull Container<@Nullable Long> duration, @NotNull Container<@NotNull Long> end,
-                                   long predictedEnd)
+                                   @NotNull Container<Long> duration, @NotNull Container<Long> end,
+                                   @Nullable Long predictedEnd)
 {
     @Override public boolean equals(Object o)
     {
@@ -37,11 +37,11 @@ public record KissenPlayerRankNode(@NotNull String id, @NotNull String rankID, l
         {
             return false;
         }
-        return Objects.equals(id, that.id) && Objects.equals(rankID, that.rankID);
+        return Objects.equals(id, that.id);
     }
 
     @Override public int hashCode()
     {
-        return Objects.hash(id, rankID);
+        return Objects.hash(id);
     }
 }

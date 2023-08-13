@@ -418,7 +418,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
 
         localeData.translationRegistry().registerAll(Objects.requireNonNull(getInternalLocale(locale).orElseGet(() ->
         {
-            Locale parseLocale = Translator.parseLocale(locale.replace('-', '_')); //convert I guess
+            Locale parseLocale = Translator.parseLocale(locale.toLowerCase()); //convert I guess
             globallyKnown.add(parseLocale);
             localeData.installed().add(parseLocale);
             assert parseLocale != null;

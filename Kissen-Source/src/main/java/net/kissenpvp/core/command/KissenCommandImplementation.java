@@ -3,7 +3,6 @@ package net.kissenpvp.core.command;
 import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.command.exception.TemporaryDeserializationException;
-import net.kissenpvp.core.command.argument.parser.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -15,38 +14,21 @@ import java.util.Objects;
 
 public class KissenCommandImplementation implements Implementation {
 
-    private final Map<Class<?>, ArgumentParser<?>> parserList;
+    private final Map<Class<?>, ArgumentParser<?, ?>> parserList;
 
     public KissenCommandImplementation() {
         this.parserList = new HashMap<>();
-        parserList.put(String.class, new StringArgumentParser());
-        parserList.put(Byte.class, new ByteArgumentParser());
-        parserList.put(Short.class, new ShortArgumentParser());
-        parserList.put(Integer.class, new IntegerArgumentParser());
-        parserList.put(Float.class, new FloatArgumentParser());
-        parserList.put(Double.class, new DoubleArgumentParser());
-        parserList.put(Long.class, new LongArgumentParser());
-        parserList.put(Character.class, new CharacterArgumentParser());
-
-        //I hate java for this
-        parserList.put(Byte.TYPE, new ByteArgumentParser());
-        parserList.put(Short.TYPE, new ShortArgumentParser());
-        parserList.put(Integer.TYPE, new IntegerArgumentParser());
-        parserList.put(Float.TYPE, new FloatArgumentParser());
-        parserList.put(Double.TYPE, new DoubleArgumentParser());
-        parserList.put(Long.TYPE, new LongArgumentParser());
-        parserList.put(Character.TYPE, new CharacterArgumentParser());
     }
 
-    public <T> void registerParser(@NotNull Class<T> type, @NotNull ArgumentParser<T> parser) {
+    public <T, S> void registerParser(@NotNull Class<T> type, @NotNull ArgumentParser<T, S> parser) {
         if (!parserList.containsKey(type)) {
             parserList.put(type, parser);
             return;
         }
-        throw new IllegalArgumentException("Type already exits"); //TODO better message
+        throw new IllegalArgumentException(String.format("Type %s already exists in the system. Unable to proceed with the operation. Please use a different type or ensure the existing type is correctly removed before attempting again.", type.getSimpleName()));
     }
 
-    public @NotNull @Unmodifiable Map<Class<?>, ArgumentParser<?>> getParserList() {
+    public @NotNull @Unmodifiable Map<Class<?>, ArgumentParser<?, ?>> getParserList() {
         return Collections.unmodifiableMap(parserList);
     }
 
@@ -58,7 +40,7 @@ public class KissenCommandImplementation implements Implementation {
      * @return the object deserialized from the input
      * @throws TemporaryDeserializationException if any exception occurs during deserialization
      */
-    public @NotNull Object deserialize(@NotNull String input, @NotNull ArgumentParser<?> argumentParser) {
+    public @NotNull Object deserialize(@NotNull String input, @NotNull ArgumentParser<?, ?> argumentParser) {
         try {
             return argumentParser.deserialize(input);
         } catch (Exception exception) {

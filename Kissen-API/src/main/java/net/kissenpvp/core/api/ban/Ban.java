@@ -16,6 +16,7 @@
 
 package net.kissenpvp.core.api.ban;
 
+import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,9 +35,9 @@ import java.util.Optional;
  * <p>
  * If you need to retrieve all bans at once, you can use {@link BanImplementation#getBanSet()}.
  * <p>
- * These Bans do NOT apply to player directly, instead they function as template for creating a {@link PlayerBan}.
+ * These Bans do NOT apply to player directly, instead they function as template for creating a {@link Punishment}.
  *
- * @see PlayerBan
+ * @see Punishment
  * @see BanType
  * @see BanImplementation
  */
@@ -117,6 +118,6 @@ public interface Ban {
      *
      * @return The number of database entries that were deleted as a result of calling this method.
      */
-    int delete();
+    int delete() throws BackendException;
 
 }

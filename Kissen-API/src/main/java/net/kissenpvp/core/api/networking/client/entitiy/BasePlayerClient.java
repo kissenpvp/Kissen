@@ -1,8 +1,14 @@
 package net.kissenpvp.core.api.networking.client.entitiy;
 
 import net.kissenpvp.core.api.ban.Ban;
-import net.kissenpvp.core.api.ban.PlayerBan;
+import net.kissenpvp.core.api.ban.BanOperator;
+import net.kissenpvp.core.api.ban.Punishment;
+import net.kissenpvp.core.api.database.meta.BackendException;
+import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
+import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.PermissionEntry;
 import net.kissenpvp.core.api.user.User;
+import net.kissenpvp.core.api.user.rank.PlayerRank;
 import net.kissenpvp.core.api.user.suffix.Suffix;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.api.user.usersetttings.UserSetting;
@@ -16,7 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-public interface BasePlayerClient {
+public interface BasePlayerClient<P extends Permission, R extends PlayerRank<?>, B extends Punishment<?>> extends ServerEntity, GroupablePermissionEntry<P>, MessageReceiver {
 
     /**
      * Returns the UUID of the player this object is pointing to.
@@ -33,23 +39,23 @@ public interface BasePlayerClient {
      *
      * @return a {@link Set} of all accounts sharing the same {@link #getTotalID()}.
      */
-    @NotNull @Unmodifiable Set<UUID> getAltAccounts();
+    @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException;
 
     @NotNull UUID getTotalID();
 
-    @NotNull PlayerBan ban(@NotNull Ban ban, @NotNull Component banOperator);
+    @NotNull B ban(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException;
 
-    @NotNull PlayerBan ban(@NotNull Ban ban, @NotNull Component banOperator, @Nullable Component reason);
+    @NotNull B ban(@NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException;
 
-    @NotNull Optional<@Nullable PlayerBan> getBan(@NotNull String id);
+    @NotNull Optional<@Nullable B> getBan(@NotNull String id) throws BackendException;
 
     /**
-     * Returns a {@link List} containing all {@link PlayerBan} this player had.
+     * Returns a {@link List} containing all {@link Punishment} this player had.
      * These are sorted after the time they were created.
      *
      * @return a list containing all bans this player ever had.
      */
-    @NotNull @Unmodifiable List<PlayerBan> getBanHistory();
+    @NotNull @Unmodifiable List<B> getBanHistory() throws BackendException;
 
     @NotNull Component displayName();
 

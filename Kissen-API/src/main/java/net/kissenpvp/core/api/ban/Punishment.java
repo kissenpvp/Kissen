@@ -47,7 +47,8 @@ import java.util.UUID;
  * @see BanImplementation
  * @see BanType
  */
-public interface PlayerBan {
+public interface Punishment<T> {
+
     /**
      * Returns the total ID that is assigned to a player ban. This ID can change if the system recognizes similarities
      * between players' IP addresses. If they are recognized as related, they will have the same total ID and will be
@@ -85,7 +86,7 @@ public interface PlayerBan {
      *
      * @return the name of the team member who applied this player ban
      */
-    @NotNull BanOperator getBanner();
+    @NotNull BanOperator getBanOperator();
 
     /**
      * Returns the type of the ban associated with this player ban.
@@ -169,7 +170,7 @@ public interface PlayerBan {
      *
      * @return the timestamp representing the end time of the player ban, or -1 if the ban is permanent
      */
-    long getEnd();
+    @NotNull Optional<Long> getEnd();
 
     /**
      * Sets the timestamp representing the end time of the player ban.
@@ -189,7 +190,7 @@ public interface PlayerBan {
      *
      * @return the original predicted end time of the player ban, or -1 if the ban is or was permanent.
      */
-    long getPredictedEnd();
+    @NotNull Optional<Long> getPredictedEnd();
 
     /**
      * Returns a boolean indicating whether the player ban is currently valid or not.
@@ -222,5 +223,5 @@ public interface PlayerBan {
      *
      * @return a {@link Set} of {@link PlayerClient}s representing the online players affected by the ban
      */
-    @Unmodifiable Set<OnlinePlayerClient> getOnlineAffectedPlayers();
+    @Unmodifiable Set<T> getOnlineAffectedPlayers();
 }

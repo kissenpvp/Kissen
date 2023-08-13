@@ -123,7 +123,7 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
     }
 
     private void printAltStatus(String name, UUID totalID, Map<String, SavableMap> data) {
-        final List<UUID> altAccountList = new ArrayList<>(((KissenPlayerClient<?>) getPlayerClient()).getAltAccounts(totalID, getSaveID(), getMeta()));
+        /*final List<UUID> altAccountList = new ArrayList<>(((KissenPlayerClient<?, ?, ?>) getPlayerClient()).getAltAccounts(totalID, getSaveID(), getMeta()));
         if (!altAccountList.isEmpty()) {
             if (altAccountList.size() == 1) {
                 //KissenCore.getInstance().getImplementation(ChatImplementation.class).notifyTeam(new PlayerAccountIsRelated(name, data.get(getSaveID() + altAccountList.get(0).toString()).getNotNull("name")));
@@ -154,7 +154,7 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
                 //KissenCore.getInstance().getImplementation(ChatImplementation.class).notifyTeam(new PlayerAccountIsRelatedToAccounts(name, altAccounts.toString()));
                 //TODO same here as above
             }
-        }
+        }*/ //TODO
     }
 
     private void handleHost(UUID totalID, String host, Map<String, SavableMap> data, String key, @NotNull Object value) {

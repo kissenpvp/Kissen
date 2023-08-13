@@ -2,7 +2,7 @@ package net.kissenpvp.core.command.argument;
 
 import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
-import net.kissenpvp.core.api.command.annotations.BaseValue;
+import net.kissenpvp.core.api.command.annotations.Default;
 import net.kissenpvp.core.api.command.annotations.IgnoreQuote;
 import net.kissenpvp.core.api.command.exception.ArgumentParserAbsentException;
 import net.kissenpvp.core.api.command.exception.CommandException;
@@ -16,6 +16,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This class is responsible for evaluating and processing the parameters of a command method,
@@ -23,7 +24,7 @@ import java.util.List;
  * <p>
  * {@link MethodEvaluator} analyses each parameter of a given method, taking into account various metadata such as
  * its type, whether it is an array, whether it has an {@link IgnoreQuote} annotation, and its default value(s) as specified
- * by the {@link BaseValue} annotation.
+ * by the {@link Default} annotation.
  * <p>
  * While processing each parameter, this class also ensures that array parameters follow the proper command syntax by being placed
  * last in the command.
@@ -34,7 +35,7 @@ import java.util.List;
  * The main public method provided by this class is {@link #evaluateMethod(Method)}, which processes a method and returns
  * a list of its parameters represented as {@link Argument} objects.
  */
-public class MethodEvaluator {
+public class MethodEvaluator<S> {
 
     /**
      * Evaluates a given method, analyzing each of its parameters to extract {@link Argument} objects from them.
@@ -53,8 +54,8 @@ public class MethodEvaluator {
      * @throws IllegalArgumentException      If a parameter in the provided method is an array but not placed as the last argument.
      * @throws ArgumentParserAbsentException If an ArgumentParser could not be retrieved for a parameter's type.
      */
-    public @NotNull @Unmodifiable List<Argument<?>> evaluateMethod(@NotNull Method method) {
-        List<Argument<?>> argumentList = new ArrayList<>();
+    public @NotNull @Unmodifiable List<Argument<?, S>> evaluateMethod(@NotNull Method method) {
+        List<Argument<?, S>> argumentList = new ArrayList<>();
 
         for (Parameter parameter : method.getParameters()) {
             argumentList.addAll(processParameter(method, parameter));
@@ -84,10 +85,10 @@ public class MethodEvaluator {
      * <p>
      * It then builds an {@link Argument} using properties such as its name, type, array status, and any {@link IgnoreQuote} annotations present.
      * <p>
-     * If the parameter's type is assignable from {@link CommandPayload}, or it does not have a {@link BaseValue} annotation,
+     * If the parameter's type is assignable from {@link CommandPayload}, or it does not have a {@link Default} annotation,
      * the function considers it to be a basic argument and returns it wrapped in a list.
      * <p>
-     * However, if the parameter has a {@link BaseValue} annotation, it means that it might have a default value(s) specified.
+     * However, if the parameter has a {@link Default} annotation, it means that it might have a default value(s) specified.
      * In this case, it will generate a "nullable" optional {@link Argument} using the {@link #createOptional(Method, Class, boolean, String[], Argument.ArgumentBuilder)} function.
      * <p>
      * In both cases, a list containing the single {@link Argument} that was processed from this parameter is returned.
@@ -98,39 +99,56 @@ public class MethodEvaluator {
      * @throws IllegalArgumentException      If the parameter is of a primitive type but does not have a default value, or if the parameter is an array but not placed as the last argument.
      * @throws ArgumentParserAbsentException If an ArgumentParser could not be retrieved for the parameter's type.
      */
-    private <T> @NotNull List<Argument<T>> processParameter(@NotNull Method method, @NotNull Parameter parameter) {
+    private <T> @NotNull List<Argument<T, S>> processParameter(@NotNull Method method, @NotNull Parameter parameter) {
         Class<T> parameterType = (Class<T>) parameter.getType();
-        boolean isArray = parameterType.isArray();
+        ArgumentType argumentType = parameterType.isArray() ? ArgumentType.ARRAY : parameterType.equals(Optional.class) ? ArgumentType.OPTIONAL : ArgumentType.NONE;
 
         validateArrayPlacement(method.getParameters(), parameterType.isArray(), parameter);
 
-        Argument.ArgumentBuilder<T> builder = Argument.<T>builder()
+        Argument.ArgumentBuilder<T, S> builder = Argument.<T, S>builder()
                 .name(parameter.getName())
                 .type(parameterType)
-                .isArray(isArray)
+                .argumentType(argumentType)
                 .ignoreQuote(parameter.isAnnotationPresent(IgnoreQuote.class));
 
-        if (isArray) {
-            builder.type(parameterType = (Class<T>) parameterType.getComponentType());
+        switch (argumentType)
+        {
+            case ARRAY -> builder.type(parameterType = (Class<T>) parameterType.getComponentType());
+            case OPTIONAL ->
+            {
+                String typeName = parameter.getParameterizedType().getTypeName();
+                typeName = typeName.substring("java.util.Optional<".length(), typeName.length() - 1);
+                try
+                {
+                    builder.type(parameterType = (Class<T>) Class.forName(typeName));
+                    builder.isNullable(true);
+                    builder.defaultValue((T) Optional.empty());
+                }
+                catch (ClassNotFoundException classNotFoundException)
+                {
+                    throw new CommandException(String.format("Class %s was not not found.", typeName));
+                }
+            }
+            default -> {} // empty
         }
 
-        builder.argumentParser((ArgumentParser<T>) getCommandImplementation().getParserList().get(parameterType));
+        builder.argumentParser((ArgumentParser<T, S>) getCommandImplementation().getParserList().get(parameterType));
 
-        BaseValue baseValue = parameter.getDeclaredAnnotation(BaseValue.class);
-        if (CommandPayload.class.isAssignableFrom(parameterType) || baseValue == null) {
+        Default defaultValueAnnotated = parameter.getDeclaredAnnotation(Default.class);
+        if (CommandPayload.class.isAssignableFrom(parameterType) || defaultValueAnnotated == null) {
             return List.of(builder.build());
         }
 
-        return List.of(createOptional(method, parameterType, isArray, baseValue.defaultValue(), builder));
+        return List.of(createOptional(method, parameterType, argumentType, defaultValueAnnotated.value(), builder));
     }
 
     /**
      * Creates an optional {@link Argument} using the provided metadata.
      * <p>
-     * This function is used to transform method parameters that have a {@link BaseValue} annotation into nullable or optional {@link Argument}s.
+     * This function is used to transform method parameters that have a {@link Default} annotation into nullable or optional {@link Argument}s.
      * An optional {@link Argument} is characterized by the fact that it can be left unspecified when invoking the command because it will have a default value.
      * <p>
-     * Default values are specified as an array of strings in the {@link BaseValue} annotation of the parameter. Each string will be deserialized into the required type {@code T}
+     * Default values are specified as an array of strings in the {@link Default} annotation of the parameter. Each string will be deserialized into the required type {@code T}
      * to create the default value of the {@link Argument}.
      * <p>
      * If the type {@code T} of the {@link Argument} is an array, the default values will be an array as well.
@@ -146,22 +164,22 @@ public class MethodEvaluator {
      * @throws IllegalArgumentException      If the {@link Argument} type is a primitive type but does not have a default value.
      * @throws ArgumentParserAbsentException If an ArgumentParser could not be retrieved for the {@link Argument} type.
      */
-    private <T> Argument<T> createOptional(@NotNull Method method, @NotNull Class<T> type, boolean isArray, @NotNull String[] def, @NotNull Argument.ArgumentBuilder<T> builder) {
+    private <T> Argument<T, S> createOptional(@NotNull Method method, @NotNull Class<T> type, ArgumentType isArray, @NotNull String[] def, @NotNull Argument.ArgumentBuilder<T, S> builder) {
 
         if (type.isPrimitive() && def.length == 0) {
             throw new IllegalArgumentException(String.format("Use wrappers instead of primitive types for nullability, %s.", method.getName()));
         }
 
-        final ArgumentParser<?> parser = getCommandImplementation().getParserList().get(type);
+        final ArgumentParser<?, ?> parser = getCommandImplementation().getParserList().get(type);
         if (parser == null) {
             throw new ArgumentParserAbsentException(type);
         }
 
         builder.isNullable(true);
-        if (isArray && def.length != 0) {
-            builder.defaultValue((T) createArray(type, parser, def));
-        } else if (def.length != 0) {
-            builder.defaultValue((T) getCommandImplementation().deserialize(def[0], parser));
+        switch (isArray)
+        {
+            case ARRAY -> builder.defaultValue((T) createArray(type, parser, def));
+            case NONE -> builder.defaultValue((T) getCommandImplementation().deserialize(def[0], parser));
         }
 
         return builder.build();
@@ -180,7 +198,7 @@ public class MethodEvaluator {
      * @param def     The array of string default values to be deserialized into specific types.
      * @return An array of objects, where each object is an instance of the specified type.
      */
-    private Object[] createArray(Class<?> type, ArgumentParser<?> adapter, String[] def) {
+    private Object[] createArray(Class<?> type, ArgumentParser<?, ?> adapter, String[] def) {
         Object[] value = (Object[]) Array.newInstance(type, 0);
         for (String arg : def) {
             value = getCommandImplementation().add(value, getCommandImplementation().deserialize(arg, adapter));
