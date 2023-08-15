@@ -51,8 +51,8 @@ subprojects {
 
 tasks.register<Exec>("cloneRepo") {
     doFirst {
-        val dir = File("${project.buildDir}/KissenVelocity")
-        if (!dir.exists()) {
+        val file = File("${project.buildDir}/KissenVelocity/.git/")
+        if (!file.exists()) {
             workingDir = project.buildDir
             commandLine("git", "clone", "https://github.com/KissenPvP/KissenVelocity.git")
         }
