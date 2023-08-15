@@ -75,7 +75,7 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @see #createBan(int, String, BanType, Duration)
      * @see #getBanSet()
      */
-    @NotNull Optional<@Nullable B> getBan(int id);
+    @NotNull Optional<B> getBan(int id);
 
     /**
      * Creates a new ban with the given ID and data. The data is a map of ban properties such as reason, type, and duration.
@@ -88,6 +88,8 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @see Ban
      */
     @NotNull B createBan(int id, @NotNull Map<String, String> data) throws BackendException;
+
+    @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType) throws BackendException;
 
     /**
      * Creates a new ban with the given ID, name, type, and duration. The ban is returned as a {@link Ban} object.
@@ -106,7 +108,7 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * Applies the specified {@link Ban} to the player with the given UUID, without providing a reason for the ban.
      * The team member who applies the ban is identified by the given banner.
      * <p>
-     * It is recommended to use {@link #ban(UUID, Ban, BanOperator, Component)} to provide a reason for the ban.
+     * It is recommended to use {@link #punish(UUID, Ban, BanOperator, Component)} to provide a reason for the ban.
      * </p>
      * <p>
      * Depending on the {@link Ban}, this punishment will be executed immediately and will affect all players who have the same {@link PlayerClient#getTotalID()} as the provided UUID.
@@ -119,15 +121,15 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @throws NullPointerException if either totalID, ban or banner are null.
      * @see Ban
      * @see Punishment
-     * @see #ban(UUID, Ban, BanOperator, Component)
+     * @see #punish(UUID, Ban, BanOperator, Component)
      */
-    @NotNull P ban(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator) throws BackendException;
+    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator) throws BackendException;
 
     /**
      * Applies the specified {@link Ban} to the player identified by the given {@code totalID} and returns a {@link Punishment} object that represents the newly applied ban.
      * If a reason for the ban is provided, it will be included in the {@link Punishment} object for future reference.
      * <p>
-     * If no reason is given, use {@link #ban(UUID, Ban, BanOperator)} instead.
+     * If no reason is given, use {@link #punish(UUID, Ban, BanOperator)} instead.
      * </p>
      * <p>
      * The punishment specified by the {@link Ban} object will be executed immediately and will affect all players who have the same {@link PlayerClient#getTotalID()} as the one provided.
@@ -141,16 +143,16 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @throws NullPointerException if either totalID, ban, or banner is null
      * @see Ban
      * @see Punishment
-     * @see #ban(UUID, Ban, BanOperator)
+     * @see #punish(UUID, Ban, BanOperator)
      */
-    @NotNull P ban(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException;
+    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException;
 
     /**
      * Returns the most recent valid ban associated with the player having the specified {@link PlayerClient#getTotalID()}.
      * If no valid bans are found, an empty {@link Optional} is returned.
      *
      * <p>
-     * Bans can be applied to players using {@link #ban(UUID, Ban, BanOperator, Component)} or {@link #ban(UUID, Ban, BanOperator)}.
+     * Bans can be applied to players using {@link #punish(UUID, Ban, BanOperator, Component)} or {@link #punish(UUID, Ban, BanOperator)}.
      * </p>
      *
      * <p>
@@ -162,18 +164,18 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * or an empty {@link Optional} if no valid bans are found.
      * @throws NullPointerException if {@code totalID} is null.
      * @see Punishment#isValid()
-     * @see #ban(UUID, Ban, BanOperator, Component)
-     * @see #ban(UUID, Ban, BanOperator)
+     * @see #punish(UUID, Ban, BanOperator, Component)
+     * @see #punish(UUID, Ban, BanOperator)
      * @see #getCurrentBan(UUID, BanType)
      */
-    @NotNull Optional<@Nullable P> getCurrentBan(@NotNull UUID totalID) throws BackendException;
+    @NotNull Optional<P> getCurrentBan(@NotNull UUID totalID) throws BackendException;
 
     /**
      * Returns the most recent valid ban of the specified type associated with the player having the specified {@link PlayerClient#getTotalID()}.
      * If no valid bans of the specified type are found, an empty {@link Optional} is returned.
      *
      * <p>
-     * Bans can be applied to players using {@link #ban(UUID, Ban, BanOperator, Component)} or {@link #ban(UUID, Ban, BanOperator)}.
+     * Bans can be applied to players using {@link #punish(UUID, Ban, BanOperator, Component)} or {@link #punish(UUID, Ban, BanOperator)}.
      * </p>
      *
      * <p>
@@ -187,10 +189,10 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @throws NullPointerException if {@code totalID} or {@code banType} are null.
      * @see Punishment#isValid()
      * @see #getCurrentBan(UUID)
-     * @see #ban(UUID, Ban, BanOperator, Component)
-     * @see #ban(UUID, Ban, BanOperator)
+     * @see #punish(UUID, Ban, BanOperator, Component)
+     * @see #punish(UUID, Ban, BanOperator)
      */
-    @NotNull Optional<@Nullable P> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType) throws BackendException;
+    @NotNull Optional<P> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType) throws BackendException;
 
     /**
      * Returns an unmodifiable set of all the bans associated with the player having the specified {@link PlayerClient#getTotalID()}.

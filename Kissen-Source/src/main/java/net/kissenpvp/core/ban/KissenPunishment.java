@@ -59,7 +59,7 @@ public abstract class KissenPunishment<T> implements Punishment<T> {
     }
 
     @Override
-    public @NotNull Optional<@Nullable Component> getReason() {
+    public @NotNull Optional<Component> getReason() {
         return kissenPunishmentNode.reason()
                 .toOptional()
                 .map(text -> KissenComponentSerializer.getInstance().getMiniSerializer().deserialize(text));
@@ -130,7 +130,7 @@ public abstract class KissenPunishment<T> implements Punishment<T> {
 
     @Override
     public boolean isValid() {
-        return getEnd().filter(end -> System.currentTimeMillis() < end).isPresent();
+        return getEnd().map(end -> System.currentTimeMillis() < end).orElse(true);
     }
 
     @Override

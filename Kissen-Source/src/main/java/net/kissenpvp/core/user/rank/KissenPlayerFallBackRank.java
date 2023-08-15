@@ -43,7 +43,7 @@ public abstract class KissenPlayerFallBackRank<T extends Rank> implements Player
         throw new UnsupportedOperationException();
     }
 
-    @Override public @NotNull Optional<@Nullable Duration> getDuration()
+    @Override public @NotNull Optional<Duration> getDuration()
     {
         throw new UnsupportedOperationException();
     }

@@ -59,7 +59,7 @@ public class KissenPlayerRank<T extends Rank> implements PlayerRank<T> {
     }
 
     @Override
-    public @NotNull Optional<@Nullable Duration> getDuration() {
+    public @NotNull Optional<Duration> getDuration() {
         if (kissenPlayerRankNode.duration().getValue() == null) {
             return Optional.empty();
         }

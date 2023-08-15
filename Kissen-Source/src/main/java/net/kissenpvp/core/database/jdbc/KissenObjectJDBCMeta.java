@@ -113,7 +113,7 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
     }
 
     @Override
-    public @NotNull Optional<@Nullable SavableMap> getData(@NotNull String totalId) {
+    public @NotNull Optional<SavableMap> getData(@NotNull String totalId) {
         Map<String, SavableMap> data = new HashMap<>();
         try {
             data.putAll(processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, totalId, FilterType.EQUALS)));

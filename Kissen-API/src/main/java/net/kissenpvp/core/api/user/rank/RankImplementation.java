@@ -29,7 +29,7 @@ public interface RankImplementation<T extends Rank> extends Implementation
 {
     @NotNull Set<T> getRankSet();
 
-    @NotNull Optional<@Nullable T> getRank(@NotNull String name);
+    @NotNull Optional<T> getRank(@NotNull String name);
 
     @NotNull T createRank(@NotNull String name, @NotNull Map<String, String> data);
 

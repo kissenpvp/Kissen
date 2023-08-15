@@ -43,11 +43,11 @@ public class CommandInfo {
 
     public CommandInfo(@NotNull CommandData commandData) {
         this(
-                commandData.name(),
+                commandData.value(),
                 commandData.aliases(),
                 commandData.description(),
                 commandData.usage(),
-                commandData.permission().isBlank() ? "kissen.command." + commandData.name() : commandData.permission(),
+                commandData.permission().isBlank() ? "kissen.command." + commandData.value() : commandData.permission(),
                 commandData.permissionRequired(),
                 commandData.target(),
                 commandData.runAsync()

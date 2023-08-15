@@ -13,7 +13,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -141,7 +140,7 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull Optional<@Nullable String> getString(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull Optional<String> getString(@NotNull String totalID, @NotNull String key) throws BackendException {
         for (String[] data : execute(getDefaultQuery(totalID, key))) {
             return Optional.ofNullable(data[0]);
         }
@@ -149,82 +148,82 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull Optional<@Nullable String> getString(@NotNull String key) throws BackendException {
+    public @NotNull Optional<String> getString(@NotNull String key) throws BackendException {
         return getString(UNDEFINED, key);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Long> getLong(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull Optional<Long> getLong(@NotNull String totalID, @NotNull String key) throws BackendException {
         return getString(totalID, key).map(Long::parseLong);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Long> getLong(@NotNull String key) throws BackendException {
+    public @NotNull Optional<Long> getLong(@NotNull String key) throws BackendException {
         return getString(key).map(Long::parseLong);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Double> getDouble(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull Optional<Double> getDouble(@NotNull String totalID, @NotNull String key) throws BackendException {
         return getString(totalID, key).map(Double::parseDouble);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Double> getDouble(@NotNull String key) throws BackendException {
+    public @NotNull Optional<Double> getDouble(@NotNull String key) throws BackendException {
         return getString(key).map(Double::parseDouble);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Float> getFloat(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull Optional<Float> getFloat(@NotNull String totalID, @NotNull String key) throws BackendException {
         return getString(totalID, key).map(Float::parseFloat);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Float> getFloat(@NotNull String key) throws BackendException {
+    public @NotNull Optional<Float> getFloat(@NotNull String key) throws BackendException {
         return getString(key).map(Float::parseFloat);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Integer> getInt(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull Optional<Integer> getInt(@NotNull String totalID, @NotNull String key) throws BackendException {
         return getString(totalID, key).map(Integer::parseInt);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Integer> getInt(@NotNull String key) throws BackendException {
+    public @NotNull Optional<Integer> getInt(@NotNull String key) throws BackendException {
         return getString(key).map(Integer::parseInt);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Short> getShort(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull Optional<Short> getShort(@NotNull String totalID, @NotNull String key) throws BackendException {
         return getString(totalID, key).map(Short::parseShort);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Short> getShort(@NotNull String key) throws BackendException {
+    public @NotNull Optional<Short> getShort(@NotNull String key) throws BackendException {
         return getString(key).map(Short::parseShort);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Byte> getByte(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull Optional<Byte> getByte(@NotNull String totalID, @NotNull String key) throws BackendException {
         return getString(totalID, key).map(Byte::parseByte);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Byte> getByte(@NotNull String key) throws BackendException {
+    public @NotNull Optional<Byte> getByte(@NotNull String key) throws BackendException {
         return getString(key).map(Byte::parseByte);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Boolean> getBoolean(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull Optional<Boolean> getBoolean(@NotNull String totalID, @NotNull String key) throws BackendException {
         return getString(totalID, key).map(Boolean::parseBoolean);
     }
 
     @Override
-    public @NotNull Optional<@Nullable Boolean> getBoolean(@NotNull String key) throws BackendException {
+    public @NotNull Optional<Boolean> getBoolean(@NotNull String key) throws BackendException {
         return getString(key).map(Boolean::parseBoolean);
     }
 
     @Override
-    public @NotNull <T extends Record> Optional<@Nullable T> getRecord(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record) throws BackendException {
+    public @NotNull <T extends Record> Optional<T> getRecord(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record) throws BackendException {
         for (String[] data : execute(getDefaultQuery(totalID, key))) {
             return Optional.of(KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(data[0], record));
         }
@@ -232,7 +231,7 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull <T extends Record> Optional<@Nullable T> getRecord(@NotNull String key, @NotNull Class<T> record) throws BackendException {
+    public @NotNull <T extends Record> Optional<T> getRecord(@NotNull String key, @NotNull Class<T> record) throws BackendException {
         return getRecord(UNDEFINED, key, record);
     }
 
@@ -248,17 +247,12 @@ public abstract class KissenBaseMeta implements Meta {
 
     @Override
     public @NotNull @Unmodifiable <T extends Record> List<T> getRecordList(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record) throws BackendException {
-        return Arrays.stream(execute(getDefaultQuery(totalID, key))).flatMap(Arrays::stream).map(data -> KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(data, record)).toList();
+        return getStringList(totalID, key).stream().map(data -> KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(data, record)).toList();
     }
 
     @Override
     public @NotNull @Unmodifiable <T extends Record> List<T> getRecordList(@NotNull String key, @NotNull Class<T> record) throws BackendException {
         return getRecordList(UNDEFINED, key, record);
-    }
-
-    @Override
-    public @NotNull @Unmodifiable List<String> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException {
-        return Arrays.stream(execute(getDefaultQuery(totalID, key))).flatMap(Arrays::stream).toList();
     }
 
     @Override

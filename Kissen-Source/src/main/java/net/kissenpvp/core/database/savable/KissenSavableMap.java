@@ -134,7 +134,7 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
     }
 
     @Override
-    public @NotNull Optional<@Nullable String> get(@NotNull String key) {
+    public @NotNull Optional<String> get(@NotNull String key) {
         return Optional.ofNullable(super.get(key));
     }
 
@@ -153,7 +153,7 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
     }
 
     @Override
-    public @NotNull Optional<@Nullable SavableList> getList(@NotNull String key) {
+    public @NotNull Optional<SavableList> getList(@NotNull String key) {
         if (this.stringArrayListMap.containsKey("_" + key)) {
             SavableList kissenList = new KissenSavableList();
             kissenList.addAll(stringArrayListMap.get("_" + key));

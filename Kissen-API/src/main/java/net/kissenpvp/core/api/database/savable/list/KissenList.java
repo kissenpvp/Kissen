@@ -204,7 +204,7 @@ public interface KissenList<T> extends List<T>
      * @see ListAction
      * @see Optional
      */
-    @NotNull Optional<@Nullable ListAction> getListAction();
+    @NotNull Optional<ListAction> getListAction();
 
     /**
      * Sets the action that should be executed when changing something in the list.

@@ -60,7 +60,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
     }
 
     @Override
-    public void setup(@NotNull String id, @Nullable Map<String, String> meta) throws SavableInitializeException, BackendException {
+    public void setup(@NotNull String id, @Nullable Map<@NotNull String, @NotNull String> meta) throws SavableInitializeException, BackendException {
         super.setId(id);
 
         if (meta == null) {

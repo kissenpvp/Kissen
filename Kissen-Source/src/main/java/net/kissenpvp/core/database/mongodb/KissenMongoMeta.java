@@ -112,13 +112,12 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
     @Override
     public @NotNull @Unmodifiable List<String> getStringList(@NotNull String totalID, @NotNull String key) {
         List<String> strings = new ArrayList<>();
-        FindIterable<Document> documents = getCollection().find(
-                Filters.and(Filters.eq(getTotalIDColumn(), totalID), Filters.eq(getKeyColumn(), key)));
+        FindIterable<Document> documents = getCollection().find(Filters.and(Filters.eq(getTotalIDColumn(), totalID), Filters.eq(getKeyColumn(), key)));
         for (Document element : documents) {
             strings.addAll(element.getList(getValueColumn(), String.class));
             break;
         }
-        KissenCore.getInstance().getLogger().info("Fetch {} from id {}.", key, totalID);
+        KissenCore.getInstance().getLogger().info("Fetch list with id {} and key {}.", totalID, key);
         return strings;
     }
 

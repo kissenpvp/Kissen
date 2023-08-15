@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -85,6 +86,7 @@ public class KissenDataImplementation implements DataImplementation {
                         }
 
                         Map<String, Object> argsMap = new HashMap<>();
+
                         reader.beginObject();
                         while (reader.hasNext()) {
                             String name = reader.nextName();

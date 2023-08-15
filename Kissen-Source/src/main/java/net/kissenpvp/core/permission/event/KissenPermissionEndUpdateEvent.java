@@ -38,7 +38,7 @@ public class KissenPermissionEndUpdateEvent implements PermissionEndUpdateEvent
         this.cancelled = false;
     }
 
-    @Override public @NotNull Optional<@Nullable Long> getEnd()
+    @Override public @NotNull Optional<Long> getEnd()
     {
         return Optional.ofNullable(end);
     }

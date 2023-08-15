@@ -70,7 +70,7 @@ public interface ObjectMeta extends Meta {
      * @param id   the ID of the object to which the data will be added.
      * @param data a map containing the data to be added to the object.
      */
-    void add(@NotNull String id, @NotNull Map<String, String> data) throws BackendException;
+    void add(@NotNull String id, @NotNull final Map<@NotNull String, @NotNull String> data) throws BackendException;
 
     /**
      * Retrieves the data associated with the object identified by the specified total ID.
@@ -84,7 +84,7 @@ public interface ObjectMeta extends Meta {
      * @return an optional SavableMap object containing the data associated with the object, or an empty optional if
      * no data is found.
      */
-    @NotNull Optional<@Nullable SavableMap> getData(@NotNull String totalId) throws BackendException;
+    @NotNull Optional<SavableMap> getData(@NotNull String totalId) throws BackendException;
 
     /**
      * Retrieves the data associated with the specified Savable object.

@@ -39,7 +39,7 @@ public interface PlayerRank<RANK extends Rank> {
 
     long getStart();
 
-    @NotNull Optional<@Nullable Duration> getDuration();
+    @NotNull Optional<Duration> getDuration();
 
     long getEnd();
 

@@ -246,7 +246,7 @@ public interface SavableMap extends Map<String, String>, Serializable {
      * @see Optional
      * @see #getNotNull(String)
      */
-    @NotNull Optional<@Nullable String> get(@NotNull String key);
+    @NotNull Optional<String> get(@NotNull String key);
 
     /**
      * Retrieves the value associated with the given key from the table and returns it as a non-null string.
@@ -364,7 +364,7 @@ public interface SavableMap extends Map<String, String>, Serializable {
      * @throws NullPointerException if the specified key is {@code null}
      * @see SavableList
      */
-    @NotNull Optional<@Nullable SavableList> getList(@NotNull String key);
+    @NotNull Optional<SavableList> getList(@NotNull String key);
 
     /**
      * Retrieves a List of Strings from the table associated with the specified key.

@@ -98,19 +98,19 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     @Override
-    public @NotNull B ban(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException {
-        return ban(ban, banOperator, null);
+    public @NotNull B punish(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException {
+        return punish(ban, banOperator, null);
     }
 
     @Override
-    public @NotNull B ban(@NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException {
+    public @NotNull B punish(@NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException {
         return (B) KissenCore.getInstance()
                 .getImplementation(BanImplementation.class)
-                .ban(getTotalID(), ban, banOperator, reason);
+                .punish(getTotalID(), ban, banOperator, reason);
     }
 
     @Override
-    public @NotNull Optional<@Nullable B> getBan(@NotNull String id) throws BackendException {
+    public @NotNull Optional<B> getBan(@NotNull String id) throws BackendException {
         return getBanHistory().stream().filter(punishment -> punishment.getID().equals(id)).findFirst();
     }
 
@@ -142,12 +142,12 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     @Override
-    public @NotNull Optional<@Nullable Suffix> getSuffix(@NotNull String name) {
+    public @NotNull Optional<Suffix> getSuffix(@NotNull String name) {
         return getSuffixSet().stream().filter(suffix -> suffix.getName().equals(name)).findFirst();
     }
 
     @Override
-    public @NotNull Optional<@Nullable Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
+    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
         SuffixNode suffixNode = new SuffixNode(name, ComponentSerializer.getInstance()
                 .getJsonSerializer()
                 .serialize(content));
@@ -174,7 +174,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     @Override
-    public @NotNull Optional<@Nullable Suffix> getSelectedSuffix() {
+    public @NotNull Optional<Suffix> getSelectedSuffix() {
         return getUser().get("selected_suffix").flatMap(this::getSuffix);
     }
 
