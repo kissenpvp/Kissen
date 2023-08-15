@@ -1,0 +1,895 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Tue, 15 Aug 2023 19:13:02 +0200
+Subject: [PATCH] Remove unused and refactor methods in KissenPaper API
+
+Removed unused KissenPaperBan.java and improved code clarity across multiple files including:
+
+1. Refactored method names to improve clarity and maintain naming convention. For example, from getCommandExecutor() to obtainCommandExecutor().
+2. Reduce optional usage by nullability annotations.
+3. Added backend exception handling in ServerLoginPacketListener to avoid failed login due to backend issues.
+4. Remove redundant permissions checks and replaced some with a more efficient solution.
+5. Introduced consolidating if block for better readability.
+
+These changes are intended to improve the readability of the codebase and maintain a coherent code structure, facilitating easier maintenance in the future.
+
+diff --git a/src/main/java/net/kissenpvp/paper/KissenPaperBan.java b/src/main/java/net/kissenpvp/paper/KissenPaperBan.java
+deleted file mode 100644
+index d95f9404e4bff52abb2440d9ea496bcb20063320..0000000000000000000000000000000000000000
+--- a/src/main/java/net/kissenpvp/paper/KissenPaperBan.java
++++ /dev/null
+@@ -1,13 +0,0 @@
+-package net.kissenpvp.paper;
+-
+-import net.kissenpvp.core.api.networking.socket.DataPackage;
+-import net.kissenpvp.core.ban.KissenBan;
+-import net.kissenpvp.paper.api.ban.PaperBan;
+-import org.jetbrains.annotations.NotNull;
+-
+-public class KissenPaperBan extends KissenBan implements PaperBan {
+-    @Override
+-    public void sendData(@NotNull DataPackage dataPackage) {
+-        //TODO
+-    }
+-}
+diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
+index 88a08eac7ce71eb9a15248dbd73ff51da1917a89..e5714c4567eae204da576b5ec8d8d366213c6ce8 100644
+--- a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
++++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
+@@ -8,13 +8,14 @@ import net.kissenpvp.core.api.database.meta.ObjectMeta;
+ import net.kissenpvp.core.api.database.savable.SavableMap;
+ import net.kissenpvp.core.ban.KissenBanImplementation;
+ import net.kissenpvp.core.ban.KissenPunishmentNode;
+-import net.kissenpvp.paper.KissenPaperBan;
+ import net.kissenpvp.paper.api.ban.PaperBan;
+ import net.kissenpvp.paper.api.ban.PaperBanImplementation;
+ import net.kissenpvp.paper.api.ban.PaperPunishment;
+ import net.kissenpvp.paper.api.base.Context;
+ import net.kyori.adventure.text.Component;
+ import org.bukkit.Bukkit;
++import org.bukkit.entity.Player;
++import org.bukkit.event.player.PlayerKickEvent;
+ import org.jetbrains.annotations.Contract;
+ import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
+@@ -28,12 +29,22 @@ import java.util.stream.Stream;
+ public class KissenPaperBanImplementation extends KissenBanImplementation<PaperBan, PaperPunishment> implements PaperBanImplementation {
+ 
+     @Override
+-    protected @NotNull @Unmodifiable Set<PaperBan> fetchCache() throws BackendException {
+-        return Stream.concat(
+-                        // get global
+-                        getMeta().getData(new KissenPaperBan()).values().stream().map(banProcessor()),
+-                        // get local
+-                        getMeta(Context.LOCAL).getData(new KissenPaperBan()).values().stream().map(banProcessor()))
++    public void applyBan(@NotNull PaperPunishment ban) {
++        ban.getOnlineAffectedPlayers().forEach(player -> applyBan(ban, player));
++    }
++
++    private void applyBan(@NotNull PaperPunishment ban, @NotNull Player player) {
++        switch (ban.getBanType())
++        {
++            case BAN -> player.kick(Component.translatable("multiplayer.disconnect.banned"), PlayerKickEvent.Cause.BANNED);
++            case KICK -> player.kick(Component.translatable("multiplayer.disconnect.kicked"), PlayerKickEvent.Cause.KICK_COMMAND);
++            case MUTE -> player.sendMessage(Component.translatable("chat.filtered_full"));
++        }
++    }
++
++    @Override
++    protected @NotNull @Unmodifiable Set<PaperBan> obtainBanSet() throws BackendException {
++        return Stream.concat(queryBanStream(getMeta()), queryBanStream(getMeta(Context.LOCAL)))
+                 .filter(Objects::nonNull)
+                 .collect(Collectors.toSet());
+     }
+@@ -44,7 +55,7 @@ public class KissenPaperBanImplementation extends KissenBanImplementation<PaperB
+     }
+ 
+     @Override
+-    protected @NotNull PaperBan constructBan(int id, @NotNull Map<String, String> data) throws BackendException {
++    protected @NotNull PaperBan buildBan(int id, @NotNull Map<String, String> data) throws BackendException {
+         KissenPaperBan kissenPaperBan = new KissenPaperBan();
+         kissenPaperBan.setup(String.valueOf(id), data);
+         return kissenPaperBan;
+@@ -74,18 +85,18 @@ public class KissenPaperBanImplementation extends KissenBanImplementation<PaperB
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable PaperPunishment> getCurrentBan(@NotNull UUID totalID, Context context) throws BackendException {
++    public @NotNull Optional<PaperPunishment> getCurrentBan(@NotNull UUID totalID, Context context) throws BackendException {
+         return getCurrentBan(totalID, getMeta(context));
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable PaperPunishment> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType, Context context) throws BackendException {
++    public @NotNull Optional<PaperPunishment> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType, Context context) throws BackendException {
+         return getCurrentBan(totalID, banType, getMeta(context));
+     }
+ 
+     @Override
+-    public @NotNull PaperPunishment ban(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @Nullable Component reason, @NotNull Context context) throws BackendException {
+-        return ban(totalID, ban, banOperator, reason, getMeta(context));
++    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @Nullable Component reason, @NotNull Context context) throws BackendException {
++        return punish(totalID, ban, banOperator, reason, getMeta(context));
+     }
+ 
+     /**
+@@ -101,6 +112,37 @@ public class KissenPaperBanImplementation extends KissenBanImplementation<PaperB
+         };
+     }
+ 
++    /**
++     * Queries the ban stream based on the given meta information.
++     * <p>
++     * This method performs a database operation under the hood to fetch a stream of PaperBan
++     * instances. The query operates on the foundations of the supplied meta information. This
++     * metaobject encapsulates essential data that directs the query towards the appropriate
++     * dataset within the database.
++     * <p>
++     * A stream interface is being utilized here due to its advantages in handling large datasets.
++     * It works by loading data on-demand, instead of loading it all at once into memory, making the
++     * process more efficient.
++     * <p>
++     * The function will map over the values returned from the database query by utilizing the
++     * banProcessor() function on each element, further processing the raw data into PaperBan
++     * objects that the application can interact with.
++     * <p>
++     * An important factor to note is that this method throws a BackendException. This exception
++     * is thrown if there are issues encountered when querying the ban stream from the database,
++     * such as connection problems, invalid query syntax.
++     *
++     * @param meta The meta information containing the data to query. This is an instance of
++     *             ObjectMeta which encapsulates the query parameters.
++     * @return The ban stream based on the given meta information. Takes form as a stream of
++     * PaperBan objects each representing a unique ban instance.
++     * @throws BackendException If there is an error querying the ban stream, this exception
++     *                          will be thrown. It signifies an issue with the backend operation.
++     */
++    private @NotNull Stream<PaperBan> queryBanStream(@NotNull ObjectMeta meta) throws BackendException {
++        return meta.getData(new KissenPaperBan()).values().stream().map(banProcessor());
++    }
++
+     /**
+      * Retrieves the ban processor function, which processes a SavableMap and returns a PaperBan.
+      *
+@@ -112,7 +154,9 @@ public class KissenPaperBanImplementation extends KissenBanImplementation<PaperB
+             try {
+                 return createBan(Integer.parseInt(savableMap.getNotNull("id")), savableMap);
+             } catch (BackendException | NumberFormatException exception) {
+-                Bukkit.getKissen().getLogger().error("Error parsing ban entry with id {}.", savableMap.getNotNull("id"), exception);
++                Bukkit.getKissen()
++                        .getLogger()
++                        .error("Error parsing ban entry with id {}.", savableMap.getNotNull("id"), exception);
+             }
+             return null;
+         };
+diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperMinecraftBan.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperMinecraftBan.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..58b72f93b902c177f152855e4ed232847f8dfe29
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperMinecraftBan.java
+@@ -0,0 +1,63 @@
++package net.kissenpvp.paper.ban;
++
++import net.kissenpvp.core.api.ban.Ban;
++import net.kissenpvp.core.api.ban.BanType;
++import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.api.event.EventCancelledException;
++import net.kissenpvp.paper.api.ban.PaperBan;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.time.Duration;
++import java.util.Optional;
++
++public class KissenPaperMinecraftBan implements PaperBan {
++
++    private final String name;
++    private final Duration duration;
++
++    public KissenPaperMinecraftBan(@NotNull String name, @Nullable Duration duration) {
++        this.name = name;
++        this.duration = duration;
++    }
++
++    @Override
++    public int getID() {
++        return 0;
++    }
++
++    @Override
++    public @NotNull String getName() {
++        return name;
++    }
++
++    @Override
++    public void setName(@NotNull String name) throws EventCancelledException {
++        throw new EventCancelledException();
++    }
++
++    @Override
++    public @NotNull BanType getBanType() {
++        return BanType.BAN;
++    }
++
++    @Override
++    public void setBanType(@NotNull BanType banType) throws EventCancelledException {
++        throw new EventCancelledException();
++    }
++
++    @Override
++    public @NotNull Optional<Duration> getDuration() {
++        return Optional.ofNullable(duration);
++    }
++
++    @Override
++    public void setDuration(@Nullable Duration duration) throws EventCancelledException {
++        throw new EventCancelledException();
++    }
++
++    @Override
++    public int delete() throws BackendException {
++        throw new BackendException(new EventCancelledException());
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
+index bc44ae33411463743eeb9b6a148a3d2d1cca68c0..ecc22afc6f022de0ba42e5c19d5aef35ed1dbbeb 100644
+--- a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
++++ b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
+@@ -1,10 +1,8 @@
+ package net.kissenpvp.paper.command;
+ 
+-import net.kissenpvp.core.api.command.CommandPayload;
+ import net.kissenpvp.core.api.command.annotations.CommandData;
+ import net.kissenpvp.core.api.command.annotations.TabCompleter;
+ import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
+-import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
+ import net.kissenpvp.core.base.KissenImplementation;
+ import net.kissenpvp.core.command.KissenCommandImplementation;
+ import net.kissenpvp.core.command.argument.MethodEvaluator;
+@@ -31,8 +29,6 @@ import org.jetbrains.annotations.NotNull;
+ 
+ import java.lang.reflect.Method;
+ import java.text.MessageFormat;
+-import java.util.Collection;
+-import java.util.List;
+ import java.util.Optional;
+ 
+ /**
+@@ -97,6 +93,12 @@ public class KissenPaperCommandImplementation extends KissenCommandImplementatio
+         return super.start();
+     }
+ 
++    @Override
++    public void setupComplete() {
++        registerCommand(new TestCommand());
++        KissenImplementation.super.setupComplete();
++    }
++
+     @Override
+     public @NotNull Optional<KissenCommand> getCommand(@NotNull String name) {
+         Command command = getCommandMap().getCommand(name);
+@@ -172,7 +174,7 @@ public class KissenPaperCommandImplementation extends KissenCommandImplementatio
+     private void injectObjectMethod(@NotNull Plugin plugin, @NotNull Object object, @NotNull Method method) {
+         final CommandData command = method.getAnnotation(CommandData.class);
+         if (command != null) {
+-            KissenPaperPluginCommand kissenPaperPluginCommand = buildCommand(plugin, command.name());
++            KissenPaperPluginCommand kissenPaperPluginCommand = buildCommand(plugin, command.value());
+             kissenPaperPluginCommand.initCommand(command, new KissenPaperCommandExecutor(method, object));
+         }
+ 
+@@ -185,7 +187,7 @@ public class KissenPaperCommandImplementation extends KissenCommandImplementatio
+     private void injectObjectMethod(@NotNull Object object, @NotNull Method method) {
+         final CommandData command = method.getAnnotation(CommandData.class);
+         if (command != null) {
+-            KissenPaperCommand kissenPaperCommand = buildCommand(command.name());
++            KissenPaperCommand kissenPaperCommand = buildCommand(command.value());
+             kissenPaperCommand.initCommand(command, new KissenPaperCommandExecutor(method, object));
+         }
+ 
+diff --git a/src/main/java/net/kissenpvp/paper/command/TestCommand.java b/src/main/java/net/kissenpvp/paper/command/TestCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..43496d9213db9ca43dd0bc15016e9684699bfc51
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/command/TestCommand.java
+@@ -0,0 +1,38 @@
++package net.kissenpvp.paper.command;
++
++import net.kissenpvp.core.api.ban.Ban;
++import net.kissenpvp.core.api.ban.BanOperator;
++import net.kissenpvp.core.api.ban.BanType;
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.annotations.CommandData;
++import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.paper.api.ban.PaperBanImplementation;
++import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
++import net.kyori.adventure.text.Component;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++
++public class TestCommand
++{
++
++    @CommandData("test")
++    public boolean command(CommandPayload<CommandSender> commandPayload) {
++
++        PaperBanImplementation paperBanImplementation = Bukkit.getKissen().getImplementation(PaperBanImplementation.class);
++        try {
++            Ban ban = paperBanImplementation.createBan(0, "Hacking", BanType.MUTE);
++            ((PaperPlayerClient) commandPayload.getSender()).punish(ban, new BanOperator() {
++                @Override
++                public @NotNull Component displayName() {
++                    return Component.text("Console");
++                }
++            });
++        } catch (BackendException backendException) {
++            backendException.printStackTrace();
++        }
++
++
++        return true;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
+index 5141ab53499ef6a876aae40b7347ca63a01030bd..d0b072ce6409a2e47c51491dca7813353a3274f4 100644
+--- a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
++++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
+@@ -33,10 +33,6 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+     private CommandExecutor<CommandSender> commandExecutor;
+     private TabCompleterExecutor<CommandSender> tabExecutor;
+ 
+-    protected @NotNull CommandExecutor<CommandSender> getCommandExecutor() {
+-        return commandExecutor;
+-    }
+-
+     /**
+      * Constructs a new {@link KissenPaperAbstractCommand} instance with the provided plugin, name, and position.
+      * <p>
+@@ -52,6 +48,10 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+         this.children = new ArrayList<>();
+     }
+ 
++    protected @NotNull CommandExecutor<CommandSender> getCommandExecutor() {
++        return commandExecutor;
++    }
++
+     @Override
+     public int getPosition() {
+         return position;
+@@ -98,7 +98,7 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+ 
+         final KissenPaperCommandPayload kissenPaperCommandPayload = new KissenPaperCommandPayload(commandLabel, sender, getTargetValidator().parseSender(sender), args, this);
+ 
+-        if(commandInfo.isAsync()) {
++        if (commandInfo.isAsync()) {
+             runAsync(kissenPaperCommandPayload);
+             return true;
+         }
+@@ -115,8 +115,7 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+             return result;
+         }
+ 
+-        if (!(result = obtainChildrenTabSuggestions(sender, alias, args).orElse(obtainTabSuggestions(sender, args, new KissenPaperCommandPayload(alias, sender, getTargetValidator().parseSender(sender), args, this)))).isEmpty())
+-        {
++        if (!(result = obtainChildrenTabSuggestions(sender, alias, args).orElse(obtainTabSuggestions(sender, args, new KissenPaperCommandPayload(alias, sender, getTargetValidator().parseSender(sender), args, this)))).isEmpty()) {
+             return result;
+         }
+ 
+@@ -209,13 +208,11 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+             nextSubCommand = subName;
+         }
+ 
+-        return getChildCommand(nextSubCommand).orElseGet(() ->
+-                {
+-                    C kissenPaperChildCommand = createChildCommand(nextSubCommand, KissenPaperAbstractCommand.this);
+-                    children.add(kissenPaperChildCommand);
+-                    return kissenPaperChildCommand;
+-                })
+-                .createRecursive(subName);
++        return getChildCommand(nextSubCommand).orElseGet(() -> {
++            C kissenPaperChildCommand = createChildCommand(nextSubCommand, KissenPaperAbstractCommand.this);
++            children.add(kissenPaperChildCommand);
++            return kissenPaperChildCommand;
++        }).createRecursive(subName);
+     }
+ 
+ 
+@@ -292,14 +289,13 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+      * the method returns an empty Optional.</p>
+      *
+      * @param sender The initiator of the command, used to provide context for the child command's tab completion
+-     * @param alias The used alias of the command, provided to offer context for child command's tab completion
+-     * @param args An array encapsulating the arguments inputted by the sender, used to deduce the corresponding child command and to provide
+-     *             content to the child command's tab completion
++     * @param alias  The used alias of the command, provided to offer context for child command's tab completion
++     * @param args   An array encapsulating the arguments inputted by the sender, used to deduce the corresponding child command and to provide
++     *               content to the child command's tab completion
+      * @return An Optional encapsulating a List of Strings which, if present, includes tab completion suggestions derived from the relevant child command
+      */
+     private @NotNull Optional<List<String>> obtainChildrenTabSuggestions(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
+-        if(args.length > 1)
+-        {
++        if (args.length > 1) {
+             return getChildCommand(args[args.length - 2]).map(commandHolders -> commandHolders.tabComplete(sender, alias, Arrays.copyOfRange(args, 1, args.length)));
+         }
+         return Optional.empty();
+@@ -319,15 +315,13 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+      *
+      * <p>The collected suggestions are sorted in ascending order (case-insensitive) and returned as a list.</p>
+      *
+-     * @param sender            The sender of the command. It serves as a reference for permission checks and establishes context for suggestion generation.
+-     * @param args              An array containing the arguments provided by the sender. It is used in the obtainAutoSuggestions method to generate relevant command completions.
++     * @param sender                      The sender of the command. It serves as a reference for permission checks and establishes context for suggestion generation.
++     * @param args                        An array containing the arguments provided by the sender. It is used in the obtainAutoSuggestions method to generate relevant command completions.
+      * @param commandSenderCommandPayload A CommandPayload object encapsulating command related data. It is passed to either the tabExecutor or the obtainAutoSuggestions method for further processing.
+      * @return A List of Strings representing possible command completions. The list is sorted in case-insensitive order.
+      */
+     private @NotNull List<String> obtainTabSuggestions(@NotNull CommandSender sender, @NotNull String @NotNull [] args, CommandPayload<CommandSender> commandSenderCommandPayload) {
+-        List<String> suggestions = new ArrayList<>(tabExecutor != null ?
+-                tabExecutor.execute(commandSenderCommandPayload) :
+-                obtainAutoSuggestions(sender, args, commandSenderCommandPayload));
++        List<String> suggestions = new ArrayList<>(tabExecutor != null ? tabExecutor.execute(commandSenderCommandPayload) : obtainAutoSuggestions(sender, args, commandSenderCommandPayload));
+         suggestions.sort(String.CASE_INSENSITIVE_ORDER);
+         return suggestions;
+     }
+@@ -339,15 +333,15 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+      * of child commands and the command executor (if applicable).</p>
+      *
+      * <p>The method starts by checking if any child commands exist and whether the command sender has supplied any arguments.
+-
++     *
+      * <p>Moreover, if the a command executor belongs to instance of KissenPaperCommandExecutor, the evaluator corresponding to
+      * the user's current command is retrieved based on the number of arguments provided by the sender. The argument parser from the
+      * evaluator then provides tab completion options based on the context of the sender's current command. These options are also added to the
+      * list of auto suggestions provided.</p>
+      *
+-     * @param sender The identifier of the command, used to check permissions and providing command context to the command executor and tab completion options
+-     * @param args An array of arguments that command sender provided, used to find the next expected argument in the child command
+-     *             and to find the last argument for comparison with child command names
++     * @param sender                      The identifier of the command, used to check permissions and providing command context to the command executor and tab completion options
++     * @param args                        An array of arguments that command sender provided, used to find the next expected argument in the child command
++     *                                    and to find the last argument for comparison with child command names
+      * @param commandSenderCommandPayload A command payload object containing context for the command sender, arguments and other command-related data.
+      *                                    It is used to get the completion options from the evaluator's command argument parser.
+      * @return A List of Strings populated with auto suggestions for the user's current command input
+@@ -365,9 +359,16 @@ public abstract class KissenPaperAbstractCommand<C extends KissenPaperAbstractCo
+             }
+         }
+ 
+-        if(getCommandExecutor() instanceof KissenPaperCommandExecutor kissenPaperCommandExecutor)
+-        {
+-            suggestions.addAll(kissenPaperCommandExecutor.getEvaluator().arguments().get(commandSenderCommandPayload.getArgumentCount()).argumentParser().tabCompletion(commandSenderCommandPayload));
++        if (getCommandExecutor() instanceof KissenPaperCommandExecutor kissenPaperCommandExecutor) {
++            if (kissenPaperCommandExecutor.getEvaluator()
++                    .arguments()
++                    .size() >= commandSenderCommandPayload.getArgumentCount()) {
++                suggestions.addAll(kissenPaperCommandExecutor.getEvaluator()
++                        .arguments()
++                        .get(commandSenderCommandPayload.getArgumentCount())
++                        .argumentParser()
++                        .tabCompletion(commandSenderCommandPayload));
++            }
+         }
+         return suggestions;
+     }
+diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
+index 22e74569d37226f14f5e9a4742a7c0fc614d7ef8..ec4afed7640dceaaeadaba015edbcf0d33a0eb15 100644
+--- a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
++++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
+@@ -73,23 +73,23 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<PaperPe
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable Suffix> getSuffix(@NotNull String name) {
++    public @NotNull Optional<Suffix> getSuffix(@NotNull String name) {
+         return getSuffix(name, Context.LOCAL).or(() -> super.getSuffix(name));
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable Suffix> getSuffix(@NotNull String name, @NotNull Context context) {
++    public @NotNull Optional<Suffix> getSuffix(@NotNull String name, @NotNull Context context) {
+         return Optional.empty(); //TODO
+     }
+ 
+ 
+     @Override
+-    public @NotNull Optional<@Nullable Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
++    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
+         return setSuffix(name, content, Context.LOCAL);
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable Suffix> setSuffix(@NotNull String name, @NotNull Component content, Context context) {
++    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content, Context context) {
+         return Optional.empty(); //TODO
+     }
+ 
+@@ -182,7 +182,7 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<PaperPe
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable PaperPermission> getPermission(@NotNull String permission) {
++    public @NotNull Optional<PaperPermission> getPermission(@NotNull String permission) {
+         return getPermissionContext().getPermission(permission);
+     }
+ 
+@@ -317,7 +317,7 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<PaperPe
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable PaperPermission> getPermission(@NotNull String permission, @NotNull Context context) {
++    public @NotNull Optional<PaperPermission> getPermission(@NotNull String permission, @NotNull Context context) {
+         return getPermissionContext().getPermission(permission, context);
+     }
+ 
+diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java
+index 8007f48fce05228e22e0c9170262517c3e1211e4..27e3920dabaa4b11dd4edd177974774c961c963c 100644
+--- a/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java
++++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java
+@@ -122,13 +122,13 @@ public interface KissenPaperGroupablePermissionEntry extends PaperGroubablePermi
+     }
+ 
+     @Override
+-    default @NotNull Optional<@Nullable PaperPermission> getPermission(@NotNull String s) {
++    default @NotNull Optional<PaperPermission> getPermission(@NotNull String s) {
+         return getPermission(s, Context.LOCAL).or(() -> getPermission(s, Context.GLOBAL));
+     }
+ 
+     @Override
+     @NotNull
+-    default Optional<@Nullable PaperPermission> getPermission(@NotNull String permission, @NotNull Context context) {
++    default Optional<PaperPermission> getPermission(@NotNull String permission, @NotNull Context context) {
+         return getPermissionEntry(context).getPermission(permission);
+     }
+ 
+diff --git a/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java
+index 21636a1ec24219d91bd859c2719f824d4c6e9759..bba64c7c3a28b51d33a6b37e909a71b781df6578 100644
+--- a/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java
++++ b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java
+@@ -216,7 +216,7 @@ public class KissenPaperPermissionGroup extends KissenPaperPermissible implement
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable PaperPermission> getPermission(@NotNull String permission, @NotNull Context context) {
++    public @NotNull Optional<PaperPermission> getPermission(@NotNull String permission, @NotNull Context context) {
+         return getCoreGroup(context).getPermission(permission);
+     }
+ 
+diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
+index 948672d012df2da64a9649a7fe76ae168adac240..b99bcfe1787035c5fadd3b08411a3cf3ff852725 100644
+--- a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
++++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
+@@ -27,7 +27,6 @@ public class KissenPaperPublicUser extends KissenPublicUser<PaperPermission> {
+ 
+     public KissenPaperPublicUser(@Nullable UUID uuid, @Nullable String name) throws BackendException {
+         super(uuid, name);
+-        getPrivateUserEntry(); // Load private user in authenticator to prevent server thread overload
+     }
+ 
+     @Override
+diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
+index fddf701b18b40604709780375ded85fffabbac04..0e677c948ddfc9e1dd262613b9b2315825df4bbf 100644
+--- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
++++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
+@@ -4,9 +4,18 @@ import com.google.common.primitives.Ints;
+ import com.mojang.authlib.GameProfile;
+ import com.mojang.authlib.exceptions.AuthenticationUnavailableException;
+ import com.mojang.logging.LogUtils;
++import io.papermc.paper.adventure.PaperAdventure;
++import net.kissenpvp.core.api.ban.BanType;
++import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.base.KissenCore;
+ import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
+ import net.kissenpvp.core.user.KissenUserImplementation;
++import net.kissenpvp.paper.api.ban.PaperBanImplementation;
++import net.kissenpvp.paper.api.ban.PaperPunishment;
++import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
+ import net.kissenpvp.paper.user.KissenPaperPublicUser;
++import net.kyori.adventure.text.TextComponent;
++import net.kyori.adventure.translation.GlobalTranslator;
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.core.UUIDUtil;
+ import net.minecraft.network.Connection;
+@@ -25,6 +34,7 @@ import org.apache.commons.lang3.Validate;
+ import org.bukkit.Bukkit;
+ import org.bukkit.craftbukkit.util.Waitable;
+ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
++import org.bukkit.event.player.PlayerLoginEvent;
+ import org.bukkit.event.player.PlayerPreLoginEvent;
+ import org.slf4j.Logger;
+ 
+@@ -35,7 +45,8 @@ import java.net.InetAddress;
+ import java.net.InetSocketAddress;
+ import java.net.SocketAddress;
+ import java.security.PrivateKey;
+-import java.util.UUID;
++import java.text.DateFormat;
++import java.util.*;
+ import java.util.concurrent.atomic.AtomicInteger;
+ // CraftBukkit end
+ 
+@@ -376,6 +387,10 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+     // Spigot start
+     public class LoginHandler {
+ 
++        /**
++         * Fires the necessary events during the login process.
++         * @throws Exception if an exception occurs during the process
++         */
+         public void fireEvents() throws Exception {
+             // Paper start - Velocity support
+             if (ServerLoginPacketListenerImpl.this.velocityLoginMessageId == -1 && io.papermc.paper.configuration.GlobalConfiguration.get().proxies.velocity.enabled) {
+@@ -385,10 +400,36 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+             // Paper end
+ 
+             // KissenPaper start
+-            KissenPaperPublicUser kissenPaperPublicUser = new KissenPaperPublicUser(gameProfile.getId(), gameProfile.getName());
+-            if(!Bukkit.getKissen().getImplementation(KissenUserImplementation.class).loadUser(kissenPaperPublicUser))
+-            {
+-                disconnect("Error when logging you in."); //TODO better message
++
++            try {
++                KissenPaperPublicUser kissenPaperPublicUser = new KissenPaperPublicUser(gameProfile.getId(), gameProfile.getName());
++                if(!Bukkit.getKissen().getImplementation(KissenUserImplementation.class).loadUser(kissenPaperPublicUser))
++                {
++                    disconnect("Error when logging you in."); //TODO better message
++                    return;
++                }
++
++                PaperBanImplementation paperBanImplementation = KissenCore.getInstance().getImplementation(PaperBanImplementation.class);
++                Optional<PaperPunishment> paperPunishment = paperBanImplementation.getCurrentBan(UUID.fromString(kissenPaperPublicUser.get("total_id").orElse(kissenPaperPublicUser.getRawID())), BanType.BAN);
++                if(paperPunishment.isPresent())
++                {
++                    net.kyori.adventure.text.Component banMessage = paperPunishment.get().getReason().map((reason) -> net.kyori.adventure.text.Component.translatable("multiplayer.disconnect.banned.reason", reason)).orElse(net.kyori.adventure.text.Component.translatable("multiplayer.disconnect.banned"));
++
++                    if(paperPunishment.get().getEnd().isPresent())
++                    {
++                        KissenPaperLocalizationImplementation kissenPaperLocalizationImplementation = Bukkit.getKissen().getImplementation(KissenPaperLocalizationImplementation.class);
++                        Locale locale = kissenPaperLocalizationImplementation.getLocale(kissenPaperPublicUser.get("forced_language").orElse(kissenPaperPublicUser.get("language").orElse(kissenPaperLocalizationImplementation.getDefaultLocale().toString().toLowerCase())));
++                        DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, locale);
++                        banMessage = banMessage.append(net.kyori.adventure.text.Component.newline()).append(net.kyori.adventure.text.Component.translatable("multiplayer.disconnect.banned.expiration", net.kyori.adventure.text.Component.text(dateFormat.format(new Date(paperPunishment.get().getEnd().get())))));
++                    }
++
++                    disconnect(PaperAdventure.asVanilla(banMessage));
++                    return;
++                }
++
++                kissenPaperPublicUser.getPrivateUserEntry(); // load private user
++            } catch (BackendException backendException) {
++                disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
+                 return;
+             }
+             // KissenPaper end
+diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
+index 7d0b3d7bdfd4ffde2604b5d8e4039364f1414432..f10100de336b50085590f576e8470c683ea93528 100644
+--- a/src/main/java/net/minecraft/server/players/PlayerList.java
++++ b/src/main/java/net/minecraft/server/players/PlayerList.java
+@@ -10,10 +10,13 @@ import com.mojang.serialization.DataResult;
+ import com.mojang.serialization.Dynamic;
+ import io.netty.buffer.Unpooled;
+ import io.papermc.paper.adventure.PaperAdventure;
++import net.kissenpvp.core.api.ban.BanType;
++import net.kissenpvp.core.api.database.meta.BackendException;
+ import net.kissenpvp.core.base.KissenCore;
+ import net.kissenpvp.core.message.KissenComponentSerializer;
+ import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
+ import net.kissenpvp.core.user.KissenUserImplementation;
++import net.kissenpvp.paper.api.ban.PaperBanImplementation;
+ import net.minecraft.ChatFormatting;
+ import net.minecraft.FileUtil;
+ import net.minecraft.commands.CommandSourceStack;
+@@ -687,7 +690,25 @@ public abstract class PlayerList {
+         ServerPlayer entity = new ServerPlayer(this.server, this.server.getLevel(Level.OVERWORLD), gameprofile);
+         Player player = entity.getBukkitEntity();
+         PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
++        // KissenPaper start - moved ban system
++        // return this.players.size() >= this.maxPlayers && !this.canBypassPlayerLimit(gameprofile) ? IChatBaseComponent.translatable("multiplayer.disconnect.server_full") : null;
++        if (this.players.size() >= this.maxPlayers && !this.canBypassPlayerLimit(gameprofile)) {
+ 
++            // KissenPaper start
++            String serverFullMessage = KissenComponentSerializer.getInstance()
++                    .getLegacySerializer()
++                    .serialize(KissenCore.getInstance()
++                            .getImplementation(KissenLocalizationImplementation.class)
++                            .translate("messages.server.disconnect.server-full", entityplayer.getBukkitEntity().getCurrentLocale()));
++            // KissenPaper end
++
++            event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection()
++                    .deserialize(/* KissenPaper */ serverFullMessage)); // Spigot // Paper - Adventure
++
++            //event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.serverFullMessage)); // Spigot // Paper - Adventure
++        }
++
++        /*
+         // Paper start - Fix MC-158900
+         UserBanListEntry gameprofilebanentry;
+         if (getBans().isBanned(gameprofile) && (gameprofilebanentry = getBans().get(gameprofile)) != null) {
+@@ -700,7 +721,7 @@ public abstract class PlayerList {
+ 
+             // return chatmessage;
+             event.disallow(PlayerLoginEvent.Result.KICK_BANNED, PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
+-        } else if (!this.isWhiteListed(gameprofile, event)) { // Paper
++        } if (!this.isWhiteListed(gameprofile, event)) { // Paper
+             //ichatmutablecomponent = Component.translatable("multiplayer.disconnect.not_whitelisted"); // Paper
+             //event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.whitelistMessage)); // Spigot // Paper - Adventure - moved to isWhitelisted
+         } else if (this.getIpBans()
+@@ -729,11 +750,12 @@ public abstract class PlayerList {
+                 // KissenPaper end
+ 
+                 event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection()
+-                        .deserialize(/* KissenPaper */ serverFullMessage)); // Spigot // Paper - Adventure
++                        .deserialize(serverFullMessage)); // Spigot // Paper - Adventure
+ 
+                 //event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.serverFullMessage)); // Spigot // Paper - Adventure
+             }
+-        }
++        }*/
++        // KissenPaper end
+ 
+         this.cserver.getPluginManager().callEvent(event);
+         if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+index d8756720df8a0a0bb515834c506f7e8231eafbc6..6f72330682fdd2084dd020df81c5bcba4c969a4b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+@@ -623,17 +623,17 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     }
+ 
+     @Override
+-    public @NotNull PaperPunishment ban(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException {
+-        return kissenPaperPlayerClient.ban(ban, banOperator);
++    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException {
++        return kissenPaperPlayerClient.punish(ban, banOperator);
+     }
+ 
+     @Override
+-    public @NotNull PaperPunishment ban(@NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException {
+-        return kissenPaperPlayerClient.ban(ban, banOperator, reason);
++    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException {
++        return kissenPaperPlayerClient.punish(ban, banOperator, reason);
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable PaperPunishment> getBan(@NotNull String id) throws BackendException {
++    public @NotNull Optional<PaperPunishment> getBan(@NotNull String id) throws BackendException {
+         return kissenPaperPlayerClient.getBan(id);
+     }
+ 
+@@ -658,12 +658,12 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable Suffix> getSuffix(@NotNull String name) {
++    public @NotNull Optional<Suffix> getSuffix(@NotNull String name) {
+         return kissenPaperPlayerClient.getSuffix(name);
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
++    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
+         return kissenPaperPlayerClient.setSuffix(name, content);
+     }
+ 
+@@ -673,7 +673,7 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable Suffix> getSelectedSuffix() {
++    public @NotNull Optional<Suffix> getSelectedSuffix() {
+         return kissenPaperPlayerClient.getSelectedSuffix();
+     }
+ 
+@@ -738,12 +738,12 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable Suffix> getSuffix(@NotNull String name, @NotNull Context context) {
++    public @NotNull Optional<Suffix> getSuffix(@NotNull String name, @NotNull Context context) {
+         return kissenPaperPlayerClient.getSuffix(name, context);
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable Suffix> setSuffix(@NotNull String name, @NotNull Component content, Context context) {
++    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content, Context context) {
+         return kissenPaperPlayerClient.setSuffix(name, content, context);
+     }
+ 
+@@ -888,7 +888,7 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable PaperPermission> getPermission(@NotNull String permission) {
++    public @NotNull Optional<PaperPermission> getPermission(@NotNull String permission) {
+         return kissenPaperPlayerClient.getPermission(permission);
+     }
+ 
+@@ -943,7 +943,7 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     }
+ 
+     @Override
+-    public @NotNull Optional<@Nullable PaperPermission> getPermission(@NotNull String permission, @NotNull Context context) {
++    public @NotNull Optional<PaperPermission> getPermission(@NotNull String permission, @NotNull Context context) {
+         return kissenPaperPlayerClient.getPermission(permission, context);
+     }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index 3cc67746a6920d81914fde816bc823d794e14fee..c84431d2205675cc31a1bc8d64ff91cb2b8ec463 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -24,8 +24,8 @@ import net.kissenpvp.core.api.user.suffix.Suffix;
+ import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
+ import net.kissenpvp.core.api.user.usersetttings.UserSetting;
+ import net.kissenpvp.core.base.KissenCore;
+-import net.kissenpvp.core.user.KissenPublicUser;
+ import net.kissenpvp.core.user.KissenUserImplementation;
++import net.kissenpvp.paper.api.ban.PaperBanImplementation;
+ import net.kissenpvp.paper.api.ban.PaperPunishment;
+ import net.kissenpvp.paper.api.base.Context;
+ import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
+@@ -33,9 +33,9 @@ import net.kissenpvp.paper.api.permission.PaperPermissible;
+ import net.kissenpvp.paper.api.permission.PaperPermission;
+ import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
+ import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
++import net.kissenpvp.paper.ban.KissenPaperMinecraftBan;
+ import net.kissenpvp.paper.networking.client.entity.KissenPaperOnlinePlayerClient;
+ import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
+-import net.kissenpvp.paper.permission.permissible.KissenPaperPlayerPermissible;
+ import net.kissenpvp.paper.user.KissenPaperPublicUser;
+ import net.kyori.adventure.audience.Audience;
+ import net.md_5.bungee.api.chat.BaseComponent;
+@@ -126,8 +126,7 @@ import java.lang.ref.WeakReference;
+ import java.net.InetAddress;
+ import java.net.InetSocketAddress;
+ import java.net.SocketAddress;
+-import java.time.Duration;
+-import java.time.Instant;
++import java.time.*;
+ import java.util.*;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+@@ -1690,6 +1689,27 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+ 
+     @Override
+     public BanEntry<com.destroystokyo.paper.profile.PlayerProfile> ban(String reason, Date expires, String source, boolean kickPlayer) { // Paper - fix ban list API
++
++        /*Duration duration = null;
++        if(expires != null)
++        {
++            LocalDate localExpire = Instant.ofEpochMilli(expires.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
++            LocalDate today = LocalDate.now();
++            duration = Duration.between(today, localExpire);
++        }
++        net.kyori.adventure.text.Component reasonComponent = Optional.ofNullable(reason).map(net.kyori.adventure.text.Component::text).orElse(null);
++        PaperBanImplementation paperBanImplementation = Bukkit.getKissen().getImplementation(PaperBanImplementation.class);
++        try {
++            paperBanImplementation.punish(getTotalID(), new KissenPaperMinecraftBan("Violating guidelines", duration), new BanOperator() {
++                @Override
++                public net.kyori.adventure.text.@NotNull Component displayName() {
++                    return net.kyori.adventure.text.Component.text(source);
++                }
++            }, reasonComponent);
++        } catch (BackendException e) {
++            throw new RuntimeException(e);
++        }*/ // KissenPaper todo
++
+         BanEntry<com.destroystokyo.paper.profile.PlayerProfile> banEntry = ((ProfileBanList) server.getBanList(BanList.Type.PROFILE)).addBan(this.getPlayerProfile(), reason, expires, source); // Paper - fix ban list API
+         if (kickPlayer) {
+             this.kickPlayer(reason);
+@@ -3323,13 +3343,13 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     }
+ 
+     @Override
+-    public @NotNull PaperPunishment ban(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException {
+-        return kissenPaperPlayer.ban(ban, banOperator);
++    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException {
++        return kissenPaperPlayer.punish(ban, banOperator);
+     }
+ 
+     @Override
+-    public @NotNull PaperPunishment ban(@NotNull Ban ban, @NotNull BanOperator banOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) throws BackendException {
+-        return kissenPaperPlayer.ban(ban, banOperator, reason);
++    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) throws BackendException {
++        return kissenPaperPlayer.punish(ban, banOperator, reason);
+     }
+ 
+     @Override

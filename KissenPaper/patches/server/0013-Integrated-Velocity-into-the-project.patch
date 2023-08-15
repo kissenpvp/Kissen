@@ -1,0 +1,93 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Tue, 15 Aug 2023 22:32:24 +0200
+Subject: [PATCH] Integrated Velocity into the project
+
+
+diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
+index e5714c4567eae204da576b5ec8d8d366213c6ce8..3b87570564f4754dff39f214bcfcab9146e3657f 100644
+--- a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
++++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
+@@ -85,12 +85,12 @@ public class KissenPaperBanImplementation extends KissenBanImplementation<PaperB
+     }
+ 
+     @Override
+-    public @NotNull Optional<PaperPunishment> getCurrentBan(@NotNull UUID totalID, Context context) throws BackendException {
++    public @NotNull Optional<PaperPunishment> getCurrentBan(@NotNull UUID totalID, @NotNull Context context) throws BackendException {
+         return getCurrentBan(totalID, getMeta(context));
+     }
+ 
+     @Override
+-    public @NotNull Optional<PaperPunishment> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType, Context context) throws BackendException {
++    public @NotNull Optional<PaperPunishment> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType, @NotNull Context context) throws BackendException {
+         return getCurrentBan(totalID, banType, getMeta(context));
+     }
+ 
+diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+index 6c1faf68b7758ae7c350515699edc552d55548a5..7dbf5fe75fb758aa20db486b123348d7359e567a 100644
+--- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
++++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+@@ -53,7 +53,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+     }
+ 
+     @Override
+-    public ObjectMeta getPrivateMeta() {
++    public @NotNull ObjectMeta getPrivateMeta() {
+         return KissenCore.getInstance().getPublicMeta(); //TODO
+     }
+ }
+diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
+index ec4afed7640dceaaeadaba015edbcf0d33a0eb15..b689a620c2e9e20479f42c5c78237cd4c3a79954 100644
+--- a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
++++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
+@@ -89,7 +89,7 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<PaperPe
+     }
+ 
+     @Override
+-    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content, Context context) {
++    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content, @NotNull Context context) {
+         return Optional.empty(); //TODO
+     }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+index 6f72330682fdd2084dd020df81c5bcba4c969a4b..80f5b8e3dfa524e6bc689e8f0edc46b1161851ac 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+@@ -743,7 +743,7 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     }
+ 
+     @Override
+-    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content, Context context) {
++    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content, @NotNull Context context) {
+         return kissenPaperPlayerClient.setSuffix(name, content, context);
+     }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index c84431d2205675cc31a1bc8d64ff91cb2b8ec463..8124640d0886834759896fd1d709df88c7e45e9d 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -25,7 +25,6 @@ import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
+ import net.kissenpvp.core.api.user.usersetttings.UserSetting;
+ import net.kissenpvp.core.base.KissenCore;
+ import net.kissenpvp.core.user.KissenUserImplementation;
+-import net.kissenpvp.paper.api.ban.PaperBanImplementation;
+ import net.kissenpvp.paper.api.ban.PaperPunishment;
+ import net.kissenpvp.paper.api.base.Context;
+ import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
+@@ -33,7 +32,6 @@ import net.kissenpvp.paper.api.permission.PaperPermissible;
+ import net.kissenpvp.paper.api.permission.PaperPermission;
+ import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
+ import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
+-import net.kissenpvp.paper.ban.KissenPaperMinecraftBan;
+ import net.kissenpvp.paper.networking.client.entity.KissenPaperOnlinePlayerClient;
+ import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
+ import net.kissenpvp.paper.user.KissenPaperPublicUser;
+@@ -3468,7 +3466,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     }
+ 
+     @Override
+-    public @NotNull Optional<@org.jetbrains.annotations.Nullable Suffix> setSuffix(@NotNull String name, net.kyori.adventure.text.@NotNull Component content, Context context) {
++    public @NotNull Optional<@org.jetbrains.annotations.Nullable Suffix> setSuffix(@NotNull String name, net.kyori.adventure.text.@NotNull Component content, @NotNull Context context) {
+         return kissenPaperPlayer.setSuffix(name, content);
+     }
+ 
