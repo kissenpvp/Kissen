@@ -99,7 +99,7 @@ public interface Ban {
      * @return An {@link Optional} containing the duration of this ban, or empty if the ban is permanent.
      * @see #setDuration(Duration)
      */
-    @NotNull Optional<@Nullable Duration> getDuration();
+    @NotNull Optional<Duration> getDuration();
 
     /**
      * Sets the duration of this ban, which specifies how long the ban lasts.

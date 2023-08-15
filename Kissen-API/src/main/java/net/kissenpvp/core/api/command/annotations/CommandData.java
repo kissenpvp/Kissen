@@ -11,7 +11,7 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CommandData {
 
-    @NotNull String name();
+    @NotNull String value();
 
     @NotNull String[] aliases() default {};
 

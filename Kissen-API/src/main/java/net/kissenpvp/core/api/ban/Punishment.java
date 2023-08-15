@@ -106,7 +106,7 @@ public interface Punishment<T> {
      *
      * @return an {@link Optional} containing the reason for the punishment, or an empty {@link Optional} if no reason was specified
      */
-    @NotNull Optional<@Nullable Component> getReason();
+    @NotNull Optional<Component> getReason();
 
     /**
      * Sets the reason for the player's ban. If the reason is null, the ban will be set without a reason.

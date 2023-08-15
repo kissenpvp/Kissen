@@ -47,7 +47,7 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
     }
 
     @Override
-    public @NotNull Optional<@Nullable T> getRank(@NotNull String name) {
+    public @NotNull Optional<T> getRank(@NotNull String name) {
         return cachedRankIdSet.stream().filter(rank -> rank.getName().equals(name)).findFirst();
     }
 

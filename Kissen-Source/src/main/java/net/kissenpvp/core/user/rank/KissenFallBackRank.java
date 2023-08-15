@@ -42,7 +42,7 @@ public class KissenFallBackRank implements Rank
         throw new UnsupportedOperationException();
     }
 
-    @Override public @NotNull Optional<@Nullable Component> getPrefix()
+    @Override public @NotNull Optional<Component> getPrefix()
     {
         return Optional.of(Component.text("Player |").color(getChatColor()));
     }

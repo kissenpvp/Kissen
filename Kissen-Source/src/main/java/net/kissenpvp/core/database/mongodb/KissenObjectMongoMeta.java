@@ -1,5 +1,6 @@
 package net.kissenpvp.core.database.mongodb;
 
+import com.mongodb.client.model.*;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
@@ -7,15 +8,16 @@ import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.QuerySelect;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
+import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.KissenSavableMap;
+import org.bson.Document;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
 
 public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implements ObjectMeta {
     public KissenObjectMongoMeta(String table) {
@@ -23,13 +25,31 @@ public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implem
     }
 
     @Override
-    public void add(@NotNull String id, @NotNull Map<String, String> data) throws BackendException {
+    public void add(@NotNull String id, @NotNull final Map<@NotNull String, @NotNull String> data) throws BackendException {
+        getCollection().bulkWrite(data.entrySet()
+                .stream()
+                .map(buildUpdateQuery(id))
+                .toList());
 
-        data.forEach((key, value) -> setString(id, key, value));
+        KissenCore.getInstance().getLogger().info("Insert map {} with id {}.", data, id);
+    }
+
+    
+    @Contract(pure = true)
+    private @NotNull Function<Map.Entry<String, String>, WriteModel<Document>> buildUpdateQuery(@NotNull String id)
+    {
+        return stringStringEntry -> {
+            Document document = new Document();
+            document.append(getTotalIDColumn(), id);
+            document.append(getKeyColumn(), stringStringEntry.getKey());
+            document.append(getValueColumn(), stringStringEntry.getValue());
+
+            return new UpdateOneModel<>(Filters.and(Filters.eq(getTotalIDColumn(), id), Filters.eq(getKeyColumn(), stringStringEntry.getKey())), new Document("$set", document), new UpdateOptions().upsert(true));
+        };
     }
 
     @Override
-    public @NotNull Optional<@Nullable SavableMap> getData(@NotNull String totalId) throws BackendException {
+    public @NotNull Optional<SavableMap> getData(@NotNull String totalId) throws BackendException {
         return Optional.ofNullable(processQuery(totalId, select(Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, totalId, FilterType.EQUALS)).get(totalId));
     }
 

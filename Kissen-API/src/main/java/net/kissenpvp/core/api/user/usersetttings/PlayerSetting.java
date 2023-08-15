@@ -29,7 +29,7 @@ public interface PlayerSetting<T> extends TextSerializer<T> {
 
     @NotNull UserValue<T>[] getPossibleValues();
 
-    default @NotNull Optional<@Nullable String> getPermission() {
+    default @NotNull Optional<String> getPermission() {
         return Optional.empty();
     }
 

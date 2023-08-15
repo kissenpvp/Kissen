@@ -54,7 +54,7 @@ public class KissenColorProvider extends ColorProvider {
         return EnumColorProvider.DISABLED.getTextColor();
     }
 
-    public @NotNull Optional<@Nullable EnumColorProvider> getColor(int value) {
+    public @NotNull Optional<EnumColorProvider> getColor(int value) {
         return Arrays.stream(EnumColorProvider.values())
                 .filter(enumColorProvider -> enumColorProvider.getTextColor().value() == value)
                 .findFirst();

@@ -24,7 +24,7 @@ public class KissenObjectFileMeta extends KissenFileMeta implements ObjectMeta {
     }
 
     @Override
-    public @NotNull Optional<@Nullable SavableMap> getData(@NotNull String totalId) throws BackendException {
+    public @NotNull Optional<SavableMap> getData(@NotNull String totalId) throws BackendException {
         return Optional.empty();
     }
 

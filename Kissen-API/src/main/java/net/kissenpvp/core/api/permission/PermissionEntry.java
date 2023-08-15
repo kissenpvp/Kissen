@@ -50,7 +50,7 @@ public interface PermissionEntry<T extends Permission> {
 
     @NotNull @Unmodifiable Set<T> getPermissionList();
 
-    @NotNull Optional<@Nullable T> getPermission(@NotNull String permission);
+    @NotNull Optional<T> getPermission(@NotNull String permission);
 
     @NotNull @Unmodifiable Set<UUID> getAffectedPermissionPlayer();
 

@@ -48,3 +48,17 @@ subprojects {
         implementation("io.netty:netty-all:4.1.87.Final")
     }
 }
+
+tasks.register<Exec>("cloneRepo") {
+    doFirst {
+        val dir = File("${project.buildDir}/KissenVelocity")
+        if (!dir.exists()) {
+            workingDir = project.buildDir
+            commandLine("git", "clone", "https://github.com/KissenPvP/KissenVelocity.git")
+        }
+    }
+}
+
+tasks.named("build") {
+    dependsOn("cloneRepo")
+}

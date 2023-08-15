@@ -76,7 +76,7 @@ public interface MetaReader extends Serializable {
      * @return The value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<@Nullable String> getString(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull Optional<String> getString(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved string value associated with the specified {@code key}.
@@ -102,7 +102,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see MetaWriter#setString(String, String, String)
      */
-    @NotNull Optional<@Nullable String> getString(@NotNull String key) throws BackendException;
+    @NotNull Optional<String> getString(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved long value associated with the specified {@code totalID} and {@code key}.
@@ -129,7 +129,7 @@ public interface MetaReader extends Serializable {
      * @return The long value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<@Nullable Long> getLong(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull Optional<Long> getLong(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved long value associated with the specified {@code key}.
@@ -155,7 +155,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getLong(String, String)
      */
-    @NotNull Optional<@Nullable Long> getLong(@NotNull String key) throws BackendException;
+    @NotNull Optional<Long> getLong(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved double value associated with the specified {@code totalID} and {@code key}.
@@ -182,7 +182,7 @@ public interface MetaReader extends Serializable {
      * @return The double value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<@Nullable Double> getDouble(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull Optional<Double> getDouble(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved double value associated with the specified {@code key}.
@@ -208,7 +208,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getDouble(String, String)
      */
-    @NotNull Optional<@Nullable Double> getDouble(@NotNull String key) throws BackendException;
+    @NotNull Optional<Double> getDouble(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved float value associated with the specified {@code totalID} and {@code key}.
@@ -235,7 +235,7 @@ public interface MetaReader extends Serializable {
      * @return The float value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<@Nullable Float> getFloat(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull Optional<Float> getFloat(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved float value associated with the specified {@code key}.
@@ -261,7 +261,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getFloat(String, String)
      */
-    @NotNull Optional<@Nullable Float> getFloat(@NotNull String key) throws BackendException;
+    @NotNull Optional<Float> getFloat(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved integer value associated with the specified {@code totalID} and {@code key}.
@@ -289,7 +289,7 @@ public interface MetaReader extends Serializable {
      * found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<@Nullable Integer> getInt(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull Optional<Integer> getInt(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved integer value associated with the specified {@code key}.
@@ -316,7 +316,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getInt(String, String)
      */
-    @NotNull Optional<@Nullable Integer> getInt(@NotNull String key) throws BackendException;
+    @NotNull Optional<Integer> getInt(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved short value associated with the specified {@code totalID} and {@code key}.
@@ -343,7 +343,7 @@ public interface MetaReader extends Serializable {
      * @return The short value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<@Nullable Short> getShort(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull Optional<Short> getShort(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved short value associated with the specified {@code key}.
@@ -369,7 +369,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getShort(String, String)
      */
-    @NotNull Optional<@Nullable Short> getShort(@NotNull String key) throws BackendException;
+    @NotNull Optional<Short> getShort(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved byte value associated with the specified {@code totalID} and {@code key}.
@@ -396,7 +396,7 @@ public interface MetaReader extends Serializable {
      * @return The byte value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<@Nullable Byte> getByte(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull Optional<Byte> getByte(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved byte value associated with the specified {@code key}.
@@ -422,7 +422,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getByte(String, String)
      */
-    @NotNull Optional<@Nullable Byte> getByte(@NotNull String key) throws BackendException;
+    @NotNull Optional<Byte> getByte(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved boolean value associated with the specified {@code totalID} and {@code key}.
@@ -450,7 +450,7 @@ public interface MetaReader extends Serializable {
      * found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<@Nullable Boolean> getBoolean(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull Optional<Boolean> getBoolean(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved boolean value associated with the specified {@code key}.
@@ -477,7 +477,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getBoolean(String, String)
      */
-    @NotNull Optional<@Nullable Boolean> getBoolean(@NotNull String key) throws BackendException;
+    @NotNull Optional<Boolean> getBoolean(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved meta list from the table and returns it.
@@ -661,7 +661,7 @@ public interface MetaReader extends Serializable {
      * @see #getRecord(String, Class)
      * @see DataImplementation#toJson(Record)
      */
-    <T extends Record> @NotNull Optional<@Nullable T> getRecord(@NotNull String totalID, @NotNull String key,
+    <T extends Record> @NotNull Optional<T> getRecord(@NotNull String totalID, @NotNull String key,
                                                                 @NotNull Class<T> record) throws BackendException;
 
     /**
@@ -706,7 +706,7 @@ public interface MetaReader extends Serializable {
      * @see #getRecord(String, String, Class)
      * @see DataImplementation#toJson(Record)
      */
-    <T extends Record> @NotNull Optional<@Nullable T> getRecord(@NotNull String key, @NotNull Class<T> record) throws BackendException;
+    <T extends Record> @NotNull Optional<T> getRecord(@NotNull String key, @NotNull Class<T> record) throws BackendException;
 
     @NotNull QueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective);
 

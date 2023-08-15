@@ -57,7 +57,7 @@ public interface PermissionEndUpdateEvent extends EventClass, Cancellable
 {
     @NotNull Permission getPermission();
 
-    @NotNull Optional<@Nullable Long> getEnd();
+    @NotNull Optional<Long> getEnd();
 
     void setEnd(@Nullable Long end);
 }

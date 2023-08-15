@@ -51,7 +51,7 @@ public abstract class KissenBan extends KissenSavable implements Ban {
     }
 
     @Override
-    public @NotNull Optional<@Nullable Duration> getDuration() {
+    public @NotNull Optional<Duration> getDuration() {
         return get("duration").map(val -> Duration.of(Long.parseLong(val), TimeUnit.MILLISECONDS.toChronoUnit()));
     }
 

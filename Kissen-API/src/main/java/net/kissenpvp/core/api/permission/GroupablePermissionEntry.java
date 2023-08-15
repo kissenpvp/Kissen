@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.Set;
 
 public interface GroupablePermissionEntry<T extends Permission> extends PermissionEntry<T> {
+
     /**
      * Returns permission that this entry has as its own.
      * Because this object can be a member of a group, not all permissions that this object are its own.

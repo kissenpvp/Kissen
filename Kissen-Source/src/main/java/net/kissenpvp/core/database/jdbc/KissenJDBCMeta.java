@@ -16,6 +16,7 @@
 
 package net.kissenpvp.core.database.jdbc;
 
+import com.google.gson.Gson;
 import lombok.SneakyThrows;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
@@ -25,11 +26,13 @@ import net.kissenpvp.core.database.KissenBaseMeta;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -69,7 +72,13 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
 
     @Override
     public void setStringList(@NotNull String totalID, @NotNull String key, @Nullable List<String> value) throws BackendException {
-        insert(totalID, key, value, insertList());
+        insert(totalID, key, new Gson().toJson(value), insertString());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public @NotNull @Unmodifiable List<String> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException {
+        return Arrays.stream(execute(getDefaultQuery(totalID, key))).map(data -> (ArrayList<String>) new Gson().fromJson(data[0], ArrayList.class)).findFirst().orElse(new ArrayList<String>());
     }
 
     @Override
@@ -238,8 +247,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     private @NotNull Writer<String> insertString() {
         return (totalID1, key1, value) ->
         {
-            PreparedStatement insertStatement = getPreparedStatement("INSERT INTO " + getTable() + " (" + getTotalIDColumn() + ", " + getKeyColumn() +
-                    ", " + getValueColumn() + ") VALUES (?, ?, ?);");
+            PreparedStatement insertStatement = getPreparedStatement("INSERT INTO " + getTable() + " (" + getTotalIDColumn() + ", " + getKeyColumn() + ", " + getValueColumn() + ") VALUES (?, ?, ?);");
             insertStatement.setString(1, totalID1);
             insertStatement.setString(2, key1);
             insertStatement.setString(3, value);
@@ -248,34 +256,6 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
         };
     }
 
-
-    /**
-     * Returns a writer implementation for inserting values as a list of strings into the database.
-     *
-     * <p>
-     * This method returns a writer implementation that is responsible for executing the necessary database
-     * operations to insert values as a list
-     * of strings into the associated database table.
-     * </p>
-     *
-     * @return a writer implementation for inserting values as a list of strings into the database.
-     */
-    @Contract(pure = true)
-    private @NotNull Writer<List<String>> insertList() {
-        return (totalID1, key1, value) ->
-        {
-            PreparedStatement insertStatement = getPreparedStatement("INSERT INTO " + getTable() + " (" + getTotalIDColumn() + ", " + getKeyColumn() +
-                    ", " + getValueColumn() + ") VALUES (?, ?, ?);");
-            for (String entry : value) {
-                insertStatement.setString(1, totalID1);
-                insertStatement.setString(2, key1);
-                insertStatement.setString(3, entry);
-                insertStatement.addBatch();
-            }
-            insertStatement.executeBatch();
-            insertStatement.close();
-        };
-    }
 
     /**
      * Creates the table in the database if it does not already exist.
@@ -386,7 +366,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
      *
      * @param <T> the type of the data to be written.
      */
-    protected interface Writer<T> {
+    public interface Writer<T> {
         /**
          * Writes the specified data to the database.
          *

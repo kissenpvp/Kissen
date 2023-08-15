@@ -59,7 +59,7 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
     }
 
     @Override
-    public @NotNull Optional<@Nullable Component> getPrefix() {
+    public @NotNull Optional<Component> getPrefix() {
         if (containsKey("prefix")) {
             return Optional.of(ComponentSerializer.getInstance().getJsonSerializer().deserialize(getNotNull("prefix")));
         }
@@ -86,7 +86,7 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
     }
 
     @Override
-    public @NotNull Optional<@Nullable Component> getSuffix() {
+    public @NotNull Optional<Component> getSuffix() {
         if (containsKey("suffix")) {
             return Optional.of(ComponentSerializer.getInstance().getJsonSerializer().deserialize(getNotNull("suffix")));
         }

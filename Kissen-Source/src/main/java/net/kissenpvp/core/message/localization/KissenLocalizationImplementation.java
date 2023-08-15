@@ -129,7 +129,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
 
     @Override
     public @NotNull Locale getLocale(@NotNull String localeTag) {
-        return getInternalLocale(localeTag).orElse(getDefaultLocale());
+        return getInternalLocale(localeTag).orElse(buildLocale(localeTag));
     }
 
     public @NotNull Optional<Locale> getInternalLocale(@NotNull String localeTag) {
@@ -418,15 +418,21 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
 
         localeData.translationRegistry().registerAll(Objects.requireNonNull(getInternalLocale(locale).orElseGet(() ->
         {
-            Locale parseLocale = Translator.parseLocale(locale.toLowerCase()); //convert I guess
-            globallyKnown.add(parseLocale);
+            Locale parseLocale = buildLocale(locale);
             localeData.installed().add(parseLocale);
-            assert parseLocale != null;
             KissenCore.getInstance()
                     .getLogger()
                     .info("Found and registered locale '{}' from '{}'.", parseLocale.getDisplayName(), localeData.translationRegistry.name());
             return parseLocale;
         })), stringStringMap);
+    }
+
+    private @NotNull Locale buildLocale(@NotNull String locale)
+    {
+        Locale parseLocale = Translator.parseLocale(locale.toLowerCase()); //convert I guess
+        globallyKnown.add(parseLocale);
+        assert parseLocale != null;
+        return parseLocale;
     }
 
     /**
