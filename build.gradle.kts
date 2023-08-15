@@ -22,15 +22,16 @@ allprojects {
 subprojects {
     repositories {
         mavenCentral()
-        mavenLocal()
     }
+
     tasks.withType<JavaCompile> {
         options.encoding = Charsets.UTF_8.name()
-        options.release.set(17)
     }
+
     tasks.withType<Javadoc> {
         options.encoding = Charsets.UTF_8.name()
     }
+
     tasks.withType<ProcessResources> {
         filteringCharset = Charsets.UTF_8.name()
     }
@@ -51,20 +52,22 @@ subprojects {
     }
 }
 
-tasks.register<DefaultTask>("cloneVelocity") {
-    doLast {
-        val velocityDirectory = File("${project.rootDir}/KissenVelocity")
-        if(!velocityDirectory.exists())
-        {
-            Grgit.clone {
-                dir = velocityDirectory
-                uri = "https://github.com/KissenPvP/KissenVelocity.git"
+// Clone Velocity task
+tasks {
+    val cloneVelocity by registering(DefaultTask::class) {
+        doLast {
+            val velocityUrl = "https://github.com/KissenPvP/KissenVelocity.git"
+            val velocityDirectory = File("${project.rootDir}/KissenVelocity")
+            if (!velocityDirectory.exists()) {
+                Grgit.clone {
+                    dir = velocityDirectory
+                    uri = velocityUrl
+                }
             }
         }
     }
-}
 
-tasks.register("applyPatches")
-tasks.named("applyPatches") {
-    dependsOn("cloneVelocity")
+    val applyPatches by registering {
+        dependsOn(cloneVelocity)
+    }
 }
