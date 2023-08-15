@@ -1,9 +1,12 @@
+import org.ajoberstar.grgit.Grgit
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     java
+    id("org.ajoberstar.grgit") version "5.2.0"
 }
+
 
 allprojects {
     apply(plugin = "java")
@@ -28,7 +31,6 @@ subprojects {
     tasks.withType<Javadoc> {
         options.encoding = Charsets.UTF_8.name()
     }
-    @Suppress("UnstableApiUsage")
     tasks.withType<ProcessResources> {
         filteringCharset = Charsets.UTF_8.name()
     }
@@ -49,16 +51,20 @@ subprojects {
     }
 }
 
-tasks.register<Exec>("cloneRepo") {
-    doFirst {
-        val file = File("${project.buildDir}/KissenVelocity/.git/")
-        if (!file.exists()) {
-            workingDir = project.buildDir
-            commandLine("git", "clone", "https://github.com/KissenPvP/KissenVelocity.git")
+tasks.register<DefaultTask>("cloneVelocity") {
+    doLast {
+        val velocityDirectory = File("${project.rootDir}/KissenVelocity")
+        if(!velocityDirectory.exists())
+        {
+            Grgit.clone {
+                dir = velocityDirectory
+                uri = "https://github.com/KissenPvP/KissenVelocity.git"
+            }
         }
     }
 }
 
-tasks.named("build") {
-    dependsOn("cloneRepo")
+tasks.register("applyPatches")
+tasks.named("applyPatches") {
+    dependsOn("cloneVelocity")
 }
