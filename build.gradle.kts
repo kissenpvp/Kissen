@@ -1,10 +1,8 @@
-import org.ajoberstar.grgit.Grgit
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     java
-    id("org.ajoberstar.grgit") version "5.2.0"
 }
 
 
@@ -49,25 +47,5 @@ subprojects {
         compileOnly("net.kyori:adventure-api:4.13.0")
         compileOnly("com.google.code.gson:gson:2.10.1")
         implementation("io.netty:netty-all:4.1.87.Final")
-    }
-}
-
-// Clone Velocity task
-tasks {
-    val cloneVelocity by registering(DefaultTask::class) {
-        doLast {
-            val velocityUrl = "https://github.com/KissenPvP/KissenVelocity.git"
-            val velocityDirectory = File("${project.rootDir}/KissenVelocity")
-            if (!velocityDirectory.exists()) {
-                Grgit.clone {
-                    dir = velocityDirectory
-                    uri = velocityUrl
-                }
-            }
-        }
-    }
-
-    val applyPatches by registering {
-        dependsOn(cloneVelocity)
     }
 }
