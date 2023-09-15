@@ -1,15 +1,26 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Groldi <chniucg@gmail.com>
-Date: Thu, 10 Aug 2023 02:14:35 +0200
-Subject: [PATCH] Integrated kissen system into paper
+Date: Mon, 11 Sep 2023 00:48:45 +0200
+Subject: [PATCH] Added kissen files to paper
 
 
+diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperBan.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperBan.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..23def43127810bfdefbb63c949a319b46ebc59a0
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperBan.java
+@@ -0,0 +1,5 @@
++package net.kissenpvp.paper.api.ban;
++
++import net.kissenpvp.core.api.ban.Ban;
++
++public interface PaperBan extends Ban {}
 diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..1b5fe5b8c553b5cec22d98ebe553060ff95e9d28
+index 0000000000000000000000000000000000000000..fad5fec3b2d19ac49236959ee310e8ccbcbcabad
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,43 @@
 +/*
 + * Copyright 2023 KissenPvP
 + *
@@ -28,11 +39,10 @@ index 0000000000000000000000000000000000000000..1b5fe5b8c553b5cec22d98ebe553060f
 +
 +package net.kissenpvp.paper.api.ban;
 +
-+import net.kissenpvp.core.api.ban.Ban;
-+import net.kissenpvp.core.api.ban.BanImplementation;
-+import net.kissenpvp.core.api.ban.BanType;
-+import net.kissenpvp.core.api.ban.PlayerBan;
++import net.kissenpvp.core.api.ban.*;
++import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.paper.api.base.Context;
++import net.kyori.adventure.text.Component;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
@@ -42,18 +52,30 @@ index 0000000000000000000000000000000000000000..1b5fe5b8c553b5cec22d98ebe553060f
 +import java.util.UUID;
 +
 +
-+public interface PaperBanImplementation extends BanImplementation
++public interface PaperBanImplementation extends BanImplementation<PaperBan, PaperPunishment>
 +{
-+    @NotNull @Unmodifiable Set<PlayerBan> getPlayerBanSet(@NotNull Context context);
++    @NotNull @Unmodifiable Set<PaperPunishment> getPlayerBanSet(@NotNull Context context) throws BackendException;
 +
-+    @NotNull @Unmodifiable Set<PlayerBan> getPlayerBanSet(@NotNull UUID totalID, @NotNull Context context);
++    @NotNull @Unmodifiable Set<PaperPunishment> getPlayerBanSet(@NotNull UUID totalID, @NotNull Context context) throws BackendException;
 +
-+    @NotNull Optional<@Nullable PlayerBan> getCurrentBan(@NotNull UUID totalID, Context context);
++    @NotNull Optional<PaperPunishment> getCurrentBan(@NotNull UUID totalID, @NotNull Context context) throws BackendException;
 +
-+    @NotNull Optional<@Nullable PlayerBan> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType, Context context);
++    @NotNull Optional<PaperPunishment> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType, @NotNull Context context) throws BackendException;
 +
-+    @NotNull PlayerBan ban(@NotNull UUID totalID, @NotNull Ban ban, @NotNull String banner, @Nullable String reason, @NotNull Context context);
++    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @Nullable Component reason, @NotNull Context context) throws BackendException;
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..e0da95de26c676b014046f1300ee6141a92a811f
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java
+@@ -0,0 +1,6 @@
++package net.kissenpvp.paper.api.ban;
++
++import net.kissenpvp.core.api.ban.Punishment;
++import org.bukkit.entity.Player;
++
++public interface PaperPunishment extends Punishment<Player> {}
 diff --git a/src/main/java/net/kissenpvp/paper/api/base/Context.java b/src/main/java/net/kissenpvp/paper/api/base/Context.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..fd25ec38c399a792511d3d8d06831eba9690b520
@@ -88,10 +110,10 @@ index 0000000000000000000000000000000000000000..fd25ec38c399a792511d3d8d06831eba
 \ No newline at end of file
 diff --git a/src/main/java/net/kissenpvp/paper/api/base/PaperKissen.java b/src/main/java/net/kissenpvp/paper/api/base/PaperKissen.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d6f3c5ed05fc0011ce4618915948d5c0d6db0f02
+index 0000000000000000000000000000000000000000..b5772f9830125732fde292a7f8a99ee19cf869f8
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/base/PaperKissen.java
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,26 @@
 +/*
 + * Copyright 2023 KissenPvP
 + *
@@ -112,58 +134,141 @@ index 0000000000000000000000000000000000000000..d6f3c5ed05fc0011ce4618915948d5c0
 +
 +import net.kissenpvp.core.api.base.Kissen;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
++import org.jetbrains.annotations.NotNull;
 +
 +public interface PaperKissen extends Kissen {
 +
-+    ObjectMeta getPrivateMeta();
++    @NotNull ObjectMeta getPrivateMeta();
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d83ddd4770455443287a0c1abaf46c5e48b5be82
+index 0000000000000000000000000000000000000000..3e193c2e5ce41c57f069b7ab0f2812c13e5f47da
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,41 @@
 +package net.kissenpvp.paper.api.command;
 +
++import net.kissenpvp.core.api.command.annotations.CommandData;
++import net.kissenpvp.core.api.command.executor.CommandExecutor;
++import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
 +import org.bukkit.command.Command;
++import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
 +
++/**
++ * Represents an abstract, base command structure for the Kissen framework.
++ * <p>
++ * This base command class holds essential information about a command and serves as
++ * a foundation for all specific commands within the Kissen command hierarchy.
++ * The structure encapsulates the basic behavior and properties of a command,
++ * such as its name.
++ * <p>
++ * Subclasses should extend this class to provide specific implementations for each command.
++ *
++ * @see Command
++ */
 +public abstract class KissenCommand extends Command {
++
++    /**
++     * Constructs a new command with the specified name.
++     *
++     * @param name The name of the command. It must not be null.
++     *             This is the primary identifier for the command and is used in command
++     *             processing to map user inputs to the corresponding command.
++     * @throws NullPointerException if the {@code name} parameter is null.
++     * @see Command
++     */
 +    protected KissenCommand(@NotNull String name) {
 +        super(name);
 +    }
++
++    public abstract void initCommand(@NotNull CommandData commandData, @NotNull CommandExecutor<CommandSender> commandExecutor);
++
++    public abstract void initCompleter(@NotNull TabCompleterExecutor<CommandSender> completerExecutor);
++
++}
+diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java b/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..c46687844179d89afefa395d64e820ba79313403
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java
+@@ -0,0 +1,7 @@
++package net.kissenpvp.paper.api.command;
++
++import net.kissenpvp.core.api.command.ArgumentParser;
++import org.bukkit.command.CommandSender;
++
++public interface PaperArgumentParser<T> extends ArgumentParser<T, CommandSender> {
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..42170ae0de1abc7769c0fbe0b25a882e91740326
+index 0000000000000000000000000000000000000000..e582dd12e88ef91e3589dbc4310773a4eab16d86
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,60 @@
 +package net.kissenpvp.paper.api.command;
 +
 +import net.kissenpvp.core.api.base.Implementation;
 +import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
-+import org.bukkit.command.Command;
 +import org.bukkit.command.CommandSender;
 +import org.bukkit.plugin.Plugin;
 +import org.jetbrains.annotations.NotNull;
 +
 +import java.util.Optional;
 +
++/**
++ * Interface for the specific implementation of command operations for the Paper API.
++ * <p>
++ * This interface extends the {@link Implementation} and provides methods related to the command handling
++ * in the context of the Paper API. It outlines the operations for command retrieval, registration, tab completion, and de-registration.
++ *
++ * @see Implementation
++ */
 +public interface PaperCommandImplementation extends Implementation {
 +
-+    @NotNull Optional<Command> getCommand(@NotNull String name);
++    /**
++     * Retrieves a command by its name.
++     *
++     * @param name The name of the command. Must not be null.
++     * @return An {@link Optional} that contains the Command if it exists; otherwise, it will be empty.
++     * @throws NullPointerException If the {@code name} parameter is null.
++     */
++    @NotNull Optional<KissenCommand> getCommand(@NotNull String name);
 +
++    /**
++     * Registers one or more objects that contain command methods with the specified {@link Plugin}.
++     *
++     * @param plugin  The plugin to register the commands with. Must not be null.
++     * @param objects The object(s) containing the commands to be registered. Must not be null.
++     * @throws NullPointerException If any of the parameters is null.
++     */
 +    void registerCommand(@NotNull Plugin plugin, @NotNull Object... objects);
 +
++    /**
++     * Registers a tab completion executor for a command with the given name.
++     *
++     * @param plugin               The plugin to register the tab completer with. Must not be null.
++     * @param name                 The name of the command to associate the tab completer with. Must not be null.
++     * @param tabCompleterExecutor The tab completion executor to register. Must not be null.
++     * @throws NullPointerException If any of the parameters is null.
++     */
 +    void registerCompleter(@NotNull Plugin plugin, @NotNull String name, @NotNull TabCompleterExecutor<CommandSender> tabCompleterExecutor);
 +
++    /**
++     * Unregisters a command by its name.
++     *
++     * @param name The name of the command to unregister. Must not be null.
++     * @return true if the command was found and unregistered successfully, false otherwise.
++     * @throws NullPointerException If the {@code name} parameter is null.
++     */
 +    boolean unregisterCommand(@NotNull String name);
++
++    <T> void registerParser(@NotNull Class<T> type, @NotNull PaperArgumentParser<T> argumentParser);
 +
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/data/LocationNode.java b/src/main/java/net/kissenpvp/paper/api/data/LocationNode.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3151ef92a8bfd02b55b49d78f6a0b77b4d441d7a
+index 0000000000000000000000000000000000000000..1b84a440b230e99f3c0b70e2b18d39134a7f6196
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/data/LocationNode.java
 @@ -0,0 +1,39 @@
@@ -193,7 +298,7 @@ index 0000000000000000000000000000000000000000..3151ef92a8bfd02b55b49d78f6a0b77b
 +import java.util.Objects;
 +
 +
-+public record LocationNode(String world, double x, double y, double z, float pitch, float yaw)
++public record LocationNode(@NotNull String world, double x, double y, double z, float pitch, float yaw)
 +{
 +
 +    public LocationNode(@NotNull Location location)
@@ -314,89 +419,65 @@ index 0000000000000000000000000000000000000000..2a9a064be74a493e090db2c2374efa80
 +
 +    void close(@NotNull PaperPlayerClient playerClient, @NotNull InventoryCloseEvent inventoryCloseEvent);
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/message/ChatEvent.java b/src/main/java/net/kissenpvp/paper/api/message/ChatEvent.java
+diff --git a/src/main/java/net/kissenpvp/paper/api/message/SystemMessageEvent.java b/src/main/java/net/kissenpvp/paper/api/message/SystemMessageEvent.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..5df3832331144969d800fb48efc57c30a24a83cd
+index 0000000000000000000000000000000000000000..a21f56229b32c5bec88fbb4761883f6f9ea4d444
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/message/ChatEvent.java
-@@ -0,0 +1,79 @@
-+/*
-+ * Copyright 2023 KissenPvP
-+ *
-+ * Licensed under the Apache License, Version 2.0 (the "License");
-+ * you may not use this file except in compliance with the License.
-+ * You may obtain a copy of the License at
-+ *
-+ *     http://www.apache.org/licenses/LICENSE-2.0
-+ *
-+ * Unless required by applicable law or agreed to in writing, software
-+ * distributed under the License is distributed on an "AS IS" BASIS,
-+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-+ * See the License for the specific language governing permissions and
-+ * limitations under the License.
-+ */
-+
++++ b/src/main/java/net/kissenpvp/paper/api/message/SystemMessageEvent.java
+@@ -0,0 +1,55 @@
 +package net.kissenpvp.paper.api.message;
 +
-+import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
 +import net.kyori.adventure.text.Component;
++import org.bukkit.entity.Player;
 +import org.bukkit.event.Cancellable;
 +import org.bukkit.event.Event;
 +import org.bukkit.event.HandlerList;
 +import org.jetbrains.annotations.NotNull;
 +
-+public class ChatEvent extends Event implements Cancellable
-+{
-+    private static final HandlerList HANDLERS = new HandlerList();
-+    private final PaperPlayerClient sender;
-+    private boolean cancelled;
-+    private Component message;
++public class SystemMessageEvent extends Event implements Cancellable {
 +
-+    public ChatEvent(@NotNull Component message, @NotNull PaperPlayerClient sender)
-+    {
-+        this.message   = message;
-+        this.sender    = sender;
++    private static final HandlerList handlers = new HandlerList();
++    private boolean cancelled;
++    private final Player receiver;
++    private Component component;
++
++    public SystemMessageEvent(@NotNull Player receiver, @NotNull Component component) {
++        this.receiver = receiver;
++        this.component = component;
 +        this.cancelled = false;
 +    }
 +
-+    public static HandlerList getHandlerList()
-+    {
-+        return HANDLERS;
++    @NotNull
++    @Override
++    public HandlerList getHandlers() {
++        return handlers;
 +    }
 +
-+    public PaperPlayerClient getSender()
-+    {
-+        return sender;
++    @NotNull
++    public static HandlerList getHandlerList() {
++        return handlers;
 +    }
 +
-+    @Override public boolean isCancelled()
-+    {
++    @Override
++    public boolean isCancelled() {
 +        return cancelled;
 +    }
 +
-+    @Override public void setCancelled(boolean cancel)
-+    {
++    @Override
++    public void setCancelled(boolean cancel) {
 +        this.cancelled = cancel;
 +    }
 +
-+    @Override public @NotNull HandlerList getHandlers()
-+    {
-+        return HANDLERS;
++    public @NotNull Player getReceiver() {
++        return receiver;
 +    }
 +
-+    public @NotNull Component getMessage()
-+    {
-+        return message;
++    public void setComponent(@NotNull Component component) {
++        this.component = component;
 +    }
 +
-+    public void setMessage(@NotNull String message)
-+    {
-+        this.message = Component.text(message);
-+    }
-+
-+    public void setMessage(@NotNull Component message)
-+    {
-+        this.message = message;
++    public @NotNull Component getComponent() {
++        return component;
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java b/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java
@@ -438,26 +519,30 @@ index 0000000000000000000000000000000000000000..75b22f04d26e6207bf90a57c72f8df6f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..029ad22e676c84e2ce3400a35e6326e0b57acdac
+index 0000000000000000000000000000000000000000..d964712ffe0db2fa32ed7d7958dc5b5e3f763a4d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,14 @@
 +package net.kissenpvp.paper.api.networking.client.entity;
 +
 +import net.kissenpvp.core.api.ban.Ban;
++import net.kissenpvp.core.api.networking.client.entitiy.OnlinePlayerClient;
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
++import net.kissenpvp.paper.api.ban.PaperPunishment;
++import net.kissenpvp.paper.api.permission.PaperPermission;
++import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
 +import org.jetbrains.annotations.NotNull;
 +
-+public interface PaperOnlinePlayerClient {
++public interface PaperOnlinePlayerClient extends OnlinePlayerClient<PaperPermission, PaperPlayerRank, PaperPunishment> {
 +
 +    int warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator);
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f66ff9517130eb9b01b2ee104a498ebe49757989
+index 0000000000000000000000000000000000000000..033c1840465eb9389ad714c78da691c942d06309
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,59 @@
 +/*
 + * Copyright 2023 KissenPvP
 + *
@@ -476,34 +561,34 @@ index 0000000000000000000000000000000000000000..f66ff9517130eb9b01b2ee104a498ebe
 +
 +package net.kissenpvp.paper.api.networking.client.entity;
 +
-+import net.kissenpvp.core.api.ban.Ban;
-+import net.kissenpvp.core.api.ban.PlayerBan;
-+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
++import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.api.user.suffix.Suffix;
++import net.kissenpvp.paper.api.ban.PaperPunishment;
 +import net.kissenpvp.paper.api.base.Context;
++import net.kissenpvp.paper.api.permission.PaperGroubablePermissionEntry;
 +import net.kissenpvp.paper.api.permission.PaperPermissible;
++import net.kissenpvp.paper.api.permission.PaperPermission;
 +import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
++import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
 +import net.kyori.adventure.text.Component;
-+import org.bukkit.permissions.Permissible;
 +import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
 +import java.util.Optional;
 +import java.util.Set;
 +
 +
-+public interface PaperPlayerClient extends Permissible {
++public interface PaperPlayerClient extends PlayerClient<PaperPermission, PaperPlayerRank, PaperPunishment>, PaperGroubablePermissionEntry {
 +
 +    @NotNull @Unmodifiable Set<@NotNull PaperOnlinePlayerClient> getOnlineAltAccounts();
 +
 +    @NotNull Set<Suffix> getSuffixSet(@NotNull Context context);
 +
-+    @NotNull Optional<@Nullable Suffix> getSuffix(@NotNull String name, @NotNull Context context);
++    @NotNull Optional<Suffix> getSuffix(@NotNull String name, @NotNull Context context);
 +
 +    @NotNull
-+    Optional<@Nullable Suffix> setSuffix(@NotNull String name, @NotNull Component content, Context context);
++    Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content, @NotNull Context context);
 +
 +    boolean deleteSuffix(@NotNull String name, @NotNull Context context);
 +
@@ -513,20 +598,16 @@ index 0000000000000000000000000000000000000000..f66ff9517130eb9b01b2ee104a498ebe
 +
 +    long getLastPlayed(@NotNull Context context);
 +
-+    @NotNull PlayerBan ban(@NotNull Ban ban, @NotNull ServerEntity banOperator, @NotNull Context context);
-+
-+    @NotNull PlayerBan ban(@NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable Component reason, @NotNull Context context);
-+
 +    @NotNull User getUser(@NotNull Context context);
 +
 +    @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException;
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/nms/NMS.java b/src/main/java/net/kissenpvp/paper/api/nms/NMS.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b772f97646bb24146f4aa0a67ae3da852d8bfd27
+index 0000000000000000000000000000000000000000..7fbad0fe6efd8fd024caac234d1a52ee056b76b9
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/nms/NMS.java
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,32 @@
 +/*
 + * Copyright 2023 KissenPvP
 + *
@@ -547,16 +628,17 @@ index 0000000000000000000000000000000000000000..b772f97646bb24146f4aa0a67ae3da85
 +
 +import net.kissenpvp.core.api.base.Implementation;
 +import net.kissenpvp.core.api.reflection.ReflectionClass;
++import org.jetbrains.annotations.NotNull;
 +
 +
 +public interface NMS extends Implementation
 +{
 +
-+    String getVersion();
++    @NotNull String getVersion();
 +
-+    ReflectionClass getNMSClass(String clazz);
++    @NotNull ReflectionClass getNMSClass(@NotNull String clazz);
 +
-+    ReflectionClass getBukkitClass(String clazz);
++    @NotNull ReflectionClass getBukkitClass(@NotNull String clazz);
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperGroubablePermissionEntry.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperGroubablePermissionEntry.java
 new file mode 100644
@@ -599,15 +681,16 @@ index 0000000000000000000000000000000000000000..6fe4afaf16ec3d4ea37ea2fc794ad92b
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissible.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissible.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..21037d40a25d1fe8416442dbbb7c2ca42846cece
+index 0000000000000000000000000000000000000000..b06ec685676f83c696a18a22b6856db08f4731ef
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissible.java
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +package net.kissenpvp.paper.api.permission;
 +
 +import org.bukkit.permissions.Permissible;
 +
 +public interface PaperPermissible extends Permissible, PaperPermissionEntry {
++
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermission.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermission.java
 new file mode 100644
@@ -639,7 +722,7 @@ index 0000000000000000000000000000000000000000..01d96e8de2758a3ea001115e58c2a0e1
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionEntry.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionEntry.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3aad2f9711323caa9953cd1157de529ed05cb6aa
+index 0000000000000000000000000000000000000000..a05f47271949fcc46881fa52bd7b5b4cf4f426e0
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionEntry.java
 @@ -0,0 +1,44 @@
@@ -683,7 +766,7 @@ index 0000000000000000000000000000000000000000..3aad2f9711323caa9953cd1157de529e
 +
 +    @NotNull @Unmodifiable Set<PaperPermission> getPermissionList(@NotNull Context context);
 +
-+    @NotNull Optional<@Nullable PaperPermission> getPermission(@NotNull String permission, @NotNull Context context);
++    @NotNull Optional<PaperPermission> getPermission(@NotNull String permission, @NotNull Context context);
 +
 +    boolean hasPermission(@NotNull String permission, @NotNull Context context);
 +}
@@ -970,254 +1053,3 @@ index 0000000000000000000000000000000000000000..cc56cc652c5c42ceaddee2af5ebb0a54
 +{
 +    void update();
 +}
-diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index f380a518bc444bfdfbbedf38805c7684e53a5629..7674d3354b74823845668e02d4b50bcc87a512cd 100644
---- a/src/main/java/org/bukkit/Bukkit.java
-+++ b/src/main/java/org/bukkit/Bukkit.java
-@@ -14,6 +14,8 @@ import java.util.Set;
- import java.util.UUID;
- import java.util.function.Consumer;
- import java.util.logging.Logger;
-+
-+import net.kissenpvp.paper.api.base.PaperKissen;
- import org.bukkit.Warning.WarningState;
- import org.bukkit.advancement.Advancement;
- import org.bukkit.block.data.BlockData;
-@@ -64,11 +66,29 @@ import io.papermc.paper.util.JarManifests; // Paper
- public final class Bukkit {
-     private static Server server;
- 
-+    // KissenPaper start
-+    private static PaperKissen kissen;
-+    // KissenPaper end
-+
-     /**
-      * Static class cannot be initialized.
-      */
-     private Bukkit() {}
- 
-+    // KissenPaper start
-+    public static PaperKissen getKissen() {
-+        return kissen;
-+    }
-+
-+    public static void setKissen(@NotNull PaperKissen kissen) {
-+        if (Bukkit.kissen != null) {
-+            throw new UnsupportedOperationException("Cannot redefine singleton Kissen");
-+        }
-+
-+        Bukkit.kissen = kissen;
-+    }
-+    // KissenPaper end
-+
-     /**
-      * Gets the current {@link Server} singleton
-      *
-diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index 9b84cb5abdf3db55cbc7ba19c8cd6955bf4fc5ec..23e38ba9b6ca03e83a254f0ec767eb923aa81c9c 100644
---- a/src/main/java/org/bukkit/OfflinePlayer.java
-+++ b/src/main/java/org/bukkit/OfflinePlayer.java
-@@ -4,6 +4,10 @@ import java.time.Duration;
- import java.time.Instant;
- import java.util.Date;
- import java.util.UUID;
-+
-+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
-+import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
-+import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
- import org.bukkit.ban.ProfileBanList;
- import org.bukkit.configuration.serialization.ConfigurationSerializable;
- import org.bukkit.entity.AnimalTamer;
-@@ -19,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
-  * player that is stored on the disk and can, thus, be retrieved without the
-  * player needing to be online.
-  */
--public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
-+public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, /* KissenPaper */ PaperPlayerClient, PlayerClient<PaperPlayerRank> {
- 
-     /**
-      * Checks if this player is currently online
-diff --git a/src/main/java/org/bukkit/command/ConsoleCommandSender.java b/src/main/java/org/bukkit/command/ConsoleCommandSender.java
-index f309c2ed39bcc700e5b491ff549bf0608a07aab8..b8a69f7e42d06ec08b1f647f8705c304949329ca 100644
---- a/src/main/java/org/bukkit/command/ConsoleCommandSender.java
-+++ b/src/main/java/org/bukkit/command/ConsoleCommandSender.java
-@@ -1,6 +1,7 @@
- package org.bukkit.command;
- 
-+import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
- import org.bukkit.conversations.Conversable;
- 
--public interface ConsoleCommandSender extends CommandSender, Conversable {
-+public interface ConsoleCommandSender extends CommandSender, Conversable, /* KissenPaper */ ConsoleClient {
- }
-diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index 14c92390aeaeee518f43778ccd5fc820fdc62689..3eef4a40afc672cafecaa052a107706cb73f8862 100644
---- a/src/main/java/org/bukkit/entity/Player.java
-+++ b/src/main/java/org/bukkit/entity/Player.java
-@@ -7,6 +7,12 @@ import java.time.Instant;
- import java.util.Collection;
- import java.util.Date;
- import java.util.Map;
-+
-+import net.kissenpvp.core.api.networking.client.entitiy.MessageReceiver;
-+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
-+import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
-+import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
-+import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
- import org.bukkit.BanEntry;
- import org.bukkit.DyeColor;
- import org.bukkit.Effect;
-@@ -51,7 +57,7 @@ import org.jetbrains.annotations.Nullable;
- /**
-  * Represents a player, connected or not
-  */
--public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, net.kyori.adventure.bossbar.BossBarViewer, com.destroystokyo.paper.network.NetworkClient { // Paper
-+public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, net.kyori.adventure.bossbar.BossBarViewer, com.destroystokyo.paper.network.NetworkClient, /* KissenPaper */ PaperOnlinePlayerClient, PaperPlayerClient, PlayerClient<PaperPlayerRank>, MessageReceiver { // Paper
- 
-     // Paper start
-     @Override
-diff --git a/src/main/java/org/bukkit/plugin/Plugin.java b/src/main/java/org/bukkit/plugin/Plugin.java
-index 4eb639fbb46a0848be207149ea433455550fae1c..cc4abfdda357531eb5434466914311fe10c45c3c 100644
---- a/src/main/java/org/bukkit/plugin/Plugin.java
-+++ b/src/main/java/org/bukkit/plugin/Plugin.java
-@@ -3,6 +3,8 @@ package org.bukkit.plugin;
- import java.io.File;
- import java.io.InputStream;
- import java.util.logging.Logger;
-+
-+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
- import org.bukkit.Server;
- import org.bukkit.command.TabExecutor;
- import org.bukkit.configuration.file.FileConfiguration;
-@@ -16,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
-  * <p>
-  * The use of {@link PluginBase} is recommended for actual Implementation
-  */
--public interface Plugin extends TabExecutor {
-+public interface Plugin extends TabExecutor, /* KissenPaper */ KissenPlugin {
-     /**
-      * Returns the folder that the plugin data's files are located in. The
-      * folder may not yet exist.
-diff --git a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..ace3b03163de85920dcbd4219df75807ca6eff3b 100644
---- a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-+++ b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-@@ -11,9 +11,14 @@ import java.io.OutputStream;
- import java.io.Reader;
- import java.net.URL;
- import java.net.URLConnection;
-+import java.text.MessageFormat;
- import java.util.List;
- import java.util.logging.Level;
- import java.util.logging.Logger;
-+
-+import net.kissenpvp.core.api.base.Kissen;
-+import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
-+import org.bukkit.Bukkit;
- import org.bukkit.Server;
- import org.bukkit.command.Command;
- import org.bukkit.command.CommandSender;
-@@ -79,6 +84,18 @@ public abstract class JavaPlugin extends PluginBase {
-         return dataFolder;
-     }
- 
-+    // KissenPaper start
-+    @Override
-+    public @NotNull Kissen getKissen() {
-+        return Bukkit.getKissen();
-+    }
-+
-+    @Override
-+    public void registerTranslation(@NotNull String s, @NotNull MessageFormat s1) {
-+        getKissen().getImplementation(LocalizationImplementation.class).register(this, s, s1);
-+    }
-+    // KissenPaper end
-+
-     /**
-      * Gets the associated PluginLoader responsible for this plugin
-      *
-@@ -348,6 +365,18 @@ public abstract class JavaPlugin extends PluginBase {
-         }
-     }
- 
-+    // KissenPaper start
-+    @Override
-+    public @NotNull String getFullName() {
-+        return description.getFullName();
-+    }
-+
-+    @Override
-+    public @NotNull String getPackage() {
-+        return "";
-+    }
-+    // KissenPaper end
-+
-     @Override
-     public void onLoad() {}
- 
-diff --git a/src/test/java/org/bukkit/plugin/TestPlugin.java b/src/test/java/org/bukkit/plugin/TestPlugin.java
-index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..27cc513e681b6233aba62c5c45f434f29f726e57 100644
---- a/src/test/java/org/bukkit/plugin/TestPlugin.java
-+++ b/src/test/java/org/bukkit/plugin/TestPlugin.java
-@@ -2,13 +2,18 @@ package org.bukkit.plugin;
- 
- import java.io.File;
- import java.io.InputStream;
-+import java.text.MessageFormat;
- import java.util.List;
-+
-+import net.kissenpvp.core.api.base.Kissen;
-+import org.bukkit.Bukkit;
- import org.bukkit.Server;
- import org.bukkit.command.Command;
- import org.bukkit.command.CommandSender;
- import org.bukkit.configuration.file.FileConfiguration;
- import org.bukkit.generator.BiomeProvider;
- import org.bukkit.generator.ChunkGenerator;
-+import org.jetbrains.annotations.NotNull;
- 
- public class TestPlugin extends PluginBase {
-     private boolean enabled = true;
-@@ -28,10 +33,23 @@ public class TestPlugin extends PluginBase {
-         throw new UnsupportedOperationException("Not supported.");
-     }
- 
-+    // KissenPaper start
-+    @Override
-+    public @NotNull Kissen getKissen() {
-+        return Bukkit.getKissen();
-+    }
-+
-+    @Override
-+    public void registerTranslation(@NotNull String s, @NotNull MessageFormat messageFormat) {
-+        throw new UnsupportedOperationException("Not supported.");
-+    }
-+    // KissenPaper end
-+
-     @Override
-     public PluginDescriptionFile getDescription() {
-         return new PluginDescriptionFile(pluginName, "1.0", "test.test");
-     }
-+
-     // Paper start
-     @Override
-     public io.papermc.paper.plugin.configuration.PluginMeta getPluginMeta() {
-@@ -94,6 +112,18 @@ public class TestPlugin extends PluginBase {
-         throw new UnsupportedOperationException("Not supported.");
-     }
- 
-+    // KissenPaper start
-+    @Override
-+    public @NotNull String getFullName() {
-+        throw new UnsupportedOperationException("Not supported.");
-+    }
-+
-+    @Override
-+    public @NotNull String getPackage() {
-+        return "net.kissenpvp";
-+    }
-+    // KissenPaper end
-+
-     @Override
-     public void onLoad() {
-         throw new UnsupportedOperationException("Not supported.");

@@ -1,11 +1,11 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Groldi <chniucg@gmail.com>
-Date: Thu, 10 Aug 2023 01:14:35 +0200
-Subject: [PATCH] Added kissen to gradle
+Date: Sun, 10 Sep 2023 15:52:02 +0200
+Subject: [PATCH] Adjusted gradle script
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 149f9088fe806467656e8b1c4157df60fda69ba7..5e7baabd946c8f40685430a302992873be568b40 100644
+index 149f9088fe806467656e8b1c4157df60fda69ba7..e46fd215fea2be1a5667f40cef4de401592ce01f 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -51,6 +51,10 @@ dependencies {
@@ -13,7 +13,7 @@ index 149f9088fe806467656e8b1c4157df60fda69ba7..5e7baabd946c8f40685430a302992873
      // Paper end
  
 +    // KissenPaper start
-+    implementation("net.kissenpvp:kissen-core-api:1.0.0-SNAPSHOT")
++    implementation(project(":kissen-api") )
 +    // KissenPaper end
 +
      api("org.apache.maven:maven-resolver-provider:3.8.5")

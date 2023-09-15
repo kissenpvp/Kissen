@@ -1,0 +1,79 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Mon, 11 Sep 2023 01:03:06 +0200
+Subject: [PATCH] Made the kissen-core start and stop
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 3238cbcba567b1242c77e41f6b6f19a8d157fb4e..21625cafef035475595f7ef17f913fcca8c2e0cb 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -53,6 +53,8 @@ import java.util.stream.Collectors;
+ import java.util.stream.Stream;
+ import javax.annotation.Nullable;
+ import javax.imageio.ImageIO;
++
++import net.kissenpvp.core.base.KissenCore;
+ import net.minecraft.CrashReport;
+ import net.minecraft.ReportedException;
+ import net.minecraft.SharedConstants;
+@@ -988,6 +990,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         }
+         // Spigot end
+ 
++        // KissenPaper start - pretty late shutdown for plugins to still access everything
++        KissenCore.getInstance().shutdown();
++        // KissenPaper end
++
+         // Paper start - move final shutdown items here
+         LOGGER.info("Flushing Chunk IO");
+         io.papermc.paper.chunk.system.io.RegionFileIOThread.close(true); // Paper // Paper - rewrite chunk system
+@@ -1106,6 +1112,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+             this.statusIcon = (ServerStatus.Favicon) this.loadStatusIcon().orElse(null); // CraftBukkit - decompile error
+             this.status = this.buildServerStatus();
+ 
++            // KissenPaper start
++            KissenCore.getInstance().start();
++            // KissenPaper end
++
+             // Spigot start
+             // Paper start - move done tracking
+             LOGGER.info("Running delayed init tasks");
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+index 9f422cbeaa52b3e6a0a27af4f8ad4ddb7808483f..a637e7606abca16b6f0df88c4a640edcefff23b0 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -19,6 +19,8 @@ import java.util.Locale;
+ import java.util.Optional;
+ import java.util.function.BooleanSupplier;
+ import javax.annotation.Nullable;
++
++import net.kissenpvp.paper.base.KissenPaperCore;
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.DefaultUncaughtExceptionHandlerWithName;
+ import net.minecraft.SharedConstants;
+@@ -50,6 +52,7 @@ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.GameType;
+ import net.minecraft.world.level.block.entity.SkullBlockEntity;
+ import net.minecraft.world.level.storage.LevelStorageSource;
++import org.bukkit.Bukkit;
+ import org.slf4j.Logger;
+ 
+ // CraftBukkit start
+@@ -192,6 +195,16 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         DedicatedServer.LOGGER.info("Loading properties");
+         DedicatedServerProperties dedicatedserverproperties = this.settings.getProperties();
+ 
++        // KissenPaper start
++        KissenPaperCore kissenPaperCore = new KissenPaperCore(LogUtils.getLogger());
++        Bukkit.setKissen(kissenPaperCore);
++        try {
++            kissenPaperCore.initialize(KissenPaperCore.class);
++        } catch (Exception exception) {
++            throw new RuntimeException(String.format("The system could not load the 'kissen' system due to a '%s' exception.", exception.getClass().getSimpleName()), exception);
++        }
++        // KissenPaper stop
++
+         if (this.isSingleplayer()) {
+             this.setLocalIp("127.0.0.1");
+         } else {
