@@ -1,0 +1,122 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Mon, 11 Sep 2023 01:08:59 +0200
+Subject: [PATCH] Included the kissen player system
+
+
+diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
+index 9b84cb5abdf3db55cbc7ba19c8cd6955bf4fc5ec..e3c0b6a486f1a0cb29b6939dd5b6da036faa9d86 100644
+--- a/src/main/java/org/bukkit/OfflinePlayer.java
++++ b/src/main/java/org/bukkit/OfflinePlayer.java
+@@ -4,6 +4,7 @@ import java.time.Duration;
+ import java.time.Instant;
+ import java.util.Date;
+ import java.util.UUID;
++
+ import org.bukkit.ban.ProfileBanList;
+ import org.bukkit.configuration.serialization.ConfigurationSerializable;
+ import org.bukkit.entity.AnimalTamer;
+@@ -19,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
+  * player that is stored on the disk and can, thus, be retrieved without the
+  * player needing to be online.
+  */
+-public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
++public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient { // KissenPaper
+ 
+     /**
+      * Checks if this player is currently online
+diff --git a/src/main/java/org/bukkit/command/CommandSender.java b/src/main/java/org/bukkit/command/CommandSender.java
+index 04e7cd0e4e2d0eb38fb2862ce6688a4470f30d6b..0fd1f0fa7ef8881efc62bffec5fca92d632b1681 100644
+--- a/src/main/java/org/bukkit/command/CommandSender.java
++++ b/src/main/java/org/bukkit/command/CommandSender.java
+@@ -1,6 +1,7 @@
+ package org.bukkit.command;
+ 
+ import java.util.UUID;
++
+ import net.kyori.adventure.audience.MessageType;
+ import net.kyori.adventure.identity.Identity;
+ import net.kyori.adventure.text.Component;
+@@ -9,7 +10,7 @@ import org.bukkit.permissions.Permissible;
+ import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
+ 
+-public interface CommandSender extends net.kyori.adventure.audience.Audience, Permissible { // Paper
++public interface CommandSender extends net.kyori.adventure.audience.Audience, Permissible, net.kissenpvp.core.api.networking.client.entitiy.ServerEntity { // Paper // KissenPaper
+ 
+     /**
+      * Sends this sender a message
+@@ -200,4 +201,11 @@ public interface CommandSender extends net.kyori.adventure.audience.Audience, Pe
+         this.sendMessage(new net.md_5.bungee.api.chat.TextComponent(components).toLegacyText());
+     }
+     // Paper end
++
++    // KissenPaper start
++    @Override
++    default @NotNull Component displayName() {
++        return name();
++    }
++    // KissenPaper end
+ }
+diff --git a/src/main/java/org/bukkit/command/ConsoleCommandSender.java b/src/main/java/org/bukkit/command/ConsoleCommandSender.java
+index f309c2ed39bcc700e5b491ff549bf0608a07aab8..5f9b1cd1fc2b9f81780e48c2966f839e5e1f3783 100644
+--- a/src/main/java/org/bukkit/command/ConsoleCommandSender.java
++++ b/src/main/java/org/bukkit/command/ConsoleCommandSender.java
+@@ -2,5 +2,5 @@ package org.bukkit.command;
+ 
+ import org.bukkit.conversations.Conversable;
+ 
+-public interface ConsoleCommandSender extends CommandSender, Conversable {
++public interface ConsoleCommandSender extends CommandSender, Conversable, net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient { // KissenPaper
+ }
+diff --git a/src/main/java/org/bukkit/command/MessageCommandSender.java b/src/main/java/org/bukkit/command/MessageCommandSender.java
+index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..ae48198d53702f3234dbb2c2468d3500db08ebc6 100644
+--- a/src/main/java/org/bukkit/command/MessageCommandSender.java
++++ b/src/main/java/org/bukkit/command/MessageCommandSender.java
+@@ -132,4 +132,25 @@ public interface MessageCommandSender extends CommandSender {
+         throw new UnsupportedOperationException();
+     }
+ 
++    // KissenPaper start
++    @Override
++    default @NotNull java.util.Locale getCurrentLocale() {
++        throw new UnsupportedOperationException();
++    }
++
++    @Override
++    default @NotNull net.kyori.adventure.text.Component displayName() {
++        throw new UnsupportedOperationException();
++    }
++
++    @Override
++    default boolean isConnected() {
++        throw new UnsupportedOperationException();
++    }
++
++    @Override
++    default boolean isClient() {
++        throw new UnsupportedOperationException();
++    }
++    // KissenPaper end
+ }
+diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
+index 14c92390aeaeee518f43778ccd5fc820fdc62689..b2323dd2d02223646e9d294deed536c1ba8de551 100644
+--- a/src/main/java/org/bukkit/entity/Player.java
++++ b/src/main/java/org/bukkit/entity/Player.java
+@@ -7,6 +7,7 @@ import java.time.Instant;
+ import java.util.Collection;
+ import java.util.Date;
+ import java.util.Map;
++
+ import org.bukkit.BanEntry;
+ import org.bukkit.DyeColor;
+ import org.bukkit.Effect;
+@@ -51,7 +52,7 @@ import org.jetbrains.annotations.Nullable;
+ /**
+  * Represents a player, connected or not
+  */
+-public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, net.kyori.adventure.bossbar.BossBarViewer, com.destroystokyo.paper.network.NetworkClient { // Paper
++public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, net.kyori.adventure.bossbar.BossBarViewer, com.destroystokyo.paper.network.NetworkClient, net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient { // Paper // KissenPaper
+ 
+     // Paper start
+     @Override
