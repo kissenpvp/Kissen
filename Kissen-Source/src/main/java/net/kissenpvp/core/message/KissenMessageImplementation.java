@@ -18,25 +18,10 @@
 
 package net.kissenpvp.core.message;
 
-import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.message.MessageImplementation;
 import net.kissenpvp.core.api.message.Theme;
-import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.message.settings.DefaultColor;
-import net.kissenpvp.core.message.settings.DefaultPrimaryColor;
-import net.kissenpvp.core.message.settings.DefaultSecondaryColor;
-
 
 public class KissenMessageImplementation implements MessageImplementation {
-    @Override
-    public String getKey(String key, String value) {
-        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultSecondaryColor.class) + key + " " + KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultColor.class) + "» " + KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultPrimaryColor.class) + value;
-    }
-
-    @Override
-    public int count(String input, String searchFor) {
-        return 0;
-    }
 
     @Override
     public Theme getDefaultTheme() {

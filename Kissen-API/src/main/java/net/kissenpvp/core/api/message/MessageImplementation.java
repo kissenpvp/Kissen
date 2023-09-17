@@ -22,9 +22,6 @@ import net.kissenpvp.core.api.base.Implementation;
 
 
 public interface MessageImplementation extends Implementation {
-    String getKey(String key, String value);
-
-    int count(String input, String searchFor);
 
     Theme getDefaultTheme();
 
