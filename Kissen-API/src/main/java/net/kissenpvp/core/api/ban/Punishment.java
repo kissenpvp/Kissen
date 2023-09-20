@@ -104,20 +104,20 @@ public interface Punishment<T> {
      * <p>If a reason was specified when the ban was created, it will be returned in the {@link Optional}.
      * If no reason was specified, an empty {@link Optional} will be returned.</p>
      *
-     * <p>Note that the reason for the punishment may be changed using the {@link #setReason(Component)} method.</p>
+     * <p>Note that the reason for the punishment may be changed using the {@link #setCause(Component)} method.</p>
      *
      * @return an {@link Optional} containing the reason for the punishment, or an empty {@link Optional} if no reason was specified
      */
-    @NotNull Optional<Component> getReason();
+    @NotNull Optional<Component> getCause();
 
     /**
      * Sets the reason for the player's ban. If the reason is null, the ban will be set without a reason.
-     * The reason should be a concise and clear explanation of the ban, and it can be retrieved by calling {@link #getReason()}.
+     * The reason should be a concise and clear explanation of the ban, and it can be retrieved by calling {@link #getCause()}.
      *
-     * @param component the reason for the ban, or null to remove the reason.
-     * @see #getReason()
+     * @param cause the reason for the ban, or null to remove the reason.
+     * @see #getCause()
      */
-    void setReason(@Nullable Component component) throws EventCancelledException;
+    void setCause(@Nullable Component cause) throws EventCancelledException;
 
     /**
      * Returns an unmodifiable list of comments made by team members on this player ban.

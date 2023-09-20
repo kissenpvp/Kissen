@@ -16,12 +16,12 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.api.command.exception;
+package net.kissenpvp.core.api.command.exception.type;
 
 import org.jetbrains.annotations.NotNull;
 
-public class IllegalReturnValueException extends IllegalTypeException {
-    public IllegalReturnValueException(@NotNull Class<?> value, @NotNull Class<?>... allowed) {
+public class IllegalParameterException extends IllegalTypeException {
+    public IllegalParameterException(@NotNull Class<?> value, @NotNull Class<?>... allowed) {
         super(value, allowed);
     }
 }

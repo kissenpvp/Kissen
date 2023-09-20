@@ -16,20 +16,26 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.api.command.exception;
-
+package net.kissenpvp.core.api.command.exception.type;
 
 import org.jetbrains.annotations.NotNull;
 
-public class UnauthorizedException extends IllegalAccessException {
+public class IllegalTypeException extends IllegalStateException {
 
-    private final String permission;
+    private final Class<?> value;
+    private final Class<?>[] allowed;
 
-    public UnauthorizedException(@NotNull String permission) {
-        this.permission = permission;
+    public IllegalTypeException(@NotNull Class<?> value, @NotNull Class<?>... allowed) {
+        super(new IllegalStateException());
+        this.value = value;
+        this.allowed = allowed;
     }
 
-    public @NotNull String getPermission() {
-        return permission;
+    public Class<?> getValue() {
+        return value;
+    }
+
+    public Class<?>[] getAllowed() {
+        return allowed;
     }
 }

@@ -19,6 +19,7 @@
 package net.kissenpvp.core.command;
 
 import net.kissenpvp.core.api.command.executor.CommandExecutor;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -27,7 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-public interface CommandHolder<S, C extends CommandHolder<S, C>> extends Iterable<CommandHolder<?, ?>> {
+public interface CommandHolder<S extends ServerEntity, C extends CommandHolder<S, C>> extends Iterable<CommandHolder<?, ?>> {
 
     @NotNull String getName();
 

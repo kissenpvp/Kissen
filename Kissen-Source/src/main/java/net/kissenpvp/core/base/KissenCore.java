@@ -23,6 +23,7 @@ import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.base.ImplementationAbsentException;
 import net.kissenpvp.core.api.base.Kissen;
 import net.kissenpvp.core.api.base.loader.Ignore;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.config.Option;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.event.EventImplementation;
@@ -42,6 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Getter
@@ -252,6 +254,6 @@ public abstract class KissenCore implements Kissen {
     }
 
     private enum OperationState {
-        PRE, START, POST
+        PRE, START, POST,
     }
 }

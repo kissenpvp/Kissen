@@ -16,13 +16,14 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.api.command.exception;
+package net.kissenpvp.core.api.command.exception.deserialization;
 
+import net.kissenpvp.core.api.command.exception.CommandException;
 import org.jetbrains.annotations.NotNull;
 
-public class TemporaryDeserializationException extends CommandException {
+public class DeserializationException extends CommandException {
 
-    public TemporaryDeserializationException(@NotNull Throwable cause) {
-        super("The provided argument of type <Type/Class Name> cannot be deserialized. Please ensure it conforms to the expected structure for deserialization.", cause);
+    public DeserializationException(@NotNull Throwable cause) {
+        super(cause);
     }
 }

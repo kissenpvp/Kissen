@@ -19,14 +19,15 @@
 package net.kissenpvp.core.api.command.executor;
 
 import net.kissenpvp.core.api.command.CommandPayload;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.Set;
 
 @FunctionalInterface
-public interface TabCompleterExecutor<SENDER> {
+public interface TabCompleterExecutor<S extends ServerEntity> {
 
-    @NotNull Collection<String> execute(@NotNull CommandPayload<SENDER> commandPayload);
+    @NotNull Collection<String> execute(@NotNull CommandPayload<S> commandPayload);
 
 }

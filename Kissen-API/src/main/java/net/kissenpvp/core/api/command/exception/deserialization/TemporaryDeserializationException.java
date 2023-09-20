@@ -16,26 +16,13 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.api.command.exception;
+package net.kissenpvp.core.api.command.exception.deserialization;
 
 import org.jetbrains.annotations.NotNull;
 
-public class IllegalTypeException extends IllegalStateException {
+public class TemporaryDeserializationException extends DeserializationException {
 
-    private final Class<?> value;
-    private final Class<?>[] allowed;
-
-    public IllegalTypeException(@NotNull Class<?> value, @NotNull Class<?>... allowed) {
-        super(new IllegalStateException());
-        this.value = value;
-        this.allowed = allowed;
-    }
-
-    public Class<?> getValue() {
-        return value;
-    }
-
-    public Class<?>[] getAllowed() {
-        return allowed;
+    public TemporaryDeserializationException(@NotNull Throwable cause) {
+        super(cause);
     }
 }

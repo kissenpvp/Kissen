@@ -18,9 +18,12 @@
 
 package net.kissenpvp.core.command;
 
+import net.kissenpvp.core.api.base.ExceptionHandler;
 import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.command.ArgumentParser;
-import net.kissenpvp.core.api.command.exception.TemporaryDeserializationException;
+import net.kissenpvp.core.api.command.CommandPayload;
+import net.kissenpvp.core.api.command.exception.deserialization.TemporaryDeserializationException;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -33,18 +36,45 @@ import java.util.Objects;
 public class KissenCommandImplementation implements Implementation {
 
     private final Map<Class<?>, ArgumentParser<?, ?>> parserList;
+    private final CommandExceptionHandlerService commandExceptionHandlerService;
 
+    /**
+     * Creates a new instance of KissenCommandImplementation.
+     * Initializes the parserList with an empty HashMap.
+     * Initializes the exceptionHandlers with an empty HashSet.
+     */
     public KissenCommandImplementation() {
         this.parserList = new HashMap<>();
+        this.commandExceptionHandlerService = new CommandExceptionHandlerService();
     }
 
-    public <T, S> void registerParser(@NotNull Class<T> type, @NotNull ArgumentParser<T, S> parser) {
+    public <T, S extends ServerEntity> void registerParser(@NotNull Class<T> type, @NotNull ArgumentParser<T, S> parser) {
         if (!parserList.containsKey(type)) {
             parserList.put(type, parser);
             return;
         }
         throw new IllegalArgumentException(String.format("Type %s already exists in the system. Unable to proceed with the operation. Please use a different type or ensure the existing type is correctly removed before attempting again.", type.getSimpleName()));
     }
+
+    /**
+     * Registers an ExceptionHandler to be used by KissenCommandImplementation.
+     *
+     * @param exceptionHandler The ExceptionHandler to be registered.
+     */
+    public void registerHandler(@NotNull ExceptionHandler<?> exceptionHandler)
+    {
+        commandExceptionHandlerService.registerHandler(exceptionHandler);
+    }
+
+    /**
+     * Handles a Throwable using the registered ExceptionHandlers.
+     *
+     * @param throwable The Throwable to be handled.
+     */
+    public <S extends ServerEntity> boolean handle(@NotNull CommandPayload<S> commandPayload, @NotNull Throwable throwable) {
+        return commandExceptionHandlerService.handleThrowable(commandPayload, throwable);
+    }
+
 
     public @NotNull @Unmodifiable Map<Class<?>, ArgumentParser<?, ?>> getParserList() {
         return Collections.unmodifiableMap(parserList);

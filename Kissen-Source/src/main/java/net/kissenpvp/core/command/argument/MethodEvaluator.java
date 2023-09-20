@@ -23,7 +23,7 @@ import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.annotations.Default;
 import net.kissenpvp.core.api.command.annotations.IgnoreQuote;
 import net.kissenpvp.core.api.command.exception.ArgumentParserAbsentException;
-import net.kissenpvp.core.api.command.exception.CommandException;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.command.KissenCommandImplementation;
 import org.jetbrains.annotations.NotNull;
@@ -53,7 +53,7 @@ import java.util.Optional;
  * The main public method provided by this class is {@link #evaluateMethod(Method)}, which processes a method and returns
  * a list of its parameters represented as {@link Argument} objects.
  */
-public class MethodEvaluator<S> {
+public class MethodEvaluator<S extends ServerEntity> {
 
     /**
      * Evaluates a given method, analyzing each of its parameters to extract {@link Argument} objects from them.
@@ -144,7 +144,7 @@ public class MethodEvaluator<S> {
                 }
                 catch (ClassNotFoundException classNotFoundException)
                 {
-                    throw new CommandException(String.format("Class %s was not not found.", typeName));
+                    throw new RuntimeException(String.format("Class %s was not not found in the classpath. Ensure the class is available in your project's classpath.", typeName));
                 }
             }
             default -> {} // empty
@@ -216,7 +216,7 @@ public class MethodEvaluator<S> {
      * @param def     The array of string default values to be deserialized into specific types.
      * @return An array of objects, where each object is an instance of the specified type.
      */
-    private Object[] createArray(Class<?> type, ArgumentParser<?, ?> adapter, String[] def) {
+    private Object[] createArray(Class<?> type, ArgumentParser<?, ?> adapter, String @NotNull [] def) {
         Object[] value = (Object[]) Array.newInstance(type, 0);
         for (String arg : def) {
             value = getCommandImplementation().add(value, getCommandImplementation().deserialize(arg, adapter));
@@ -231,16 +231,16 @@ public class MethodEvaluator<S> {
      * In accordance to the API design, it is required for any array parameters to be placed last in any method's parameter ordering.
      * <p>
      * This function validates the placement of the given parameter, checking whether it is the last element in the parameter list if it is an array.
-     * If the array parameter is not in the right position, an exception of type {@link CommandException} is thrown.
+     * If the array parameter is not in the right position, an exception of type {@link RuntimeException} is thrown.
      *
      * @param parameters The array of method's parameters.
      * @param isArray    A boolean indicating whether the parameter to validate is an array.
      * @param parameter  The parameter to validate.
-     * @throws CommandException If the array parameter is not the last in the list.
+     * @throws RuntimeException If the array parameter is not the last in the list.
      */
     private void validateArrayPlacement(@NotNull Parameter[] parameters, boolean isArray, @NotNull Parameter parameter) {
         if (isArray && parameter != parameters[parameters.length - 1]) {
-            throw new CommandException("Please ensure that arrays are placed as the final argument, in accordance with the required syntax.", new IllegalArgumentException());
+            throw new RuntimeException("Please ensure that arrays are placed as the final argument, in accordance with the required syntax.", new IllegalStateException());
         }
     }
 }

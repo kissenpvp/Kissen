@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.Optional;
 
-public interface CommandPayload<S> {
+public interface CommandPayload<S extends ServerEntity> {
 
     @NotNull String getLabel();
 

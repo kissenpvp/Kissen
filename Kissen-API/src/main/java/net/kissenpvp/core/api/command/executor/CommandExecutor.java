@@ -19,11 +19,12 @@
 package net.kissenpvp.core.api.command.executor;
 
 import net.kissenpvp.core.api.command.CommandPayload;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 
 @FunctionalInterface
-public interface CommandExecutor<SENDER> {
+public interface CommandExecutor<S extends ServerEntity> {
 
-    boolean execute(@NotNull CommandPayload<SENDER> commandPayload);
+    boolean execute(@NotNull CommandPayload<S> commandPayload);
 
 }

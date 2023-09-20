@@ -20,8 +20,9 @@ package net.kissenpvp.core.command.argument;
 
 import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
-import net.kissenpvp.core.api.command.exception.CommandException;
-import net.kissenpvp.core.api.command.exception.TemporaryDeserializationException;
+import net.kissenpvp.core.api.command.exception.deserialization.DeserializationException;
+import net.kissenpvp.core.api.command.exception.deserialization.TemporaryDeserializationException;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.command.KissenCommandImplementation;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @see Argument
  * @see CommandPayload
  */
-public record ArgumentEvaluator<S>(@NotNull @Unmodifiable List<Argument<?, S>> arguments) {
+public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable List<Argument<?, S>> arguments) {
 
     /**
      * This method is used to parse command arguments.
@@ -51,12 +52,11 @@ public record ArgumentEvaluator<S>(@NotNull @Unmodifiable List<Argument<?, S>> a
      * @return array of parsed objects
      * @throws TemporaryDeserializationException is thrown when an error occurs during parsing.
      */
-    public @NotNull Object[] parseArguments(@NotNull CommandPayload<S> commandPayload) throws TemporaryDeserializationException {
+    public @NotNull Object[] parseArguments(@NotNull CommandPayload<S> commandPayload) throws DeserializationException {
 
         Object[] parameters = new Object[0];
         AtomicInteger currentArgumentIndex = new AtomicInteger(0);
-        KissenCommandImplementation kissenCommandImplementation = KissenCore.getInstance()
-                .getImplementation(KissenCommandImplementation.class);
+        KissenCommandImplementation kissenCommandImplementation = KissenCore.getInstance().getImplementation(KissenCommandImplementation.class);
 
         for (Argument<?, S> argument : arguments) {
             if (CommandPayload.class.isAssignableFrom(argument.type())) {
@@ -85,18 +85,17 @@ public record ArgumentEvaluator<S>(@NotNull @Unmodifiable List<Argument<?, S>> a
 
     /**
      * This private method is an internal helper used by the parseArguments function.
-     * It expresses the behaviour when an argumentOptional is empty.
+     * It expresses the behavior when an argumentOptional is empty.
      *
      * @param parameters           the current parameters
      * @param argument             the argument
      * @param currentArgumentIndex the index tracked of the current argument
      * @return a new array that includes the parameter
-     * @throws CommandException if the argument is not nullable
+     * @throws NullPointerException if the argument is not nullable
      */
-    private @NotNull Object[] handleEmptyArgument(@NotNull Object[] parameters, @NotNull Argument<?, S> argument, @NotNull AtomicInteger currentArgumentIndex) throws CommandException {
+    private @NotNull Object[] handleEmptyArgument(@NotNull Object[] parameters, @NotNull Argument<?, S> argument, @NotNull AtomicInteger currentArgumentIndex) throws NullPointerException {
         if (!argument.isNullable()) {
-            throw new CommandException(String.format("The argument '%s' cannot be null or undefined.", argument.type()
-                    .getName()), new NullPointerException());
+            throw new NullPointerException(String.format("The argument '%s' cannot be null or undefined.", argument.type().getName()));
         }
 
         currentArgumentIndex.incrementAndGet();
@@ -141,7 +140,11 @@ public record ArgumentEvaluator<S>(@NotNull @Unmodifiable List<Argument<?, S>> a
             return argumentParser.deserialize(input);
         } catch (Exception exception) {
             argumentParser.processError(input, exception);
-            throw new TemporaryDeserializationException(exception);
+            if(exception instanceof DeserializationException deserializationException)
+            {
+                throw deserializationException;
+            }
+            throw new DeserializationException(exception);
         }
     }
 
@@ -153,7 +156,7 @@ public record ArgumentEvaluator<S>(@NotNull @Unmodifiable List<Argument<?, S>> a
      * @param commandPayload  the command payload
      * @return the parsed argument string encapsulated in an Optional
      */
-    private @NotNull Optional<String> readFullString(@NotNull Argument<?, S> argument, @NotNull AtomicInteger currentArgument, CommandPayload<S> commandPayload) {
+    private @NotNull Optional<String> readFullString(@NotNull Argument<?, S> argument, @NotNull AtomicInteger currentArgument, @NotNull CommandPayload<S> commandPayload) {
         return commandPayload.getArgument(currentArgument.get()).map(argumentValue -> {
             currentArgument.incrementAndGet();
             if (!argument.ignoreQuote() && argumentValue.charAt(0) == '"') {
