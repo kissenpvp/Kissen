@@ -24,5 +24,5 @@ import org.jetbrains.annotations.NotNull;
 
 public interface MessageReceiver {
 
-    @NotNull Theme getTheme();
+    @NotNull Audience getKyoriAudience();
 }

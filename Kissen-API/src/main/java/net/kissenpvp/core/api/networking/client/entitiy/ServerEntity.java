@@ -19,6 +19,7 @@
 package net.kissenpvp.core.api.networking.client.entitiy;
 
 import net.kissenpvp.core.api.ban.BanOperator;
+import net.kissenpvp.core.api.message.Theme;
 import net.kissenpvp.core.api.networking.client.Client;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,4 +30,6 @@ public interface ServerEntity extends Client, BanOperator {
     @NotNull String getName();
 
     @NotNull Locale getCurrentLocale();
+
+    @NotNull Theme getTheme();
 }

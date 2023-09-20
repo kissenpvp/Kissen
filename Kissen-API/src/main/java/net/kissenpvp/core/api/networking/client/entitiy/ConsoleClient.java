@@ -18,4 +18,4 @@
 
 package net.kissenpvp.core.api.networking.client.entitiy;
 
-public interface ConsoleClient extends ServerEntity {}
+public interface ConsoleClient extends ServerEntity, MessageReceiver {}
