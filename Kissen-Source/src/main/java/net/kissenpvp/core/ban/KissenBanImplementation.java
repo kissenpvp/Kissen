@@ -81,7 +81,10 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
 
     @Override
     public @NotNull Optional<B> getBan(int id) {
-        return cachedBans.stream().filter(ban -> ban.getID() == id).findFirst();
+        return cachedBans.stream().filter(ban -> {
+            System.out.println(ban.getID() + " == " + id + " (" + (ban.getID() == id) + ")");
+            return ban.getID() == id;
+        }).findFirst();
     }
 
     @Override

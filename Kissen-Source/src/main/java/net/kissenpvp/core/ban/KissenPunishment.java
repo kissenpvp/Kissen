@@ -77,21 +77,21 @@ public abstract class KissenPunishment<T> implements Punishment<T> {
     }
 
     @Override
-    public @NotNull Optional<Component> getReason() {
+    public @NotNull Optional<Component> getCause() {
         return kissenPunishmentNode.reason()
                 .toOptional()
                 .map(text -> KissenComponentSerializer.getInstance().getMiniSerializer().deserialize(text));
     }
 
     @Override
-    public void setReason(@Nullable Component component) throws EventCancelledException {
+    public void setCause(@Nullable Component cause) throws EventCancelledException {
         if (dataWriter == null) {
             throw new EventCancelledException();
         }
 
         //TODO event
         kissenPunishmentNode.reason()
-                .setValue(Optional.ofNullable(component)
+                .setValue(Optional.ofNullable(cause)
                         .map(node -> KissenComponentSerializer.getInstance().getMiniSerializer().serialize(node))
                         .orElse(null));
         dataWriter.update(kissenPunishmentNode);
