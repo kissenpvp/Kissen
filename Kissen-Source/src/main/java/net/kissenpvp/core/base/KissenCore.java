@@ -222,6 +222,35 @@ public abstract class KissenCore implements Kissen {
         });
     }
 
+    public void load(@NotNull PluginState pluginState, @NotNull KissenPlugin kissenPlugin)
+    {
+        switch (pluginState) {
+            case PRE -> iterateKissenImplementation(implementation -> implementation.load(kissenPlugin));
+            case POST -> iterateKissenImplementation(implementation -> implementation.postLoad(kissenPlugin));
+        }
+    }
+
+    public void enable(@NotNull PluginState pluginState, @NotNull KissenPlugin kissenPlugin)
+    {
+        switch (pluginState) {
+            case PRE -> iterateKissenImplementation(implementation -> implementation.enable(kissenPlugin));
+            case POST -> iterateKissenImplementation(implementation -> implementation.postEnable(kissenPlugin));
+        }
+    }
+
+    public void disable(@NotNull PluginState pluginState, @NotNull KissenPlugin kissenPlugin)
+    {
+        switch (pluginState) {
+            case PRE -> iterateKissenImplementation(implementation -> implementation.disable(kissenPlugin));
+            case POST -> iterateKissenImplementation(implementation -> implementation.postDisable(kissenPlugin));
+        }
+    }
+
+    private void iterateKissenImplementation(@NotNull Consumer<KissenImplementation> kissenImplementationConsumer)
+    {
+        getKissenImplementations().forEach(kissenImplementationConsumer);
+    }
+
     private enum OperationState {
         PRE, START, POST
     }
