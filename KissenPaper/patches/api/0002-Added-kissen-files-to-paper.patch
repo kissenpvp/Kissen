@@ -278,6 +278,18 @@ index 0000000000000000000000000000000000000000..d4aaecc0c25f54c5721c99e02fb7ee16
 +
 +public interface PaperArgumentParser<T> extends ArgumentParser<T, CommandSender> {
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..a8ea1223da9099039c285478de31483135c0ab6f
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java
+@@ -0,0 +1,6 @@
++package net.kissenpvp.paper.api.command;
++
++import net.kissenpvp.core.api.command.exception.CommandExceptionHandler;
++import org.bukkit.command.CommandSender;
++
++public interface PaperCommandExceptionHandler<T extends Throwable> extends CommandExceptionHandler<T, CommandSender> { }
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..fcb026696a30412901844c46ad601991c35b6b96

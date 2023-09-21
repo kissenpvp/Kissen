@@ -43,10 +43,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..37d3bbcac79bbcdca49cfcd4efae604028e8ceb3
+index 0000000000000000000000000000000000000000..c1176cb9915e0511082b576427a97936a64d5add
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,182 @@
+@@ -0,0 +1,191 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -79,6 +79,8 @@ index 0000000000000000000000000000000000000000..37d3bbcac79bbcdca49cfcd4efae6040
 +import net.kissenpvp.paper.api.ban.PaperBanImplementation;
 +import net.kissenpvp.paper.api.ban.PaperPunishment;
 +import net.kissenpvp.paper.api.base.Context;
++import net.kissenpvp.paper.api.command.PaperCommandImplementation;
++import net.kissenpvp.paper.ban.command.PaperBanParser;
 +import net.kyori.adventure.text.Component;
 +import org.bukkit.Bukkit;
 +import org.bukkit.entity.Player;
@@ -94,6 +96,13 @@ index 0000000000000000000000000000000000000000..37d3bbcac79bbcdca49cfcd4efae6040
 +import java.util.stream.Stream;
 +
 +public class KissenPaperBanImplementation extends KissenBanImplementation<PaperBan, PaperPunishment> implements PaperBanImplementation {
++
++
++    @Override
++    public boolean postStart() {
++        Bukkit.getKissen().getImplementation(PaperCommandImplementation.class).registerParser(PaperBan.class, new PaperBanParser());
++        return super.postStart();
++    }
 +
 +    @Override
 +    public void applyBan(@NotNull PaperPunishment ban) {
@@ -366,6 +375,89 @@ index 0000000000000000000000000000000000000000..d505df42ce46658a7b3d899cacb4ad3b
 +        return Bukkit.getOnlinePlayers().stream().filter(player -> player.getTotalID().equals(getTotalID())).collect(Collectors.toSet());
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..c1142f8964c0a24c1d15e7b684cffe3743b7c22a
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
+@@ -0,0 +1,25 @@
++package net.kissenpvp.paper.ban.command;
++
++import net.kissenpvp.core.api.command.annotations.CommandData;
++import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.paper.api.ban.PaperBan;
++import net.kissenpvp.paper.api.command.PaperCommandPayload;
++import org.bukkit.OfflinePlayer;
++import org.bukkit.entity.Player;
++import org.jetbrains.annotations.NotNull;
++
++public class KissenPaperBanCommand {
++
++    @CommandData(permissionRequired = false, value = "ban", aliases = "punish", description = "This command is used to ban or punish a specific user by removing their access rights from the server.")
++    public void ban(@NotNull PaperCommandPayload payload, @NotNull OfflinePlayer offlinePlayer, @NotNull PaperBan paperBan)
++    {
++        try
++        {
++            payload.getSender().sendMessage(offlinePlayer.punish(paperBan, payload.getSender()).getID() + " ist jetzt erschaffen");
++        }
++        catch (BackendException backendException)
++        {
++            payload.getSender().sendMessage("Backend down oder so");
++        }
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/ban/command/PaperBanParser.java b/src/main/java/net/kissenpvp/paper/ban/command/PaperBanParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..674545d91be1d08e3e0e19a9d00678d319578d3d
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/ban/command/PaperBanParser.java
+@@ -0,0 +1,46 @@
++package net.kissenpvp.paper.ban.command;
++
++import net.kissenpvp.core.api.ban.Ban;
++import net.kissenpvp.core.api.ban.BanType;
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.exception.deserialization.DeserializationException;
++import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.paper.api.ban.PaperBan;
++import net.kissenpvp.paper.api.ban.PaperBanImplementation;
++import net.kissenpvp.paper.api.command.PaperArgumentParser;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Collection;
++import java.util.Optional;
++import java.util.stream.Collectors;
++
++public class PaperBanParser implements PaperArgumentParser<PaperBan> {
++    @Override
++    public @NotNull String serialize(@NotNull PaperBan object) {
++        return String.valueOf(object.getID());
++    }
++
++    @Override
++    public @NotNull PaperBan deserialize(@NotNull String input) {
++        PaperBanImplementation paperBanImplementation = Bukkit.getKissen().getImplementation(PaperBanImplementation.class);
++        try {
++            paperBanImplementation.createBan(0, "Hacking", BanType.BAN);
++        } catch (BackendException e) {
++            throw new RuntimeException(e);
++        }
++        Optional<PaperBan> paperBan = paperBanImplementation.getBan(Integer.parseInt(input));
++        return paperBan.orElse(paperBanImplementation.getBanSet().stream().filter(ban -> ban.getName().equals(input)).findFirst().orElseThrow(() -> new DeserializationException(new NullPointerException())));
++    }
++
++    @Override
++    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
++        return Bukkit.getKissen().getImplementation(PaperBanImplementation.class).getBanSet().stream().map(Ban::getID).map(String::valueOf).collect(Collectors.toSet());
++    }
++
++    @Override
++    public void processError(@NotNull String string, @NotNull Exception exception) {
++        PaperArgumentParser.super.processError(string, exception);
++    }
++}
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..4446e728cd8c2a3869d0092000c347a44ca8bd39
@@ -451,10 +543,10 @@ index 0000000000000000000000000000000000000000..4446e728cd8c2a3869d0092000c347a4
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b72bf1b41c695d9ae7ab6219b393d1e6ec45bc7f
+index 0000000000000000000000000000000000000000..7a51bc0e3e54e641d557c08389f8d99d515a0ab0
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
-@@ -0,0 +1,263 @@
+@@ -0,0 +1,269 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -488,12 +580,15 @@ index 0000000000000000000000000000000000000000..b72bf1b41c695d9ae7ab6219b393d1e6
 +import net.kissenpvp.paper.command.command.KissenPaperAbstractCommand;
 +import net.kissenpvp.paper.command.command.plugin.KissenPaperPluginCommand;
 +import net.kissenpvp.paper.command.command.system.KissenPaperCommand;
++import net.kissenpvp.paper.command.handler.CommandExceptionParser;
++import net.kissenpvp.paper.command.handler.PlayerExceptionHandler;
 +import net.kissenpvp.paper.command.executor.KissenPaperCommandExecutor;
 +import net.kissenpvp.paper.command.executor.KissenPaperCompleteExecutor;
 +import net.kissenpvp.paper.command.parser.*;
 +import net.kissenpvp.paper.command.target.KissenPaperTargetValidator;
 +import net.kyori.adventure.text.format.NamedTextColor;
 +import org.bukkit.Bukkit;
++import org.bukkit.OfflinePlayer;
 +import org.bukkit.command.Command;
 +import org.bukkit.command.CommandMap;
 +import org.bukkit.command.CommandSender;
@@ -553,8 +648,12 @@ index 0000000000000000000000000000000000000000..b72bf1b41c695d9ae7ab6219b393d1e6
 +
 +        // Advanced
 +        registerParser(Player.class, new PlayerParser());
++        registerParser(OfflinePlayer.class, new OfflinePlayerParser());
 +        registerParser(NamedTextColor.class, new NamedTextColorParser());
 +
++        //Exception handler
++        registerHandler(new CommandExceptionParser());
++        registerHandler(new PlayerExceptionHandler());
 +    }
 +
 +    @Override
@@ -570,7 +669,6 @@ index 0000000000000000000000000000000000000000..b72bf1b41c695d9ae7ab6219b393d1e6
 +
 +    @Override
 +    public void setupComplete() {
-+        registerCommand(new TestCommand());
 +        KissenImplementation.super.setupComplete();
 +    }
 +
@@ -782,7 +880,7 @@ index 0000000000000000000000000000000000000000..75f6ea0214ae3badc7a6d0f35cb6c686
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..677380c8366772402243e9a80d391f7ae4d806bb
+index 0000000000000000000000000000000000000000..d86008e05512c8ffbd18773c457f0b8225649f40
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
 @@ -0,0 +1,393 @@
@@ -980,7 +1078,7 @@ index 0000000000000000000000000000000000000000..677380c8366772402243e9a80d391f7a
 +     */
 +    public final void initCompleter(@NotNull TabCompleterExecutor<CommandSender> tabExecutor) {
 +        if (this.tabExecutor != null) {
-+            throw new IllegalStateException("Completer already initialized");
++            throw new IllegalStateException("Initialization of Completer already executed.");
 +        }
 +
 +        this.tabExecutor = tabExecutor;
@@ -1589,10 +1687,10 @@ index 0000000000000000000000000000000000000000..6032f5bf3442e03bdd95d095341c6323
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCommandExecutor.java b/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCommandExecutor.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..39bc58c72363958d703c2d843fe3417020516e68
+index 0000000000000000000000000000000000000000..187bfbcede6bf7b6648e5a224502eb2b4e59da2b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCommandExecutor.java
-@@ -0,0 +1,151 @@
+@@ -0,0 +1,116 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1613,21 +1711,16 @@ index 0000000000000000000000000000000000000000..39bc58c72363958d703c2d843fe34170
 +
 +package net.kissenpvp.paper.command.executor;
 +
-+import net.kissenpvp.core.api.command.ArgumentParser;
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.core.api.command.exception.CommandException;
 +import net.kissenpvp.core.api.command.executor.CommandExecutor;
-+import net.kissenpvp.core.api.networking.client.entitiy.PlayerOfflineException;
-+import net.kissenpvp.core.command.argument.Argument;
 +import net.kissenpvp.core.command.argument.ArgumentEvaluator;
 +import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
 +import net.kissenpvp.paper.command.command.KissenPaperAbstractCommand;
-+import net.kyori.adventure.text.Component;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
 +
-+import java.lang.reflect.InvocationTargetException;
 +import java.lang.reflect.Method;
 +
 +
@@ -1693,43 +1786,13 @@ index 0000000000000000000000000000000000000000..39bc58c72363958d703c2d843fe34170
 +            }
 +            method.invoke(holder, parameter);
 +            return true;
-+        } catch (CommandException commandException) {
-+            processError(context, commandException.getCause());
++        } catch (Throwable throwable) {
++            if(!Bukkit.getKissen().getImplementation(KissenPaperCommandImplementation.class).handle(context, throwable))
++            {
++                throw new CommandException(throwable);
++            }
 +            return false;
-+        } catch (IllegalAccessException | InvocationTargetException exception) {
-+            throw new CommandException(String.format("An error occurred while processing the command '%s'.", context.getLabel()), exception);
 +        }
-+    }
-+
-+    /**
-+     * Processes the specified error, typically thrown during command invocation, by applying a defined error handling strategy.
-+     * <p>
-+     * The {@code processError} method is a private helper method used within this class to isolate the error processing logic from the main command invocation logic implemented in the {@code invokeCommand} method.
-+     * This method gets invoked when a {@link CommandException} is caught in the main method and is handed the cause of the exception for further processing.
-+     * This method currently has no implementation (TODO) and hence no error processing is performed at the moment. A suitable implementation could, for example, entail logging the error in a specific way, transforming
-+     * the error into another form, or handling the error based on its type or content, etc.
-+     *
-+     * @param cause The {@link Throwable} that caused the method invocation to fail. This parameter must not be null.
-+     * @throws NullPointerException If the provided {@code cause} parameter is null.
-+     */
-+    private void processError(@NotNull CommandPayload<CommandSender> context, @NotNull Throwable cause) {
-+
-+        Component component = null;
-+        if(cause instanceof NullPointerException)
-+        {
-+            component = Component.translatable("messages.command.error.incorrect-usage");
-+        } else if(cause instanceof PlayerOfflineException playerOfflineException)
-+        {
-+            component = Component.translatable("messages.command.error.player-offline", Component.text(playerOfflineException.getName()));
-+        }
-+
-+        if(component != null)
-+        {
-+            context.getSender().sendMessage(component);
-+            return;
-+        }
-+
-+        throw new CommandException(cause);
 +    }
 +
 +    public @NotNull ArgumentEvaluator<CommandSender> getEvaluator() {
@@ -1746,10 +1809,10 @@ index 0000000000000000000000000000000000000000..39bc58c72363958d703c2d843fe34170
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCompleteExecutor.java b/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCompleteExecutor.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..c4ab8b1051bf13569315fdccf260146c5eb52a0f
+index 0000000000000000000000000000000000000000..e5453caa56d556e8c7b7e1c541369014a375c56e
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCompleteExecutor.java
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,72 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1772,8 +1835,8 @@ index 0000000000000000000000000000000000000000..c4ab8b1051bf13569315fdccf260146c
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.core.api.command.exception.CommandException;
-+import net.kissenpvp.core.api.command.exception.IllegalParameterException;
-+import net.kissenpvp.core.api.command.exception.IllegalReturnValueException;
++import net.kissenpvp.core.api.command.exception.type.IllegalParameterException;
++import net.kissenpvp.core.api.command.exception.type.IllegalReturnValueException;
 +import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
@@ -1781,7 +1844,6 @@ index 0000000000000000000000000000000000000000..c4ab8b1051bf13569315fdccf260146c
 +import java.lang.reflect.Method;
 +import java.util.Collection;
 +import java.util.HashSet;
-+import java.util.List;
 +
 +public class KissenPaperCompleteExecutor implements TabCompleterExecutor<CommandSender> {
 +
@@ -1793,7 +1855,7 @@ index 0000000000000000000000000000000000000000..c4ab8b1051bf13569315fdccf260146c
 +        final Class<?>[] parameters = method.getParameterTypes();
 +
 +        if (!Collection.class.isAssignableFrom(returnType)) {
-+            throw new IllegalReturnValueException(returnType, List.class);
++            throw new IllegalReturnValueException(returnType, Collection.class);
 +        }
 +
 +        if (parameters.length > 1 || (parameters.length == 1 && !CommandPayload.class.isAssignableFrom(parameters[0]))) {
@@ -1822,6 +1884,54 @@ index 0000000000000000000000000000000000000000..c4ab8b1051bf13569315fdccf260146c
 +        }
 +    }
 +
++}
+diff --git a/src/main/java/net/kissenpvp/paper/command/handler/CommandExceptionParser.java b/src/main/java/net/kissenpvp/paper/command/handler/CommandExceptionParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..1fd0fcafe04fc7ac641e0a20e97d6d751c48ec6e
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/command/handler/CommandExceptionParser.java
+@@ -0,0 +1,19 @@
++package net.kissenpvp.paper.command.handler;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.exception.CommandException;
++import net.kissenpvp.core.command.KissenCommandImplementation;
++import net.kissenpvp.paper.api.command.PaperCommandExceptionHandler;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Optional;
++
++public class CommandExceptionParser implements PaperCommandExceptionHandler<CommandException> {
++    @Override
++    public boolean handle(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull CommandException throwable) {
++        //Basically pass through or return false if no suitable handler has been found
++        return Optional.ofNullable(throwable.getCause()).map(cause -> Bukkit.getKissen().getImplementation(KissenCommandImplementation.class).handle(commandPayload, cause)).orElse(false);
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/command/handler/PlayerExceptionHandler.java b/src/main/java/net/kissenpvp/paper/command/handler/PlayerExceptionHandler.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..3109a2d03d33758a89ec9e23f77d3572deda8728
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/command/handler/PlayerExceptionHandler.java
+@@ -0,0 +1,17 @@
++package net.kissenpvp.paper.command.handler;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.networking.client.entitiy.PlayerOfflineException;
++import net.kissenpvp.paper.api.command.PaperCommandExceptionHandler;
++import net.kyori.adventure.text.Component;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++
++public class PlayerExceptionHandler implements PaperCommandExceptionHandler<PlayerOfflineException> {
++    @Override
++    public boolean handle(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PlayerOfflineException throwable) {
++
++        commandPayload.getSender().sendMessage(Component.translatable("server.command.player.offline", Component.text(throwable.getName())));
++        return true;
++    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/parser/BooleanParser.java b/src/main/java/net/kissenpvp/paper/command/parser/BooleanParser.java
 new file mode 100644
@@ -2170,12 +2280,62 @@ index 0000000000000000000000000000000000000000..05c2d19257713c52b764c9bcf2b47b47
 +        return NamedTextColor.NAMES.keys();
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java b/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..531ef8a95c1809861504f65d1466ff0a3c30b82a
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java
+@@ -0,0 +1,44 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.paper.command.parser;
++
++import net.kissenpvp.paper.api.command.PaperArgumentParser;
++import org.bukkit.Bukkit;
++import org.bukkit.OfflinePlayer;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.UUID;
++
++public class OfflinePlayerParser implements PaperArgumentParser<OfflinePlayer> {
++    @Override
++    public @NotNull String serialize(@NotNull OfflinePlayer object) {
++        return object.getName();
++    }
++
++    @Override
++    public @NotNull OfflinePlayer deserialize(@NotNull String input) {
++        OfflinePlayer player;
++        if (input.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")) {
++            player = Bukkit.getOfflinePlayer(UUID.fromString(input));
++        } else {
++            player = Bukkit.getOfflinePlayer(input);
++        }
++        return player;
++    }
++}
 diff --git a/src/main/java/net/kissenpvp/paper/command/parser/PlayerParser.java b/src/main/java/net/kissenpvp/paper/command/parser/PlayerParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ca9107f7b4fb04bc7ad466b82cf7a7799afd148c
+index 0000000000000000000000000000000000000000..f6c93ab02a825fbf1f82e8bbb152223099845310
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/parser/PlayerParser.java
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,63 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2206,8 +2366,6 @@ index 0000000000000000000000000000000000000000..ca9107f7b4fb04bc7ad466b82cf7a779
 +
 +import java.util.Collection;
 +import java.util.UUID;
-+import java.util.regex.Matcher;
-+import java.util.regex.Pattern;
 +import java.util.stream.Collectors;
 +
 +public class PlayerParser implements PaperArgumentParser<Player> {
@@ -2219,9 +2377,7 @@ index 0000000000000000000000000000000000000000..ca9107f7b4fb04bc7ad466b82cf7a779
 +    @Override
 +    public @NotNull Player deserialize(@NotNull String input) {
 +        Player player;
-+        Pattern pattern = Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$");
-+        Matcher matcher = pattern.matcher(input);
-+        if(matcher.matches())
++        if (input.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"))
 +        {
 +            player = Bukkit.getPlayer(UUID.fromString(input));
 +        }

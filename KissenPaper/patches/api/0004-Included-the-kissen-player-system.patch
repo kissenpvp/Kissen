@@ -70,14 +70,21 @@ index f309c2ed39bcc700e5b491ff549bf0608a07aab8..5f9b1cd1fc2b9f81780e48c2966f839e
 +public interface ConsoleCommandSender extends CommandSender, Conversable, net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient { // KissenPaper
  }
 diff --git a/src/main/java/org/bukkit/command/MessageCommandSender.java b/src/main/java/org/bukkit/command/MessageCommandSender.java
-index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..ae48198d53702f3234dbb2c2468d3500db08ebc6 100644
+index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..72227c4175f588f2f9181ca4d5647d75e568b917 100644
 --- a/src/main/java/org/bukkit/command/MessageCommandSender.java
 +++ b/src/main/java/org/bukkit/command/MessageCommandSender.java
-@@ -132,4 +132,25 @@ public interface MessageCommandSender extends CommandSender {
+@@ -132,4 +132,32 @@ public interface MessageCommandSender extends CommandSender {
          throw new UnsupportedOperationException();
      }
  
 +    // KissenPaper start
++    @org.jetbrains.annotations.NotNull
++    @Override
++    default net.kissenpvp.core.api.message.Theme getTheme()
++    {
++        return Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.MessageImplementation.class).getDefaultTheme();
++    }
++
 +    @Override
 +    default @NotNull java.util.Locale getCurrentLocale() {
 +        throw new UnsupportedOperationException();
