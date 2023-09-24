@@ -5,7 +5,7 @@ Subject: [PATCH] Adjusted gradle script
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index fb98936bb8a5488db75d676c5bcb4060597fbbf8..f742d4aab89aa9c9c220a64e5d7501fc8bab6dd2 100644
+index 7e0580bbd0a557c7bb269507a99d25db07bf31f1..f3bd4402cdaa74929b8e20e6323aced702732efa 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -13,8 +13,14 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
@@ -37,4 +37,4 @@ index fb98936bb8a5488db75d676c5bcb4060597fbbf8..f742d4aab89aa9c9c220a64e5d7501fc
 +
      // Paper end
      implementation("org.apache.logging.log4j:log4j-iostreams:2.19.0") // Paper - remove exclusion
-     implementation("org.ow2.asm:asm:9.4")
+     implementation("org.ow2.asm:asm:9.5")

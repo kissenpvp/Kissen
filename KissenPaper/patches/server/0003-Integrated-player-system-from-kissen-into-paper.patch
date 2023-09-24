@@ -2288,7 +2288,7 @@ index 2ff578e4a953ffcf5176815ba8e3f06f73499989..d02bed87a38595ef98595f2ff3bd3590
      // Spigot end
  
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 640e9bd618dc8286933318744c2064ede1fd9b5f..ae720dc577faa7ef5e72236bcbdb5d1dc4d5a51d 100644
+index f097ec5b4e3ad6b1a7c464a8cff4f8b2568fcf4f..33ca5e426f599da178115344d3d600ec77e12e2a 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -335,6 +335,10 @@ public abstract class PlayerList {
@@ -2303,7 +2303,7 @@ index 640e9bd618dc8286933318744c2064ede1fd9b5f..ae720dc577faa7ef5e72236bcbdb5d1d
          this.cserver.getPluginManager().callEvent(playerJoinEvent);
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index c6129dc565b8f874b73e2fefcabd4be1c221fd73..30484fda9ffbc17b2a535cd55ecc79e392b70cd3 100644
+index c1b874cd6e0498fce3cd53fdbaca30d290e004d7..481f5796e233dadbad369ef3fdd69e546fba4bd1 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -34,6 +34,44 @@ import org.bukkit.metadata.MetadataValue;
@@ -2378,7 +2378,7 @@ index c6129dc565b8f874b73e2fefcabd4be1c221fd73..30484fda9ffbc17b2a535cd55ecc79e3
      protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
          this.server = server;
          this.profile = profile;
-@@ -560,4 +618,357 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -567,4 +625,357 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
              manager.save();
          }
      }
@@ -2827,13 +2827,13 @@ index 1c638a4b1f2c841928d8b2a7ae43e4ebb1f7eac7..31c40acd927245ad59d111e178a61d5f
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-index fc0dc8e607cc24020106ea1af92b4421a5f9393d..106a2f4a223d04306a5ced0aa6d23f16e9e5e0f3 100644
+index 2dbe8b870fd39b4d22e9725912f443757ae70761..ae67ba3390169996a08de50adeda0296b6afa88d 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-@@ -1450,4 +1450,27 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
-         return !this.getHandle().level().noCollision(this.getHandle(), aabb);
+@@ -1507,4 +1507,27 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+         return this.getHandle().getScoreboardName();
      }
-     // Paper End - Collision API
+     // Paper end - entity scoreboard name
 +
 +    // KissenPaper start
 +    @org.jetbrains.annotations.NotNull
@@ -2859,7 +2859,7 @@ index fc0dc8e607cc24020106ea1af92b4421a5f9393d..106a2f4a223d04306a5ced0aa6d23f16
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-index 5fe9a0985432ac6cdd28a2a138854a24f10e42ba..13373b7cfbbce9ee297f1e97b52b18b995223a12 100644
+index 7db63d9ef93902872937b69f431137336e4abc3a..5ccbcfb966b767f2faa9172e21f2e686acb0af79 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 @@ -71,7 +71,7 @@ import org.bukkit.plugin.Plugin;
@@ -2872,10 +2872,10 @@ index 5fe9a0985432ac6cdd28a2a138854a24f10e42ba..13373b7cfbbce9ee297f1e97b52b18b9
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 5bbded65095dccfadaf7576fc41b5f62974878b4..f80ac21650769bb3767398ff9755e7dfe8f5113a 100644
+index 3d5876cbadb5c8c02de751c3e15fc7f251ea7d35..c0efe8e23c2b9260ff671ec0fb7b222261655936 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -175,6 +175,39 @@ import org.jetbrains.annotations.NotNull;
+@@ -174,6 +174,39 @@ import org.jetbrains.annotations.NotNull;
  
  import net.md_5.bungee.api.chat.BaseComponent; // Spigot
  
@@ -2945,7 +2945,7 @@ index 5bbded65095dccfadaf7576fc41b5f62974878b4..f80ac21650769bb3767398ff9755e7df
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2351,7 +2407,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2406,7 +2462,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -2963,7 +2963,7 @@ index 5bbded65095dccfadaf7576fc41b5f62974878b4..f80ac21650769bb3767398ff9755e7df
      }
  
      @Override
-@@ -2697,7 +2762,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2752,7 +2817,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -2972,7 +2972,7 @@ index 5bbded65095dccfadaf7576fc41b5f62974878b4..f80ac21650769bb3767398ff9755e7df
      }
      // Paper end
      @Override
-@@ -3212,4 +3277,337 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3267,4 +3332,337 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end

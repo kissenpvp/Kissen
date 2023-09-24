@@ -130,10 +130,10 @@ index 0000000000000000000000000000000000000000..4446e728cd8c2a3869d0092000c347a4
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 3238cbcba567b1242c77e41f6b6f19a8d157fb4e..994e59f79f3387c3a79b6ec77b72b5a4d89b67d0 100644
+index 67ee3a4ca8a6cdeb275653d492a1fea8037c51fb..82130c9b556922f6ef4d6f004282ab05d874d9b0 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -988,6 +988,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -987,6 +987,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
          }
          // Spigot end
  
@@ -144,7 +144,7 @@ index 3238cbcba567b1242c77e41f6b6f19a8d157fb4e..994e59f79f3387c3a79b6ec77b72b5a4
          // Paper start - move final shutdown items here
          LOGGER.info("Flushing Chunk IO");
          io.papermc.paper.chunk.system.io.RegionFileIOThread.close(true); // Paper // Paper - rewrite chunk system
-@@ -1102,6 +1106,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1101,6 +1105,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                  throw new IllegalStateException("Failed to initialize server");
              }
  
@@ -156,7 +156,7 @@ index 3238cbcba567b1242c77e41f6b6f19a8d157fb4e..994e59f79f3387c3a79b6ec77b72b5a4
              this.statusIcon = (ServerStatus.Favicon) this.loadStatusIcon().orElse(null); // CraftBukkit - decompile error
              this.status = this.buildServerStatus();
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 9f422cbeaa52b3e6a0a27af4f8ad4ddb7808483f..56a35b4538d232aa2e1473ae07f4e080255606b0 100644
+index c49802c936ae8e3f4dc1badd98414d96714ecd60..fa5c680318d8c9817a219dc030025ea3893ac5ad 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -192,6 +192,16 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
@@ -177,7 +177,7 @@ index 9f422cbeaa52b3e6a0a27af4f8ad4ddb7808483f..56a35b4538d232aa2e1473ae07f4e080
              this.setLocalIp("127.0.0.1");
          } else {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 249d76acac9a91cd46f0b8a477511974a75d6f4a..55cbe8e68bbe83c0dd30dba85a075854c753cc99 100644
+index 74d06790de674cbd230a0b14ac9a6b614c9f84ef..f2e887cb297e38fe70198d76baf12a466ace5992 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -44,6 +44,8 @@ import java.util.logging.Level;
@@ -189,7 +189,7 @@ index 249d76acac9a91cd46f0b8a477511974a75d6f4a..55cbe8e68bbe83c0dd30dba85a075854
  import net.minecraft.advancements.Advancement;
  import net.minecraft.commands.CommandSourceStack;
  import net.minecraft.commands.Commands;
-@@ -548,7 +550,13 @@ public final class CraftServer implements Server {
+@@ -550,7 +552,13 @@ public final class CraftServer implements Server {
  
          for (Plugin plugin : plugins) {
              if ((!plugin.isEnabled()) && (plugin.getDescription().getLoad() == type)) {
