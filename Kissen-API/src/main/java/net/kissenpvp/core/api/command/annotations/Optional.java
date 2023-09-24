@@ -16,14 +16,19 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.command.argument;
+package net.kissenpvp.core.api.command.annotations;
 
-import lombok.Builder;
-import net.kissenpvp.core.api.command.ArgumentParser;
-import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+import org.jetbrains.annotations.NotNull;
 
-@Builder
-public record Argument<T, S extends ServerEntity>(String name, Class<?> type, T defaultValue,
-                                                  ArgumentParser<T, S> argumentParser, boolean isNullable, boolean isEnum, ArgumentType argumentType,
-                                                  boolean ignoreQuote) {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.PARAMETER)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Optional {
+
+    @NotNull String[] value() default {};
+
 }

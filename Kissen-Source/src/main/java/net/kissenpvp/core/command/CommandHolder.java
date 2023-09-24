@@ -46,7 +46,7 @@ public interface CommandHolder<S extends ServerEntity, C extends CommandHolder<S
 
     @NotNull Optional<C> getChildCommand(@NotNull String name);
 
-    @NotNull CommandInfo getCommandInfo();
+    CommandInfo getCommandInfo();
 
     default boolean equals(@NotNull String name) {
         return getName().equalsIgnoreCase(name) || Arrays.stream(getCommandInfo().getAliases())

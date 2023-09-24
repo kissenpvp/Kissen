@@ -20,6 +20,7 @@ package net.kissenpvp.core.command.argument;
 
 import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
+import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
 import net.kissenpvp.core.api.command.exception.deserialization.DeserializationException;
 import net.kissenpvp.core.api.command.exception.deserialization.TemporaryDeserializationException;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
@@ -77,6 +78,7 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
                 case OPTIONAL -> Optional.of(deserialize(argumentOptional.get(), argument.argumentParser()));
                 case NONE -> deserialize(argumentOptional.get(), argument.argumentParser());
             };
+
             parameters = kissenCommandImplementation.add(parameters, object);
         }
 
@@ -95,7 +97,7 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
      */
     private @NotNull Object[] handleEmptyArgument(@NotNull Object[] parameters, @NotNull Argument<?, S> argument, @NotNull AtomicInteger currentArgumentIndex) throws NullPointerException {
         if (!argument.isNullable()) {
-            throw new NullPointerException(String.format("The argument '%s' cannot be null or undefined.", argument.type().getName()));
+            throw new ArgumentMissingException(String.format("The argument '%s' cannot be null or undefined.", argument.type().getName()));
         }
 
         currentArgumentIndex.incrementAndGet();

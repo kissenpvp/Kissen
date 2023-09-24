@@ -20,11 +20,12 @@ package net.kissenpvp.core.command.argument;
 
 import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
-import net.kissenpvp.core.api.command.annotations.Default;
+import net.kissenpvp.core.api.command.annotations.Optional;
 import net.kissenpvp.core.api.command.annotations.IgnoreQuote;
 import net.kissenpvp.core.api.command.exception.ArgumentParserAbsentException;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.command.parser.EnumParser;
 import net.kissenpvp.core.command.KissenCommandImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
@@ -34,7 +35,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * This class is responsible for evaluating and processing the parameters of a command method,
@@ -42,7 +42,7 @@ import java.util.Optional;
  * <p>
  * {@link MethodEvaluator} analyses each parameter of a given method, taking into account various metadata such as
  * its type, whether it is an array, whether it has an {@link IgnoreQuote} annotation, and its default value(s) as specified
- * by the {@link Default} annotation.
+ * by the {@link Optional} annotation.
  * <p>
  * While processing each parameter, this class also ensures that array parameters follow the proper command syntax by being placed
  * last in the command.
@@ -103,10 +103,10 @@ public class MethodEvaluator<S extends ServerEntity> {
      * <p>
      * It then builds an {@link Argument} using properties such as its name, type, array status, and any {@link IgnoreQuote} annotations present.
      * <p>
-     * If the parameter's type is assignable from {@link CommandPayload}, or it does not have a {@link Default} annotation,
+     * If the parameter's type is assignable from {@link CommandPayload}, or it does not have a {@link Optional} annotation,
      * the function considers it to be a basic argument and returns it wrapped in a list.
      * <p>
-     * However, if the parameter has a {@link Default} annotation, it means that it might have a default value(s) specified.
+     * However, if the parameter has a {@link Optional} annotation, it means that it might have a default value(s) specified.
      * In this case, it will generate a "nullable" optional {@link Argument} using the {@link #createOptional(Method, Class, ArgumentType, String[], Argument.ArgumentBuilder)} function.
      * <p>
      * In both cases, a list containing the single {@link Argument} that was processed from this parameter is returned.
@@ -119,7 +119,8 @@ public class MethodEvaluator<S extends ServerEntity> {
      */
     private <T> @NotNull List<Argument<T, S>> processParameter(@NotNull Method method, @NotNull Parameter parameter) {
         Class<T> parameterType = (Class<T>) parameter.getType();
-        ArgumentType argumentType = parameterType.isArray() ? ArgumentType.ARRAY : parameterType.equals(Optional.class) ? ArgumentType.OPTIONAL : ArgumentType.NONE;
+
+        ArgumentType argumentType = parameterType.isArray() ? ArgumentType.ARRAY : parameterType.equals(java.util.Optional.class) ? ArgumentType.OPTIONAL : ArgumentType.NONE;
 
         validateArrayPlacement(method.getParameters(), parameterType.isArray(), parameter);
 
@@ -140,7 +141,7 @@ public class MethodEvaluator<S extends ServerEntity> {
                 {
                     builder.type(parameterType = (Class<T>) Class.forName(typeName));
                     builder.isNullable(true);
-                    builder.defaultValue((T) Optional.empty());
+                    builder.defaultValue((T) java.util.Optional.empty());
                 }
                 catch (ClassNotFoundException classNotFoundException)
                 {
@@ -149,24 +150,32 @@ public class MethodEvaluator<S extends ServerEntity> {
             }
             default -> {} // empty
         }
+        boolean isEnum = parameterType.isEnum();
+        builder.isEnum(isEnum);
+        if(isEnum)
+        {
+            builder.argumentParser((ArgumentParser<T, S>) new EnumParser<>(parameterType));
+        }
+        else
+        {
+            builder.argumentParser((ArgumentParser<T, S>) getCommandImplementation().getParserList().get(parameterType));
+        }
 
-        builder.argumentParser((ArgumentParser<T, S>) getCommandImplementation().getParserList().get(parameterType));
-
-        Default defaultValueAnnotated = parameter.getDeclaredAnnotation(Default.class);
-        if (CommandPayload.class.isAssignableFrom(parameterType) || defaultValueAnnotated == null) {
+        Optional optionalValueAnnotated = parameter.getDeclaredAnnotation(Optional.class);
+        if (CommandPayload.class.isAssignableFrom(parameterType) || optionalValueAnnotated == null) {
             return List.of(builder.build());
         }
 
-        return List.of(createOptional(method, parameterType, argumentType, defaultValueAnnotated.value(), builder));
+        return List.of(createOptional(method, parameterType, argumentType, optionalValueAnnotated.value(), builder));
     }
 
     /**
      * Creates an optional {@link Argument} using the provided metadata.
      * <p>
-     * This function is used to transform method parameters that have a {@link Default} annotation into nullable or optional {@link Argument}s.
+     * This function is used to transform method parameters that have a {@link Optional} annotation into nullable or optional {@link Argument}s.
      * An optional {@link Argument} is characterized by the fact that it can be left unspecified when invoking the command because it will have a default value.
      * <p>
-     * Default values are specified as an array of strings in the {@link Default} annotation of the parameter. Each string will be deserialized into the required type {@code T}
+     * Default values are specified as an array of strings in the {@link Optional} annotation of the parameter. Each string will be deserialized into the required type {@code T}
      * to create the default value of the {@link Argument}.
      * <p>
      * If the type {@code T} of the {@link Argument} is an array, the default values will be an array as well.

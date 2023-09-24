@@ -30,7 +30,6 @@ public class CommandExceptionHandlerService {
      * @param exceptionHandler The ExceptionHandler to be registered.
      */
     public void registerHandler(@NotNull ExceptionHandler<?> exceptionHandler) {
-        System.out.println(exceptionHandler.getClass().getSimpleName());
         exceptionHandlerSet.add(exceptionHandler);
     }
 

@@ -16,14 +16,30 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.command.argument;
+package net.kissenpvp.core.command.parser;
 
-import lombok.Builder;
 import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.jetbrains.annotations.NotNull;
 
-@Builder
-public record Argument<T, S extends ServerEntity>(String name, Class<?> type, T defaultValue,
-                                                  ArgumentParser<T, S> argumentParser, boolean isNullable, boolean isEnum, ArgumentType argumentType,
-                                                  boolean ignoreQuote) {
+import java.util.Collection;
+import java.util.Objects;
+
+public class NamedTextColorParser <S extends ServerEntity> implements ArgumentParser<NamedTextColor, S> {
+    @Override
+    public @NotNull String serialize(@NotNull NamedTextColor object) {
+        return object.examinableName();
+    }
+
+    @Override
+    public @NotNull NamedTextColor deserialize(@NotNull String input) {
+        return Objects.requireNonNull(NamedTextColor.NAMES.value(input));
+    }
+
+    @Override
+    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<S> commandPayload) {
+        return NamedTextColor.NAMES.keys();
+    }
 }

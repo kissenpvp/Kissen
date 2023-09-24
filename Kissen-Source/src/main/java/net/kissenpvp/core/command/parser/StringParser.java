@@ -16,19 +16,20 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.api.command.annotations;
+package net.kissenpvp.core.command.parser;
 
+import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public class StringParser <S extends ServerEntity> implements ArgumentParser<String, S> {
+    @Override
+    public @NotNull String serialize(@NotNull String object) {
+        return object;
+    }
 
-@Target(ElementType.PARAMETER)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Default {
-
-    @NotNull String[] value();
-
+    @Override
+    public @NotNull String deserialize(@NotNull String input) {
+        return input;
+    }
 }

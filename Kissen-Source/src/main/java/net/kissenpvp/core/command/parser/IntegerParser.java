@@ -16,14 +16,21 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.command.argument;
+package net.kissenpvp.core.command.parser;
 
-import lombok.Builder;
 import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+import org.jetbrains.annotations.NotNull;
 
-@Builder
-public record Argument<T, S extends ServerEntity>(String name, Class<?> type, T defaultValue,
-                                                  ArgumentParser<T, S> argumentParser, boolean isNullable, boolean isEnum, ArgumentType argumentType,
-                                                  boolean ignoreQuote) {
+public class IntegerParser <S extends ServerEntity> implements ArgumentParser<Integer, S> {
+
+    @Override
+    public @NotNull String serialize(@NotNull Integer object) {
+        return String.valueOf(object);
+    }
+
+    @Override
+    public @NotNull Integer deserialize(@NotNull String input) {
+        return Integer.parseInt(input);
+    }
 }
