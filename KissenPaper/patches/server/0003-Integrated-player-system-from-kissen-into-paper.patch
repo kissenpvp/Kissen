@@ -2303,7 +2303,7 @@ index f097ec5b4e3ad6b1a7c464a8cff4f8b2568fcf4f..33ca5e426f599da178115344d3d600ec
          this.cserver.getPluginManager().callEvent(playerJoinEvent);
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index c1b874cd6e0498fce3cd53fdbaca30d290e004d7..481f5796e233dadbad369ef3fdd69e546fba4bd1 100644
+index c1b874cd6e0498fce3cd53fdbaca30d290e004d7..5d205e53d10b4f7568b37b26676e195fccf2e472 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -34,6 +34,44 @@ import org.bukkit.metadata.MetadataValue;
@@ -2378,7 +2378,7 @@ index c1b874cd6e0498fce3cd53fdbaca30d290e004d7..481f5796e233dadbad369ef3fdd69e54
      protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
          this.server = server;
          this.profile = profile;
-@@ -567,4 +625,357 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -567,4 +625,352 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
              manager.save();
          }
      }
@@ -2388,11 +2388,6 @@ index c1b874cd6e0498fce3cd53fdbaca30d290e004d7..481f5796e233dadbad369ef3fdd69e54
 +    @Override
 +    public final boolean isClient() {
 +        return true;
-+    }
-+
-+    @Override
-+    public final boolean isConnected() {
-+        return false;
 +    }
 +
 +    @Override
