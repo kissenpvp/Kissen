@@ -20,15 +20,17 @@ package net.kissenpvp.core.ban;
 
 import net.kissenpvp.core.api.ban.Ban;
 import net.kissenpvp.core.api.ban.BanType;
+import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.event.EventCancelledException;
+import net.kissenpvp.core.api.time.AccurateDuration;
+import net.kissenpvp.core.api.time.TimeImplementation;
+import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.KissenSavable;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("RedundantThrows") //TODO events
 public abstract class KissenBan extends KissenSavable implements Ban {
@@ -69,16 +71,22 @@ public abstract class KissenBan extends KissenSavable implements Ban {
     }
 
     @Override
-    public @NotNull Optional<Duration> getDuration() {
-        return get("duration").map(val -> Duration.of(Long.parseLong(val), TimeUnit.MILLISECONDS.toChronoUnit()));
+    public @NotNull Optional<AccurateDuration> getAccurateDuration() {
+        return get("duration").map(val -> KissenCore.getInstance().getImplementation(TimeImplementation.class).millis(Long.parseLong(val)));
     }
 
     @Override
-    public void setDuration(@Nullable Duration duration) throws EventCancelledException {
+    public void setAccurateDuration(@Nullable AccurateDuration duration) throws EventCancelledException {
         set("ban_type", Optional.ofNullable(duration)
-                .map(Duration::toMillis)
+                .map(AccurateDuration::getMillis)
                 .map(String::valueOf)
                 .orElse(null));
+    }
+
+    @Override
+    public int softDelete() throws BackendException {
+        KissenCore.getInstance().getImplementation(KissenBanImplementation.class).remove(this);
+        return super.softDelete();
     }
 
     @Override

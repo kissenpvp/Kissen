@@ -29,23 +29,25 @@ import net.kissenpvp.core.permission.event.KissenPermissionEndUpdateEvent;
 import net.kissenpvp.core.permission.event.KissenPermissionOptionDeleteEvent;
 import net.kissenpvp.core.permission.event.KissenPermissionOptionSetEvent;
 import net.kissenpvp.core.permission.event.KissenPermissionValueUpdateEvent;
+import net.kissenpvp.core.time.KissenTemporalObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
 
-public class KissenPermission implements Permission {
+public class KissenPermission extends KissenTemporalObject implements Permission {
+
     protected final KissenPermissionNode kissenPermissionNode;
     protected final PermissionEntry<? extends Permission> permissionEntry;
     protected final DataWriter dataWriter;
 
     public KissenPermission(@NotNull KissenPermissionNode kissenPermissionNode, @NotNull PermissionEntry<? extends Permission> permissionEntry, @Nullable DataWriter dataWriter) {
+        super(kissenPermissionNode.temporalMeasureNode());
         this.kissenPermissionNode = kissenPermissionNode;
         this.permissionEntry = permissionEntry;
         this.dataWriter = dataWriter;
@@ -69,7 +71,7 @@ public class KissenPermission implements Permission {
     @Override
     public void setValue(boolean value) throws EventCancelledException {
         if (dataWriter == null) {
-            throw new UnsupportedOperationException("This object is immutable.");
+            throw new EventCancelledException("This object is immutable.", new IllegalStateException());
         }
 
         KissenPermissionValueUpdateEvent kissenPermissionValueUpdateEvent = new KissenPermissionValueUpdateEvent(this, value);
@@ -82,48 +84,9 @@ public class KissenPermission implements Permission {
     }
 
     @Override
-    public long getStart() {
-        return getKissenPermissionNode().start();
-    }
-
-    @Override
-    public @Nullable Duration getDuration() {
-        return getKissenPermissionNode().duration().getValue() == null ? null : Duration.of(getKissenPermissionNode().duration().getValue(), ChronoUnit.MILLIS);
-    }
-
-    @Override
-    public long getEnd() {
-        return getKissenPermissionNode().end().getValue();
-    }
-
-    @Override
-    public void setEnd(long end) throws EventCancelledException {
-        if (dataWriter == null) {
-            throw new UnsupportedOperationException("This object is immutable.");
-        }
-        PermissionEndUpdateEvent permissionEndUpdateEvent = new KissenPermissionEndUpdateEvent(this, end);
-        if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(permissionEndUpdateEvent)) {
-            kissenPermissionNode.end().setValue(permissionEndUpdateEvent.getEnd().orElse(-1L));
-            dataWriter.update(kissenPermissionNode);
-            return;
-        }
-        throw new EventCancelledException();
-    }
-
-    @Override
-    public long getPredictedEnd() {
-        return kissenPermissionNode.predictedEnd();
-    }
-
-    @Override
-    public boolean isValid() {
-        return (getEnd() > System.currentTimeMillis() || getEnd() == -1);
-    }
-
-    @Override
     public void setOption(@NotNull String key, @NotNull String data) throws EventCancelledException {
         if (dataWriter == null) {
-            throw new UnsupportedOperationException("This object is immutable.");
+            throw new EventCancelledException("This object is immutable.", new IllegalStateException());
         }
         KissenPermissionOptionSetEvent kissenPermissionOptionSetEvent = new KissenPermissionOptionSetEvent(this, kissenPermissionNode.additionalData().containsKey(key), key, data);
         if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(kissenPermissionOptionSetEvent)) {
@@ -138,7 +101,7 @@ public class KissenPermission implements Permission {
     @Override
     public boolean deleteOption(@NotNull String key) throws EventCancelledException {
         if (dataWriter == null) {
-            throw new UnsupportedOperationException("This object is immutable.");
+            throw new EventCancelledException("This object is immutable.", new IllegalStateException());
         }
 
         if (kissenPermissionNode.additionalData().containsKey(key)) {
@@ -162,6 +125,21 @@ public class KissenPermission implements Permission {
     @Override
     public @Unmodifiable @NotNull Map<String, String> getDefinedOptions() {
         return Collections.unmodifiableMap(kissenPermissionNode.additionalData());
+    }
+
+    @Override
+    public void setEnd(Instant end) throws EventCancelledException {
+        if (dataWriter == null) {
+            throw new EventCancelledException("This object is immutable.", new IllegalStateException());
+        }
+
+        PermissionEndUpdateEvent permissionEndUpdateEvent = new KissenPermissionEndUpdateEvent(this, end);
+        if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(permissionEndUpdateEvent)) {
+            rewriteEnd(permissionEndUpdateEvent.getEnd().orElse(null));
+            dataWriter.update(kissenPermissionNode);
+            return;
+        }
+        throw new EventCancelledException();
     }
 
     public @NotNull KissenPermissionNode getKissenPermissionNode() {

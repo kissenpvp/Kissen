@@ -25,22 +25,23 @@ import net.kissenpvp.core.api.permission.event.PermissionEndUpdateEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.Optional;
 
 public class KissenPermissionEndUpdateEvent implements PermissionEndUpdateEvent
 {
     @Getter private final Permission permission;
-    @Setter private Long end;
+    @Setter private Instant end;
     @Getter @Setter private boolean cancelled;
 
-    public KissenPermissionEndUpdateEvent(@NotNull Permission permission, Long end)
+    public KissenPermissionEndUpdateEvent(@NotNull Permission permission, Instant end)
     {
         this.permission = permission;
         this.end = end;
         this.cancelled = false;
     }
 
-    @Override public @NotNull Optional<Long> getEnd()
+    @Override public @NotNull Optional<Instant> getEnd()
     {
         return Optional.ofNullable(end);
     }

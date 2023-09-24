@@ -45,4 +45,24 @@ package net.kissenpvp.core.api.event;
  *
  * @see Exception
  */
-public class EventCancelledException extends Exception {}
+public class EventCancelledException extends RuntimeException
+{
+    public EventCancelledException() {
+    }
+
+    public EventCancelledException(String message) {
+        super(message);
+    }
+
+    public EventCancelledException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public EventCancelledException(Throwable cause) {
+        super(cause);
+    }
+
+    public EventCancelledException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+}

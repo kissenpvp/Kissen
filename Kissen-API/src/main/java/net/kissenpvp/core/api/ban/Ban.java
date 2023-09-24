@@ -20,17 +20,17 @@ package net.kissenpvp.core.api.ban;
 
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.event.EventCancelledException;
+import net.kissenpvp.core.api.time.AccurateDuration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
 /**
  * The {@code Ban} interface represents a ban that can be applied to a player in a game or server, specifying its unique ID, name, type, duration, and behavior.
  * <p>
- * To create a ban, you can use either {@link BanImplementation#createBan(int, String, BanType, Duration)} or {@link BanImplementation#createBan(int, Map)}.
+ * To create a ban, you can use either {@link BanImplementation#createBan(int, String, BanType, net.kissenpvp.core.api.time.AccurateDuration)} or {@link BanImplementation#createBan(int, Map)}.
  * <p>
  * Once a ban has been created, it can be loaded using {@link BanImplementation#getBan(int)}.
  * <br>This allows you to manage bans for players, including specifying the ban's ID, name, type, duration, and behavior.
@@ -99,9 +99,9 @@ public interface Ban {
      * If the ban is permanent, an empty {@link Optional} is returned.
      *
      * @return An {@link Optional} containing the duration of this ban, or empty if the ban is permanent.
-     * @see #setDuration(Duration)
+     * @see #setAccurateDuration(AccurateDuration)
      */
-    @NotNull Optional<Duration> getDuration();
+    @NotNull Optional<AccurateDuration> getAccurateDuration();
 
     /**
      * Sets the duration of this ban, which specifies how long the ban lasts.
@@ -111,9 +111,9 @@ public interface Ban {
      * </p>
      *
      * @param duration The duration of this ban, or null if the ban is permanent.
-     * @see #getDuration()
+     * @see #getAccurateDuration()
      */
-    void setDuration(@Nullable Duration duration) throws EventCancelledException;
+    void setAccurateDuration(@Nullable AccurateDuration duration) throws EventCancelledException;
 
     /**
      * Deletes this ban object from the system and returns the number of database entries that were deleted.

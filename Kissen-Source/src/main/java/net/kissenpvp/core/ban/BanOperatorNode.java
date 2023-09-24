@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.ban;
 
+import net.kissenpvp.core.api.ban.BanOperator;
 import net.kissenpvp.core.message.KissenComponentSerializer;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -28,8 +29,9 @@ import java.util.UUID;
 public record BanOperatorNode(@Nullable UUID uuid, @NotNull String name)
 {
 
-    public BanOperatorNode(@Nullable UUID uuid, @NotNull Component name) {
-        this(uuid, KissenComponentSerializer.getInstance().getJsonSerializer().serialize(name));
+    public BanOperatorNode(@NotNull BanOperator banOperator)
+    {
+        this(null /*TODO */, KissenComponentSerializer.getInstance().getJsonSerializer().serialize(banOperator.displayName()));
     }
 
     public @NotNull Component displayName() {
