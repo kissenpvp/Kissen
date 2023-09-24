@@ -374,6 +374,18 @@ index 0000000000000000000000000000000000000000..fcb026696a30412901844c46ad601991
 +    <T> void registerParser(@NotNull Class<T> type, @NotNull PaperArgumentParser<T> argumentParser);
 +
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..36f22b864cd7047c3cbf6897211e06dc8765290e
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java
+@@ -0,0 +1,6 @@
++package net.kissenpvp.paper.api.command;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import org.bukkit.command.CommandSender;
++
++public interface PaperCommandPayload extends CommandPayload<CommandSender> {}
 diff --git a/src/main/java/net/kissenpvp/paper/api/data/LocationNode.java b/src/main/java/net/kissenpvp/paper/api/data/LocationNode.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..48bd44de19e949f4719161965bd2281d3e65a172
