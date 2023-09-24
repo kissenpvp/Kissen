@@ -26,17 +26,18 @@ import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.QuerySelect;
-import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
-import net.kissenpvp.core.api.util.Container;
+import net.kissenpvp.core.api.time.AccurateDuration;
+import net.kissenpvp.core.api.time.TemporalObject;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.message.KissenComponentSerializer;
+import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.time.Duration;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -62,6 +63,22 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     }
 
     @Override
+    public boolean start() {
+        KissenLocalizationImplementation kissenLocalizationImplementation = KissenCore.getInstance().getImplementation(KissenLocalizationImplementation.class);
+        kissenLocalizationImplementation.register("server.ban.player.banned", new MessageFormat("Player {0} has been banned from this network."));
+        kissenLocalizationImplementation.register("server.ban.player.banned.reason", new MessageFormat("Player {0} has been banned from this network with the reason: \"{1}\"."));
+        kissenLocalizationImplementation.register("server.ban.player.muted", new MessageFormat("Player {0} has been muted on this network."));
+        kissenLocalizationImplementation.register("server.ban.player.muted.reason", new MessageFormat("Player {0} has been muted on this network with the reason: \"{1}\"."));
+        kissenLocalizationImplementation.register("server.ban.player.kicked", new MessageFormat("Player {0} has been kicked on this network."));
+        kissenLocalizationImplementation.register("server.ban.player.kicked.reason", new MessageFormat("Player {0} has been kicked from this network with the reason: \"{1}\"."));
+        kissenLocalizationImplementation.register("server.ban.player.warned", new MessageFormat("Player {0} has been warned {1} time(s)."));
+        kissenLocalizationImplementation.register("server.ban.player.warned.reason", new MessageFormat("Player {0} has been warned {1} time(s) with the reason: \"{2}\"."));
+        kissenLocalizationImplementation.register("server.ban.created.permanent", new MessageFormat("The ban with ID {0} now exists under the name {1}, with a type of {2} and a permanent duration."));
+        kissenLocalizationImplementation.register("server.ban.created", new MessageFormat("The ban with ID {0} now exists under the name {1}, with a type of {2} and a duration of {3}."));
+        return BanImplementation.super.start();
+    }
+
+    @Override
     public boolean postStart() {
         try {
             cachedBans.addAll(obtainBanSet());
@@ -81,10 +98,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
 
     @Override
     public @NotNull Optional<B> getBan(int id) {
-        return cachedBans.stream().filter(ban -> {
-            System.out.println(ban.getID() + " == " + id + " (" + (ban.getID() == id) + ")");
-            return ban.getID() == id;
-        }).findFirst();
+        return cachedBans.stream().filter(ban -> ban.getID() == id).findFirst();
     }
 
     @Override
@@ -101,12 +115,12 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     }
 
     @Override
-    public @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable Duration duration) throws BackendException {
+    public @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration) throws BackendException {
         Map<String, String> data = new HashMap<>();
         data.put("name", name);
         data.put("ban_type", banType.name());
-        if (duration != null) {
-            data.put("duration", String.valueOf(duration.toMillis()));
+        if (accurateDuration != null) {
+            data.put("duration", String.valueOf(accurateDuration.getMillis()));
         }
         return createBan(id, data);
     }
@@ -122,29 +136,29 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     }
 
     @Override
-    public @NotNull Optional<P> getCurrentBan(@NotNull UUID totalID) throws BackendException {
-        return getCurrentBan(totalID, getMeta());
+    public @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID) throws BackendException {
+        return getLatestPunishment(totalID, getMeta());
     }
 
     @Override
-    public @NotNull Optional<P> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType) throws BackendException {
-        return getCurrentBan(totalID, banType, getMeta());
+    public @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType) throws BackendException {
+        return getLatestPunishment(totalID, banType, getMeta());
     }
 
     @Override
     public @NotNull @Unmodifiable Set<P> getPlayerBanSet(@NotNull UUID totalID) throws BackendException {
-        return getPlayerBanSet(totalID, getMeta());
+        return getPunishmentSet(totalID, getMeta());
     }
 
     @Override
     public @NotNull @Unmodifiable Set<P> getPlayerBanSet() throws BackendException {
-        return getPlayerBanSet(getMeta());
+        return getPunishmentSet(getMeta());
     }
 
     /**
-     * Filters the punishment based on the given meta data.
+     * Filters the punishment based on the given metadata.
      *
-     * @param meta The meta data used for filtering the punishment.
+     * @param meta The metadata used for filtering the punishment.
      * @return A QuerySelect object that represents the filtered punishment.
      */
     private @NotNull QuerySelect punishmentFilter(@NotNull Meta meta) {
@@ -182,10 +196,10 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @return an Optional containing the current ban if found, otherwise an empty Optional
      * @throws BackendException if there is an error retrieving the ban from the backend
      */
-    protected @NotNull Optional<P> getCurrentBan(@NotNull UUID totalID, @NotNull Meta meta) throws BackendException {
-        return getPlayerBanSet(totalID, meta).stream()
+    protected @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull Meta meta) throws BackendException {
+        return getPunishmentSet(totalID, meta).stream()
                 .filter(Punishment::isValid)
-                .min(Comparator.comparingLong(punishment -> punishment.getStart()));
+                .min(Comparator.comparing(TemporalObject::getStart));
     }
 
     /**
@@ -197,11 +211,11 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @return an Optional containing the current ban if found, otherwise an empty Optional
      * @throws BackendException if there is an error retrieving the ban from the backend
      */
-    protected @NotNull Optional<P> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType, @NotNull Meta meta) throws BackendException {
-        return getPlayerBanSet(totalID, meta).stream()
+    protected @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType, @NotNull Meta meta) throws BackendException {
+        return getPunishmentSet(totalID, meta).stream()
                 .filter(Punishment::isValid)
                 .filter(punishment -> punishment.getBanType().equals(banType))
-                .min(Comparator.comparingLong(punishment -> punishment.getStart()));
+                .min(Comparator.comparing(TemporalObject::getStart));
     }
 
     /**
@@ -212,7 +226,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @return The set of player bans, wrapped in an {@link Optional}.
      * @throws BackendException If an error occurs while accessing the backend.
      */
-    protected @NotNull @Unmodifiable Set<P> getPlayerBanSet(@NotNull UUID totalID, @NotNull Meta meta) throws BackendException {
+    protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID, @NotNull Meta meta) throws BackendException {
         return meta.getRecordList("punishment", totalID.toString(), KissenPunishmentNode.class).stream().map(obj -> translatePunishment(totalID, obj, meta)).collect(Collectors.toSet());
     }
 
@@ -223,7 +237,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @return an unmodifiable set of player bans
      * @throws BackendException if there is an issue retrieving the player bans from the backend
      */
-    protected @NotNull @Unmodifiable Set<P> getPlayerBanSet(@NotNull Meta meta) throws BackendException {
+    protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull Meta meta) throws BackendException {
         //return Arrays.stream(meta.getRecordList("punishment")).map(dataProcessor()).collect(Collectors.toSet());
         return new HashSet<>(); //TODO
     }
@@ -268,13 +282,12 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @return the constructed punishment node
      */
     protected @NotNull KissenPunishmentNode constructPunishmentNode(@NotNull B ban, @NotNull BanOperator banOperator, @Nullable String reason) {
-        String id = KissenCore.getInstance().getImplementation(DataImplementation.class).generateID();
-        BanOperatorNode banOperatorNode = new BanOperatorNode(banOperator instanceof PlayerClient<?, ?, ?> playerClient ? playerClient.getUniqueId() : null, banOperator.displayName());
-        long timeStamp = System.currentTimeMillis();
-        Long end = ban.getDuration().map(duration -> timeStamp + duration.toMillis()).orElse(null);
-        return new KissenPunishmentNode(id, ban.getName(), banOperatorNode, ban.getBanType(), new Container<>(reason), new ArrayList<>(), timeStamp, new Container<>(ban.getDuration()
-                .map(Duration::toMillis)
-                .orElse(null)), new Container<>(end), end);
+        return new KissenPunishmentNode(ban, banOperator, reason);
+    }
+
+    public boolean remove(@NotNull B ban)
+    {
+        return cachedBans.removeIf(current -> current.getID() == ban.getID());
     }
 
     public abstract void applyBan(@NotNull P ban);

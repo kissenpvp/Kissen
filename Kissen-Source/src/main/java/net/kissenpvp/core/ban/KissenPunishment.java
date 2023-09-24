@@ -31,21 +31,23 @@ import net.kissenpvp.core.database.DataWriter;
 import net.kissenpvp.core.message.CommentNode;
 import net.kissenpvp.core.message.KissenComment;
 import net.kissenpvp.core.message.KissenComponentSerializer;
+import net.kissenpvp.core.time.KissenTemporalObject;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
-public abstract class KissenPunishment<T> implements Punishment<T> {
+public abstract class KissenPunishment<T> extends KissenTemporalObject implements Punishment<T> {
 
     private final UUID totalID;
     private final KissenPunishmentNode kissenPunishmentNode;
     private final DataWriter dataWriter;
 
     public KissenPunishment(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @Nullable DataWriter dataWriter) {
+        super(kissenPunishmentNode.temporalMeasureNode());
         this.totalID = totalID;
         this.kissenPunishmentNode = kissenPunishmentNode;
         this.dataWriter = dataWriter;
@@ -116,39 +118,16 @@ public abstract class KissenPunishment<T> implements Punishment<T> {
         return new KissenComment(commentNode, kissenPunishmentNode.commentDataWriter());
     }
 
-    @Override
-    public long getStart() {
-        return kissenPunishmentNode.start();
-    }
 
     @Override
-    public @NotNull Optional<Duration> getDuration() {
-        return kissenPunishmentNode.duration().toOptional().map(Duration::ofMillis);
-    }
-
-    @Override
-    public @NotNull Optional<Long> getEnd() {
-        return kissenPunishmentNode.end().toOptional();
-    }
-
-    @Override
-    public void setEnd(@Nullable Long end) throws EventCancelledException {
-        if (dataWriter == null) {
+    public void setEnd(@Nullable Instant end) throws EventCancelledException {
+        if(dataWriter == null)
+        {
             throw new EventCancelledException();
         }
 
-        //TODO event
-        kissenPunishmentNode.end().setValue(end);
-    }
-
-    @Override
-    public @NotNull Optional<Long> getPredictedEnd() {
-        return Optional.ofNullable(kissenPunishmentNode.predictedEnd());
-    }
-
-    @Override
-    public boolean isValid() {
-        return getEnd().map(end -> System.currentTimeMillis() < end).orElse(true);
+        rewriteEnd(end);
+        dataWriter.update(kissenPunishmentNode);
     }
 
     @Override

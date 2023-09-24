@@ -24,12 +24,12 @@ import net.kissenpvp.core.api.message.Comment;
 import net.kissenpvp.core.api.networking.client.entitiy.OnlinePlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+import net.kissenpvp.core.api.time.TemporalObject;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -49,7 +49,7 @@ import java.util.UUID;
  * @see BanImplementation
  * @see BanType
  */
-public interface Punishment<T> {
+public interface Punishment<T> extends TemporalObject {
 
     /**
      * Returns the total ID that is assigned to a player ban. This ID can change if the system recognizes similarities
@@ -147,62 +147,6 @@ public interface Punishment<T> {
      * @see Comment
      */
     @NotNull Comment addComment(@NotNull ServerEntity sender, @NotNull Component comment) throws EventCancelledException;
-
-    /**
-     * Returns the start time of this player ban as a Unix timestamp.
-     * If the start time has not been set, the value returned will be zero.
-     *
-     * @return the start time of this player ban as a Unix timestamp.
-     */
-    long getStart();
-
-    /**
-     * Returns an {@link Optional} {@link Duration} representing the length of time the player ban will last, or an empty Optional if the ban has no set duration (i.e., it is permanent).
-     * The duration returned by this method may be used to determine how long the ban will last, or to display information about the ban to users. If the ban has no set duration, an empty optional is returned, which means it is permanent.
-     * <p>
-     * Note that the duration returned by this method represents the original ban duration, even if the end time has been modified by calling {@link #setEnd(Long)}.
-     *
-     * @return an {@link Optional} {@link Duration} representing the length of the player ban, or an empty Optional if the ban is permanent.
-     */
-    @NotNull Optional<Duration> getDuration();
-
-    /**
-     * Returns the timestamp representing the end time of the player ban.
-     * If the ban is permanent, the value returned will be -1.
-     *
-     * @return the timestamp representing the end time of the player ban, or -1 if the ban is permanent
-     */
-    @NotNull Optional<Long> getEnd();
-
-    /**
-     * Sets the timestamp representing the end time of the player ban.
-     * If the end time is set to -1, the ban will be permanent.
-     * To remove a set end time, pass in a value of {@link System#currentTimeMillis()}.
-     *
-     * @param end the timestamp representing the end time of the player ban, or 0 to remove the end time or -1 to make it permanent
-     */
-    void setEnd(@Nullable Long end) throws EventCancelledException;
-
-    /**
-     * Returns the original end time for the player ban, which was calculated based on the start time and the ban duration
-     * specified when the ban was created. This value can differ from the current end time returned by {@link #getEnd()}
-     * if the end time has been modified using {@link #setEnd(Long)}.
-     * <p>
-     * If the ban is or was permanent, this method will return -1.
-     *
-     * @return the original predicted end time of the player ban, or -1 if the ban is or was permanent.
-     */
-    @NotNull Optional<Long> getPredictedEnd();
-
-    /**
-     * Returns a boolean indicating whether the player ban is currently valid or not.
-     * <p>
-     * A player ban is considered valid if the end time has not yet been reached and the ban is not permanent.
-     * If the ban is permanent, the end time is set to -1. If the end time has been reached, the ban is no longer valid.
-     *
-     * @return true if the player ban is currently valid, false otherwise.
-     */
-    boolean isValid();
 
     /**
      * Retrieves a {@link Set} of {@link UUID}s that represent the players who are affected by this ban from the database. Use this method with caution, as it may take significant performance to load all affected players.

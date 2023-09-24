@@ -18,6 +18,8 @@
 
 package net.kissenpvp.core.ban;
 
+import net.kissenpvp.core.api.ban.Ban;
+import net.kissenpvp.core.api.ban.BanOperator;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.message.Comment;
@@ -26,17 +28,22 @@ import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.DataWriter;
 import net.kissenpvp.core.message.CommentNode;
 import net.kissenpvp.core.message.KissenComment;
+import net.kissenpvp.core.time.TemporalMeasureNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public record KissenPunishmentNode(@NotNull String id, @NotNull String banName, @NotNull BanOperatorNode banOperator,
                                    @NotNull BanType banType, @NotNull Container<String> reason,
-                                   @NotNull List<String> comments, long start, @NotNull Container<Long> duration,
-                                   @NotNull Container<Long> end, @Nullable Long predictedEnd)
+                                   @NotNull List<String> comments, @NotNull TemporalMeasureNode temporalMeasureNode)
 {
+
+    public KissenPunishmentNode(@NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable String reason) {
+        this(KissenCore.getInstance().getImplementation(DataImplementation.class).generateID(), ban.getName(), new BanOperatorNode(banOperator), ban.getBanType(), new Container<>(reason), new ArrayList<>(), new TemporalMeasureNode(System.currentTimeMillis(), ban.getAccurateDuration().orElse(null)));
+    }
 
     public @NotNull @Unmodifiable List<Comment> translateComments() {
         return comments().stream().map(comment -> (Comment) new KissenComment(KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(comment, CommentNode.class), commentDataWriter())).toList();

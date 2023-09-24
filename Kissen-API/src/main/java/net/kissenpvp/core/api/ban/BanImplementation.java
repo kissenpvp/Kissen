@@ -21,12 +21,12 @@ package net.kissenpvp.core.api.ban;
 import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
+import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -53,28 +53,28 @@ import java.util.UUID;
 public interface BanImplementation<B extends Ban, P extends Punishment<?>> extends Implementation {
     
     /**
-     * Returns an unmodifiable set containing all bans created using {@link #createBan(int, Map)} or {@link #createBan(int, String, BanType, Duration)}.
+     * Returns an unmodifiable set containing all bans created using {@link #createBan(int, Map)} or {@link #createBan(int, String, BanType, AccurateDuration)}.
      * This set cannot be modified. To remove a {@link Ban} from this set, use {@link Ban#delete()} instead.
      *
      * @return An unmodifiable {@link Set} containing all bans.
      * @see Ban
      * @see #createBan(int, Map)
-     * @see #createBan(int, String, BanType, Duration)
+     * @see #createBan(int, String, BanType, AccurateDuration)
      * @see Ban#delete()
      */
     @NotNull @Unmodifiable Set<B> getBanSet();
 
     /**
-     * Returns an {@link Optional} containing a previously created ban with the given ID using {@link #createBan(int, Map)} or {@link #createBan(int, String, BanType, Duration)}.
+     * Returns an {@link Optional} containing a previously created ban with the given ID using {@link #createBan(int, Map)} or {@link #createBan(int, String, BanType, AccurateDuration)}.
      * <p>
-     * If {@link Optional#isEmpty()} returns {@code true}, a {@link Ban} with the given ID does not exist in the system and can be added using {@link #createBan(int, Map)} or {@link #createBan(int, String, BanType, Duration)}.
+     * If {@link Optional#isEmpty()} returns {@code true}, a {@link Ban} with the given ID does not exist in the system and can be added using {@link #createBan(int, Map)} or {@link #createBan(int, String, BanType, AccurateDuration)}.
      * <p>
      * To get all available {@link Ban}, use the method {@link #getBanSet()} which returns an unmodifiable set containing all {@link Ban}.
      *
      * @param id The ID of the ban to return.
      * @return An {@link Optional} containing the {@link Ban} with the given ID, or an empty one if no such {@link Ban} exists.
      * @see #createBan(int, Map)
-     * @see #createBan(int, String, BanType, Duration)
+     * @see #createBan(int, String, BanType, AccurateDuration)
      * @see #getBanSet()
      */
     @NotNull Optional<B> getBan(int id);
@@ -99,12 +99,12 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @param id       The ID of the new ban.
      * @param name     The name of the player being banned.
      * @param banType  The type of the ban.
-     * @param duration The duration of the ban, or null for permanent bans.
+     * @param accurateDuration The duration of the ban, or null for permanent bans.
      * @return The new {@link Ban}.
      * @throws NullPointerException if the name or banType is null.
      * @see Ban
      */
-    @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable Duration duration) throws BackendException;
+    @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration) throws BackendException;
 
     /**
      * Applies the specified {@link Ban} to the player with the given UUID, without providing a reason for the ban.
@@ -158,7 +158,7 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * </p>
      *
      * <p>
-     * To filter for a specific {@link BanType}, use the {@link #getCurrentBan(UUID, BanType)} method instead.
+     * To filter for a specific {@link BanType}, use the {@link #getLatestPunishment(UUID, BanType)} method instead.
      * </p>
      *
      * @param totalID the UUID of the player for whom to search for bans.
@@ -168,9 +168,9 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @see Punishment#isValid()
      * @see #punish(UUID, Ban, BanOperator, Component)
      * @see #punish(UUID, Ban, BanOperator)
-     * @see #getCurrentBan(UUID, BanType)
+     * @see #getLatestPunishment(UUID, BanType)
      */
-    @NotNull Optional<P> getCurrentBan(@NotNull UUID totalID) throws BackendException;
+    @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID) throws BackendException;
 
     /**
      * Returns the most recent valid ban of the specified type associated with the player having the specified {@link PlayerClient#getTotalID()}.
@@ -181,7 +181,7 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * </p>
      *
      * <p>
-     * If no specific {@link BanType} is needed, use the method {@link #getCurrentBan(UUID)} instead.
+     * If no specific {@link BanType} is needed, use the method {@link #getLatestPunishment(UUID)} instead.
      * </p>
      *
      * @param totalID the UUID of the player for whom to search for bans.
@@ -190,17 +190,17 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * Returns an empty {@link Optional} if no valid bans of the specified type are found.
      * @throws NullPointerException if {@code totalID} or {@code banType} are null.
      * @see Punishment#isValid()
-     * @see #getCurrentBan(UUID)
+     * @see #getLatestPunishment(UUID)
      * @see #punish(UUID, Ban, BanOperator, Component)
      * @see #punish(UUID, Ban, BanOperator)
      */
-    @NotNull Optional<P> getCurrentBan(@NotNull UUID totalID, @NotNull BanType banType) throws BackendException;
+    @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType) throws BackendException;
 
     /**
      * Returns an unmodifiable set of all the bans associated with the player having the specified {@link PlayerClient#getTotalID()}.
      * These bans include both valid and invalid bans.
      * <p>
-     * To get the most recent valid ban of a player, use the {@link #getCurrentBan(UUID)} or the {@link #getCurrentBan(UUID, BanType)} method.
+     * To get the most recent valid ban of a player, use the {@link #getLatestPunishment(UUID)} or the {@link #getLatestPunishment(UUID, BanType)} method.
      *
      * <p>
      * Note that this method returns an unmodifiable set, meaning that it cannot be modified directly.
@@ -210,8 +210,8 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @param totalID the UUID of the player for whom to retrieve the set of bans.
      * @return an unmodifiable {@link Set} of all the {@link Punishment} objects associated with the specified player.
      * @throws NullPointerException if {@code totalID} is null.
-     * @see #getCurrentBan(UUID)
-     * @see #getCurrentBan(UUID, BanType)
+     * @see #getLatestPunishment(UUID)
+     * @see #getLatestPunishment(UUID, BanType)
      */
     @NotNull @Unmodifiable Set<P> getPlayerBanSet(@NotNull UUID totalID) throws BackendException;
 
@@ -220,7 +220,7 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * These bans include both valid and invalid bans.
      * <p>
      * To get the bans associated with a specific player, use the {@link #getPlayerBanSet(UUID)} method.
-     * To get the most recent valid ban of a player, use the {@link #getCurrentBan(UUID)} or the {@link #getCurrentBan(UUID, BanType)} method.
+     * To get the most recent valid ban of a player, use the {@link #getLatestPunishment(UUID)} or the {@link #getLatestPunishment(UUID, BanType)} method.
      *
      * <p>
      * Note that this method returns an unmodifiable set, meaning that it cannot be modified directly.
@@ -229,8 +229,8 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      *
      * @return an unmodifiable {@link Set} of all the {@link Punishment} objects associated with any player.
      * @see #getPlayerBanSet(UUID)
-     * @see #getCurrentBan(UUID)
-     * @see #getCurrentBan(UUID, BanType)
+     * @see #getLatestPunishment(UUID)
+     * @see #getLatestPunishment(UUID, BanType)
      */
     @NotNull @Unmodifiable Set<P> getPlayerBanSet() throws BackendException;
 

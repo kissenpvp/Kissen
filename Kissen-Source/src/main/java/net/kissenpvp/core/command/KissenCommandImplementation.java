@@ -19,21 +19,44 @@
 package net.kissenpvp.core.command;
 
 import net.kissenpvp.core.api.base.ExceptionHandler;
-import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.exception.deserialization.TemporaryDeserializationException;
+import net.kissenpvp.core.api.command.handler.DateTimeParseExceptionHandler;
+import net.kissenpvp.core.api.command.handler.EnumConstantNotPresentExceptionHandler;
+import net.kissenpvp.core.api.time.AccurateDuration;
+import net.kissenpvp.core.command.handler.NumberFormatExceptionHandler;
+import net.kissenpvp.core.command.parser.BooleanParser;
+import net.kissenpvp.core.command.parser.ByteParser;
+import net.kissenpvp.core.command.parser.CharacterParser;
+import net.kissenpvp.core.command.parser.DoubleParser;
+import net.kissenpvp.core.command.parser.AccurateDurationParser;
+import net.kissenpvp.core.command.parser.FloatParser;
+import net.kissenpvp.core.command.parser.IntegerParser;
+import net.kissenpvp.core.command.parser.LongParser;
+import net.kissenpvp.core.command.parser.NamedTextColorParser;
+import net.kissenpvp.core.command.parser.ShortParser;
+import net.kissenpvp.core.command.parser.StringParser;
+import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.base.KissenImplementation;
+import net.kissenpvp.core.api.command.handler.ArgumentMissingExceptionHandler;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+import net.kissenpvp.core.api.command.handler.BackendExceptionHandler;
+import net.kissenpvp.core.command.handler.CommandExceptionHandler;
+import net.kissenpvp.core.command.handler.InvocationTargetExceptionHandler;
+import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.reflect.Array;
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class KissenCommandImplementation implements Implementation {
+public class KissenCommandImplementation implements KissenImplementation {
 
     private final Map<Class<?>, ArgumentParser<?, ?>> parserList;
     private final CommandExceptionHandlerService commandExceptionHandlerService;
@@ -46,8 +69,61 @@ public class KissenCommandImplementation implements Implementation {
     public KissenCommandImplementation() {
         this.parserList = new HashMap<>();
         this.commandExceptionHandlerService = new CommandExceptionHandlerService();
+
+        // default
+        registerParser(String.class, new StringParser<>());
+        registerParser(Byte.class, new ByteParser<>());
+        registerParser(Short.class, new ShortParser<>());
+        registerParser(Integer.class, new IntegerParser<>());
+        registerParser(Float.class, new FloatParser<>());
+        registerParser(Double.class, new DoubleParser<>());
+        registerParser(Long.class, new LongParser<>());
+        registerParser(Character.class, new CharacterParser<>());
+        registerParser(Boolean.class, new BooleanParser<>());
+
+        // we love java, right?
+        registerParser(Byte.TYPE, new ByteParser<>());
+        registerParser(Short.TYPE, new ShortParser<>());
+        registerParser(Integer.TYPE, new IntegerParser<>());
+        registerParser(Float.TYPE, new FloatParser<>());
+        registerParser(Double.TYPE, new DoubleParser<>());
+        registerParser(Long.TYPE, new LongParser<>());
+        registerParser(Character.TYPE, new CharacterParser<>());
+        registerParser(Boolean.TYPE, new BooleanParser<>());
+
+        // advanced
+        registerParser(NamedTextColor.class, new NamedTextColorParser<>());
+        registerParser(AccurateDuration.class, new AccurateDurationParser<>());
+
+        // Handler
+        registerHandler(new BackendExceptionHandler<>());
+        registerHandler(new NumberFormatExceptionHandler<>());
+        registerHandler(new CommandExceptionHandler<>());
+        registerHandler(new InvocationTargetExceptionHandler<>());
+        registerHandler(new ArgumentMissingExceptionHandler<>());
+        registerHandler(new EnumConstantNotPresentExceptionHandler<>());
+        registerHandler(new DateTimeParseExceptionHandler<>());
     }
 
+    @Override
+    public boolean start() {
+        KissenLocalizationImplementation kissenLocalizationImplementation = KissenCore.getInstance().getImplementation(KissenLocalizationImplementation.class);
+        kissenLocalizationImplementation.register("server.command.incorrect-usage", new MessageFormat("It appears that the command usage is not correct. Please refer to the commands help."));
+        kissenLocalizationImplementation.register("server.command.invalid-duration", new MessageFormat("This duration does not seem to match the ISO 8601 duration format. If you want to know more: https://en.wikipedia.org/wiki/ISO_8601"));
+        kissenLocalizationImplementation.register("server.command.backend-exception", new MessageFormat("It seems that the backend is currently unreachable. Please contact an Administrator."));
+        return KissenImplementation.super.start();
+    }
+
+    /**
+     * Registers a parser for a given type.
+     * If the type already exists in the system, an exception will be thrown.
+     *
+     * @param <T>     the type to register parser for
+     * @param <S>     the server entity type
+     * @param type    the type to register parser for
+     * @param parser  the parser to register
+     * @throws IllegalArgumentException if the type already exists in the system
+     */
     public <T, S extends ServerEntity> void registerParser(@NotNull Class<T> type, @NotNull ArgumentParser<T, S> parser) {
         if (!parserList.containsKey(type)) {
             parserList.put(type, parser);
@@ -97,25 +173,62 @@ public class KissenCommandImplementation implements Implementation {
         }
     }
 
+    /**
+     * This method is used to add an element to an array.
+     *
+     * @param array   the array to which the element will be added
+     * @param element the element to be added
+     * @return a new array with the element added
+     */
     public @NotNull Object[] add(@NotNull Object[] array, @NotNull Object element) {
         Class<?> type = determineType(array, element);
         return addElementToArray(array, element, type);
     }
 
+    /**
+     * Determines the type of array and an element.
+     *
+     * @param array   The input array.
+     * @param element The input element.
+     * @return The determined type of the array and element.
+     * @throws NullPointerException if either the array or the element is null.
+     */
     private Class<?> determineType(@NotNull Object[] array, @NotNull Object element) {
         return Objects.requireNonNullElse(array, element).getClass();
     }
 
+    /**
+     * Adds an element to an array and returns the updated array.
+     *
+     * @param array   the array to which the element is added
+     * @param element the element to be added to the array
+     * @param type    the class type of the array elements
+     * @return the updated array with the element added
+     */
     private @NotNull Object[] addElementToArray(@NotNull Object[] array, @NotNull Object element, @NotNull Class<?> type) {
         Object[] newArray = copy(array, type);
         newArray[newArray.length - 1] = element;
         return newArray;
     }
 
+    /**
+     * Creates a deep copy of the given array.
+     *
+     * @param array                   The array to be copied
+     * @param newArrayComponentType   The class type of the new array
+     * @return A deep copy of the given array
+     */
     public @NotNull Object[] copy(@NotNull Object[] array, @NotNull Class<?> newArrayComponentType) {
         return (array != null) ? expandArray(array) : createSingleElementArray(newArrayComponentType);
     }
 
+    /**
+     * Expands the given array by one element, creating a new array with the same type and
+     * the length increased by one. The element at the last index is set to `null`.
+     *
+     * @param array the array to be expanded (must not be null)
+     * @return the expanded array
+     */
     private @NotNull Object[] expandArray(@NotNull Object[] array) {
         int arrayLength = Array.getLength(array);
         Object[] expandedArray = (Object[]) Array.newInstance(array.getClass().getComponentType(), arrayLength + 1);
@@ -125,6 +238,12 @@ public class KissenCommandImplementation implements Implementation {
         return expandedArray;
     }
 
+    /**
+     * Creates a single element array of the specified type.
+     *
+     * @param type the class object representing the type of the array element
+     * @return an array with a single element of the specified type
+     */
     private @NotNull Object[] createSingleElementArray(@NotNull Class<?> type) {
         return (Object[]) Array.newInstance(type, 1);
     }
