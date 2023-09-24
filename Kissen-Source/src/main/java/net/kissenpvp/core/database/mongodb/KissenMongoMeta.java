@@ -49,7 +49,7 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
 
     @Override
     public void purge(@NotNull String totalID) {
-        getCollection().deleteOne(new Document(getTotalIDColumn(), totalID));
+        getCollection().deleteMany(new Document(getTotalIDColumn(), totalID));
     }
 
     @Override
