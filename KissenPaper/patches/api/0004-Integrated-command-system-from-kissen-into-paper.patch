@@ -1,0 +1,212 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Sun, 24 Sep 2023 16:06:01 +0200
+Subject: [PATCH] Integrated command system from kissen into paper
+
+
+diff --git a/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..00716a1d5eccb5638540cd3fde5911b04284ef61
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
+@@ -0,0 +1,59 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.paper.api.command;
++
++import net.kissenpvp.core.api.command.annotations.CommandData;
++import net.kissenpvp.core.api.command.executor.CommandExecutor;
++import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
++import org.bukkit.command.Command;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++
++/**
++ * Represents an abstract, base command structure for the Kissen framework.
++ * <p>
++ * This base command class holds essential information about a command and serves as
++ * a foundation for all specific commands within the Kissen command hierarchy.
++ * The structure encapsulates the basic behavior and properties of a command,
++ * such as its name.
++ * <p>
++ * Subclasses should extend this class to provide specific implementations for each command.
++ *
++ * @see org.bukkit.command.Command
++ */
++public abstract class KissenCommand extends Command {
++
++    /**
++     * Constructs a new command with the specified name.
++     *
++     * @param name The name of the command. It must not be null.
++     *             This is the primary identifier for the command and is used in command
++     *             processing to map user inputs to the corresponding command.
++     * @throws NullPointerException if the {@code name} parameter is null.
++     * @see org.bukkit.command.Command
++     */
++    protected KissenCommand(@NotNull String name) {
++        super(name);
++    }
++
++    public abstract void initCommand(@NotNull CommandData commandData, @NotNull CommandExecutor<CommandSender> commandExecutor);
++
++    public abstract void initCompleter(@NotNull TabCompleterExecutor<CommandSender> completerExecutor);
++
++}
+diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java b/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d4aaecc0c25f54c5721c99e02fb7ee166d08d0a3
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java
+@@ -0,0 +1,25 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.paper.api.command;
++
++import net.kissenpvp.core.api.command.ArgumentParser;
++import org.bukkit.command.CommandSender;
++
++public interface PaperArgumentParser<T> extends ArgumentParser<T, CommandSender> {
++}
+diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..a8ea1223da9099039c285478de31483135c0ab6f
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java
+@@ -0,0 +1,6 @@
++package net.kissenpvp.paper.api.command;
++
++import net.kissenpvp.core.api.command.exception.CommandExceptionHandler;
++import org.bukkit.command.CommandSender;
++
++public interface PaperCommandExceptionHandler<T extends Throwable> extends CommandExceptionHandler<T, CommandSender> { }
+diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..07623f9cedb7a3f165b42d9aa8e040fe774c2cd5
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
+@@ -0,0 +1,80 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.paper.api.command;
++
++import net.kissenpvp.core.api.base.ExceptionHandler;
++import net.kissenpvp.core.api.base.Implementation;
++import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
++import org.bukkit.command.CommandSender;
++import org.bukkit.plugin.Plugin;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Optional;
++
++/**
++ * Interface for the specific implementation of command operations for the Paper API.
++ * <p>
++ * This interface extends the {@link net.kissenpvp.core.api.base.Implementation} and provides methods related to the command handling
++ * in the context of the Paper API. It outlines the operations for command retrieval, registration, tab completion, and de-registration.
++ *
++ * @see net.kissenpvp.core.api.base.Implementation
++ */
++public interface PaperCommandImplementation extends Implementation {
++
++    /**
++     * Retrieves a command by its name.
++     *
++     * @param name The name of the command. Must not be null.
++     * @return An {@link java.util.Optional} that contains the Command if it exists; otherwise, it will be empty.
++     * @throws NullPointerException If the {@code name} parameter is null.
++     */
++    @NotNull Optional<KissenCommand> getCommand(@NotNull String name);
++
++    /**
++     * Registers one or more objects that contain command methods with the specified {@link org.bukkit.plugin.Plugin}.
++     *
++     * @param plugin  The plugin to register the commands with. Must not be null.
++     * @param objects The object(s) containing the commands to be registered. Must not be null.
++     * @throws NullPointerException If any of the parameters is null.
++     */
++    void registerCommand(@NotNull Plugin plugin, @NotNull Object... objects);
++
++    /**
++     * Registers a tab completion executor for a command with the given name.
++     *
++     * @param plugin               The plugin to register the tab completer with. Must not be null.
++     * @param name                 The name of the command to associate the tab completer with. Must not be null.
++     * @param tabCompleterExecutor The tab completion executor to register. Must not be null.
++     * @throws NullPointerException If any of the parameters is null.
++     */
++    void registerCompleter(@NotNull Plugin plugin, @NotNull String name, @NotNull TabCompleterExecutor<CommandSender> tabCompleterExecutor);
++
++    /**
++     * Unregisters a command by its name.
++     *
++     * @param name The name of the command to unregister. Must not be null.
++     * @return true if the command was found and unregistered successfully, false otherwise.
++     * @throws NullPointerException If the {@code name} parameter is null.
++     */
++    boolean unregisterCommand(@NotNull String name);
++
++    <T> void registerParser(@NotNull Class<T> type, @NotNull PaperArgumentParser<T> argumentParser);
++
++    void registerHandler(@NotNull ExceptionHandler<?> exceptionHandler);
++}
+diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..36f22b864cd7047c3cbf6897211e06dc8765290e
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java
+@@ -0,0 +1,6 @@
++package net.kissenpvp.paper.api.command;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import org.bukkit.command.CommandSender;
++
++public interface PaperCommandPayload extends CommandPayload<CommandSender> {}
