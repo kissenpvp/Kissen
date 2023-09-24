@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Fri, 22 Sep 2023 17:59:06 +0200
+Subject: [PATCH] Enhanced command system
+
+
+diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
+index fcb026696a30412901844c46ad601991c35b6b96..01a91e4566ec67c17947ce3f2d598fd59e7837a4 100644
+--- a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
++++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
+@@ -18,6 +18,7 @@
+ 
+ package net.kissenpvp.paper.api.command;
+ 
++import net.kissenpvp.core.api.base.ExceptionHandler;
+ import net.kissenpvp.core.api.base.Implementation;
+ import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
+ import org.bukkit.command.CommandSender;
+@@ -75,4 +76,5 @@ public interface PaperCommandImplementation extends Implementation {
+ 
+     <T> void registerParser(@NotNull Class<T> type, @NotNull PaperArgumentParser<T> argumentParser);
+ 
++    void registerHandler(@NotNull ExceptionHandler<?> exceptionHandler);
+ }
+diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java
+deleted file mode 100644
+index 36f22b864cd7047c3cbf6897211e06dc8765290e..0000000000000000000000000000000000000000
+--- a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java
++++ /dev/null
+@@ -1,6 +0,0 @@
+-package net.kissenpvp.paper.api.command;
+-
+-import net.kissenpvp.core.api.command.CommandPayload;
+-import org.bukkit.command.CommandSender;
+-
+-public interface PaperCommandPayload extends CommandPayload<CommandSender> {}

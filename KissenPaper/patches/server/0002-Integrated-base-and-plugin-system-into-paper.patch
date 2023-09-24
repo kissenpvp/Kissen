@@ -1,0 +1,267 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Mon, 11 Sep 2023 00:49:19 +0200
+Subject: [PATCH] Integrated base and plugin system into paper
+
+
+diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
+index 9c7552968b8c017c71a7a77557a66a03ed89f125..9aa30cbb5782fb417ff74f548f4ddf036ad5e5ee 100644
+--- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
++++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
+@@ -145,7 +145,13 @@ class PaperPluginInstanceManager {
+     public void disablePlugins() {
+         Plugin[] plugins = this.getPlugins();
+         for (int i = plugins.length - 1; i >= 0; i--) {
++            // KissenPaper start
++            net.kissenpvp.core.base.KissenCore.getInstance().load(net.kissenpvp.core.base.PluginState.PRE, plugins[i]);
++            // KissenPaper end
+             this.disablePlugin(plugins[i]);
++            // KissenPaper start
++            net.kissenpvp.core.base.KissenCore.getInstance().load(net.kissenpvp.core.base.PluginState.POST, plugins[i]);
++            // KissenPaper end
+         }
+     }
+ 
+diff --git a/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java b/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java
+index cb9b13522a976b82bcb71cef486f11f4172e3e99..862625f912d8e8d980f06f58f7bef353578420e6 100644
+--- a/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java
++++ b/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java
+@@ -35,6 +35,9 @@ public class ServerPluginProviderStorage extends ConfiguredProviderStorage<JavaP
+ 
+             @Override
+             public boolean load(PluginProvider<JavaPlugin> provider, JavaPlugin provided) {
++                // KissenPaper start
++                net.kissenpvp.core.base.KissenCore.getInstance().load(net.kissenpvp.core.base.PluginState.PRE, provided);
++                // KissenPaper end
+                 // Add it to the map here, we have to run the actual loading logic later.
+                 PaperPluginManagerImpl.getInstance().loadPlugin(provided);
+                 return true;
+@@ -57,6 +60,9 @@ public class ServerPluginProviderStorage extends ConfiguredProviderStorage<JavaP
+         try {
+             provided.getLogger().info(String.format("Loading server plugin %s", provided.getPluginMeta().getDisplayName()));
+             provided.onLoad();
++            // KissenPaper start
++            net.kissenpvp.core.base.KissenCore.getInstance().enable(net.kissenpvp.core.base.PluginState.POST, provided);
++            // KissenPaper end
+         } catch (Throwable ex) {
+             // Don't mark that provider as ERRORED, as this apparently still needs to run the onEnable logic.
+             provided.getSLF4JLogger().error("Error initializing plugin '%s' in folder '%s' (Is it up to date?)".formatted(provider.getFileName(), provider.getParentSource()), ex);
+diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4446e728cd8c2a3869d0092000c347a44ca8bd39
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+@@ -0,0 +1,77 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.paper.base;
++
++import net.kissenpvp.core.api.database.meta.ObjectMeta;
++import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
++import net.kissenpvp.core.base.KissenCore;
++import net.kissenpvp.paper.api.base.PaperKissen;
++import org.bukkit.Bukkit;
++import org.jetbrains.annotations.NotNull;
++import org.slf4j.Logger;
++
++import java.util.UUID;
++
++// KissenPaper
++public class KissenPaperCore extends KissenCore implements PaperKissen {
++
++    /**
++     * Constructs a new instance of the KissenPaperCore class.
++     *
++     * @param logger The logger to be used for logging.
++     */
++    public KissenPaperCore(@NotNull Logger logger) {
++        super(logger);
++    }
++
++    @Override
++    public int getPort() {
++        return Bukkit.getPort();
++    }
++
++    @Override
++    public boolean isOnline(@NotNull UUID uuid) {
++        return Bukkit.getPlayer(uuid) != null;
++    }
++
++    @Override
++    public boolean isOnline(@NotNull String s) {
++        return Bukkit.getPlayer(s) != null;
++    }
++
++    @Override
++    public @NotNull ConsoleClient getConsole() {
++        return Bukkit.getConsoleSender();
++    }
++
++    @Override
++    public void repeatTask(@NotNull String name, int l1, @NotNull Runnable runnable) {
++        //TODO add task class
++    }
++
++    @Override
++    public void runTask(long l, @NotNull Runnable runnable) {
++        //TODO look method above
++    }
++
++    @Override
++    public @NotNull ObjectMeta getPrivateMeta() {
++        return KissenCore.getInstance().getPublicMeta(); //TODO
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 3238cbcba567b1242c77e41f6b6f19a8d157fb4e..994e59f79f3387c3a79b6ec77b72b5a4d89b67d0 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -988,6 +988,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         }
+         // Spigot end
+ 
++        // KissenPaper start
++        net.kissenpvp.core.base.KissenCore.getInstance().shutdown();
++        // KissenPaper end
++
+         // Paper start - move final shutdown items here
+         LOGGER.info("Flushing Chunk IO");
+         io.papermc.paper.chunk.system.io.RegionFileIOThread.close(true); // Paper // Paper - rewrite chunk system
+@@ -1102,6 +1106,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+                 throw new IllegalStateException("Failed to initialize server");
+             }
+ 
++            // KissenPaper start
++            net.kissenpvp.core.base.KissenCore.getInstance().start();
++            // KissenPaper end
++
+             this.nextTickTime = Util.getMillis();
+             this.statusIcon = (ServerStatus.Favicon) this.loadStatusIcon().orElse(null); // CraftBukkit - decompile error
+             this.status = this.buildServerStatus();
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+index 9f422cbeaa52b3e6a0a27af4f8ad4ddb7808483f..56a35b4538d232aa2e1473ae07f4e080255606b0 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -192,6 +192,16 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         DedicatedServer.LOGGER.info("Loading properties");
+         DedicatedServerProperties dedicatedserverproperties = this.settings.getProperties();
+ 
++        // KissenPaper start
++        net.kissenpvp.paper.base.KissenPaperCore kissenPaperCore = new net.kissenpvp.paper.base.KissenPaperCore(LogUtils.getLogger());
++        org.bukkit.Bukkit.setKissen(kissenPaperCore);
++        try {
++            kissenPaperCore.initialize(net.kissenpvp.paper.base.KissenPaperCore.class);
++        } catch (Exception exception) {
++            throw new RuntimeException(String.format("The system could not load the 'kissen' system due to a '%s' exception.", exception.getClass().getSimpleName()), exception);
++        }
++        // KissenPaper stop
++
+         if (this.isSingleplayer()) {
+             this.setLocalIp("127.0.0.1");
+         } else {
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 249d76acac9a91cd46f0b8a477511974a75d6f4a..55cbe8e68bbe83c0dd30dba85a075854c753cc99 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -44,6 +44,8 @@ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ import java.util.stream.Collectors;
+ import javax.imageio.ImageIO;
++
++import net.kissenpvp.core.base.PluginState;
+ import net.minecraft.advancements.Advancement;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
+@@ -548,7 +550,13 @@ public final class CraftServer implements Server {
+ 
+         for (Plugin plugin : plugins) {
+             if ((!plugin.isEnabled()) && (plugin.getDescription().getLoad() == type)) {
++                // KissenPaper start
++                net.kissenpvp.core.base.KissenCore.getInstance().enable(net.kissenpvp.core.base.PluginState.PRE, plugin);
++                // KissenPaper end
+                 this.enablePlugin(plugin);
++                // KissenPaper start
++                net.kissenpvp.core.base.KissenCore.getInstance().enable(PluginState.POST, plugin);
++                // KissenPaper end
+             }
+         }
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
+index d96399e9bf1a58db5a4a22e58abb99e7660e0694..8a9614959e399ff8b43a8819f62f351b6bec78e9 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
+@@ -143,4 +143,26 @@ public class MinecraftInternalPlugin extends PluginBase {
+     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+         throw new UnsupportedOperationException("Not supported.");
+     }
++
++    // KissenPaper start
++    @Override
++    public @org.jetbrains.annotations.NotNull String getFullName() {
++        return getName();
++    }
++
++    @Override
++    public @org.jetbrains.annotations.NotNull String getPackage() {
++        throw new UnsupportedOperationException("Not supported.");
++    }
++
++    @Override
++    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
++        return org.bukkit.Bukkit.getKissen();
++    }
++
++    @Override
++    public void registerTranslation(@org.jetbrains.annotations.NotNull String key, java.text.@org.jetbrains.annotations.NotNull MessageFormat defaultMessage) {
++        getKissen().getImplementation(net.kissenpvp.core.message.localization.KissenLocalizationImplementation.class).register(key, defaultMessage);
++    }
++    // KissenPaper end
+ }
+diff --git a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
+index 1d14f530ef888102e47eeeaf0d1a6076e51871c4..b83c491de7f79f29716686805b6f10341667b89b 100644
+--- a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
++++ b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
+@@ -143,4 +143,26 @@ public class PaperTestPlugin extends PluginBase {
+     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+         throw new UnsupportedOperationException("Not supported.");
+     }
++
++    // KissenPaper start
++    @Override
++    public @org.jetbrains.annotations.NotNull String getFullName() {
++        return getName();
++    }
++
++    @Override
++    public @org.jetbrains.annotations.NotNull String getPackage() {
++        throw new UnsupportedOperationException("Not supported.");
++    }
++
++    @Override
++    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
++        return org.bukkit.Bukkit.getKissen();
++    }
++
++    @Override
++    public void registerTranslation(@org.jetbrains.annotations.NotNull String key, java.text.@org.jetbrains.annotations.NotNull MessageFormat defaultMessage) {
++        throw new UnsupportedOperationException("Not supported.");
++    }
++    // KissenPaper end
+ }

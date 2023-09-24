@@ -1,0 +1,69 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Groldi <chniucg@gmail.com>
+Date: Sun, 24 Sep 2023 13:28:51 +0200
+Subject: [PATCH] Integrated localization from kissen into paper
+
+
+diff --git a/src/main/java/net/kissenpvp/paper/message/localization/KissenPaperLocalizationImplementation.java b/src/main/java/net/kissenpvp/paper/message/localization/KissenPaperLocalizationImplementation.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..40392c8b5f129106015ab5b49dc8764ae72387df
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/message/localization/KissenPaperLocalizationImplementation.java
+@@ -0,0 +1,57 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.paper.message.localization;
++
++import net.kissenpvp.core.message.KissenComponentSerializer;
++import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
++import net.kyori.adventure.text.Component;
++
++import java.text.MessageFormat;
++
++public class KissenPaperLocalizationImplementation extends KissenLocalizationImplementation {
++
++    @Override
++    public boolean postStart() {
++
++        //I love disconnect messages
++        register("server.disconnect.server-shutdown", getTranslation("multiplayer.disconnect.server_shutdown"));
++        register("server.disconnect.not-whitelisted", getTranslation("multiplayer.disconnect.not_whitelisted"));
++        register("server.disconnect.server-full", getTranslation("multiplayer.disconnect.server_full"));
++        register("server.disconnect.outdated-client", getTranslation("multiplayer.disconnect.outdated_client"));
++        register("server.disconnect.outdated-server", getTranslation("multiplayer.disconnect.outdated_server"));
++        register("server.disconnect.server-restart", getTranslation("multiplayer.disconnect.server_shutdown"));
++
++        register("paper.kick.connection-throttle", new MessageFormat("Connection throttled! Please wait before reconnecting."));
++        register("paper.unauthorized", new MessageFormat("You do not have the permission to perform this command."));
++
++        return super.postStart();
++    }
++
++    /**
++     * Retrieves a translated message format based on the provided language key.
++     *
++     * @param languageKey the string representing the language key for the translation
++     * @return the translated message format
++     */
++    private MessageFormat getTranslation(String languageKey) {
++        return new MessageFormat(KissenComponentSerializer.getInstance()
++                .getMiniSerializer()
++                .serialize(Component.translatable(languageKey)));
++    }
++}
