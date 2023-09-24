@@ -6,10 +6,10 @@ Subject: [PATCH] Integrated player system from kissen into paper
 
 diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperBan.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperBan.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..821c78207e71d13ec02ec9669829e83924bc4a21
+index 0000000000000000000000000000000000000000..3665cb5da0501f7cda075a633bab7cadf2dda10d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperBan.java
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,33 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -32,13 +32,23 @@ index 0000000000000000000000000000000000000000..821c78207e71d13ec02ec9669829e839
 +
 +import net.kissenpvp.core.api.ban.Ban;
 +
++/**
++ * Interface for a Paper-specific ban.
++ * <p>
++ * This interface extends the {@link Ban} and doesn't introduce any new methods; it merely represents a
++ * specialized version of a ban within the context of the Paper API.
++ * <p>
++ * All methods inherited from {@link Ban} maintain their original functionality in the Paper API context.
++ *
++ * @see Ban
++ */
 +public interface PaperBan extends Ban {}
 diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7203d8b06838f110d14fc2b4aa28efde9b13727c
+index 0000000000000000000000000000000000000000..7356a0028ac85e4bf3ca58d91f881c98a369520b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,100 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -71,25 +81,80 @@ index 0000000000000000000000000000000000000000..7203d8b06838f110d14fc2b4aa28efde
 +import java.util.Set;
 +import java.util.UUID;
 +
-+
++/**
++ * Interface for Paper-specific ban implementation.
++ * <p>
++ * This interface extends the {@link BanImplementation} and specializes the type for {@link PaperBan} and {@link PaperPunishment}.
++ * This interface further defines methods to get punishment details within a Paper context.
++ *
++ * @see BanImplementation
++ * @see PaperBan
++ * @see PaperPunishment
++ */
 +public interface PaperBanImplementation extends BanImplementation<PaperBan, PaperPunishment>
 +{
++    /**
++     * Returns an unmodifiable set of all punishments applied in the specified context.
++     *
++     * @param context The context from which to retrieve punishments.
++     * @return An unmodifiable set containing all punishments in the context.
++     * @throws BackendException if an error occurs when retrieving the punishment data.
++     */
 +    @NotNull @Unmodifiable Set<PaperPunishment> getPunishmentSet(@NotNull Context context) throws BackendException;
 +
++    /**
++     * Returns an unmodifiable set of all punishments applied to the player with the given UUID within the specified context.
++     *
++     * @param totalID The UUID of the player for whom to retrieve the punishment data.
++     * @param context The context from which to retrieve punishments.
++     * @return An unmodifiable set containing all punishments for the player in the context.
++     * @throws BackendException if an error occurs when retrieving the punishment data.
++     */
 +    @NotNull @Unmodifiable Set<PaperPunishment> getPunishmentSet(@NotNull UUID totalID, @NotNull Context context) throws BackendException;
 +
++    /**
++     * Returns the most recent punishment applied to the player with the given UUID within the specified context, if such a punishment exists.
++     *
++     * @param totalID The UUID of the player for whom to retrieve the latest punishment.
++     * @param context The context from which to retrieve the punishment.
++     * @return An Optional containing the latest punishment if it exists, or Optional.empty() otherwise.
++     * @throws BackendException if an error occurs when retrieving the punishment data.
++     */
 +    @NotNull Optional<PaperPunishment> getLatestPunishment(@NotNull UUID totalID, @NotNull Context context) throws BackendException;
 +
++    /**
++     * Returns the most recent punishment of the specified type applied to the player with the given UUID within the specified context, if such a punishment exists.
++     *
++     * @param totalID The UUID of the player for whom to retrieve the latest punishment.
++     * @param banType The type of ban to search for.
++     * @param context The context from which to retrieve the punishment.
++     * @return An Optional containing the latest punishment of the required type if it exists, or Optional.empty() otherwise.
++     * @throws BackendException if an error occurs when retrieving the punishment data.
++     */
 +    @NotNull Optional<PaperPunishment> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType, @NotNull Context context) throws BackendException;
 +
++    /**
++     * Applies a punishment to the player with the specified UUID.
++     * <p>
++     * This method creates and returns a new instance of {@link PaperPunishment} on the specified player,
++     * based on the given parameters. The new punishment is persistently stored in the backend.
++     *
++     * @param totalID The UUID of the player to be punished.
++     * @param ban The {@link PaperBan} instance representing the specifications of the punishment.
++     * @param banOperator The operator who is applying the punishment.
++     * @param reason The reason for the punishment. This can be null.
++     * @param context The context in which the punishment is being applied.
++     * @return The created {@link PaperPunishment} instance.
++     * @throws BackendException if an error occurs when trying to create or persist the punishment in the backend.
++     */
 +    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @Nullable Component reason, @NotNull Context context) throws BackendException;
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..90a011ad25d6db9b1e72466ad4eb9217d7bedd34
+index 0000000000000000000000000000000000000000..0a15c0506043b8eb0ea0013299119300a81af8f6
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,36 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -113,6 +178,18 @@ index 0000000000000000000000000000000000000000..90a011ad25d6db9b1e72466ad4eb9217
 +import net.kissenpvp.core.api.ban.Punishment;
 +import org.bukkit.entity.Player;
 +
++/**
++ * Represents a punishment applied to a Player within Paper-specific context.
++ * <p>
++ * This interface is an extension of the {@link Punishment} interface specific to Player instances.
++ * It defines the contract for any kind of punishment that can be applied to a Player in the game
++ * or application built on the Paper platform.
++ * <p>
++ * The specific methods of punishment and their behaviour on a Player are defined in the classes that
++ * implement this interface, in accordance with the specifications of the {@link Punishment} interface.
++ *
++ * @see Punishment
++ */
 +public interface PaperPunishment extends Punishment<Player> {}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java b/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java
 new file mode 100644

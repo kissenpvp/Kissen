@@ -6,10 +6,10 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..00716a1d5eccb5638540cd3fde5911b04284ef61
+index 0000000000000000000000000000000000000000..74befff8d0efa7e921a24af394790f4bbd31128f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
-@@ -0,0 +1,59 @@
+@@ -0,0 +1,77 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -64,17 +64,35 @@ index 0000000000000000000000000000000000000000..00716a1d5eccb5638540cd3fde5911b0
 +        super(name);
 +    }
 +
++    /**
++     * Initializes the command with the provided command data and executor.
++     * <p>
++     * This method is used to set up the command with the given data and to assign an executor to handle
++     * the command execution. This setup process is typically performed during command registration.
++     *
++     * @param commandData     The details about the command (e.g., name, description, usage). Must not be null.
++     * @param commandExecutor The executor to handle the command execution. Must not be null.
++     * @throws NullPointerException if any of the parameters is null.
++     */
 +    public abstract void initCommand(@NotNull CommandData commandData, @NotNull CommandExecutor<CommandSender> commandExecutor);
 +
++    /**
++     * Initializes the command with a given tab completer.
++     * <p>
++     * This method is used to set up a tab completion system for the command, which assists the user by
++     * filling in possible command arguments as they type. This method is typically called when the command is registered.
++     *
++     * @param completerExecutor The tab completion executor to register. Must not be null.
++     * @throws NullPointerException if the completerExecutor is null.
++     */
 +    public abstract void initCompleter(@NotNull TabCompleterExecutor<CommandSender> completerExecutor);
-+
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java b/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d4aaecc0c25f54c5721c99e02fb7ee166d08d0a3
+index 0000000000000000000000000000000000000000..ca377cfde793abb8eebe3aa9ded9391dc84d387d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,40 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -98,26 +116,58 @@ index 0000000000000000000000000000000000000000..d4aaecc0c25f54c5721c99e02fb7ee16
 +import net.kissenpvp.core.api.command.ArgumentParser;
 +import org.bukkit.command.CommandSender;
 +
-+public interface PaperArgumentParser<T> extends ArgumentParser<T, CommandSender> {
-+}
++/**
++ * Interface for a Paper-specific argument parser.
++ * <p>
++ * This interface extends the {@link ArgumentParser} and refines the server entity type to
++ * {@link CommandSender}. It's used for parsing command arguments within the Paper API context.
++ * <p>
++ * This interface does not add any additional methods; it merely specializes the
++ * {@link ArgumentParser} for use with {@link CommandSender} in the Paper API context.
++ * <p>
++ * All methods inherited from {@link ArgumentParser} maintain their original functionality
++ * with the specialized type {@link CommandSender}.
++ *
++ * @param <T> the type of object that the parser can parse.
++ * @see ArgumentParser
++ * @see org.bukkit.command.CommandSender
++ */
++public interface PaperArgumentParser<T> extends ArgumentParser<T, CommandSender> { }
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a8ea1223da9099039c285478de31483135c0ab6f
+index 0000000000000000000000000000000000000000..d63915d40118b0684d6e3850c0737dff5a2bd9a1
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,23 @@
 +package net.kissenpvp.paper.api.command;
 +
 +import net.kissenpvp.core.api.command.exception.CommandExceptionHandler;
 +import org.bukkit.command.CommandSender;
 +
++/**
++ * Interface for Paper command exception handler.
++ * <p>
++ * This interface extends the {@link CommandExceptionHandler} and narrows down
++ * the {@code ServerEntity} type to {@link CommandSender}. It's used for handling exceptions
++ * specifically occurring during the execution of commands within the Paper API context.
++ * <p>
++ * This interface does not add any additional methods; it merely specializes the
++ * {@link CommandExceptionHandler} for use with {@link CommandSender} in the Paper API context.
++ * <p>
++ * All methods inherited from {@link CommandExceptionHandler} maintain their original functionality
++ * with the specialized type {@link CommandSender}.
++ *
++ * @param <T> the type of exception this handler can handle
++ * @see CommandExceptionHandler
++ * @see org.bukkit.command.CommandSender
++ */
 +public interface PaperCommandExceptionHandler<T extends Throwable> extends CommandExceptionHandler<T, CommandSender> { }
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..07623f9cedb7a3f165b42d9aa8e040fe774c2cd5
+index 0000000000000000000000000000000000000000..55299b060eab441f70774ace312e2588bf2206af
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
-@@ -0,0 +1,80 @@
+@@ -0,0 +1,97 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -194,19 +244,24 @@ index 0000000000000000000000000000000000000000..07623f9cedb7a3f165b42d9aa8e040fe
 +     */
 +    boolean unregisterCommand(@NotNull String name);
 +
++    /**
++     * Registers a parser for arguments of a specific type.
++     * <p>
++     * The provided parser will be used to convert command-line parameters into objects of the specified type.
++     *
++     * @param type           The type of object that the parser will create. Must not be null.
++     * @param argumentParser The parser that parses command-line parameters and creates objects of the specified type. Must not be null.
++     * @throws NullPointerException If any of the parameters is null.
++     */
 +    <T> void registerParser(@NotNull Class<T> type, @NotNull PaperArgumentParser<T> argumentParser);
 +
++    /**
++     * Registers an exception handler.
++     * <p>
++     * The provided handler will be used to handle the exceptions that occur in the command execution.
++     *
++     * @param exceptionHandler The exception handler that is responsible to handle exceptions occurring during command execution. Must not be null.
++     * @throws NullPointerException If the {@code exceptionHandler} parameter is null.
++     */
 +    void registerHandler(@NotNull ExceptionHandler<?> exceptionHandler);
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..36f22b864cd7047c3cbf6897211e06dc8765290e
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandPayload.java
-@@ -0,0 +1,6 @@
-+package net.kissenpvp.paper.api.command;
-+
-+import net.kissenpvp.core.api.command.CommandPayload;
-+import org.bukkit.command.CommandSender;
-+
-+public interface PaperCommandPayload extends CommandPayload<CommandSender> {}
