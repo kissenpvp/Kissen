@@ -18,17 +18,23 @@
 
 package net.kissenpvp.core.user.rank;
 
-import net.kissenpvp.core.api.util.Container;
+import net.kissenpvp.core.api.time.TemporalObject;
+import net.kissenpvp.core.time.TemporalMeasureNode;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
 
-public record KissenPlayerRankNode(@NotNull String id, @NotNull String rankID, long start,
-                                   @NotNull Container<Long> duration, @NotNull Container<Long> end,
-                                   @Nullable Long predictedEnd)
+public record KissenPlayerRankNode(@NotNull String id, @NotNull String rankID, @NotNull TemporalMeasureNode temporalMeasureNode)
 {
+    public KissenPlayerRankNode(@NotNull String id, @NotNull String rankID) {
+        this(id, rankID, new TemporalMeasureNode());
+    }
+
+    public KissenPlayerRankNode(@NotNull String id, @NotNull String rankID, @NotNull TemporalObject temporalObject) {
+        this(id, rankID, new TemporalMeasureNode(temporalObject));
+    }
+
     @Override public boolean equals(Object o)
     {
         if (this == o)

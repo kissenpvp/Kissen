@@ -25,19 +25,18 @@ import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.permission.PermissionEntry;
 import net.kissenpvp.core.api.permission.event.PermissionEntrySetPermissionEvent;
-import net.kissenpvp.core.api.util.Container;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.DataWriter;
 import net.kissenpvp.core.database.savable.KissenSavable;
 import net.kissenpvp.core.permission.event.KissenPermissionEntryClearEvent;
 import net.kissenpvp.core.permission.event.KissenPermissionEntrySetPermissionEvent;
 import net.kissenpvp.core.permission.event.KissenPermissionEntryUnsetPermissionEvent;
+import net.kissenpvp.core.time.TemporalMeasureNode;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,8 +65,7 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
             }
             return currentPermission.get();
         }
-        long start = System.currentTimeMillis();
-        return setPermission(new KissenPermissionNode(permission, getPermissionID(), new Container<>(value), start, new Container<>(null), new Container<>(-1L), -1L, new HashMap<>()));
+        return setPermission(new KissenPermissionNode(permission, this, value, new TemporalMeasureNode()));
     }
 
     @Override
@@ -76,10 +74,7 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
             throw new IllegalArgumentException("The specified permission owner does not match this object.");
         }
 
-        long start = System.currentTimeMillis();
-        Duration duration = permission.getDuration();
-        return setPermission(new KissenPermissionNode(permission.getName(), permission.getOwner()
-                .getPermissionID(), new Container<>(permission.getValue()), permission.getStart(), new Container<>(duration == null ? null : duration.toMillis()), new Container<>(permission.getEnd()), permission.getPredictedEnd(), permission instanceof KissenPermission kissenPermission ? kissenPermission.getDefinedOptions() : new HashMap<>()));
+        return setPermission(new KissenPermissionNode(permission));
     }
 
     @Override
@@ -98,7 +93,7 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
 
     @Override
     public int wipePermissions() {
-        if (containsList("permission_list") && getListNotNull("permission_list").size() > 0) {
+        if (containsList("permission_list") && !getListNotNull("permission_list").isEmpty()) {
             KissenPermissionEntryClearEvent kissenPermissionEntryClearEvent = new KissenPermissionEntryClearEvent(this);
             if (KissenCore.getInstance()
                     .getImplementation(EventImplementation.class)

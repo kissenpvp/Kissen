@@ -24,6 +24,7 @@ import net.kissenpvp.core.api.permission.Permission;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.Optional;
 
 /**
@@ -53,13 +54,13 @@ import java.util.Optional;
  *
  * @see EventClass
  * @see Cancellable
- * @see Permission#setEnd(long)
+ * @see Permission#setEnd(Instant)
  */
 public interface PermissionEndUpdateEvent extends EventClass, Cancellable
 {
     @NotNull Permission getPermission();
 
-    @NotNull Optional<Long> getEnd();
+    @NotNull Optional<Instant> getEnd();
 
-    void setEnd(@Nullable Long end);
+    void setEnd(@Nullable Instant end);
 }

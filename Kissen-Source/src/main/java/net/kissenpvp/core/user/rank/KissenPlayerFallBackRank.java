@@ -18,12 +18,12 @@
 
 package net.kissenpvp.core.user.rank;
 
+import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.user.rank.PlayerRank;
 import net.kissenpvp.core.api.user.rank.Rank;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
 
 
@@ -40,22 +40,22 @@ public abstract class KissenPlayerFallBackRank<T extends Rank> implements Player
         return getID();
     }
 
-    @Override public long getStart()
+    @Override public Instant getStart()
     {
         throw new UnsupportedOperationException();
     }
 
-    @Override public @NotNull Optional<Duration> getDuration()
+    @Override public @NotNull Optional<AccurateDuration> getAccurateDuration()
     {
         throw new UnsupportedOperationException();
     }
 
-    @Override public long getEnd()
+    @Override public @NotNull Optional<Instant> getEnd()
     {
         throw new UnsupportedOperationException();
     }
 
-    @Override public void setEnd(long end)
+    @Override public void setEnd(Instant end)
     {
         throw new UnsupportedOperationException();
     }
@@ -65,7 +65,7 @@ public abstract class KissenPlayerFallBackRank<T extends Rank> implements Player
         return true;
     }
 
-    @Override public long getPredictedEnd()
+    @Override public @NotNull Optional<Instant> getPredictedEnd()
     {
         throw new UnsupportedOperationException();
     }
