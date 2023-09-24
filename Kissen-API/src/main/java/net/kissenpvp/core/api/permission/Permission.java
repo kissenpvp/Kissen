@@ -19,15 +19,15 @@
 package net.kissenpvp.core.api.permission;
 
 import net.kissenpvp.core.api.event.EventCancelledException;
+import net.kissenpvp.core.api.time.TemporalObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.time.Duration;
 import java.util.Map;
 
 
-public interface Permission {
+public interface Permission extends TemporalObject {
     @NotNull String getName();
 
     @NotNull PermissionEntry<?> getOwner();
@@ -35,18 +35,6 @@ public interface Permission {
     boolean getValue();
 
     void setValue(boolean value) throws EventCancelledException;
-
-    long getStart();
-
-    @Nullable Duration getDuration();
-
-    long getEnd();
-
-    void setEnd(long end) throws EventCancelledException;
-
-    long getPredictedEnd();
-
-    boolean isValid();
 
     void setOption(@NotNull String key, @NotNull String data) throws EventCancelledException;
 

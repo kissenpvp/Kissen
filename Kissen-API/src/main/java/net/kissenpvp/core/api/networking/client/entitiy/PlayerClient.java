@@ -24,6 +24,7 @@ import net.kissenpvp.core.api.ban.Punishment;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
 import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.rank.PlayerRank;
 import net.kissenpvp.core.api.user.rank.Rank;
@@ -35,7 +36,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -68,7 +68,7 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
 
     @NotNull R grantRank(@NotNull Rank rank);
 
-    @NotNull R grantRank(@NotNull Rank rank, @Nullable Duration duration);
+    @NotNull R grantRank(@NotNull Rank rank, @Nullable AccurateDuration accurateDuration);
 
     @NotNull B punish(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException;
 

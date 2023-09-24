@@ -20,14 +20,13 @@ package net.kissenpvp.core.api.user.rank;
 
 
 import net.kissenpvp.core.api.database.DataImplementation;
+import net.kissenpvp.core.api.time.TemporalObject;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.time.Duration;
 import java.util.Optional;
 
 
-public interface PlayerRank<RANK extends Rank> {
+public interface PlayerRank<RANK extends Rank> extends TemporalObject {
     /**
      * Returns the id of this player rank.
      * This is generated using {@link DataImplementation#generateID()}.
@@ -38,16 +37,4 @@ public interface PlayerRank<RANK extends Rank> {
     @NotNull String getID();
 
     @NotNull Optional<RANK> getSource();
-
-    long getStart();
-
-    @NotNull Optional<Duration> getDuration();
-
-    long getEnd();
-
-    void setEnd(long end);
-
-    boolean isValid();
-
-    long getPredictedEnd();
 }

@@ -32,6 +32,7 @@ import net.kissenpvp.core.api.message.Theme;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.rank.PlayerRank;
@@ -39,7 +40,6 @@ import net.kissenpvp.core.api.user.rank.Rank;
 import net.kissenpvp.core.api.user.suffix.Suffix;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.api.user.usersetttings.UserSetting;
-import net.kissenpvp.core.api.util.Container;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.DataWriter;
 import net.kissenpvp.core.message.PlayerTheme;
@@ -48,12 +48,12 @@ import net.kissenpvp.core.user.rank.KissenPlayerRankNode;
 import net.kissenpvp.core.user.suffix.KissenSuffix;
 import net.kissenpvp.core.user.suffix.SuffixNode;
 import net.kissenpvp.core.user.usersettings.KissenUserBoundSettings;
+import net.kissenpvp.core.time.TemporalMeasureNode;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -67,7 +67,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
                         .toRecordList()
                         .stream()
                         .map(rank -> translateRank(rank, getRankSaveChanges()))
-                        .sorted(Comparator.comparingLong(PlayerRank::getStart))
+                        .sorted(Comparator.comparing(PlayerRank::getStart))
                         .toList())
                 .orElse(new ArrayList<>());
     }
@@ -83,16 +83,9 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     @Override
-    public @NotNull R grantRank(@NotNull Rank rank, @Nullable Duration duration) {
+    public @NotNull R grantRank(@NotNull Rank rank, @Nullable AccurateDuration accurateDuration) {
         String id = KissenCore.getInstance().getImplementation(DataImplementation.class).generateID();
-
-        Optional<Duration> optionalDuration = Optional.ofNullable(duration);
-        long start = System.currentTimeMillis();
-
-        Long milliDuration = optionalDuration.map(Duration::toMillis).orElse(null);
-        Long end = optionalDuration.map(Duration::toMillis).map(val -> System.currentTimeMillis() + val).orElse(null);
-
-        KissenPlayerRankNode kissenPlayerRankNode = new KissenPlayerRankNode(id, rank.getName(), start, new Container<>(milliDuration), new Container<>(end), end);
+        KissenPlayerRankNode kissenPlayerRankNode = new KissenPlayerRankNode(id, rank.getName(), new TemporalMeasureNode(accurateDuration));
         R playerRank = translateRank(kissenPlayerRankNode, record -> {});
         setRank(playerRank);
         return playerRank;

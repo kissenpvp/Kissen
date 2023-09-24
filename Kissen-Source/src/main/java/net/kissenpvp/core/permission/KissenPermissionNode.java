@@ -18,17 +18,108 @@
 
 package net.kissenpvp.core.permission;
 
+import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.PermissionEntry;
+import net.kissenpvp.core.time.KissenAccurateDuration;
 import net.kissenpvp.core.api.util.Container;
+import net.kissenpvp.core.api.time.TemporalObject;
+import net.kissenpvp.core.time.TemporalMeasureNode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-
-public record KissenPermissionNode(String name, String owner, Container<Boolean> value, long start,
-                                   Container<Long> duration, Container<Long> end, long predictedEnd,
-                                   @NotNull Map<String, String> additionalData)
+/**
+ * This is a record class named {@code KissenPermissionNode} used for storing and handling data related to a Permission Entity.
+ * <p>
+ * The {@code KissenPermissionNode} record encapsulates five different attributes:
+ * <ul>
+ *  <li>{@code name}: a {@code NotNull String} value representing the name of a permission entity.</li>
+ *  <li>{@code owner}: a {@code NotNull String} value representing the owner of a permission entity.</li>
+ *  <li>{@code value}: a {@code NotNull Container} encapsulating a {@code NotNull Boolean} value that represents the value of the permission entity.</li>
+ *  <li>{@code additionalData}: a {@code NotNull Map} representing additional data related to the permission entity.</li>
+ *  <li>{@code temporalNode}: a {@code NotNull TemporalNode} object representing the temporal aspect associated with the permission entity.</li>
+ * </ul>
+ */
+public record KissenPermissionNode(@NotNull String name, @NotNull String owner, @NotNull Container<@NotNull Boolean> value,
+                                   @NotNull Map<String, String> additionalData, @NotNull TemporalMeasureNode temporalMeasureNode)
 {
+    /**
+     * This constructor creates a new instance of {@code KissenPermissionNode} using an instance of {@code Permission}.
+     *
+     * @param permission a {@code Permission} object that contains {@code name}, {@code owner}, {@code value}, and {@code definedOptions}.
+     * @throws NullPointerException if {@code permission} is {@code null}.
+     */
+    public KissenPermissionNode(@NotNull Permission permission) {
+        this(permission.getName(), permission.getOwner(), permission.getValue(), permission.getDefinedOptions(), permission);
+    }
+
+    /**
+     * This constructor creates an instance of {@code KissenPermissionNode} using a series of parameters along with a {@code TemporalNode}.
+     *
+     * @param name  the name of the permission.
+     * @param owner the owner of the permission, represented as a {@code PermissionEntry}.
+     * @param value the value of the permission, represented as a boolean.
+     * @param additionalData a {@code Map} of additional data related to the permission.
+     * @param temporalMeasureNode a {@code TemporalNode} object representing the temporal aspect associated with the permission.
+     * @throws NullPointerException if any of {@code name}, {@code owner}, {@code additionalData} or {@code temporalNode} is {@code null}.
+     */
+    public KissenPermissionNode(@NotNull String name, @NotNull PermissionEntry<?> owner, boolean value, @NotNull Map<String, String> additionalData, @NotNull TemporalMeasureNode temporalMeasureNode) {
+        this(name, owner.getPermissionID(), new Container<>(value), additionalData, temporalMeasureNode);
+    }
+
+    /**
+     * This constructor creates an instance of {@code KissenPermissionNode} using a series of parameters along with a {@code TemporalObject}.
+     *
+     * @param name  the name of the permission.
+     * @param owner the owner of the permission, represented as a {@code PermissionEntry}.
+     * @param value the value of the permission, represented as a boolean.
+     * @param additionalData a {@code Map} of additional data related to the permission.
+     * @param temporalObject a {@code TemporalObject} object representing the temporal aspect associated with the permission. It will be converted into a {@code TemporalNode} object.
+     * @throws NullPointerException if any of {@code name}, {@code owner}, {@code additionalData} or {@code temporalObject} is {@code null}.
+     */
+    public KissenPermissionNode(@NotNull String name, @NotNull PermissionEntry<?> owner, boolean value, @NotNull Map<String, String> additionalData, @NotNull TemporalObject temporalObject) {
+        this(name, owner.getPermissionID(), new Container<>(value), additionalData, new TemporalMeasureNode(temporalObject));
+    }
+
+    /**
+     * This constructor creates an instance of {@code KissenPermissionNode} with a minimal set of required parameters along with a {@code TemporalObject}, the additional data is initialized to an empty {@code HashMap}.
+     *
+     * @param name  the name of the permission.
+     * @param owner the owner of the permission, represented as a {@code PermissionEntry}.
+     * @param value the value of the permission, represented as a boolean.
+     * @param temporalObject a {@code TemporalObject} object representing the temporal aspect associated with the permission. It will be converted into a {@code TemporalNode} object.
+     */
+    public KissenPermissionNode(String name, PermissionEntry<?> owner, boolean value, @NotNull TemporalObject temporalObject) {
+        this(name, owner, value, new HashMap<>(), temporalObject);
+    }
+
+    /**
+     * This constructor creates an instance of {@code KissenPermissionNode} with a minimal set of required parameters along with a {@code TemporalNode}, the additional data is initialized to an empty {@code HashMap}.
+     *
+     * @param name  the name of the permission.
+     * @param owner the owner of the permission, represented as a {@code PermissionEntry}.
+     * @param value the value of the permission, represented as a boolean.
+     * @param temporalMeasureNode a {@code TemporalNode} object representing the temporal aspect associated with the permission.
+     */
+    public KissenPermissionNode(String name, PermissionEntry<?> owner, boolean value, @NotNull TemporalMeasureNode temporalMeasureNode) {
+        this(name, owner.getPermissionID(), new Container<>(value), new HashMap<>(), temporalMeasureNode);
+    }
+
+    /**
+     * This constructor creates an instance of {@code KissenPermissionNode} with a minimal set of required parameters and a duration, represented as a {@code PeriodDuration}. The additional data is initialized to an empty {@code HashMap}. A new {@code TemporalNode} is created with the start time as the current system time and the end time as the start time plus the duration.
+     *
+     * @param name  the name of the permission.
+     * @param owner the owner of the permission, represented as a {@code PermissionEntry}.
+     * @param value the value of the permission, represented as a boolean.
+     * @param kissenAccurateDuration the duration of the period, represented as a {@code Nullable PeriodDuration}.
+     */
+    public KissenPermissionNode(String name, PermissionEntry<?> owner, boolean value, @Nullable KissenAccurateDuration kissenAccurateDuration) {
+        this(name, owner.getPermissionID(), new Container<>(value), new HashMap<>(), new TemporalMeasureNode(System.currentTimeMillis(), kissenAccurateDuration));
+    }
+
     @Override public boolean equals(Object o)
     {
         if (this == o)

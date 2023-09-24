@@ -18,27 +18,33 @@
 
 package net.kissenpvp.core.user.rank;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.user.rank.PlayerRank;
 import net.kissenpvp.core.api.user.rank.Rank;
 import net.kissenpvp.core.api.user.rank.RankImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.DataWriter;
+import net.kissenpvp.core.time.KissenTemporalObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
 
-@AllArgsConstructor
-public class KissenPlayerRank<T extends Rank> implements PlayerRank<T> {
+public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject implements PlayerRank<T> {
+
     private final @Getter
     @NotNull KissenPlayerRankNode kissenPlayerRankNode;
     private final @Nullable DataWriter dataWriter;
+
+    public KissenPlayerRank(@NotNull KissenPlayerRankNode kissenPlayerRankNode, @Nullable DataWriter dataWriter) {
+        super(kissenPlayerRankNode.temporalMeasureNode());
+        this.kissenPlayerRankNode = kissenPlayerRankNode;
+        this.dataWriter = dataWriter;
+    }
 
     @Override
     public String toString() {
@@ -56,40 +62,14 @@ public class KissenPlayerRank<T extends Rank> implements PlayerRank<T> {
     }
 
     @Override
-    public long getStart() {
-        return kissenPlayerRankNode.start();
-    }
-
-    @Override
-    public @NotNull Optional<Duration> getDuration() {
-        if (kissenPlayerRankNode.duration().getValue() == null) {
-            return Optional.empty();
+    public void setEnd(@Nullable Instant end) throws EventCancelledException {
+        if(dataWriter == null)
+        {
+            throw new EventCancelledException();
         }
-        return Optional.of(Duration.of(kissenPlayerRankNode.duration().getValue(), ChronoUnit.MILLIS));
-    }
 
-    @Override
-    public long getEnd() {
-        return kissenPlayerRankNode.end().getValue();
-    }
-
-    @Override
-    public void setEnd(long end) {
-        if (dataWriter == null) {
-            throw new UnsupportedOperationException("This object is unmodifiable.");
-        }
-        kissenPlayerRankNode.end().setValue(end);
+        rewriteEnd(end);
         dataWriter.update(kissenPlayerRankNode);
-    }
-
-    @Override
-    public boolean isValid() {
-        return getEnd() > System.currentTimeMillis() || getEnd() == -1;
-    }
-
-    @Override
-    public long getPredictedEnd() {
-        return kissenPlayerRankNode.predictedEnd();
     }
 
     @Override
