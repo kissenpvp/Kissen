@@ -330,7 +330,7 @@ index 0000000000000000000000000000000000000000..d505df42ce46658a7b3d899cacb4ad3b
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0f30adde527f8235aa3801b1e141f5f8feb21c88
+index 0000000000000000000000000000000000000000..f3922f58e347608415e743beec8afa1236d7d745
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 @@ -0,0 +1,132 @@
@@ -397,7 +397,7 @@ index 0000000000000000000000000000000000000000..0f30adde527f8235aa3801b1e141f5f8
 +    @CommandData(value = "ban.delete", aliases = "punish", description = "")
 +    public void executeCreateBanCommand(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperBan paperBan) throws BackendException {
 +        paperBan.delete();
-+        payload.getSender().sendMessage("The ban " + paperBan.getID()  + " has been deleted.");
++        payload.getSender().sendMessage(Component.translatable("server.ban.deleted"));
 +    }
 +
 +    /**
@@ -468,10 +468,10 @@ index 0000000000000000000000000000000000000000..0f30adde527f8235aa3801b1e141f5f8
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/PaperBanParser.java b/src/main/java/net/kissenpvp/paper/ban/command/PaperBanParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7a8663f20ae96970c371bb79c9d4c696266a0717
+index 0000000000000000000000000000000000000000..a5483cbe7117fb928201a6ca56c71400f7b875b4
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/PaperBanParser.java
-@@ -0,0 +1,57 @@
+@@ -0,0 +1,58 @@
 +package net.kissenpvp.paper.ban.command;
 +
 +import net.kissenpvp.core.api.ban.Ban;
@@ -482,6 +482,7 @@ index 0000000000000000000000000000000000000000..7a8663f20ae96970c371bb79c9d4c696
 +import net.kissenpvp.paper.api.ban.PaperBanImplementation;
 +import net.kissenpvp.paper.api.command.PaperArgumentParser;
 +import net.kissenpvp.paper.api.command.PaperCommandExceptionHandler;
++import net.kyori.adventure.text.Component;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
@@ -525,7 +526,7 @@ index 0000000000000000000000000000000000000000..7a8663f20ae96970c371bb79c9d4c696
 +
 +    @Override
 +    public boolean handle(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull NonexistentBanException throwable) {
-+        commandPayload.getSender().sendMessage(String.format("The ban %s has not been found.", throwable.getBan()));
++        commandPayload.getSender().sendMessage(Component.translatable("server.ban.invalid", Component.text(throwable.getBan())));
 +        return true;
 +    }
 +}
@@ -619,21 +620,60 @@ index 0000000000000000000000000000000000000000..d537152a8059f6d73ac7f9a75878b039
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 5e6eff3c6058dc11cc4d4937eefe12a875ed411f..fd263732e3649f5b4cbdf7dab9f4b4bbdda38d88 100644
+index 454cee69c217106b840dc5c0019f8f7f80ca3782..ed8a75e7654dd2d9fb578d40a941c8b31596c57b 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-@@ -412,6 +412,14 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -422,6 +422,13 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                      return false;
                  }
  
 +                net.kissenpvp.paper.api.ban.PaperBanImplementation banImplementation = org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class);
 +                net.kissenpvp.paper.api.ban.PaperPunishment paperPunishment = banImplementation.getLatestPunishment(kissenPaperPublicUser.get("total_id").map(UUID::fromString).orElse(gameProfile.getId())).orElse(null);
-+                if(paperPunishment != null)
-+                {
-+                    disconnect(Component.translatable("multiplayer.disconnect.banned"));
++                if (paperPunishment != null) {
++                    disconnect(io.papermc.paper.adventure.PaperAdventure.asVanilla(paperPunishment.getPunishmentText(getLocale(kissenPaperPublicUser))));
 +                    return false;
 +                }
 +
                  kissenPaperPublicUser.getPrivateUserEntry(); // load private user
              } catch (BackendException backendException) {
                  disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
+@@ -429,6 +436,39 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+             }
+             return true;
+         }
++
++        /**
++         * Gets the given KissenPaperPublicUsers locale. The method first attempts to retrieve the locale
++         * identified by the key "forced_locale" from the user's property list. If the "forced_locale" is not defined or its
++         * value cannot be translated into a Locale object by the localizationImplementation, the method then attempts to
++         * retrieve the locale identified by the key "locale". If the "locale" is also absent or invalid, it defaults to
++         * localizationImplementation's default locale.
++         *
++         * <p>The method interacts with the LocalizationImplementation to obtain locale strings
++         * and convert them to Java Locale objects.</p>
++         *
++         * @param kissenPaperPublicUser The KissenPaperPublicUser object from which the locale is retrieved.
++         *                              This parameter must be of type KissenPaperPublicUser and cannot be null.
++         *
++         * @return The Locale object corresponding to the user's forced locale, or their standard locale,
++         *         or the default locale as defined by the LocalizationImplementation API.
++         *         The result will not be null.
++         *
++         * @throws NullPointerException if kissenPaperPublicUser is null.
++         *
++         * @see net.kissenpvp.core.api.message.localization.LocalizationImplementation
++         * @see java.util.Locale
++         * @see java.util.Optional
++         */
++        private @org.jetbrains.annotations.NotNull java.util.Locale getLocale(@org.jetbrains.annotations.NotNull KissenPaperPublicUser kissenPaperPublicUser) {
++            net.kissenpvp.core.api.message.localization.LocalizationImplementation localizationImplementation = Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class);
++
++            java.util.Optional<java.util.Locale> forcedLocale = kissenPaperPublicUser.get("forced_locale").map(localizationImplementation::getLocale);
++            java.util.Optional<java.util.Locale> locale = kissenPaperPublicUser.get("locale").map(localizationImplementation::getLocale);
++            java.util.Locale defaultLocale = localizationImplementation.getDefaultLocale();
++
++            return forcedLocale.orElse(locale.orElse(defaultLocale));
++        }
+         // KissenPaper end
+     }
+     // Spigot end

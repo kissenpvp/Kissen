@@ -2222,7 +2222,7 @@ index 0000000000000000000000000000000000000000..c6e107e7bc79c4f66c23f423452ac974
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index ff2dd53e9e943aa929188fd9d4c35498b78c497a..5e6eff3c6058dc11cc4d4937eefe12a875ed411f 100644
+index ff2dd53e9e943aa929188fd9d4c35498b78c497a..454cee69c217106b840dc5c0019f8f7f80ca3782 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -44,6 +44,13 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
@@ -2251,20 +2251,30 @@ index ff2dd53e9e943aa929188fd9d4c35498b78c497a..5e6eff3c6058dc11cc4d4937eefe12a8
                          // Paper end
                          String playerName = gameprofile.getName();
                          java.net.InetAddress address = ((java.net.InetSocketAddress) ServerLoginPacketListenerImpl.this.connection.getRemoteAddress()).getAddress();
-@@ -380,6 +392,34 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -380,6 +392,44 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                          ServerLoginPacketListenerImpl.LOGGER.info("UUID of player {} is {}", gameprofile.getName(), gameprofile.getId());
                          ServerLoginPacketListenerImpl.this.startClientVerification(gameprofile);
          }
 +
 +        // KissenPaper start
 +        /**
-+         * Attempts to log in the user.
-+         * This method checks if the game profile is not null, loads the user using the KissenUserImplementation,
-+         * checks if the user is banned using the PaperBanImplementation, and loads the private user entry.
-+         * If an exception occurs during the login process, the user is disconnected and true is returned.
-+         * Otherwise, false is returned.
++         * Attempts to log in a user represented by a GameProfile object. This includes loading the KissenPaperPublicUser via a
++         * KissenUserImplementation, checking the user's ban status, and if not banned, loading the user's
++         * private data.
 +         *
-+         * @return true if the user is disconnected during the login process, false otherwise.
++         * <p>If the user cannot be loaded, or they have an outstanding punishment, the method
++         * will disconnect them with an appropriate message and return false. If an exception occurs in the process,
++         * the user is also disconnected and false is returned. If the user is loaded successfully and has no
++         * outstanding punishments, true is returned.</p>
++         *
++         * @param gameProfile The GameProfile of the user attempting to log in. This parameter must not be null.
++         * @return true if the user was successfully logged in, false otherwise.
++         * @throws NullPointerException If gameProfile is null.
++         *
++         * @see KissenPaperPublicUser
++         * @see net.kissenpvp.paper.api.ban.PaperBanImplementation
++         * @see net.kissenpvp.paper.api.ban.PaperPunishment
++         * @see GameProfile
 +         */
 +        private boolean loginUser(GameProfile gameProfile) {
 +            try {
