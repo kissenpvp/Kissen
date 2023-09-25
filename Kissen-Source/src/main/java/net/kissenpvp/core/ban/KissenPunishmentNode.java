@@ -23,12 +23,14 @@ import net.kissenpvp.core.api.ban.BanOperator;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.message.Comment;
+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.util.Container;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.DataWriter;
 import net.kissenpvp.core.message.CommentNode;
 import net.kissenpvp.core.message.KissenComment;
 import net.kissenpvp.core.time.TemporalMeasureNode;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -42,7 +44,7 @@ public record KissenPunishmentNode(@NotNull String id, @NotNull String banName, 
 {
 
     public KissenPunishmentNode(@NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable String reason) {
-        this(KissenCore.getInstance().getImplementation(DataImplementation.class).generateID(), ban.getName(), new BanOperatorNode(banOperator), ban.getBanType(), new Container<>(reason), new ArrayList<>(), new TemporalMeasureNode(System.currentTimeMillis(), ban.getAccurateDuration().orElse(null)));
+        this(KissenCore.getInstance().getImplementation(DataImplementation.class).generateID(), ban.getName(), new BanOperatorNode(banOperator instanceof PlayerClient<?,?,?> playerClient ? playerClient.getUniqueId() : null, JSONComponentSerializer.json().serialize(banOperator.displayName())), ban.getBanType(), new Container<>(reason), new ArrayList<>(), new TemporalMeasureNode(System.currentTimeMillis(), ban.getAccurateDuration().orElse(null)));
     }
 
     public @NotNull @Unmodifiable List<Comment> translateComments() {

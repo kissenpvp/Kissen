@@ -33,10 +33,13 @@ import net.kissenpvp.core.message.KissenComment;
 import net.kissenpvp.core.message.KissenComponentSerializer;
 import net.kissenpvp.core.time.KissenTemporalObject;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.text.DateFormat;
 import java.time.Instant;
 import java.util.*;
 
@@ -70,7 +73,12 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public @NotNull BanOperator getBanOperator() {
-        return null; //TODO
+        return new BanOperator() {
+            @Override
+            public @NotNull Component displayName() {
+                return kissenPunishmentNode.banOperator().displayName(); //TODO sync player
+            }
+        };
     }
 
     @Override
@@ -133,6 +141,18 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
     @Override
     public @Unmodifiable Set<UUID> getAffectedPlayers() {
         return null; //TODO
+    }
+
+    @Override
+    public @NotNull Component getPunishmentText(@NotNull Locale locale) {
+
+        Component banMessage = getCause().map(reason -> Component.translatable("multiplayer.diconnect.banned.reason", reason)).orElse(Component.translatable("multiplayer.diconnect.banned"));
+        Optional<TranslatableComponent> optionalEnd = getEnd().map(end -> Component.translatable("multiplayer.disconnect.banned.expiration", DateFormat.getDateInstance(DateFormat.SHORT, locale).format(Date.from(end))));
+        if(optionalEnd.isPresent())
+        {
+            banMessage = banMessage.append(optionalEnd.get());
+        }
+        return banMessage;
     }
 
     private @NotNull CommentNode constructComment(@NotNull ServerEntity sender, @NotNull Component comment) {

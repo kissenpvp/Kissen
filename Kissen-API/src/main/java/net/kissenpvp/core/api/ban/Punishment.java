@@ -26,11 +26,14 @@ import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.TemporalObject;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.translation.Translatable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -170,4 +173,15 @@ public interface Punishment<T> extends TemporalObject {
      * @return a {@link Set} of {@link PlayerClient}s representing the online players affected by the ban
      */
     @Unmodifiable Set<T> getOnlineAffectedPlayers();
+
+    /**
+     * Retrieves a Translatable message associated with the user's punishment.
+     * <p>
+     * This method generates a Translatable instance that serves as a message corresponding to the
+     * user's punishment. The message is used as a part of the banishment process to provide
+     * information to the user about the punishment.
+     *
+     * @return A Translatable instance that represents a punishment message intended for the user.
+     */
+    @NotNull Component getPunishmentText(@NotNull Locale locale);
 }

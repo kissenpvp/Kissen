@@ -31,7 +31,7 @@ public record BanOperatorNode(@Nullable UUID uuid, @NotNull String name)
 
     public BanOperatorNode(@NotNull BanOperator banOperator)
     {
-        this(null /*TODO */, KissenComponentSerializer.getInstance().getJsonSerializer().serialize(banOperator.displayName()));
+        this(null, KissenComponentSerializer.getInstance().getJsonSerializer().serialize(banOperator.displayName()));
     }
 
     public @NotNull Component displayName() {
