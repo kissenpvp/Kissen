@@ -5,8 +5,31 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.format.DateTimeParseException;
 
+/**
+ * An interface for implementations that accurately measure and convert time durations.
+ * Parsing an ISO 8601 string representation of a duration and creating KissenTemporalMeasure instances
+ * based on the duration in various time units are the main functionalities of this interface.
+ * <p>
+ * It extends the <code>Implementation</code> interface and provides methods to parse durations,
+ * and to generate KissenTemporalMeasure objects from milliseconds, seconds, minutes, hours,
+ * days, weeks, months, and years.
+ * <p>
+ * Each method that generates a KissenTemporalMeasure instance converts the provided time duration
+ * into milliseconds to ensure accuracy and uniformity.
+ * <p>
+ * For simplicity, the conversion from months to milliseconds assumes each month has exactly 4 weeks,
+ * and the conversion from years to milliseconds assumes each year has exactly 12 months.
+ *
+ */
 public interface TimeImplementation extends Implementation {
 
+    /**
+     * Parses a string representation of a duration into an AccurateDuration object.
+     *
+     * @param iso the ISO 8601 string representation of a duration.
+     * @return the parsed AccurateDuration object.
+     * @throws DateTimeParseException if the string cannot be parsed into a valid AccurateDuration.
+     */
     @NotNull AccurateDuration parse(@NotNull String iso) throws DateTimeParseException;
 
     /**
@@ -80,7 +103,4 @@ public interface TimeImplementation extends Implementation {
      * @return a new instance of KissenTemporalMeasure representing the duration in milliseconds.
      */
     @NotNull AccurateDuration years(long years);
-
-
-
 }
