@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class AccurateDurationParser<S extends ServerEntity> implements ArgumentParser<AccurateDuration, S> {
     @Override
     public @NotNull String serialize(@NotNull AccurateDuration object) {
-        return object.getMillis() + "";
+        return String.valueOf(object.getMillis());
     }
 
     @Override
