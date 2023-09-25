@@ -15,7 +15,7 @@ public interface TimeImplementation extends Implementation {
      * @param milis the duration in milliseconds
      * @return a new instance of KissenTemporalMeasure representing the duration in milliseconds.
      */
-    AccurateDuration millis(@NotNull long milis);
+    AccurateDuration millis(long milis);
 
     /**
      * Creates a new instance of KissenTemporalMeasure based on the provided duration in seconds.
@@ -24,7 +24,7 @@ public interface TimeImplementation extends Implementation {
      * @param seconds the duration in seconds.
      * @return a new instance of KissenTemporalMeasure representing the duration in milliseconds.
      */
-    @NotNull AccurateDuration seconds(@NotNull long seconds);
+    @NotNull AccurateDuration seconds(long seconds);
 
     /**
      * Creates a new instance of KissenTemporalMeasure based on the provided duration in minutes.
@@ -33,7 +33,7 @@ public interface TimeImplementation extends Implementation {
      * @param minutes the duration in minutes.
      * @return a new instance of KissenTemporalMeasure representing the duration in milliseconds.
      */
-    @NotNull AccurateDuration minutes(@NotNull long minutes);
+    @NotNull AccurateDuration minutes(long minutes);
     /**
      * Creates a new instance of KissenTemporalMeasure based on the provided duration in hours.
      * The provided hours are first converted to minutes, then to seconds, and finally to milliseconds.
@@ -41,7 +41,7 @@ public interface TimeImplementation extends Implementation {
      * @param hours the duration in hours.
      * @return a new instance of KissenTemporalMeasure representing the duration in milliseconds.
      */
-    @NotNull AccurateDuration hours(@NotNull long hours);
+    @NotNull AccurateDuration hours(long hours);
 
     /**
      * Creates a new instance of KissenTemporalMeasure based on the provided duration in days.
@@ -50,7 +50,7 @@ public interface TimeImplementation extends Implementation {
      * @param days the duration in days.
      * @return a new instance of KissenTemporalMeasure representing the duration in milliseconds.
      */
-    @NotNull AccurateDuration days(@NotNull long days);
+    @NotNull AccurateDuration days(long days);
 
     /**
      * Creates a new instance of KissenTemporalMeasure based on the provided duration in weeks.
@@ -59,7 +59,7 @@ public interface TimeImplementation extends Implementation {
      * @param weeks the duration in weeks.
      * @return a new instance of KissenTemporalMeasure representing the duration in milliseconds.
      */
-    @NotNull AccurateDuration weeks(@NotNull long weeks);
+    @NotNull AccurateDuration weeks(long weeks);
 
     /**
      * Creates a new instance of KissenTemporalMeasure based on the provided duration in months.
@@ -69,7 +69,7 @@ public interface TimeImplementation extends Implementation {
      * @param months the duration in months.
      * @return a new instance of KissenTemporalMeasure representing the duration in milliseconds.
      */
-    @NotNull AccurateDuration months(@NotNull long months);
+    @NotNull AccurateDuration months(long months);
 
     /**
      * Creates a new instance of KissenTemporalMeasure based on the provided duration in years.
@@ -79,7 +79,7 @@ public interface TimeImplementation extends Implementation {
      * @param years the duration in years.
      * @return a new instance of KissenTemporalMeasure representing the duration in milliseconds.
      */
-    @NotNull AccurateDuration years(@NotNull long years);
+    @NotNull AccurateDuration years(long years);
 
 
 

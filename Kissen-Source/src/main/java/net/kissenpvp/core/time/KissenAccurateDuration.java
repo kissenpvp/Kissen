@@ -19,7 +19,7 @@ public record KissenAccurateDuration(long milliseconds) implements AccurateDurat
 
     public KissenAccurateDuration(@NotNull String iso)
     {
-        this(transformISOFormat(iso));
+        this(transformISOFormat(iso.toUpperCase()));
     }
 
     /**
@@ -46,14 +46,14 @@ public record KissenAccurateDuration(long milliseconds) implements AccurateDurat
     private static long calculateTotalTime(String[][] data) {
         long totalTime = 0;
 
-        String period = "P" + String.join("", data[0]);
+        String period = String.join("", data[0]);
         if (!period.isBlank()) {
-            totalTime += periodMillis(Period.parse(period));
+            totalTime += periodMillis(Period.parse("P" + period));
         }
 
-        String duration = "PT" + String.join("", data[1]);
+        String duration = String.join("", data[1]);
         if (!duration.isBlank()) {
-            totalTime += Duration.parse(duration).toMillis();
+            totalTime += Duration.parse("PT" + duration).toMillis();
         }
 
         return totalTime;
@@ -106,11 +106,11 @@ public record KissenAccurateDuration(long milliseconds) implements AccurateDurat
         return new String[][]{periodData.toArray(new String[0]), durationData.toArray(new String[0])};
     }
 
-    public Duration getDuration() {
+    public @NotNull Duration getDuration() {
         return Duration.ofMillis(milliseconds);
     }
 
-    public Period getPeriod() {
+    public @NotNull Period getPeriod() {
         long days = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(milliseconds);
         return Period.ofDays((int) days);
     }
