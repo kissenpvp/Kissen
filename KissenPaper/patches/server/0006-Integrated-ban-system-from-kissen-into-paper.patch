@@ -619,14 +619,13 @@ index 0000000000000000000000000000000000000000..d537152a8059f6d73ac7f9a75878b039
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index d02bed87a38595ef98595f2ff3bd359008d55a82..46e1f8218e4014312e7899677b6683721958d2d2 100644
+index 5e6eff3c6058dc11cc4d4937eefe12a875ed411f..fd263732e3649f5b4cbdf7dab9f4b4bbdda38d88 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-@@ -457,6 +457,15 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -412,6 +412,14 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                      return false;
                  }
  
-+
 +                net.kissenpvp.paper.api.ban.PaperBanImplementation banImplementation = org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class);
 +                net.kissenpvp.paper.api.ban.PaperPunishment paperPunishment = banImplementation.getLatestPunishment(kissenPaperPublicUser.get("total_id").map(UUID::fromString).orElse(gameProfile.getId())).orElse(null);
 +                if(paperPunishment != null)

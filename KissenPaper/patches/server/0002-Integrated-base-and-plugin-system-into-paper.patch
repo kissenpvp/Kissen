@@ -130,21 +130,22 @@ index 0000000000000000000000000000000000000000..4446e728cd8c2a3869d0092000c347a4
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 67ee3a4ca8a6cdeb275653d492a1fea8037c51fb..82130c9b556922f6ef4d6f004282ab05d874d9b0 100644
+index 97745f0bab8d82d397c6c2a5775aed92bca0a034..0b5d01de7fbf2d8400aefd8781193d010ef600a8 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -987,6 +987,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -971,6 +971,11 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+             this.getProfileCache().save(false); // Paper
          }
          // Spigot end
- 
++
 +        // KissenPaper start
 +        net.kissenpvp.core.base.KissenCore.getInstance().shutdown();
 +        // KissenPaper end
 +
          // Paper start - move final shutdown items here
          LOGGER.info("Flushing Chunk IO");
-         io.papermc.paper.chunk.system.io.RegionFileIOThread.close(true); // Paper // Paper - rewrite chunk system
-@@ -1101,6 +1105,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         // Paper end - move final shutdown items here
+@@ -1087,6 +1092,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                  throw new IllegalStateException("Failed to initialize server");
              }
  
@@ -156,7 +157,7 @@ index 67ee3a4ca8a6cdeb275653d492a1fea8037c51fb..82130c9b556922f6ef4d6f004282ab05
              this.statusIcon = (ServerStatus.Favicon) this.loadStatusIcon().orElse(null); // CraftBukkit - decompile error
              this.status = this.buildServerStatus();
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index c49802c936ae8e3f4dc1badd98414d96714ecd60..fa5c680318d8c9817a219dc030025ea3893ac5ad 100644
+index dbccbcb9b44e4efacdf53c2d161115cc20b36cff..464c7940bf630731d56663d10003bb02138c44f7 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -192,6 +192,16 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
@@ -177,7 +178,7 @@ index c49802c936ae8e3f4dc1badd98414d96714ecd60..fa5c680318d8c9817a219dc030025ea3
              this.setLocalIp("127.0.0.1");
          } else {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 74d06790de674cbd230a0b14ac9a6b614c9f84ef..f2e887cb297e38fe70198d76baf12a466ace5992 100644
+index fcd5096d64edfaf6bce3ecce8c9b9afb84462786..7a7627de340ad8edcb4c2c2f80657146c1f6e992 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -44,6 +44,8 @@ import java.util.logging.Level;
@@ -187,9 +188,9 @@ index 74d06790de674cbd230a0b14ac9a6b614c9f84ef..f2e887cb297e38fe70198d76baf12a46
 +
 +import net.kissenpvp.core.base.PluginState;
  import net.minecraft.advancements.Advancement;
+ import net.minecraft.advancements.AdvancementHolder;
  import net.minecraft.commands.CommandSourceStack;
- import net.minecraft.commands.Commands;
-@@ -550,7 +552,13 @@ public final class CraftServer implements Server {
+@@ -552,7 +554,13 @@ public final class CraftServer implements Server {
  
          for (Plugin plugin : plugins) {
              if ((!plugin.isEnabled()) && (plugin.getDescription().getLoad() == type)) {
