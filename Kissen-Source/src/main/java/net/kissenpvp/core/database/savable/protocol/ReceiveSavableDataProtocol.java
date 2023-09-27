@@ -32,7 +32,7 @@ public class ReceiveSavableDataProtocol extends MetaProtocol {
     public Serializable[] execute(@NotNull SerializableSavableHandler savable, DataPackage dataPackage, Socket client) {
         return new Serializable[]
                 {
-                        savable.getSavable().serialize()
+                        savable.getSavable().serializeSavable()
                 };
     }
 

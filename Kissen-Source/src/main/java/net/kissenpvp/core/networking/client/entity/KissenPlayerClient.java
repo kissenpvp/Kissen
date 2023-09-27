@@ -129,7 +129,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     public @NotNull @Unmodifiable List<B> getBanHistory() throws BackendException {
         return (List<B>) KissenCore.getInstance()
                 .getImplementation(BanImplementation.class)
-                .getPlayerBanSet(getTotalID());
+                .getPunishmentSet(getTotalID());
     }
 
     @Override
