@@ -808,7 +808,7 @@ public interface SavableMap extends Map<String, String>, Serializable {
      *
      * @return a serializable version of the SavableMap
      */
-    @NotNull SavableMap serialize();
+    @NotNull SavableMap serializeSavable();
 
     @NotNull ObjectMeta getMeta();
 }

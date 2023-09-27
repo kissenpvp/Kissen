@@ -260,7 +260,7 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
     }
 
     @Override
-    public @NotNull SavableMap serialize() {
+    public @NotNull SavableMap serializeSavable() {
         return new KissenSavableMap(this);
     }
 

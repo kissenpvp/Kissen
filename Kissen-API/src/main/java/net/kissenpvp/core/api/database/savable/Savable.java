@@ -76,7 +76,7 @@ public interface Savable extends SavableMap {
      *
      * @return the save ID associated with the object
      * @see #getRawID()
-     * @see #getId()
+     * @see #getSavableID()
      */
 
     @NotNull String getSaveID();
@@ -104,7 +104,7 @@ public interface Savable extends SavableMap {
      *
      * @return the unmodified ID associated with the object
      * @see #getSaveID()
-     * @see #getId()
+     * @see #getSavableID()
      */
     @NotNull String getRawID();
 
@@ -127,7 +127,7 @@ public interface Savable extends SavableMap {
      * @see #getSaveID()
      * @see #getRawID()
      */
-    default @NotNull String getId() {
+    default @NotNull String getSavableID() {
         return getSaveID() + getRawID();
     }
 
