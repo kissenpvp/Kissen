@@ -149,6 +149,11 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      */
     @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException;
 
+    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, boolean apply) throws BackendException;
+
+    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, boolean apply, @Nullable Component reason) throws BackendException;
+
+
     /**
      * Returns the most recent valid ban associated with the player having the specified {@link PlayerClient#getTotalID()}.
      * If no valid bans are found, an empty {@link Optional} is returned.
@@ -213,13 +218,13 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @see #getLatestPunishment(UUID)
      * @see #getLatestPunishment(UUID, BanType)
      */
-    @NotNull @Unmodifiable Set<P> getPlayerBanSet(@NotNull UUID totalID) throws BackendException;
+    @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID) throws BackendException;
 
     /**
      * Returns an unmodifiable set of all the bans associated with any player.
      * These bans include both valid and invalid bans.
      * <p>
-     * To get the bans associated with a specific player, use the {@link #getPlayerBanSet(UUID)} method.
+     * To get the bans associated with a specific player, use the {@link #getPunishmentSet(UUID)} method.
      * To get the most recent valid ban of a player, use the {@link #getLatestPunishment(UUID)} or the {@link #getLatestPunishment(UUID, BanType)} method.
      *
      * <p>
@@ -228,10 +233,10 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * </p>
      *
      * @return an unmodifiable {@link Set} of all the {@link Punishment} objects associated with any player.
-     * @see #getPlayerBanSet(UUID)
+     * @see #getPunishmentSet(UUID)
      * @see #getLatestPunishment(UUID)
      * @see #getLatestPunishment(UUID, BanType)
      */
-    @NotNull @Unmodifiable Set<P> getPlayerBanSet() throws BackendException;
+    @NotNull @Unmodifiable Set<P> getPunishmentSet() throws BackendException;
 
 }
