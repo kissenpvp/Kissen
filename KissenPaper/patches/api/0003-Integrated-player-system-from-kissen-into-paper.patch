@@ -45,10 +45,10 @@ index 0000000000000000000000000000000000000000..3665cb5da0501f7cda075a633bab7cad
 +public interface PaperBan extends Ban {}
 diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7356a0028ac85e4bf3ca58d91f881c98a369520b
+index 0000000000000000000000000000000000000000..0e31335d4cf1324119f8e4b6175f445bcbfd7259
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java
-@@ -0,0 +1,100 @@
+@@ -0,0 +1,107 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -73,6 +73,7 @@ index 0000000000000000000000000000000000000000..7356a0028ac85e4bf3ca58d91f881c98
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kyori.adventure.text.Component;
++import org.bukkit.ban.ProfileBanList;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
@@ -91,7 +92,7 @@ index 0000000000000000000000000000000000000000..7356a0028ac85e4bf3ca58d91f881c98
 + * @see PaperBan
 + * @see PaperPunishment
 + */
-+public interface PaperBanImplementation extends BanImplementation<PaperBan, PaperPunishment>
++public interface PaperBanImplementation extends BanImplementation<PaperBan, PaperPunishment>, ProfileBanList
 +{
 +    /**
 +     * Returns an unmodifiable set of all punishments applied in the specified context.
@@ -148,13 +149,19 @@ index 0000000000000000000000000000000000000000..7356a0028ac85e4bf3ca58d91f881c98
 +     * @throws BackendException if an error occurs when trying to create or persist the punishment in the backend.
 +     */
 +    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @Nullable Component reason, @NotNull Context context) throws BackendException;
++
++    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @NotNull Context context) throws BackendException;
++
++    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, boolean apply, @NotNull Context context) throws BackendException;
++
++    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, boolean apply, @Nullable Component reason, @NotNull Context context) throws BackendException;
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0a15c0506043b8eb0ea0013299119300a81af8f6
+index 0000000000000000000000000000000000000000..c59ee172bafb18359c227145de4e7f311f51aabb
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java
-@@ -0,0 +1,36 @@
+@@ -0,0 +1,38 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -175,7 +182,9 @@ index 0000000000000000000000000000000000000000..0a15c0506043b8eb0ea0013299119300
 +
 +package net.kissenpvp.paper.api.ban;
 +
++import com.destroystokyo.paper.profile.PlayerProfile;
 +import net.kissenpvp.core.api.ban.Punishment;
++import org.bukkit.BanEntry;
 +import org.bukkit.entity.Player;
 +
 +/**
@@ -190,7 +199,7 @@ index 0000000000000000000000000000000000000000..0a15c0506043b8eb0ea0013299119300
 + *
 + * @see Punishment
 + */
-+public interface PaperPunishment extends Punishment<Player> {}
++public interface PaperPunishment extends Punishment<Player>, BanEntry<PlayerProfile> {}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java b/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..ce61bd83bfcfb2dc09764f89b9bd1d1f48728e02
@@ -777,7 +786,7 @@ index 0000000000000000000000000000000000000000..f89bc619e02de3fd4c4bb000df66a11c
 +
 +public interface PaperRankImplementation extends RankImplementation<PaperRank> { }
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index 9b84cb5abdf3db55cbc7ba19c8cd6955bf4fc5ec..e3c0b6a486f1a0cb29b6939dd5b6da036faa9d86 100644
+index bce07d84cafca677bb6fad78c21b82097f06430c..a24d26f541679b4b3cd2c1fe8aaf2695f901dedf 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
 +++ b/src/main/java/org/bukkit/OfflinePlayer.java
 @@ -4,6 +4,7 @@ import java.time.Duration;
@@ -879,7 +888,7 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..72227c4175f588f2f9181ca4d5647d75
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index 14c92390aeaeee518f43778ccd5fc820fdc62689..b2323dd2d02223646e9d294deed536c1ba8de551 100644
+index 20fa1024f9ad8f478a347be5c554b5e45b398a1c..2b43607a3c255348bf076cefb0a9e9b3a6c6a468 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
 @@ -7,6 +7,7 @@ import java.time.Instant;
@@ -899,3 +908,16 @@ index 14c92390aeaeee518f43778ccd5fc820fdc62689..b2323dd2d02223646e9d294deed536c1
  
      // Paper start
      @Override
+diff --git a/src/main/java/org/bukkit/profile/PlayerProfile.java b/src/main/java/org/bukkit/profile/PlayerProfile.java
+index d36b3e3c7e53840132011add365ca2a26d799064..50572f51a906c1fdc0788934d3d80c276bacad1b 100644
+--- a/src/main/java/org/bukkit/profile/PlayerProfile.java
++++ b/src/main/java/org/bukkit/profile/PlayerProfile.java
+@@ -100,4 +100,8 @@ public interface PlayerProfile extends Cloneable, ConfigurationSerializable {
+ 
+     @NotNull
+     PlayerProfile clone();
++
++    // KissenPaper start
++    @NotNull net.kissenpvp.core.api.user.User getUser();
++    // KissenPaper end
+ }

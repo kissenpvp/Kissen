@@ -4,6 +4,34 @@ Date: Fri, 15 Sep 2023 22:45:32 +0200
 Subject: [PATCH] Integrated player system from kissen into paper
 
 
+diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
+index e513ce5bcb5070b8a57737228904381f1bda658e..d3079ec5b215e8711c39f76927ae134e30d11ff4 100644
+--- a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
++++ b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
+@@ -31,6 +31,10 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
+     private GameProfile profile;
+     private final PropertySet properties = new PropertySet();
+ 
++    // KissenPaper start
++    private net.kissenpvp.core.api.user.User cached;
++    // KissenPaper end
++
+     public CraftPlayerProfile(CraftPlayer player) {
+         this.profile = player.getHandle().getGameProfile();
+     }
+@@ -398,4 +402,12 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
+             }
+         }
+     }
++
++    // KissenPaper start
++    @Override
++    public @org.jetbrains.annotations.NotNull net.kissenpvp.core.api.user.User getUser()
++    {
++        return org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).getUser(java.util.Objects.requireNonNull(getId()));
++    }
++    // KissenPaper end
+ }
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..9c8dd9e8cbcfa11056597821e86ed59cc81d157d
@@ -1788,106 +1816,105 @@ index 0000000000000000000000000000000000000000..55de8302538c8e5e85ccdd5f4250f240
 +        getPlayer().setOp(value);
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPrivateUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPrivateUser.java
+diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6f54d348bb138b7dc8349942035139a57f4e7d57
+index 0000000000000000000000000000000000000000..f1e1b64aad5d492e652f744082d8365eec51014b
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPrivateUser.java
-@@ -0,0 +1,88 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
++++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
+@@ -0,0 +1,87 @@
 +package net.kissenpvp.paper.user;
 +
++import com.mojang.authlib.GameProfile;
++import com.mojang.authlib.GameProfileRepository;
 +import net.kissenpvp.core.api.database.meta.BackendException;
-+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
-+import net.kissenpvp.core.api.networking.socket.DataPackage;
-+import net.kissenpvp.core.api.permission.PermissionGroup;
-+import net.kissenpvp.core.base.KissenCore;
-+import net.kissenpvp.core.database.DataWriter;
-+import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
-+import net.kissenpvp.core.permission.KissenPermissionNode;
-+import net.kissenpvp.core.user.KissenUser;
-+import net.kissenpvp.paper.api.ban.PaperPunishment;
-+import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
-+import net.kissenpvp.paper.api.permission.PaperPermission;
-+import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
-+import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
-+import net.kissenpvp.paper.permission.KissenPaperPermission;
++import net.kissenpvp.core.api.user.User;
++import net.kissenpvp.core.api.user.UserRepository;
++import net.minecraft.server.players.GameProfileCache;
 +import org.bukkit.Bukkit;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
-+import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.util.Objects;
-+import java.util.Set;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Optional;
 +import java.util.UUID;
-+import java.util.stream.Collectors;
 +
-+public class KissenPaperPrivateUser extends KissenUser<PaperPermission> {
++/**
++ * KissenPaperProfileCache is a cache specifically designed for KissenPaper profiles.
++ * This cache extends the {@code GameProfileCache} class to provide additional functionalities
++ * specific to the KissenPaper profiles. It has been designed to be used in the KissenPaper game application.
++ */
++public class KissenPaperProfileCache extends GameProfileCache {
 +
-+    public KissenPaperPrivateUser(@Nullable UUID uuid, @Nullable String name) throws BackendException {
-+        super(uuid, name);
++    private final UserRepository userRepository;
++
++    /**
++     * Creates a new instance of KissenPaperProfileCache.
++     *
++     * @param profileRepository - a not-null instance of a GameProfileRepository which is used to fetch and cache profiles
++     * @throws IllegalArgumentException if profileRepository is null
++     */
++    public KissenPaperProfileCache(@NotNull GameProfileRepository profileRepository) {
++        //noinspection DataFlowIssue
++        super(profileRepository, null); // not file based
++        userRepository = new KissenPaperUserRepository(profileRepository);
++        KissenPaperUserImplementation.setKissenPaperProfileCache(this);
++    }
++
++    /**
++     * Returns the UserRepository object used within this class.
++     *
++     * @return UserRepository that this class uses to perform user related operations
++     */
++    public @NotNull UserRepository getUserRepository() {
++        return userRepository;
 +    }
 +
 +    @Override
-+    public @NotNull String getSaveID() {
-+        return "privateuser";
++    public void add(@NotNull GameProfile profile) {
++        //TODO
++        System.out.println("Would add profile (normally)");
++    }
++
++    @Nullable
++    @Override
++    public GameProfile getProfileIfCached(@NotNull String name) {
++        return null; //TODO
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups() {
-+        return KissenCore.getInstance()
-+            .getImplementation(PaperPermissionImplementation.class)
-+            .getPrivatePermissionGroupSet()
-+            .stream()
-+            .filter(permissionGroup -> permissionGroup.getMember().contains(getPermissionID()))
-+            .collect(Collectors.toUnmodifiableSet());
-+    }
-+
-+    @Override
-+    public PlayerClient<?, ?, ?> getPlayerClient() {
-+        if (!getStorage().containsKey("player_client")) {
-+            getStorage().put("player_client", injectPlayerClient());
++    public @NotNull Optional<GameProfile> get(@NotNull String name) {
++        try {
++            User user = Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUser(name);
++            return Optional.of(new GameProfile(UUID.fromString(user.getRawID()), user.getNotNull("name")));
++        } catch (BackendException backendException) {
++            throw new RuntimeException("It seems like the backend is not reachable. It's advised to shutdown the server to prevent further data damages or loss.", backendException);
 +        }
-+        return (PlayerClient<?, ?, ?>) getStorage().get("player_client");
-+    }
-+
-+    protected @NotNull PaperPlayerClient injectPlayerClient() {
-+        UUID uuid = UUID.fromString(getRawID());
-+        return Bukkit.getKissen()
-+            .isOnline(uuid) ? Objects.requireNonNull(Bukkit.getPlayer(uuid)) : Bukkit.getOfflinePlayer(uuid);
 +    }
 +
 +    @Override
-+    protected @NotNull PaperPermission translatePermission(@NotNull KissenPermissionNode kissenPermissionNode, @Nullable DataWriter dataWriter) {
-+        return new KissenPaperPermission(kissenPermissionNode, this, dataWriter);
++    public @NotNull Optional<GameProfile> get(@NotNull UUID uuid) {
++        User user = Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUser(uuid);
++        return Optional.of(new GameProfile(UUID.fromString(user.getRawID()), user.getNotNull("name")));
 +    }
 +
 +    @Override
-+    public void sendData(@NotNull DataPackage dataPackage) { /* Ignored because it's private */ }
++    protected @NotNull List<GameProfileInfo> load() {
++        // ignored
++        return new ArrayList<>();
++    }
++
++    @Override
++    public void save(boolean asyncSave) {
++        // ignored
++    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..cbdce0b67c62333d7b7f63e9b714e172ea9a308e
+index 0000000000000000000000000000000000000000..4c107a71f5b49be528f2187fe084b4900e845a58
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
-@@ -0,0 +1,118 @@
+@@ -0,0 +1,170 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1910,6 +1937,7 @@ index 0000000000000000000000000000000000000000..cbdce0b67c62333d7b7f63e9b714e172
 +
 +import net.kissenpvp.core.api.database.StorageImplementation;
 +import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.api.database.savable.SavableMap;
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 +import net.kissenpvp.core.api.networking.socket.DataPackage;
 +import net.kissenpvp.core.api.permission.PermissionGroup;
@@ -1919,6 +1947,7 @@ index 0000000000000000000000000000000000000000..cbdce0b67c62333d7b7f63e9b714e172
 +import net.kissenpvp.core.permission.KissenPermissionNode;
 +import net.kissenpvp.core.user.KissenPublicUser;
 +import net.kissenpvp.core.user.KissenUser;
++import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
 +import net.kissenpvp.paper.api.permission.PaperPermission;
 +import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
 +import net.kissenpvp.paper.permission.KissenPaperPermission;
@@ -1927,6 +1956,7 @@ index 0000000000000000000000000000000000000000..cbdce0b67c62333d7b7f63e9b714e172
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
++import java.util.Objects;
 +import java.util.Set;
 +import java.util.UUID;
 +import java.util.stream.Collectors;
@@ -1935,6 +1965,11 @@ index 0000000000000000000000000000000000000000..cbdce0b67c62333d7b7f63e9b714e172
 +
 +    public KissenPaperPublicUser(@Nullable UUID uuid, @Nullable String name) throws BackendException {
 +        super(uuid, name);
++    }
++
++    public KissenPaperPublicUser(@NotNull SavableMap data) throws BackendException
++    {
++        super(data);
 +    }
 +
 +    @Override
@@ -2002,16 +2037,60 @@ index 0000000000000000000000000000000000000000..cbdce0b67c62333d7b7f63e9b714e172
 +        return (User) getStorage().get("private_user_entry");
 +    }
 +
-+    protected KissenPaperPrivateUser setupPrivateUser(UUID uuid, String name) throws BackendException {
++    protected @NotNull KissenPaperPrivateUser setupPrivateUser(UUID uuid, String name) throws BackendException {
 +        return new KissenPaperPrivateUser(uuid, name);
++    }
++
++    public static class KissenPaperPrivateUser extends KissenUser<PaperPermission> {
++
++        public KissenPaperPrivateUser(@Nullable UUID uuid, @Nullable String name) throws BackendException {
++            super(uuid, name);
++        }
++
++        @Override
++        public @NotNull String getSaveID() {
++            return "privateuser";
++        }
++
++        @Override
++        public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups() {
++            return KissenCore.getInstance()
++                    .getImplementation(PaperPermissionImplementation.class)
++                    .getPrivatePermissionGroupSet()
++                    .stream()
++                    .filter(permissionGroup -> permissionGroup.getMember().contains(getPermissionID()))
++                    .collect(Collectors.toUnmodifiableSet());
++        }
++
++        @Override
++        public PlayerClient<?, ?, ?> getPlayerClient() {
++            if (!getStorage().containsKey("player_client")) {
++                getStorage().put("player_client", injectPlayerClient());
++            }
++            return (PlayerClient<?, ?, ?>) getStorage().get("player_client");
++        }
++
++        protected @NotNull PaperPlayerClient injectPlayerClient() {
++            UUID uuid = UUID.fromString(getRawID());
++            return Bukkit.getKissen()
++                    .isOnline(uuid) ? Objects.requireNonNull(Bukkit.getPlayer(uuid)) : Bukkit.getOfflinePlayer(uuid);
++        }
++
++        @Override
++        protected @NotNull PaperPermission translatePermission(@NotNull KissenPermissionNode kissenPermissionNode, @Nullable DataWriter dataWriter) {
++            return new KissenPaperPermission(kissenPermissionNode, this, dataWriter);
++        }
++
++        @Override
++        public void sendData(@NotNull DataPackage dataPackage) { /* Ignored because it's private */ }
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..16c0a3452b730fa2936e0605aa7a97a9596d7a9d
+index 0000000000000000000000000000000000000000..bca8fd25a5bb1c04823154df70484841f078febe
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
-@@ -0,0 +1,46 @@
+@@ -0,0 +1,81 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2034,28 +2113,172 @@ index 0000000000000000000000000000000000000000..16c0a3452b730fa2936e0605aa7a97a9
 +
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
++import net.kissenpvp.core.api.networking.client.entitiy.UnknownPlayerException;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.user.KissenUserImplementation;
-+import org.bukkit.Bukkit;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.util.Optional;
 +import java.util.Set;
 +import java.util.UUID;
++import java.util.function.Supplier;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
 +public class KissenPaperUserImplementation extends KissenUserImplementation {
 +
++    private static KissenPaperProfileCache kissenPaperProfileCache;
++
++    public static void setKissenPaperProfileCache(KissenPaperProfileCache kissenPaperProfileCache) {
++        if(kissenPaperProfileCache == null)
++        {
++            throw new IllegalStateException("Object already initialized.");
++        }
++        KissenPaperUserImplementation.kissenPaperProfileCache = kissenPaperProfileCache;
++    }
++
++    private static KissenPaperProfileCache getKissenPaperProfileCache() {
++        return kissenPaperProfileCache;
++    }
++
 +    @Override
 +    public @NotNull @Unmodifiable Set<SavableMap> getUserData() throws BackendException {
-+        return Stream.concat(getUserMeta().getData(new KissenPaperPublicUser(null, null)).values().stream(), getUserMeta().getData(new KissenPaperPrivateUser(null, null)).values().stream()).collect(Collectors.toUnmodifiableSet());
++        return Stream.concat(getUserMeta().getData(new KissenPaperPublicUser(null, null)).values().stream(), getUserMeta().getData(new KissenPaperPublicUser.KissenPaperPrivateUser(null, null)).values().stream()).collect(Collectors.toUnmodifiableSet());
 +    }
 +
 +    @Override
 +    public @NotNull User getUser(@NotNull UUID uuid) {
-+        return getOnlineUser(uuid).or(() -> Optional.of(Bukkit.getOfflinePlayer(uuid).getUser())).orElseThrow(IllegalArgumentException::new);
++
++        Supplier<User> createUser = () -> kissenPaperProfileCache.getUserRepository().getUser(uuid).join().orElseThrow(() -> new UnknownPlayerException(String.valueOf(uuid)));
++        Supplier<User> loadUser = () -> {
++            try {
++                return new KissenPaperPublicUser(getUserMeta().getData(getUserSaveID() + uuid).orElseGet(createUser));
++            } catch (BackendException backendException) {
++                throw new RuntimeException("It seems like the backend is unreachable. It's advised to shutdown the server to prevent further damage or loss to the servers data.", backendException);
++            }
++        };
++        return getOnlineUser(uuid).orElseGet(loadUser);
++    }
++
++    @Override
++    public @NotNull User getUser(@NotNull String name) throws BackendException {
++        try {
++            if (!getUserNames().contains(name)) {
++                throw new UnknownPlayerException(name);
++            }
++            return super.getUser(name);
++        } catch (UnknownPlayerException unknownPlayerException) {
++            return kissenPaperProfileCache.getUserRepository().getUser(name).join().orElseThrow(() -> new UnknownPlayerException(name));
++        }
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserRepository.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserRepository.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..269aec40944874fcc28f56349ea2a6b5416581f0
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserRepository.java
+@@ -0,0 +1,103 @@
++package net.kissenpvp.paper.user;
++
++import com.mojang.authlib.GameProfile;
++import com.mojang.authlib.GameProfileRepository;
++import com.mojang.authlib.ProfileLookupCallback;
++import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.api.user.User;
++import net.kissenpvp.core.api.user.UserRepository;
++import net.minecraft.core.UUIDUtil;
++import net.minecraft.server.players.GameProfileCache;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Optional;
++import java.util.UUID;
++import java.util.concurrent.CompletableFuture;
++import java.util.concurrent.atomic.AtomicReference;
++
++public class KissenPaperUserRepository implements UserRepository {
++
++    private final GameProfileRepository gameProfileRepository;
++
++    public KissenPaperUserRepository(@NotNull GameProfileRepository gameProfileRepository) {
++        this.gameProfileRepository = gameProfileRepository;
++    }
++
++    private boolean shouldAuthorize()
++    {
++        return io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode();
++    }
++
++    @Override
++    public @NotNull CompletableFuture<Optional<User>> getUser(@NotNull String name) throws BackendException {
++        System.out.println("Test");
++        CompletableFuture<Optional<User>> gameProfileCompletableFuture = new CompletableFuture<>();
++        AtomicReference<Optional<GameProfile>> fetchedRef = new AtomicReference<>(Optional.empty());
++
++        gameProfileRepository.findProfilesByNames(new String[]{name}, new ProfileLookupCallback() {
++            @Override
++            public void onProfileLookupSucceeded(GameProfile gameProfile) {
++                fetchedRef.set(Optional.ofNullable(gameProfile));
++            }
++
++            @Override
++            public void onProfileLookupFailed(String s, Exception e) {
++                gameProfileCompletableFuture.completeExceptionally(e);
++            }
++        });
++
++        fetchedRef.get().ifPresentOrElse(gameProfile -> processGameProfile(gameProfileCompletableFuture, gameProfile), () -> processMissingProfile(gameProfileCompletableFuture, name));
++
++        return gameProfileCompletableFuture;
++    }
++
++    @Override
++    public @NotNull CompletableFuture<Optional<User>> getUser(@NotNull UUID uuid) {
++        return null; //TODO
++    }
++
++    /**
++     * Processes a potentially missing user profile. If authentication is not required,
++     * it will generate and process a "cracked" user profile with an offline player UUID.
++     * Otherwise, the method will complete the CompletableFuture with an empty Optional.
++     *
++     * @param gameProfileFuture a CompletableFuture that will be completed with the found (or not found) User
++     * @param name the name of the user to lookup
++     */
++    private void processMissingProfile(CompletableFuture<Optional<User>> gameProfileFuture, String name) {
++        if (!shouldAuthorize()) {
++            // Create cracked user
++            UUID offlineUUID = UUIDUtil.createOfflinePlayerUUID(name);
++            processGameProfile(gameProfileFuture, new GameProfile(offlineUUID, name));
++            return;
++        }
++        gameProfileFuture.complete(Optional.empty());
++    }
++
++    /**
++     * Processes a game profile and completes the CompletableFuture with the translated User object.
++     * If any error occurs during the translation, the resulting BackendException will be completed exceptionally
++     * inside the CompletableFuture.
++     *
++     * @param gameProfileFuture a CompletableFuture that will be completed with the translated User or an Error.
++     * @param gameProfile the game profile to process.
++     */
++    private void processGameProfile(CompletableFuture<Optional<User>> gameProfileFuture, GameProfile gameProfile) {
++        try {
++            gameProfileFuture.complete(Optional.of(translate(gameProfile)));
++        } catch (BackendException backendException) {
++            gameProfileFuture.completeExceptionally(backendException);
++        }
++    }
++
++    /**
++     * Translates a game profile into a KissenPaperPublicUser object.
++     *
++     * @param gameProfile the game profile to translate.
++     * @return KissenPaperPublicUser a new user object with the id and name from the passed game profile.
++     * @throws BackendException if any error occurs during the translation process.
++     */
++    private @NotNull User translate(@NotNull GameProfile gameProfile) throws BackendException {
++        return new KissenPaperPublicUser(gameProfile.getId(), gameProfile.getName());
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperFallBackRank.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperFallBackRank.java
@@ -2221,6 +2444,48 @@ index 0000000000000000000000000000000000000000..c6e107e7bc79c4f66c23f423452ac974
 +        //TODO async network and so on
 +    }
 +}
+diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
+index ec268189b19b6fa5c4521f96ce211a531db35ec5..da0cb15bbf8cd561a008344ae8ddd466de6defe8 100644
+--- a/src/main/java/net/minecraft/server/Main.java
++++ b/src/main/java/net/minecraft/server/Main.java
+@@ -193,15 +193,17 @@ public class Main {
+             org.spigotmc.SpigotConfig.disabledAdvancements = spigotConfiguration.getStringList("advancements.disabled"); // Paper - fix SPIGOT-5885, must be set early in init
+             // Paper start - fix SPIGOT-5824
+             File file;
+-            File userCacheFile = new File(Services.USERID_CACHE_FILE);
++            /* KissenPaper - remove cache file
++             * File userCacheFile = new File(Services.USERID_CACHE_FILE);
++             */
+             if (optionset.has("universe")) {
+                 file = (File) optionset.valueOf("universe"); // CraftBukkit
+-                userCacheFile = new File(file, Services.USERID_CACHE_FILE);
++                //userCacheFile = new File(file, Services.USERID_CACHE_FILE); // KissenPaper
+             } else {
+                 file = new File(bukkitConfiguration.getString("settings.world-container", "."));
+             }
+             // Paper end - fix SPIGOT-5824
+-            Services services = Services.create(new com.destroystokyo.paper.profile.PaperAuthenticationService(Proxy.NO_PROXY), file, userCacheFile, optionset); // Paper
++            Services services = Services.create(new com.destroystokyo.paper.profile.PaperAuthenticationService(Proxy.NO_PROXY), file/*, userCacheFile KissenPaper - remove cache file*/, optionset); // Paper
+             // CraftBukkit start
+             String s = (String) Optional.ofNullable((String) optionset.valueOf("world")).orElse(dedicatedserversettings.getProperties().levelName);
+             LevelStorageSource convertable = LevelStorageSource.createDefault(file.toPath());
+diff --git a/src/main/java/net/minecraft/server/Services.java b/src/main/java/net/minecraft/server/Services.java
+index a9b2c8cd4dcd3f884e4306bebee9334d3848fce5..c3510492a900bcf2782fa6af332223803922e4bf 100644
+--- a/src/main/java/net/minecraft/server/Services.java
++++ b/src/main/java/net/minecraft/server/Services.java
+@@ -24,10 +24,10 @@ public record Services(MinecraftSessionService sessionService, ServicesKeySet se
+     // Paper end
+     public static final String USERID_CACHE_FILE = "usercache.json"; // Paper - private -> public
+ 
+-    public static Services create(YggdrasilAuthenticationService authenticationService, File rootDirectory, File userCacheFile, joptsimple.OptionSet optionSet) throws Exception { // Paper
++    public static Services create(YggdrasilAuthenticationService authenticationService, File rootDirectory /*, File userCacheFile KissenPaper - remove file*/, joptsimple.OptionSet optionSet) throws Exception { // Paper
+         MinecraftSessionService minecraftSessionService = authenticationService.createMinecraftSessionService();
+         GameProfileRepository gameProfileRepository = authenticationService.createProfileRepository();
+-        GameProfileCache gameProfileCache = new GameProfileCache(gameProfileRepository, userCacheFile); // Paper
++        GameProfileCache gameProfileCache = /*new GameProfileCache(gameProfileRepository, userCacheFile); // Paper*/ new net.kissenpvp.paper.user.KissenPaperProfileCache(gameProfileRepository); // KissenPaper
+         // Paper start
+         final java.nio.file.Path legacyConfigPath = ((File) optionSet.valueOf("paper-settings")).toPath();
+         final java.nio.file.Path configDirPath = ((File) optionSet.valueOf("paper-settings-directory")).toPath();
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 index ff2dd53e9e943aa929188fd9d4c35498b78c497a..454cee69c217106b840dc5c0019f8f7f80ca3782 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
@@ -2296,6 +2561,28 @@ index ff2dd53e9e943aa929188fd9d4c35498b78c497a..454cee69c217106b840dc5c0019f8f7f
      }
      // Spigot end
  
+diff --git a/src/main/java/net/minecraft/server/players/GameProfileCache.java b/src/main/java/net/minecraft/server/players/GameProfileCache.java
+index f4d903ed4342c3100c30deda291dfd6dd4e1ef40..b04ba26f9e04e31c5d4ba73436bf3492b62be9e6 100644
+--- a/src/main/java/net/minecraft/server/players/GameProfileCache.java
++++ b/src/main/java/net/minecraft/server/players/GameProfileCache.java
+@@ -228,7 +228,7 @@ public class GameProfileCache {
+         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.ROOT);
+     }
+ 
+-    public List<GameProfileCache.GameProfileInfo> load() {
++    protected List<GameProfileCache.GameProfileInfo> load() { // KissenPaper - private -> protected
+         ArrayList arraylist = Lists.newArrayList();
+ 
+         try {
+@@ -399,7 +399,7 @@ public class GameProfileCache {
+         }
+     }
+ 
+-    private static class GameProfileInfo {
++    protected static class GameProfileInfo { // KissenPaper - private -> protected
+ 
+         private final GameProfile profile;
+         final Date expirationDate;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
 index 48d1444fbad1c57738807d0128b94160a5a17a4d..20d27e9c50e4acd4a49424aadccf6a2741256e6e 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
@@ -3311,6 +3598,35 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..8fcc206acf02691bf5817de3fa087b9d
 +    @Override
 +    public boolean hasPermission(@NotNull String permission, @NotNull Context context) {
 +        return kissenPaperPlayer.hasPermission(permission, context);
++    }
++    // KissenPaper end
+ }
+diff --git a/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java b/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
+index 51a6e84198f5b95488e8c757951ba14be4c55625..bb2c06fbe964c382de2ae2b5b86638cd7b95fb88 100644
+--- a/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
++++ b/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
+@@ -54,6 +54,10 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+     private final PropertyMap properties = new PropertyMap();
+     private final CraftPlayerTextures textures = new CraftPlayerTextures(this);
+ 
++    // KissenPaper start
++    private net.kissenpvp.core.api.user.User cached;
++    // KissenPaper end
++
+     public CraftPlayerProfile(UUID uniqueId, String name) {
+         Preconditions.checkArgument((uniqueId != null) || !StringUtils.isBlank(name), "uniqueId is null or name is blank");
+         this.uniqueId = (uniqueId == null) ? Util.NIL_UUID : uniqueId;
+@@ -352,4 +356,13 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+     public boolean complete(final boolean textures, final boolean onlineMode) {
+         throw new UnsupportedOperationException("Do not cast to com.destroystokyo.paper.profile.PlayerProfile");
+     }
++
++
++    // KissenPaper start
++    @Override
++    public @org.jetbrains.annotations.NotNull net.kissenpvp.core.api.user.User getUser()
++    {
++        return org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).getUser(getId());
 +    }
 +    // KissenPaper end
  }
