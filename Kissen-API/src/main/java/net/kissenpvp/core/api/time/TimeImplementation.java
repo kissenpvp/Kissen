@@ -38,7 +38,7 @@ public interface TimeImplementation extends Implementation {
      * @param milis the duration in milliseconds
      * @return a new instance of KissenTemporalMeasure representing the duration in milliseconds.
      */
-    AccurateDuration millis(long milis);
+    @NotNull AccurateDuration millis(long milis);
 
     /**
      * Creates a new instance of KissenTemporalMeasure based on the provided duration in seconds.
