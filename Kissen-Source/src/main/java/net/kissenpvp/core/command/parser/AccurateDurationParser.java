@@ -18,7 +18,7 @@ public class AccurateDurationParser<S extends ServerEntity> implements ArgumentP
     @Override
     public @NotNull AccurateDuration deserialize(@NotNull String input) {
 
-        if(!input.matches("(?i).*[ywdhms].*"))
+        if(!input.matches("(?i).*[0-9][ywdhms].*"))
         {
             throw new DateTimeParseException("Input doesn't contain the required characters (Y, W, D, H, M, S).", input, input.length());
         }

@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Groldi <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:30:00 +0200
-Subject: [PATCH] Integrated commandsystem from kissen into paper
+Subject: [PATCH] Integrated command system from kissen into paper
 
 
 diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
@@ -324,10 +324,10 @@ index 0000000000000000000000000000000000000000..e98a60a3fa6d40df09de156b0f6bf7e0
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3dacf5050a08dd844eb9fa9495e20e3813d52eea
+index 0000000000000000000000000000000000000000..1ced7e59004442e0d3cd94caad778199ce5bcf04
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
-@@ -0,0 +1,411 @@
+@@ -0,0 +1,404 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -354,16 +354,13 @@ index 0000000000000000000000000000000000000000..3dacf5050a08dd844eb9fa9495e20e38
 +import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
 +import net.kissenpvp.core.command.CommandHolder;
 +import net.kissenpvp.core.command.CommandInfo;
++import net.kissenpvp.core.command.argument.Argument;
++import net.kissenpvp.core.command.argument.ArgumentType;
 +import net.kissenpvp.paper.api.command.KissenCommand;
 +import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
 +import net.kissenpvp.paper.command.command.system.KissenPaperChildCommand;
 +import net.kissenpvp.paper.command.executor.KissenPaperCommandExecutor;
 +import net.kissenpvp.paper.command.target.KissenPaperTargetValidator;
-+import net.minecraft.commands.CommandSourceStack;
-+import net.minecraft.commands.Commands;
-+import net.minecraft.commands.arguments.GameProfileArgument;
-+import net.minecraft.commands.arguments.MessageArgument;
-+import net.minecraft.network.chat.Component;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandException;
 +import org.bukkit.command.CommandSender;
@@ -371,7 +368,6 @@ index 0000000000000000000000000000000000000000..3dacf5050a08dd844eb9fa9495e20e38
 +import org.jetbrains.annotations.Unmodifiable;
 +
 +import java.util.*;
-+import java.util.function.Predicate;
 +
 +/**
 + * Represents a command implementation specific to the Kissen Paper framework.
@@ -546,7 +542,7 @@ index 0000000000000000000000000000000000000000..3dacf5050a08dd844eb9fa9495e20e38
 +     * @return The final {@link KissenPaperAbstractCommand} instance at the bottom of the recursive hierarchy.
 +     * @throws NullPointerException If the provided {@code name} parameter is null.
 +     */
-+    public @NotNull KissenPaperAbstractCommand<C> createRecursive(String name) {
++    public @NotNull KissenPaperAbstractCommand<C> createRecursive(@NotNull String name) {
 +
 +        int position = getPosition() + (name.split("\\.").length - 1);
 +        if (position == getPosition()) {
@@ -649,14 +645,13 @@ index 0000000000000000000000000000000000000000..3dacf5050a08dd844eb9fa9495e20e38
 +     *               content to the child command's tab completion
 +     * @return An Optional encapsulating a List of Strings which, if present, includes tab completion suggestions derived from the relevant child command
 +     */
-+    private @NotNull Optional<List<String>> obtainChildrenTabSuggestions(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
++    private @NotNull Optional<List<String>> obtainChildrenTabSuggestions(@NotNull CommandSender sender, @NotNull String alias, @NotNull String @NotNull [] args) {
 +        for (var iterator = new Object() {
 +            int i = 0;
 +        }; iterator.i < args.length; iterator.i++) {
 +
 +            Optional<List<String>> data = getChildCommand(args[iterator.i]).map(commandHolder -> commandHolder.tabComplete(sender, alias, Arrays.copyOfRange(args, iterator.i + 1, args.length)));
-+            if(data.isPresent())
-+            {
++            if (data.isPresent()) {
 +                data.get().add("");
 +                return data;
 +            }
@@ -666,22 +661,21 @@ index 0000000000000000000000000000000000000000..3dacf5050a08dd844eb9fa9495e20e38
 +
 +
 +    /**
-+     * Obtains a list of tab completion suggestions for a given command.
++     * Gathers a list of tab completion suggestions for a given command.
 +     *
-+     * <p>This function primarily retrieves possible suggestions either from a custom tabExecutor or an automatic
-+     * suggestion generator based on defined child commands and the command executor.</p>
++     * <p>This function primarily selects suggestions either from a custom tabExecutor or an automatic
++     * suggestion generator derived from defined child commands and the command executor.</p>
 +     *
-+     * <p>If a tabExecutor is defined (not null), it is used to execute the commandSenderCommandPayload and generates a list of suggestions.</p>
++     * <p>If a tabExecutor is provided (not null), it is used to process the commandSenderCommandPayload and generate a list of suggestions.</p>
 +     *
-+     * <p>If there is no tabExecutor assigned (null), the method defaults to obtaining suggestions through the obtainAutoSuggestions method,
-+     * which populates suggestions based on child commands and the command executor (if applicable).</p>
++     * <p>If no tabExecutor is assigned (null), the method defaults to collecting suggestions through the obtainAutoSuggestions method,
++     * which determines suggestions based on child commands and the command executor (if applicable).</p>
 +     *
-+     * <p>The collected suggestions are sorted in ascending order (case-insensitive) and returned as a list.</p>
++     * <p>The compiled suggestions are sorted in ascending order (case-insensitive) and returned in a list.</p>
 +     *
-+     * @param sender                      The sender of the command. It serves as a reference for permission checks and establishes context for suggestion generation.
-+     * @param args                        An array containing the arguments provided by the sender. It is used in the obtainAutoSuggestions method to generate relevant command completions.
-+     * @param commandSenderCommandPayload A CommandPayload object encapsulating command related data. It is passed to either the tabExecutor or the obtainAutoSuggestions method for further processing.
-+     * @return A List of Strings representing possible command completions. The list is sorted in case-insensitive order.
++     * @param sender                      The issuer of the command. This is used as a context for permission checks and for generating suggestions.
++     * @param commandSenderCommandPayload An object encapsulating command-related data. It is passed to either the tabExecutor or the obtainAutoSuggestions method for further processing.
++     * @return A List of Strings comprising possible command completions. The list is sorted in a case-insensitive manner.
 +     */
 +    private @NotNull List<String> obtainTabSuggestions(@NotNull CommandSender sender, CommandPayload<CommandSender> commandSenderCommandPayload) {
 +        List<String> suggestions = new ArrayList<>(tabExecutor != null ? tabExecutor.execute(commandSenderCommandPayload) : obtainAutoSuggestions(sender, commandSenderCommandPayload));
@@ -690,26 +684,23 @@ index 0000000000000000000000000000000000000000..3dacf5050a08dd844eb9fa9495e20e38
 +    }
 +
 +    /**
-+     * This method retrieves auto suggestions for command completion based on the user's current input.
++     * This method derives auto suggestions for command completions based on the sender's existing input.
 +     *
-+     * <p>The primary function of this method is to generate automatic suggestions using the list
++     * <p>The core function of this method is to generate automatic suggestions using the list
 +     * of child commands and the command executor (if applicable).</p>
 +     *
-+     * <p>The method starts by checking if any child commands exist and whether the command sender has supplied any arguments.
++     * <p>The method commences by validating if any child commands exist and whether the command sender supplied any arguments.</p>
 +     *
-+     * <p>Moreover, if the a command executor belongs to instance of KissenPaperCommandExecutor, the evaluator corresponding to
-+     * the user's current command is retrieved based on the number of arguments provided by the sender. The argument parser from the
-+     * evaluator then provides tab completion options based on the context of the sender's current command. These options are also added to the
-+     * list of auto suggestions provided.</p>
++     * <p>In addition, if a command executor is of the instance KissenPaperCommandExecutor, the evaluator corresponding to
++     * the sender's current command is retrieved based on the number of arguments provided by the sender. The argument parser from
++     * the evaluator, then provides tab completion options depending on the context of the sender's current command. These choices
++     * are added to the list of auto suggestions provided.</p>
 +     *
-+     * @param sender                      The identifier of the command, used to check permissions and providing command context to the command executor and tab completion options
-+     * @param args                        An array of arguments that command sender provided, used to find the next expected argument in the child command
-+     *                                    and to find the last argument for comparison with child command names
-+     * @param commandSenderCommandPayload A command payload object containing context for the command sender, arguments and other command-related data.
-+     *                                    It is used to get the completion options from the evaluator's command argument parser.
-+     * @return A List of Strings populated with auto suggestions for the user's current command input
++     * @param sender                      The identifier of the command, used for checking permissions and providing command context to the executor and tab completion options.
++     * @param commandSenderCommandPayload An object with context for the command sender, arguments and other command-related data. It is used to retrieve completion options from the evaluator's command argument parser.
++     * @return A List of Strings containing auto suggestions for the sender's current command input.
 +     */
-+    private @NotNull List<String> obtainAutoSuggestions(@NotNull CommandSender sender, CommandPayload<CommandSender> commandSenderCommandPayload) {
++    private @NotNull List<String> obtainAutoSuggestions(@NotNull CommandSender sender, @NotNull CommandPayload<CommandSender> commandSenderCommandPayload) {
 +        String[] args = commandSenderCommandPayload.getArguments();
 +        List<String> suggestions = new ArrayList<>();
 +        if (!getChildCommandList().isEmpty() && args.length != 0) {
@@ -724,17 +715,19 @@ index 0000000000000000000000000000000000000000..3dacf5050a08dd844eb9fa9495e20e38
 +        }
 +
 +        if (getCommandExecutor() instanceof KissenPaperCommandExecutor kissenPaperCommandExecutor) {
-+            suggestions.add(""); // Make names not visible because it might a string array
-+            if(commandSenderCommandPayload.getArgumentCount() != 0)
-+            {
-+                if (kissenPaperCommandExecutor.getEvaluator().arguments().size() > commandSenderCommandPayload.getArgumentCount()) {
-+                    suggestions.addAll(kissenPaperCommandExecutor.getEvaluator()
-+                            .arguments()
-+                            .get(commandSenderCommandPayload.getArgumentCount())
-+                            .argumentParser()
-+                            .tabCompletion(commandSenderCommandPayload));
-+                }
++            List<Argument<?, CommandSender>> argumentList = kissenPaperCommandExecutor.getEvaluator().arguments();
++            suggestions.add(""); // Mark this as handled
++
++            int index = commandSenderCommandPayload.getArgumentCount();
++            if (argumentList.size() == 1 && !argumentList.get(0).argumentType().equals(ArgumentType.ARRAY)) {
++                index = 0;
 +            }
++
++            try {
++                Optional.ofNullable(argumentList.get(index).argumentParser())
++                        .map(parser -> parser.tabCompletion(commandSenderCommandPayload))
++                        .ifPresent(suggestions::addAll);
++            } catch (IndexOutOfBoundsException ignored) {}
 +        }
 +        return suggestions;
 +    }
