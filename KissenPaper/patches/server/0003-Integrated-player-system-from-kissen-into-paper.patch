@@ -1818,7 +1818,7 @@ index 0000000000000000000000000000000000000000..55de8302538c8e5e85ccdd5f4250f240
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f1e1b64aad5d492e652f744082d8365eec51014b
+index 0000000000000000000000000000000000000000..c47e484f2dc6ce8dddf28f026113cf8834be8c51
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
 @@ -0,0 +1,87 @@
@@ -1861,15 +1861,6 @@ index 0000000000000000000000000000000000000000..f1e1b64aad5d492e652f744082d8365e
 +        KissenPaperUserImplementation.setKissenPaperProfileCache(this);
 +    }
 +
-+    /**
-+     * Returns the UserRepository object used within this class.
-+     *
-+     * @return UserRepository that this class uses to perform user related operations
-+     */
-+    public @NotNull UserRepository getUserRepository() {
-+        return userRepository;
-+    }
-+
 +    @Override
 +    public void add(@NotNull GameProfile profile) {
 +        //TODO
@@ -1908,13 +1899,22 @@ index 0000000000000000000000000000000000000000..f1e1b64aad5d492e652f744082d8365e
 +    public void save(boolean asyncSave) {
 +        // ignored
 +    }
++
++    /**
++     * Returns the UserRepository object used within this class.
++     *
++     * @return UserRepository that this class uses to perform user related operations
++     */
++    public @NotNull UserRepository getUserRepository() {
++        return userRepository;
++    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..4c107a71f5b49be528f2187fe084b4900e845a58
+index 0000000000000000000000000000000000000000..aa9b852e279e836c44ef3ddfded134fd14b2508c
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
-@@ -0,0 +1,170 @@
+@@ -0,0 +1,251 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1935,6 +1935,7 @@ index 0000000000000000000000000000000000000000..4c107a71f5b49be528f2187fe084b490
 +
 +package net.kissenpvp.paper.user;
 +
++import net.kissenpvp.core.api.base.Kissen;
 +import net.kissenpvp.core.api.database.StorageImplementation;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
@@ -1961,12 +1962,39 @@ index 0000000000000000000000000000000000000000..4c107a71f5b49be528f2187fe084b490
 +import java.util.UUID;
 +import java.util.stream.Collectors;
 +
++/**
++ * The {@code KissenPaperPublicUser} class extends the {@link KissenPublicUser} class with {@link PaperPermission}
++ * as its generic type. It represents a public user within the KissenPaper system.
++ * <p>
++ * While it maintains the key characteristics of a {@link KissenPublicUser}, such as a UUID and name,
++ * the {@code KissenPaperPublicUser} further enhances this with specifics for a user that has a public profile
++ * accessible across multiple servers.
++ * @see KissenPublicUser
++ */
 +public class KissenPaperPublicUser extends KissenPublicUser<PaperPermission> {
 +
++    /**
++     * The constructor for the {@code KissenPaperPublicUser} class.
++     * It initializes a new instance of the class with a specified UUID and name.
++     *
++     * @param uuid A unique identifier. It may be nullable, representing a user, whose unique identifier
++     *             might not be known or relevant at the time of creation.
++     * @param name A string representing the username. It may be nullable, representing a user whose name
++     *             might not be known or relevant at the time of creation.
++     * @throws BackendException If an error occurs during the creation and initialization of a KissenPaperPublicUser instance.
++     */
 +    public KissenPaperPublicUser(@Nullable UUID uuid, @Nullable String name) throws BackendException {
 +        super(uuid, name);
 +    }
 +
++    /**
++     * An alternate constructor for the {@code KissenPaperPublicUser} class which initializes a new instance
++     * of the class with a SavableMap data structure.
++     *
++     * @param data A {@link SavableMap} object that contains user details.
++     *             It is expected to be used when loading a user from saved storage.
++     * @throws BackendException If an error occurs during the creation and initialization of a KissenPaperPublicUser instance.
++     */
 +    public KissenPaperPublicUser(@NotNull SavableMap data) throws BackendException
 +    {
 +        super(data);
@@ -2024,7 +2052,16 @@ index 0000000000000000000000000000000000000000..4c107a71f5b49be528f2187fe084b490
 +        return super.softDelete() + getPrivateUserEntry().delete();
 +    }
 +
-+    public User getPrivateUserEntry() {
++    /**
++     * The {@code getPrivateUserEntry} method retrieves an instance of a private user entry from the local storage.
++     * If the private user entry is not yet in the storage, it creates an entry using the 'setupPrivateUser' method.
++     * In case of an exception when creating the private user entry, an error log is produced, and the server
++     * is advised to be shut down to prevent further data problems.
++     *
++     * @return An instance of a {@link User} associated with the private user entry.
++     *         Cast is performed without check, which assumes that "private_user_entry" in the storage is always of {@link User} type.
++     */
++    public @NotNull User getPrivateUserEntry() {
 +        if (!getStorage().containsKey("private_user_entry")) {
 +            try {
 +                getStorage().put("private_user_entry", setupPrivateUser(UUID.fromString(getRawID()), getNotNull("name")));
@@ -2037,12 +2074,40 @@ index 0000000000000000000000000000000000000000..4c107a71f5b49be528f2187fe084b490
 +        return (User) getStorage().get("private_user_entry");
 +    }
 +
++    /**
++     * The {@code setupPrivateUser} method creates a new instance of a private user, {@link KissenPaperPrivateUser}, using provided UUID and username.
++     *
++     * @param uuid The UUID for the private user to be created.
++     * @param name The username of the private user.
++     * @return An instance of a {@link KissenPaperPrivateUser} initialized with the provided UUID and username.
++     * @throws BackendException If an error occurs during the creation and initialization of a KissenPaperPrivateUser instance.
++     * @see KissenPaperPrivateUser
++     */
 +    protected @NotNull KissenPaperPrivateUser setupPrivateUser(UUID uuid, String name) throws BackendException {
 +        return new KissenPaperPrivateUser(uuid, name);
 +    }
 +
++    /**
++     * The nested class {@code KissenPaperPrivateUser} extends the {@link KissenUser} class while specifying {@link PaperPermission}
++     * as its generic type. It represents a private user entity within the KissenPaper system.
++     * <p>
++     * While the key characteristics of a {@link KissenUser} are maintained such as a UUID and name,
++     * the KissenPaperPrivateUser further enhances this with specifics for a user that owns a private profile which only this
++     * server can access.
++     * @see KissenUser
++     */
 +    public static class KissenPaperPrivateUser extends KissenUser<PaperPermission> {
 +
++        /**
++         * The constructor for the {@code KissenPaperPrivateUser} class.
++         * It initializes a new instance of the class with specified UUID and name.
++         *
++         * @param uuid A unique identifier. It may be nullable, representing a user whose unique identifier
++         *             might not be known or relevant at the time of creation.
++         * @param name A string representing the username. It may be nullable, representing a user whose name
++         *             might not be known or relevant at the time of creation.
++         * @throws BackendException If an error occurs during the creation and initialization of a KissenPaperPrivateUser instance.
++         */
 +        public KissenPaperPrivateUser(@Nullable UUID uuid, @Nullable String name) throws BackendException {
 +            super(uuid, name);
 +        }
@@ -2070,12 +2135,6 @@ index 0000000000000000000000000000000000000000..4c107a71f5b49be528f2187fe084b490
 +            return (PlayerClient<?, ?, ?>) getStorage().get("player_client");
 +        }
 +
-+        protected @NotNull PaperPlayerClient injectPlayerClient() {
-+            UUID uuid = UUID.fromString(getRawID());
-+            return Bukkit.getKissen()
-+                    .isOnline(uuid) ? Objects.requireNonNull(Bukkit.getPlayer(uuid)) : Bukkit.getOfflinePlayer(uuid);
-+        }
-+
 +        @Override
 +        protected @NotNull PaperPermission translatePermission(@NotNull KissenPermissionNode kissenPermissionNode, @Nullable DataWriter dataWriter) {
 +            return new KissenPaperPermission(kissenPermissionNode, this, dataWriter);
@@ -2083,14 +2142,36 @@ index 0000000000000000000000000000000000000000..4c107a71f5b49be528f2187fe084b490
 +
 +        @Override
 +        public void sendData(@NotNull DataPackage dataPackage) { /* Ignored because it's private */ }
++
++        /**
++         * The 'injectPlayerClient' method is responsible for creating and returning a {@link PaperPlayerClient}.
++         * This method is used to get an instance of a user's player client (whether online or offline),
++         * crucial for various user-related functionality.
++         * <p>
++         * The method begins by obtaining the UUID of the user.
++         * It then checks if the user is currently online using Bukkit's {@link Kissen#isOnline(UUID)} method on 'Kissen' platform.
++         * If the user is online, it gets the online instance of the player using Bukkit's 'getPlayer' method.
++         * If the user is offline, it gets the offline instance of the player using Bukkit's 'getOfflinePlayer' method.
++         *
++         * @return Returns an instance of {@link PaperPlayerClient} associated with the user based on visibility status.
++         * Can be an online or offline player, depending on the user's current visibility in the game environment.
++         *
++         * @throws NullPointerException If 'getPlayer' method returns null, this exception is thrown, indicating that
++         * the user is currently marked as online but no associated online {@link PaperPlayerClient} was found.
++         * @see Kissen
++         */
++        protected @NotNull PaperPlayerClient injectPlayerClient() {
++            UUID uuid = UUID.fromString(getRawID());
++            return Bukkit.getKissen().isOnline(uuid) ? Objects.requireNonNull(Bukkit.getPlayer(uuid)) : Bukkit.getOfflinePlayer(uuid);
++        }
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..bca8fd25a5bb1c04823154df70484841f078febe
+index 0000000000000000000000000000000000000000..33c1cd4ed28df0410382e79c084bfc014ded2ae8
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,99 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2125,21 +2206,14 @@ index 0000000000000000000000000000000000000000..bca8fd25a5bb1c04823154df70484841
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
++/**
++ * The class 'KissenPaperUserImplementation' is an extension of the 'KissenUserImplementation' in the KissenPaper system.
++ * This class is responsible for interacting with or manipulating the paper-related functionality of a Kissen user.
++ * The class holds an instance of KissenPaperProfileCache which it uses to cache profiles for efficient read operations.
++ */
 +public class KissenPaperUserImplementation extends KissenUserImplementation {
 +
 +    private static KissenPaperProfileCache kissenPaperProfileCache;
-+
-+    public static void setKissenPaperProfileCache(KissenPaperProfileCache kissenPaperProfileCache) {
-+        if(kissenPaperProfileCache == null)
-+        {
-+            throw new IllegalStateException("Object already initialized.");
-+        }
-+        KissenPaperUserImplementation.kissenPaperProfileCache = kissenPaperProfileCache;
-+    }
-+
-+    private static KissenPaperProfileCache getKissenPaperProfileCache() {
-+        return kissenPaperProfileCache;
-+    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<SavableMap> getUserData() throws BackendException {
@@ -2171,13 +2245,38 @@ index 0000000000000000000000000000000000000000..bca8fd25a5bb1c04823154df70484841
 +            return kissenPaperProfileCache.getUserRepository().getUser(name).join().orElseThrow(() -> new UnknownPlayerException(name));
 +        }
 +    }
++
++    /**
++     * This private static method retrieves the current instance of KissenPaperProfileCache.
++     *
++     * @return The current KissenPaperProfileCache instance.
++     */
++    private static KissenPaperProfileCache getKissenPaperProfileCache() {
++        return kissenPaperProfileCache;
++    }
++
++    /**
++     * This public static method sets the KissenPaperProfileCache with a new instance.
++     * The method expects to receive an instance of KissenPaperProfileCache.
++     * If the input is null, an IllegalStateException will be thrown.
++     *
++     * @param kissenPaperProfileCache A new KissenPaperProfileCache instance.
++     * @throws IllegalStateException If the provided KissenPaperProfileCache instance is null.
++     */
++    public static void setKissenPaperProfileCache(KissenPaperProfileCache kissenPaperProfileCache) {
++        if(kissenPaperProfileCache == null)
++        {
++            throw new IllegalStateException("Object already initialized.");
++        }
++        KissenPaperUserImplementation.kissenPaperProfileCache = kissenPaperProfileCache;
++    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserRepository.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserRepository.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..269aec40944874fcc28f56349ea2a6b5416581f0
+index 0000000000000000000000000000000000000000..671da825ee272f8ef7a02e43ca5620df939bf03c
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserRepository.java
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,126 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.mojang.authlib.GameProfile;
@@ -2187,7 +2286,6 @@ index 0000000000000000000000000000000000000000..269aec40944874fcc28f56349ea2a6b5
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.api.user.UserRepository;
 +import net.minecraft.core.UUIDUtil;
-+import net.minecraft.server.players.GameProfileCache;
 +import org.jetbrains.annotations.NotNull;
 +
 +import java.util.Optional;
@@ -2195,22 +2293,32 @@ index 0000000000000000000000000000000000000000..269aec40944874fcc28f56349ea2a6b5
 +import java.util.concurrent.CompletableFuture;
 +import java.util.concurrent.atomic.AtomicReference;
 +
++/**
++ * The class 'KissenPaperUserRepository' implements the 'UserRepository' interface.
++ * It represents a repository for the User entities from mojang.
++ * Compliant with the Repository pattern, this class is intended to encapsulate all
++ * data access mechanics needed for User entities.
++ * <p>
++ * It also holds a 'GameProfileRepository' which perhaps holds the source data for the
++ * Users, or is another important factor in the retrieval or manipulation of User data.
++ */
 +public class KissenPaperUserRepository implements UserRepository {
 +
 +    private final GameProfileRepository gameProfileRepository;
 +
++    /**
++     * The constructor for the 'KissenPaperUserRepository' class.
++     * It initializes a new instance of the class with a specified 'GameProfileRepository' object.
++     *
++     * @param gameProfileRepository A 'GameProfileRepository' object.
++     * Specifies the game profile repository that the user repository will work with.
++     */
 +    public KissenPaperUserRepository(@NotNull GameProfileRepository gameProfileRepository) {
 +        this.gameProfileRepository = gameProfileRepository;
 +    }
 +
-+    private boolean shouldAuthorize()
-+    {
-+        return io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode();
-+    }
-+
 +    @Override
 +    public @NotNull CompletableFuture<Optional<User>> getUser(@NotNull String name) throws BackendException {
-+        System.out.println("Test");
 +        CompletableFuture<Optional<User>> gameProfileCompletableFuture = new CompletableFuture<>();
 +        AtomicReference<Optional<GameProfile>> fetchedRef = new AtomicReference<>(Optional.empty());
 +
@@ -2234,6 +2342,20 @@ index 0000000000000000000000000000000000000000..269aec40944874fcc28f56349ea2a6b5
 +    @Override
 +    public @NotNull CompletableFuture<Optional<User>> getUser(@NotNull UUID uuid) {
 +        return null; //TODO
++    }
++
++    /**
++     * This method is used to determine whether authorization should take place.
++     * Its behaviour may be determined by the 'GlobalConfiguration' setting 'isProxyOnlineMode'.
++     * The return value implies whether the proxy is in online mode or not,
++     * which further implies whether authentication is needed.
++     *
++     * @return A boolean value -- 'true' when proxy is in online mode implying authorization
++     * is required for network interactions, 'false' otherwise.
++     */
++    private boolean shouldAuthorize()
++    {
++        return io.papermc.paper.configuration.GlobalConfiguration.get().proxies.isProxyOnlineMode();
 +    }
 +
 +    /**
