@@ -866,7 +866,7 @@ index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8d5a4c0d07ddfcf3b327fdb5357c138e65348214
+index 0000000000000000000000000000000000000000..9fd38ea496875a626312b828df29ae4130b1fe59
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 @@ -0,0 +1,133 @@
@@ -933,7 +933,7 @@ index 0000000000000000000000000000000000000000..8d5a4c0d07ddfcf3b327fdb5357c138e
 +    @CommandData(value = "ban.delete", aliases = "punish")
 +    public void executeCreateBanCommand(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperBan paperBan) throws BackendException {
 +        paperBan.delete();
-+        payload.getSender().sendMessage(Component.translatable("server.ban.deleted"));
++        payload.getSender().sendMessage(Component.translatable("server.ban.deleted", Component.text(paperBan.getID())));
 +    }
 +
 +    /**
@@ -996,7 +996,7 @@ index 0000000000000000000000000000000000000000..8d5a4c0d07ddfcf3b327fdb5357c138e
 +     * @param reason the array of strings representing the reason
 +     * @return the reason as a Component object, or null if the reason is empty
 +     */
-+    private @NotNull java.util.Optional<Component> getReason(@NotNull String[] reason) {
++    private @NotNull java.util.Optional<Component> getReason(@NotNull String @NotNull [] reason) {
 +        if (reason.length != 0) {
 +            return java.util.Optional.of(LegacyComponentSerializer.legacyAmpersand().deserialize(String.join(" ", reason).strip()));
 +        }
@@ -1125,3 +1125,107 @@ index 454cee69c217106b840dc5c0019f8f7f80ca3782..ed8a75e7654dd2d9fb578d40a941c8b3
          // KissenPaper end
      }
      // Spigot end
+diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
+index 20d27e9c50e4acd4a49424aadccf6a2741256e6e..912e930068b8b0fe11859d66f0bfc707af875595 100644
+--- a/src/main/java/net/minecraft/server/players/PlayerList.java
++++ b/src/main/java/net/minecraft/server/players/PlayerList.java
+@@ -165,7 +165,7 @@ public abstract class PlayerList {
+         server.console = new com.destroystokyo.paper.console.TerminalConsoleCommandSender(); // Paper
+         // CraftBukkit end
+ 
+-        this.bans = new UserBanList(PlayerList.USERBANLIST_FILE);
++        this.bans = new net.kissenpvp.paper.ban.KissenPaperPunishmentList(/*PlayerList.USERBANLIST_FILE*/); // KissenPaper - rework ban system
+         this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
+         this.ops = new ServerOpList(PlayerList.OPLIST_FILE);
+         this.whitelist = new UserWhiteList(PlayerList.WHITELIST_FILE);
+@@ -711,37 +711,39 @@ public abstract class PlayerList {
+         Player player = entity.getBukkitEntity();
+         PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
+ 
+-        // Paper start - Fix MC-158900
+-        UserBanListEntry gameprofilebanentry;
+-        if (getBans().isBanned(gameprofile) && (gameprofilebanentry = getBans().get(gameprofile)) != null) {
+-            // Paper end
+-
+-            ichatmutablecomponent = Component.translatable("multiplayer.disconnect.banned.reason", gameprofilebanentry.getReason());
+-            if (gameprofilebanentry.getExpires() != null) {
+-                ichatmutablecomponent.append((Component) Component.translatable("multiplayer.disconnect.banned.expiration", PlayerList.BAN_DATE_FORMAT.format(gameprofilebanentry.getExpires())));
+-            }
+-
+-            // return chatmessage;
+-            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
+-        } else if (!this.isWhiteListed(gameprofile, event)) { // Paper
+-            //ichatmutablecomponent = Component.translatable("multiplayer.disconnect.not_whitelisted"); // Paper
+-            //event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.whitelistMessage)); // Spigot // Paper - Adventure - moved to isWhitelisted
+-        } else if (this.getIpBans().isBanned(socketaddress) && getIpBans().get(socketaddress) != null && !this.getIpBans().get(socketaddress).hasExpired()) { // Paper - fix NPE with temp ip bans
+-            IpBanListEntry ipbanentry = this.ipBans.get(socketaddress);
+-
+-            ichatmutablecomponent = Component.translatable("multiplayer.disconnect.banned_ip.reason", ipbanentry.getReason());
+-            if (ipbanentry.getExpires() != null) {
+-                ichatmutablecomponent.append((Component) Component.translatable("multiplayer.disconnect.banned_ip.expiration", PlayerList.BAN_DATE_FORMAT.format(ipbanentry.getExpires())));
+-            }
+-
+-            // return chatmessage;
+-            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
+-        } else {
++        // KissenPaper start - rework ban system
++//      // Paper start - Fix MC-158900
++//      UserBanListEntry gameprofilebanentry;
++//      if (getBans().isBanned(gameprofile) && (gameprofilebanentry = getBans().get(gameprofile)) != null) {
++//          // Paper end
++//
++//          ichatmutablecomponent = Component.translatable("multiplayer.disconnect.banned.reason", gameprofilebanentry.getReason());
++//          if (gameprofilebanentry.getExpires() != null) {
++//              ichatmutablecomponent.append((Component) Component.translatable("multiplayer.disconnect.banned.expiration", PlayerList.BAN_DATE_FORMAT.format(gameprofilebanentry.getExpires())));
++//          }
++//
++//          // return chatmessage;
++//          event.disallow(PlayerLoginEvent.Result.KICK_BANNED, io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
++//      } else if (!this.isWhiteListed(gameprofile, event)) { // Paper
++//          //ichatmutablecomponent = Component.translatable("multiplayer.disconnect.not_whitelisted"); // Paper
++//          //event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.whitelistMessage)); // Spigot // Paper - Adventure - moved to isWhitelisted
++//      } else if (this.getIpBans().isBanned(socketaddress) && getIpBans().get(socketaddress) != null && !this.getIpBans().get(socketaddress).hasExpired()) { // Paper - fix NPE with temp ip bans
++//          IpBanListEntry ipbanentry = this.ipBans.get(socketaddress);
++//
++//          ichatmutablecomponent = Component.translatable("multiplayer.disconnect.banned_ip.reason", ipbanentry.getReason());
++//          if (ipbanentry.getExpires() != null) {
++//              ichatmutablecomponent.append((Component) Component.translatable("multiplayer.disconnect.banned_ip.expiration", PlayerList.BAN_DATE_FORMAT.format(ipbanentry.getExpires())));
++//          }
++//
++//          // return chatmessage;
++//          event.disallow(PlayerLoginEvent.Result.KICK_BANNED, io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
++        //} else {
+             // return this.players.size() >= this.maxPlayers && !this.canBypassPlayerLimit(gameprofile) ? IChatBaseComponent.translatable("multiplayer.disconnect.server_full") : null;
+             if (this.players.size() >= this.maxPlayers && !this.canBypassPlayerLimit(gameprofile)) {
+                 event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.serverFullMessage)); // Spigot // Paper - Adventure
+             }
+-        }
++//      }
++        // KissenPaper end
+ 
+         this.cserver.getPluginManager().callEvent(event);
+         if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 7a7627de340ad8edcb4c2c2f80657146c1f6e992..11c0864ed61a9477138d31ed85c3f04628748134 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -2103,12 +2103,19 @@ public final class CraftServer implements Server {
+ 
+     @Override
+     public <T extends BanList<?>> T getBanList(BanList.Type type) {
++        // KissenPaper start - rework ban system
++        return (T) Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class);
++        // The following code is effectively dead
++        /*
+         Preconditions.checkArgument(type != null, "BanList.Type cannot be null");
+ 
+         return switch (type) {
+             case IP -> (T) new CraftIpBanList(this.playerList.getIpBans());
+             case PROFILE, NAME -> (T) new CraftProfileBanList(this.playerList.getBans());
+         };
++
++        */
++        // KissenPaper end
+     }
+ 
+     @Override
