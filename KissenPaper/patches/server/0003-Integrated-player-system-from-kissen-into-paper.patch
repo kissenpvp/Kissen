@@ -1818,10 +1818,10 @@ index 0000000000000000000000000000000000000000..55de8302538c8e5e85ccdd5f4250f240
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..c47e484f2dc6ce8dddf28f026113cf8834be8c51
+index 0000000000000000000000000000000000000000..685492b37d4ebfa0d618d65dc79d96cb03bd43af
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
-@@ -0,0 +1,87 @@
+@@ -0,0 +1,86 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.mojang.authlib.GameProfile;
@@ -1864,7 +1864,6 @@ index 0000000000000000000000000000000000000000..c47e484f2dc6ce8dddf28f026113cf88
 +    @Override
 +    public void add(@NotNull GameProfile profile) {
 +        //TODO
-+        System.out.println("Would add profile (normally)");
 +    }
 +
 +    @Nullable
