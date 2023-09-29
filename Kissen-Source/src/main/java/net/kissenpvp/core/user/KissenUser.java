@@ -83,7 +83,7 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
             return false;
         }
 
-        return userEntry.getId().equals(getId());
+        return userEntry.getSavableID().equals(getSavableID());
     }
 
     /**

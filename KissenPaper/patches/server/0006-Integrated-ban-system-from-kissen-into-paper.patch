@@ -43,10 +43,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b4baefe861ee994a75b28429c7056c6e012260fb
+index 0000000000000000000000000000000000000000..3d6516ea5690079668e840928b745a890d621f13
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,231 @@
+@@ -0,0 +1,484 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -67,12 +67,18 @@ index 0000000000000000000000000000000000000000..b4baefe861ee994a75b28429c7056c6e
 +
 +package net.kissenpvp.paper.ban;
 +
++import com.destroystokyo.paper.profile.CraftPlayerProfile;
++import com.destroystokyo.paper.profile.PlayerProfile;
++import com.mojang.authlib.GameProfile;
 +import net.kissenpvp.core.api.ban.BanOperator;
 +import net.kissenpvp.core.api.ban.BanType;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.meta.Meta;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
++import net.kissenpvp.core.api.time.AccurateDuration;
++import net.kissenpvp.core.api.time.TimeImplementation;
++import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.ban.KissenBanImplementation;
 +import net.kissenpvp.core.ban.KissenPunishmentNode;
 +import net.kissenpvp.core.base.KissenImplementation;
@@ -83,12 +89,13 @@ index 0000000000000000000000000000000000000000..b4baefe861ee994a75b28429c7056c6e
 +import net.kissenpvp.paper.api.command.PaperCommandImplementation;
 +import net.kissenpvp.paper.ban.command.KissenPaperBanCommand;
 +import net.kissenpvp.paper.ban.command.PaperBanParser;
-+import net.kissenpvp.paper.ban.minecraft.KissenPaperMinecraftBan;
-+import net.kissenpvp.paper.ban.minecraft.KissenPaperMinecraftBanBridge;
-+import net.kissenpvp.paper.ban.minecraft.KissenPaperMinecraftKick;
 +import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
 +import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
++import net.minecraft.server.MinecraftServer;
++import org.bukkit.BanEntry;
 +import org.bukkit.Bukkit;
++import org.bukkit.ban.ProfileBanList;
 +import org.bukkit.entity.Player;
 +import org.bukkit.event.player.PlayerKickEvent;
 +import org.jetbrains.annotations.Contract;
@@ -96,23 +103,20 @@ index 0000000000000000000000000000000000000000..b4baefe861ee994a75b28429c7056c6e
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.util.*;
++import java.time.Duration;
++import java.time.Instant;
++import java.time.temporal.ChronoUnit;
++import java.util.Date;
++import java.util.Map;
++import java.util.Objects;
++import java.util.Optional;
++import java.util.Set;
++import java.util.UUID;
 +import java.util.function.Function;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
 +public class KissenPaperBanImplementation extends KissenBanImplementation<PaperBan, PaperPunishment> implements PaperBanImplementation, KissenImplementation {
-+
-+    private final KissenPaperMinecraftBanBridge minecraftBan, minecraftKick;
-+
-+    /**
-+     * Constructor for KissenPaperBanImplementation class.
-+     * Initializes a new instance of the class and creates instances of KissenPaperMinecraftBan and KissenPaperMinecraftKick.
-+     */
-+    public KissenPaperBanImplementation() {
-+        this.minecraftBan = new KissenPaperMinecraftBan();
-+        this.minecraftKick = new KissenPaperMinecraftKick();
-+    }
 +
 +    @Override
 +    public boolean preStart() {
@@ -193,26 +197,23 @@ index 0000000000000000000000000000000000000000..b4baefe861ee994a75b28429c7056c6e
 +    }
 +
 +    @Override
-+    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @Nullable Component reason, @NotNull Context context) throws BackendException {
-+        return punish(totalID, ban, banOperator, reason, getMeta(context));
++    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @Nullable Component cause, @NotNull Context context) throws BackendException {
++        return punish(totalID, ban, banOperator, true, cause);
 +    }
 +
-+    /**
-+     * Returns the instance of KissenPaperMinecraftBanBridge.
-+     *
-+     * @return the instance of KissenPaperMinecraftBanBridge
-+     */
-+    public @NotNull KissenPaperMinecraftBanBridge getMinecraftBan() {
-+        return minecraftBan;
++    @Override
++    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @NotNull Context context) throws BackendException {
++        return punish(totalID, ban, banOperator, true, context);
 +    }
 +
-+    /**
-+     * Returns the KissenPaperMinecraftBanBridge instance associated with the Minecraft kick.
-+     *
-+     * @return the KissenPaperMinecraftBanBridge instance representing the Minecraft kick
-+     */
-+    public @NotNull KissenPaperMinecraftBanBridge getMinecraftKick() {
-+        return minecraftKick;
++    @Override
++    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, boolean apply, @NotNull Context context) throws BackendException {
++        return punish(totalID, ban, banOperator, apply, null, context);
++    }
++
++    @Override
++    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, boolean apply, @Nullable Component cause, @NotNull Context context) throws BackendException {
++        return punish(totalID, ban, banOperator, apply, cause, getMeta(context));
 +    }
 +
 +    /**
@@ -259,6 +260,11 @@ index 0000000000000000000000000000000000000000..b4baefe861ee994a75b28429c7056c6e
 +        return meta.getData(new KissenPaperBan()).values().stream().map(banProcessor());
 +    }
 +
++    public PaperPunishment createBan(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode) throws BackendException {
++        set(totalID, kissenPunishmentNode, getMeta(Context.LOCAL));
++        return translatePunishment(totalID, kissenPunishmentNode, getMeta(Context.LOCAL));
++    }
++
 +    /**
 +     * Retrieves the ban processor function, which processes a SavableMap and returns a PaperBan.
 +     *
@@ -277,13 +283,260 @@ index 0000000000000000000000000000000000000000..b4baefe861ee994a75b28429c7056c6e
 +            return null;
 +        };
 +    }
++
++    // Bukkit
++
++    @Override
++    public @NotNull <E extends BanEntry<? super PlayerProfile>> Set<E> getEntries() {
++        try {
++            return getPunishmentSet().stream().map(punishment -> (E) punishment).collect(Collectors.toSet());
++        } catch (BackendException backendException) {
++            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
++        }
++    }
++
++    @Override
++    public <E extends BanEntry<? super PlayerProfile>> @Nullable E getBanEntry(@NotNull String target) {
++        return (E) getBanEntry(resolvePlayerProfile(target));
++    }
++
++    @Override
++    public @Nullable BanEntry<PlayerProfile> getBanEntry(@NotNull PlayerProfile target) {
++        try {
++            return getLatestPunishment(Objects.requireNonNull(target.getId())).orElse(null);
++        } catch (BackendException backendException) {
++            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
++        }
++    }
++
++    @Override
++    public @NotNull Set<BanEntry> getBanEntries() {
++        try {
++            return getPunishmentSet().stream().map(punishment -> (BanEntry<?>) punishment).collect(Collectors.toSet());
++        } catch (BackendException backendException) {
++            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
++        }
++    }
++
++    @Override
++    public <E extends BanEntry<? super PlayerProfile>> @Nullable E getBanEntry(org.bukkit.profile.@NotNull PlayerProfile target) {
++        try {
++            return (E) getLatestPunishment(Objects.requireNonNull(target.getUniqueId())).orElse(null);
++        } catch (BackendException backendException) {
++            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
++        }
++    }
++
++    @Override
++    public boolean isBanned(@NotNull String target) {
++        return isBanned(Objects.requireNonNull(resolvePlayerProfile(target)));
++    }
++
++    @Override
++    public boolean isBanned(@NotNull PlayerProfile target) {
++        try {
++            return getLatestPunishment(Objects.requireNonNull(target.getId())).isPresent();
++        } catch (BackendException backendException) {
++            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
++        }
++    }
++
++    @Override
++    public boolean isBanned(@NotNull org.bukkit.profile.PlayerProfile target) {
++        try {
++            return getLatestPunishment(Objects.requireNonNull(target.getUniqueId())).isPresent();
++        } catch (BackendException backendException) {
++            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
++        }
++    }
++
++    @Override
++    public void pardon(@NotNull String target) {
++        //TODO
++    }
++
++    @Override
++    public void pardon(@NotNull PlayerProfile target) {
++        //TODO
++    }
++
++    @Override
++    public void pardon(@NotNull org.bukkit.profile.PlayerProfile target) {
++        //TODO
++    }
++
++    @Override
++    public <E extends BanEntry<? super PlayerProfile>> @Nullable E addBan(@NotNull String target, @Nullable String reason, @Nullable Date expires, @Nullable String source) {
++        return (E) addBan(Objects.requireNonNull(resolvePlayerProfile(target)), reason, expires, source);
++    }
++
++    @Override
++    public <E extends BanEntry<? super PlayerProfile>> @Nullable E addBan(org.bukkit.profile.@NotNull PlayerProfile target, @Nullable String reason, @Nullable Instant expires, @Nullable String source) {
++        return (E) addBan(target.getUser(), reason, getDateTransformer(expires), source);
++    }
++
++    @Override
++    public <E extends BanEntry<? super PlayerProfile>> @Nullable E addBan(org.bukkit.profile.@NotNull PlayerProfile target, @Nullable String reason, @Nullable Duration duration, @Nullable String source) {
++        return (E) addBan(target.getUser(), reason, getDateTransformer(duration), source);
++    }
++
++    @Override
++    public <E extends BanEntry<? super PlayerProfile>> @Nullable E addBan(org.bukkit.profile.@NotNull PlayerProfile target, @Nullable String reason, @Nullable Date expires, @Nullable String source) {
++        return (E) addBan(target.getUser(), reason, getDateTransformer(expires), source);
++    }
++
++    @Override
++    public @Nullable BanEntry<PlayerProfile> addBan(@NotNull PlayerProfile target, @Nullable String reason, @Nullable Instant expires, @Nullable String source) {
++        return addBan(target.getUser(), reason, getDateTransformer(expires), source);
++    }
++
++    @Override
++    public @Nullable BanEntry<PlayerProfile> addBan(@NotNull PlayerProfile target, @Nullable String reason, @Nullable Duration duration, @Nullable String source) {
++        return addBan(target.getUser(), reason, getDateTransformer(duration), source);
++    }
++
++    @Override
++    public @Nullable BanEntry<PlayerProfile> addBan(@NotNull PlayerProfile target, @Nullable String reason, @Nullable Date expires, @Nullable String source) {
++        return addBan(target.getUser(), reason, getDateTransformer(expires), source);
++    }
++
++    private @Nullable PlayerProfile resolvePlayerProfile(@NotNull String target)
++    {
++        GameProfile gameProfile = resolveGameProfile(target);
++        return gameProfile == null ? null : new CraftPlayerProfile(gameProfile.getId(), gameProfile.getName());
++    }
++
++    private @Nullable GameProfile resolveGameProfile(@NotNull String target)
++    {
++        if(target.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"))
++        {
++            UUID targetUUID = UUID.fromString(target);
++            return MinecraftServer.getServer().getProfileCache().get(targetUUID).orElse(null);
++        }
++        return MinecraftServer.getServer().getProfileCache().get(target).orElse(null);
++    }
++
++    /**
++     * This method is responsible for adding an entry to the ban list for a specific player. This method requires several parameters as described below.
++     * <p>
++     * The action of banning involves communicating with a backend system.
++     * If the system is not reachable, a {@link BackendException} will be thrown.
++     * To handle such situations, this method has a catch block to wrap the {@link BackendException}
++     *
++     * @param target              represents the {@link User} object to be banned.
++     *                            This parameter is annotated with {@link org.jetbrains.annotations.NotNull}
++     *                            which means it must never be null.
++     * @param reason              is a string containing the reason for the ban.
++     *                            This parameter is allowed to be null, represent by {@link org.jetbrains.annotations.Nullable}.
++     *                            If null, the default reason specified by the system will be used.
++     * @param durationTransformer is an instance of {@link DurationTransformer}.
++     *                            This parameter is used to determine the duration of the ban.
++     *                            This cannot be null.
++     * @param source              is a string representing the entity which imposes the ban action.
++     *                            Though this parameter is nullable, a {@link java.lang.IllegalArgumentException}
++     *                            will be thrown if source is null after an internal checking.
++     * @return An instance of {@link BanEntry}<{@link PlayerProfile}> is created and returned.
++     * The return value encapsulates details such as ban type, ban duration,
++     * operator and reason for the ban.
++     * @throws java.lang.IllegalArgumentException If the {@code source} parameter is null.
++     * @throws java.lang.RuntimeException         If the backend system cannot be reached.
++     */
++    private @NotNull BanEntry<PlayerProfile> addBan(@NotNull User target, @Nullable String reason, @NotNull DurationTransformer durationTransformer, @Nullable String source) {
++        try {
++            if (source == null) {
++                throw new IllegalArgumentException("Source must not be null");
++            }
++            return punish(target.getPlayerClient().getTotalID(), new MinecraftBan(BanType.BAN, durationTransformer.create()), new BanOperator() {
++                @Override
++                public @NotNull Component displayName() {
++                    return LegacyComponentSerializer.legacyAmpersand().deserialize(source);
++                }
++            }, reason == null ? null : LegacyComponentSerializer.legacySection().deserialize(reason));
++        } catch (BackendException backendException) {
++            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
++        }
++    }
++
++    /**
++     * The `getDateTransformer` method is overloaded to accept three different types of arguments: {@link Date}, {@link Duration}, and {@link Instant}.
++     * These methods have been contractually defined to produce a new value whenever they're called and are considered to be pure (no side effects).
++     * <p>
++     * Each of these methods is responsible for converting a given {@link Date}, {@link Duration}, or {@link Instant} into an instance of {@link DurationTransformer}, an interface that only contains one method: `create()`, which returns an {@link AccurateDuration} object.
++     * <p>
++     * Note: If the `Date`, `Duration`, or `Instant` provided to these methods is null, the `create()` method of the resultant {@link DurationTransformer} will return null when called.
++     *
++     * @param expires - {@link Date} object representing point of time instance or null.
++     * @return a new {@link DurationTransformer} that encapsulates the conversion logic from {@link Date} to {@link AccurateDuration}.
++     */
++    @Contract(value = "_ -> new", pure = true)
++    private @NotNull DurationTransformer getDateTransformer(@Nullable Date expires) {
++        return getDateTransformer(expires == null ? null : expires.toInstant());
++    }
++
++    /**
++     * Converts a given {@link Duration} object to a new instance of {@link DurationTransformer}. This method is a part of a suite of transformation methods that handle different types of time representation.
++     *
++     * @param duration is a {@link Duration} that represents the amount of time or can potentially be null.
++     *                 If null, the method will delegate to another `getDateTransformer` method with a null {@link Instant} as an argument.
++     *                 If not null, the method will transform it into an {@link Instant} that is the current moment in time incremented by the
++     *                 number of milliseconds represented by the duration. Then it delegates to another `getDateTransformer` method.
++     * @return a new {@link DurationTransformer}, which is a functional interface for converting different types of time representation into
++     * an {@link AccurateDuration}. This returned transformer's `create` method will, when called, produce an {@link AccurateDuration}
++     * representing the same time span as the given duration argument.
++     */
++    @Contract(value = "_ -> new", pure = true)
++    private @NotNull DurationTransformer getDateTransformer(@Nullable Duration duration) {
++        return getDateTransformer(duration == null ? null : Instant.now().plusMillis(duration.toMillis()));
++    }
++
++    /**
++     * Converts a given {@link Instant} object to a new instance of {@link DurationTransformer}. This method is a part of a suite of transformation methods that handle different types of time representation.
++     *
++     * @param instant is an {@link Instant} that represents a specific moment on a time-line or can potentially be null.
++     *                If null, the returned {@link DurationTransformer}'s `create` method will produce null when called.
++     *                If not null, the returned {@link DurationTransformer}'s `create` method will produce an {@link AccurateDuration} which represents
++     *                amount of time between now and the instant when called.
++     * @return a new {@link DurationTransformer}, which is a functional interface for converting different types of time representation into an
++     * {@link AccurateDuration}. Depending on the arguments it has been passed, the `create` method of returned object will produce different output.
++     */
++    @Contract(value = "_ -> new", pure = true)
++    private @NotNull DurationTransformer getDateTransformer(@Nullable Instant instant) {
++        return new DurationTransformer() {
++            @Override
++            public @Nullable AccurateDuration create() {
++                return instant == null ? null : Bukkit.getKissen().getImplementation(TimeImplementation.class).millis(Instant.now().until(instant, ChronoUnit.MILLIS));
++            }
++        };
++    }
++
++    /**
++     * DurationTransformer is a functional interface which provides a contract for transforming various time representations into an {@link AccurateDuration}.
++     * It's intended to be utilized by classes that need time conversion functionalities.
++     * Annotated with {@code @FunctionalInterface}, it ensures that this interface should only have one abstract method, conforming to the Java language specification.
++     */
++    @FunctionalInterface
++    private interface DurationTransformer {
++
++        /**
++         * This abstract method named 'create' is the single method in this functional interface. The duty of exact transformation varies depending on its implementation.
++         * <ul>
++         * <li> In some implementations, the 'create' method will convert a specific point in time into a duration from that point until the current time.</li>
++         * <li> In others, it might translate a specific elapsed time period into a duration.</li>
++         * </ul>
++         *
++         * @return an {@link AccurateDuration} instance representing the result of the transformation, or null if the transformation could not be successfully completed
++         * or resulted in a null value.
++         */
++        @Nullable AccurateDuration create();
++
++    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d505df42ce46658a7b3d899cacb4ad3bad163d90
+index 0000000000000000000000000000000000000000..878a0e1616df6af206aaffbf15d4fa28f6da6ef1
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,131 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -304,21 +557,48 @@ index 0000000000000000000000000000000000000000..d505df42ce46658a7b3d899cacb4ad3b
 +
 +package net.kissenpvp.paper.ban;
 +
++import com.destroystokyo.paper.profile.PlayerProfile;
 +import net.kissenpvp.core.ban.KissenPunishmentNode;
 +import net.kissenpvp.core.ban.KissenPunishment;
 +import net.kissenpvp.core.database.DataWriter;
 +import net.kissenpvp.paper.api.ban.PaperPunishment;
++import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 +import org.bukkit.Bukkit;
 +import org.bukkit.entity.Player;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
++import java.util.Date;
 +import java.util.Set;
 +import java.util.UUID;
 +import java.util.stream.Collectors;
 +
++/**
++ * The {@code KissenPaperPunishment} class is a specific implementation of {@code KissenPunishment}, representing
++ * punishment data in a Paper server context. This class additionally implements the {@code PaperPunishment}
++ * interface, hence making it a Paper-specific extension of the {@code KissenPunishment}.
++ * <p>
++ * This class is designed to work with in-game Players and their associated punishment data, including
++ * PunishmentNode, DataWriter and much more. It provides operations to manipulate the punishment data such as
++ * {@code getOnlineAffectedPlayers()}, {@code getBanTarget()}, {@code getCreated()} etc.
++ * <p>
++ * The instances of this class are mutable but do not allow direct mutation of the created and source fields.
++ * Mutating operations for these fields will throw an {@code UnsupportedOperationException}.
++ *
++ * @see KissenPunishment
++ * @see PaperPunishment
++ * @author User
++ */
 +public class KissenPaperPunishment extends KissenPunishment<Player> implements PaperPunishment {
++
++    /**
++     * Instantiates a {@code KissenPaperPunishment}.
++     *
++     * @param totalID The UUID of the dataset for which the punishment data is to be created.
++     * @param kissenPunishmentNode The data container for this punishment.
++     * @param dataWriter (Nullable) The DataWriter that will be used for updating the punishment data.
++     */
 +    public KissenPaperPunishment(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @Nullable DataWriter dataWriter) {
 +        super(totalID, kissenPunishmentNode, dataWriter);
 +    }
@@ -327,13 +607,269 @@ index 0000000000000000000000000000000000000000..d505df42ce46658a7b3d899cacb4ad3b
 +    public @Unmodifiable Set<Player> getOnlineAffectedPlayers() {
 +        return Bukkit.getOnlinePlayers().stream().filter(player -> player.getTotalID().equals(getTotalID())).collect(Collectors.toSet());
 +    }
++
++    @Override
++    public @NotNull String getTarget() {
++        return null; //TODO
++    }
++
++    @Override
++    public @NotNull PlayerProfile getBanTarget() {
++        return null; //TODO
++    }
++
++    @Override
++    public @NotNull Date getCreated() {
++        return Date.from(getStart());
++    }
++
++    @Override
++    public void setCreated(@NotNull Date created) {
++        throw new UnsupportedOperationException();
++    }
++
++    @Override
++    public @NotNull String getSource() {
++        return LegacyComponentSerializer.legacyAmpersand().serialize(getBanOperator().displayName());
++    }
++
++    @Override
++    public void setSource(@NotNull String source) {
++        throw new UnsupportedOperationException();
++    }
++
++    @Override
++    public @Nullable Date getExpiration() {
++        return getEnd().map(Date::from).orElse(null);
++    }
++
++    @Override
++    public void setExpiration(@Nullable Date expiration) {
++        setEnd(expiration == null ? null : expiration.toInstant());
++    }
++
++    @Override
++    public @Nullable String getReason() {
++        return getCause().map(cause -> LegacyComponentSerializer.legacyAmpersand().serialize(cause)).orElse(null);
++    }
++
++    @Override
++    public void setReason(@Nullable String reason) {
++        setCause(reason == null ? null : LegacyComponentSerializer.legacySection().deserialize(reason));
++    }
++
++    @Override
++    public void save() {
++        // not used
++    }
++
++    @Override
++    public void remove() {
++        // not used
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishmentList.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishmentList.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6f610f38c8263b7208cc97fb70566c842d5d6f6c
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishmentList.java
+@@ -0,0 +1,124 @@
++package net.kissenpvp.paper.ban;
++
++import com.google.gson.JsonObject;
++import com.mojang.authlib.GameProfile;
++import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.paper.api.ban.PaperBanImplementation;
++import net.kissenpvp.paper.api.ban.PaperPunishment;
++import net.minecraft.server.players.StoredUserEntry;
++import net.minecraft.server.players.UserBanList;
++import net.minecraft.server.players.UserBanListEntry;
++import org.bukkit.Bukkit;
++import org.jetbrains.annotations.Contract;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.io.File;
++import java.io.IOException;
++import java.util.Collection;
++import java.util.Objects;
++import java.util.stream.Collectors;
++
++public class KissenPaperPunishmentList extends UserBanList {
++
++    public KissenPaperPunishmentList() {
++        super(null);
++    }
++
++
++    
++    @Override
++    protected @NotNull StoredUserEntry<GameProfile> createEntry(JsonObject json) {
++        throw new UnsupportedOperationException();
++    }
++
++    @Override
++    public boolean isBanned(GameProfile profile) {
++        return getBanImplementation().isBanned(String.valueOf(profile.getId()));
++    }
++
++    @Override
++    public String @NotNull [] getUserList() {
++        return new String[0]; // too performance consuming and not even necessary.
++    }
++
++    @Override
++    public @NotNull File getFile() {
++        throw new UnsupportedOperationException();
++    }
++
++    @Override
++    public void add(UserBanListEntry entry) {
++        getBanImplementation().addBan(String.valueOf(Objects.requireNonNull(entry.getUser()).getId()), entry.getReason(), entry.getExpires(), entry.getSource());
++    }
++
++    @Nullable
++    @Override
++    public UserBanListEntry get(@NotNull GameProfile key) {
++        try {
++            return getBanImplementation().getLatestPunishment(key.getId()).map(this::translate).orElse(null); //TODO use totalID instead.
++        }catch (BackendException backendException)
++        {
++            return null;
++        }
++    }
++
++    @Override
++    public boolean isEmpty() {
++        return getBanImplementation().getEntries().isEmpty();
++    }
++
++    @Override
++    protected boolean contains(@NotNull GameProfile k0) {
++        return getEntries().stream().anyMatch(entry -> Objects.equals(entry.getUser(), k0));
++    }
++
++    @Override
++    public @NotNull Collection<UserBanListEntry> getEntries() {
++        return getBanImplementation().getEntries().stream().map(ban -> translate((PaperPunishment) ban)).collect(Collectors.toSet());
++    }
++
++    @Override
++    public void save() throws IOException {
++        // ignored
++    }
++
++    @Override
++    public void load()  {
++        // ignored
++    }
++
++    @Override
++    public void remove(@NotNull GameProfile key) {
++        throw new UnsupportedOperationException();
++    }
++
++    @Override
++    public void remove(@NotNull StoredUserEntry<GameProfile> entry) {
++        throw new UnsupportedOperationException();
++    }
++
++    /**
++     * Retrieves the PaperBanImplementation instance.
++     *
++     * @return The PaperBanImplementation instance. This method returns the implementation of the PaperBan plugin
++     *         registered with Bukkit's implementation provider.
++     * @throws IllegalStateException if the PaperBanImplementation has not been registered with the implementation provider.
++     */
++    private @NotNull PaperBanImplementation getBanImplementation()
++    {
++        return Bukkit.getKissen().getImplementation(PaperBanImplementation.class);
++    }
++
++    /**
++     * Translates a PaperPunishment object into a UserBanListEntry object.
++     *
++     * @param paperPunishment The PaperPunishment object to be translated.
++     * @return The translated UserBanListEntry object.
++     */
++    @Contract("_ -> new")
++    private @NotNull UserBanListEntry translate(@NotNull PaperPunishment paperPunishment)
++    {
++        return new UserBanListEntry(null, paperPunishment.getCreated(), paperPunishment.getSource(), paperPunishment.getExpiration(), paperPunishment.getReason());
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/ban/MinecraftBan.java b/src/main/java/net/kissenpvp/paper/ban/MinecraftBan.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f5eeeb607
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/ban/MinecraftBan.java
+@@ -0,0 +1,60 @@
++package net.kissenpvp.paper.ban;
++
++import net.kissenpvp.core.api.ban.BanType;
++import net.kissenpvp.core.api.event.EventCancelledException;
++import net.kissenpvp.core.api.time.AccurateDuration;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.Optional;
++
++public class MinecraftBan implements net.kissenpvp.paper.api.ban.PaperBan {
++
++    private final BanType banType;
++    private final AccurateDuration duration;
++
++    public MinecraftBan(BanType banType, AccurateDuration duration) {
++        this.banType = banType;
++        this.duration = duration;
++    }
++
++    @Override
++    public int getID() {
++        return -1;
++    }
++
++    @Override
++    public @NotNull String getName() {
++        return "Minecraft";
++    }
++
++    @Override
++    public void setName(@NotNull String name) throws EventCancelledException {
++        throw new EventCancelledException(new UnsupportedOperationException());
++    }
++
++    @Override
++    public @NotNull BanType getBanType() {
++        return banType;
++    }
++
++    @Override
++    public void setBanType(@NotNull BanType banType) throws EventCancelledException {
++        throw new EventCancelledException(new UnsupportedOperationException());
++    }
++
++    @Override
++    public @NotNull Optional<AccurateDuration> getAccurateDuration() {
++        return Optional.ofNullable(duration);
++    }
++
++    @Override
++    public void setAccurateDuration(@Nullable AccurateDuration duration) throws EventCancelledException {
++        throw new EventCancelledException(new UnsupportedOperationException());
++    }
++
++    @Override
++    public int delete()  {
++        throw new EventCancelledException(new UnsupportedOperationException());
++    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f3922f58e347608415e743beec8afa1236d7d745
+index 0000000000000000000000000000000000000000..8d5a4c0d07ddfcf3b327fdb5357c138e65348214
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
-@@ -0,0 +1,132 @@
+@@ -0,0 +1,133 @@
 +package net.kissenpvp.paper.ban.command;
 +
 +import net.kissenpvp.core.api.ban.BanType;
@@ -394,7 +930,7 @@ index 0000000000000000000000000000000000000000..f3922f58e347608415e743beec8afa12
 +                .orElse(Component.translatable("server.ban.created.permanent", idComponent, nameComponent, banTypeComponent)));
 +    }
 +
-+    @CommandData(value = "ban.delete", aliases = "punish", description = "")
++    @CommandData(value = "ban.delete", aliases = "punish")
 +    public void executeCreateBanCommand(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperBan paperBan) throws BackendException {
 +        paperBan.delete();
 +        payload.getSender().sendMessage(Component.translatable("server.ban.deleted"));
@@ -413,6 +949,7 @@ index 0000000000000000000000000000000000000000..f3922f58e347608415e743beec8afa12
 +        java.util.Optional<Component> transformedReason = getReason(reason);
 +        payload.getSender().sendMessage(obtainWarnedMessage(player.displayName(), Component.text(player.warn(paperBan, payload.getSender(), transformedReason.orElse(null))), transformedReason.orElse(null)));
 +    }
++
 +
 +    /**
 +     * Obtain the punished message for a given display name, ban type, and reason component.
@@ -528,95 +1065,6 @@ index 0000000000000000000000000000000000000000..a5483cbe7117fb928201a6ca56c71400
 +    public boolean handle(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull NonexistentBanException throwable) {
 +        commandPayload.getSender().sendMessage(Component.translatable("server.ban.invalid", Component.text(throwable.getBan())));
 +        return true;
-+    }
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/ban/minecraft/KissenPaperMinecraftBan.java b/src/main/java/net/kissenpvp/paper/ban/minecraft/KissenPaperMinecraftBan.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..6a1c14745eaf0016723a9eb330dc8c29060c7482
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/ban/minecraft/KissenPaperMinecraftBan.java
-@@ -0,0 +1,11 @@
-+package net.kissenpvp.paper.ban.minecraft;
-+
-+import net.kissenpvp.core.api.ban.BanType;
-+import org.jetbrains.annotations.NotNull;
-+
-+public class KissenPaperMinecraftBan extends KissenPaperMinecraftBanBridge {
-+    @Override
-+    public @NotNull BanType getBanType() {
-+        return BanType.BAN;
-+    }
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/ban/minecraft/KissenPaperMinecraftBanBridge.java b/src/main/java/net/kissenpvp/paper/ban/minecraft/KissenPaperMinecraftBanBridge.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..e7a412b77e843bbaeb17cdbb059ab25dd0fdd144
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/ban/minecraft/KissenPaperMinecraftBanBridge.java
-@@ -0,0 +1,48 @@
-+package net.kissenpvp.paper.ban.minecraft;
-+
-+import net.kissenpvp.core.api.ban.BanType;
-+import net.kissenpvp.core.api.database.meta.BackendException;
-+import net.kissenpvp.core.api.event.EventCancelledException;
-+import net.kissenpvp.core.api.time.AccurateDuration;
-+import net.kissenpvp.paper.api.ban.PaperBan;
-+import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Nullable;
-+
-+import java.util.Optional;
-+
-+public abstract class KissenPaperMinecraftBanBridge implements PaperBan {
-+    @Override
-+    public int getID() {
-+        return -1;
-+    }
-+
-+    @Override
-+    public @NotNull String getName() {
-+        return "Minecraft";
-+    }
-+
-+    @Override
-+    public void setName(@NotNull String name) throws EventCancelledException {
-+        throw new EventCancelledException(new IllegalStateException());
-+    }
-+
-+    @Override
-+    public void setBanType(@NotNull BanType banType) throws EventCancelledException {
-+        throw new EventCancelledException(new IllegalStateException());
-+    }
-+
-+    @Override
-+    public @NotNull Optional<AccurateDuration> getAccurateDuration() {
-+        return Optional.empty();
-+    }
-+
-+    @Override
-+    public void setAccurateDuration(@Nullable AccurateDuration duration) throws EventCancelledException {
-+        throw new EventCancelledException(new IllegalStateException());
-+    }
-+
-+    @Override
-+    public int delete() throws BackendException {
-+        throw new BackendException(new IllegalStateException());
-+    }
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/ban/minecraft/KissenPaperMinecraftKick.java b/src/main/java/net/kissenpvp/paper/ban/minecraft/KissenPaperMinecraftKick.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..d537152a8059f6d73ac7f9a75878b03901eb7477
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/ban/minecraft/KissenPaperMinecraftKick.java
-@@ -0,0 +1,12 @@
-+package net.kissenpvp.paper.ban.minecraft;
-+
-+import net.kissenpvp.core.api.ban.BanType;
-+import org.jetbrains.annotations.NotNull;
-+
-+public class KissenPaperMinecraftKick extends KissenPaperMinecraftBanBridge {
-+
-+    @Override
-+    public @NotNull BanType getBanType() {
-+        return BanType.KICK;
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java

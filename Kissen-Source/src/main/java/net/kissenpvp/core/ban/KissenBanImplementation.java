@@ -133,12 +133,22 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
 
     @Override
     public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator) throws BackendException {
-        return punish(totalID, ban, banOperator, null);
+        return punish(totalID, ban, banOperator, true);
     }
 
     @Override
     public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException {
-        return punish(totalID, ban, banOperator, reason, getMeta());
+        return punish(totalID, ban, banOperator, true, reason);
+    }
+
+    @Override
+    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, boolean apply) throws BackendException {
+        return punish(totalID, ban, banOperator, apply, null);
+    }
+
+    @Override
+    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, boolean apply, @Nullable Component reason) throws BackendException {
+        return punish(totalID, ban, banOperator, apply, reason, getMeta());
     }
 
     @Override
@@ -152,12 +162,12 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<P> getPlayerBanSet(@NotNull UUID totalID) throws BackendException {
+    public @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID) throws BackendException {
         return getPunishmentSet(totalID, getMeta());
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<P> getPlayerBanSet() throws BackendException {
+    public @NotNull @Unmodifiable Set<P> getPunishmentSet() throws BackendException {
         return getPunishmentSet(getMeta());
     }
 
@@ -182,10 +192,8 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @return the punishment object representing the applied ban
      * @throws BackendException if there is an error in the backend operation
      */
-    protected @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, @Nullable Component reason, @NotNull Meta meta) throws BackendException {
-        KissenPunishmentNode kissenPunishmentNode = constructPunishmentNode(ban, banOperator, Optional.ofNullable(reason)
-                .map(component -> KissenComponentSerializer.getInstance().getJsonSerializer().serialize(component))
-                .orElse(null));
+    protected @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, boolean apply, @Nullable Component reason, @NotNull Meta meta) throws BackendException {
+        KissenPunishmentNode kissenPunishmentNode = constructPunishmentNode(ban, banOperator, Optional.ofNullable(reason).map(component -> KissenComponentSerializer.getInstance().getJsonSerializer().serialize(component)).orElse(null));
         set(totalID, kissenPunishmentNode, meta);
 
         P punishment = translatePunishment(totalID, kissenPunishmentNode, meta);
@@ -279,6 +287,11 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
         meta.setRecordList("punishment", totalID.toString(), punishmentRecordList);
     }
 
+    public boolean remove(@NotNull B ban)
+    {
+        return cachedBans.removeIf(current -> current.getID() == ban.getID());
+    }
+
     /**
      * Constructs a punishment node based on the given parameters.
      *
@@ -289,11 +302,6 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      */
     protected @NotNull KissenPunishmentNode constructPunishmentNode(@NotNull B ban, @NotNull BanOperator banOperator, @Nullable String reason) {
         return new KissenPunishmentNode(ban, banOperator, reason);
-    }
-
-    public boolean remove(@NotNull B ban)
-    {
-        return cachedBans.removeIf(current -> current.getID() == ban.getID());
     }
 
     public abstract void applyBan(@NotNull P ban);

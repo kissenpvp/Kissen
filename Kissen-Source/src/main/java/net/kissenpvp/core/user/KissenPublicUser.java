@@ -49,6 +49,10 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
         this(uuid, name, null);
     }
 
+    public KissenPublicUser(@NotNull SavableMap savableMap) throws BackendException {
+        this(UUID.fromString(savableMap.getNotNull("id")), savableMap.getNotNull("name"), savableMap);
+    }
+
     /**
      * Creates a public user which is based on the parameter given just an abstract user or a specific player.
      *

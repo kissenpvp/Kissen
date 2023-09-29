@@ -48,7 +48,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
 
     @Override
     public @NotNull Map<String, Object> getStorage() {
-        return KissenCore.getInstance().getImplementation(StorageImplementation.class).getStorage(getId());
+        return KissenCore.getInstance().getImplementation(StorageImplementation.class).getStorage(getSavableID());
     }
 
     @Override
@@ -66,9 +66,9 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
         super.setId(id);
 
         if (meta == null) {
-            meta = getMeta().getData(this.getId())
-                    .map(SavableMap::serialize)
-                    .orElse(new KissenSavableMap(this.getId(), getMeta()));
+            meta = getMeta().getData(this.getSavableID())
+                    .map(SavableMap::serializeSavable)
+                    .orElse(new KissenSavableMap(this.getSavableID(), getMeta()));
 
         }
 
@@ -82,7 +82,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
         if (!meta.containsKey("id")) {
             Map<String, String> newMeta = new HashMap<>(meta);
             newMeta.put("id", this.getRawID());
-            getMeta().add(this.getId(), newMeta);
+            getMeta().add(this.getSavableID(), newMeta);
             meta = newMeta;
             justCreated = true;
         }
@@ -96,7 +96,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
     }
 
     @Override
-    public @NotNull String getId() {
+    public @NotNull String getSavableID() {
         return this.getSaveID() + super.getId();
     }
 
@@ -147,13 +147,13 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
             return false;
         }
 
-        return getId().equals(that.getId());
+        return getSavableID().equals(that.getSavableID());
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + getId().hashCode();
+        result = 31 * result + getSavableID().hashCode();
         return result;
     }
 
@@ -163,9 +163,9 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
     public int softDelete() throws BackendException {
         AtomicInteger count = new AtomicInteger(size());
         getStringArrayListMap().forEach((key, value) -> count.addAndGet(value.size()));
-        this.getMeta().purge(this.getId());
+        this.getMeta().purge(this.getSavableID());
         KissenCore.getInstance().getImplementation(EventImplementation.class).call(new SavableDeletedEvent(this));
-        KissenCore.getInstance().getImplementation(StorageImplementation.class).dropStorage(getId());
+        KissenCore.getInstance().getImplementation(StorageImplementation.class).dropStorage(getSavableID());
         return count.get();
     }
 

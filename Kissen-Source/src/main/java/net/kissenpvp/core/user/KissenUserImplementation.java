@@ -26,6 +26,7 @@ import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.QueryUpdateDirective;
 import net.kissenpvp.core.api.database.savable.SavableMap;
+import net.kissenpvp.core.api.networking.client.entitiy.UnknownPlayerException;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.task.TaskException;
 import net.kissenpvp.core.api.task.TaskImplementation;
@@ -92,6 +93,23 @@ public abstract class KissenUserImplementation implements UserImplementation {
     @Override
     public @NotNull Optional<User> getOnlineUser(@NotNull UUID uuid) {
         return onlineUserSet.stream().filter(userEntry -> userEntry.getRawID().equals(uuid.toString())).findFirst();
+    }
+
+    @Override
+    public @NotNull User getUser(@NotNull String name) throws BackendException {
+        return getOnlineUser().stream().filter(user -> user.getNotNull("name").equals(name)).findFirst().orElseGet(() ->
+        {
+            try {
+                String[][] data = getUserMeta().execute(getUserMeta().select(Column.TOTAL_ID).appendFilter(Column.KEY, "name", FilterType.EQUALS).appendFilter(Column.VALUE, name, FilterType.EQUALS));
+                if(data.length != 0)
+                {
+                    return getUser(UUID.fromString(data[0][0].substring(getUserSaveID().length())));
+                }
+                throw new UnknownPlayerException(name);
+            } catch (BackendException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     @Override

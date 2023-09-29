@@ -34,7 +34,6 @@ import net.kissenpvp.core.message.KissenComponentSerializer;
 import net.kissenpvp.core.time.KissenTemporalObject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -90,7 +89,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
     public @NotNull Optional<Component> getCause() {
         return kissenPunishmentNode.reason()
                 .toOptional()
-                .map(text -> KissenComponentSerializer.getInstance().getMiniSerializer().deserialize(text));
+                .map(text -> KissenComponentSerializer.getInstance().getJsonSerializer().deserialize(text));
     }
 
     @Override
@@ -102,7 +101,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
         //TODO event
         kissenPunishmentNode.reason()
                 .setValue(Optional.ofNullable(cause)
-                        .map(node -> KissenComponentSerializer.getInstance().getMiniSerializer().serialize(node))
+                        .map(node -> KissenComponentSerializer.getInstance().getJsonSerializer().serialize(node))
                         .orElse(null));
         dataWriter.update(kissenPunishmentNode);
     }
@@ -146,7 +145,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
     @Override
     public @NotNull Component getPunishmentText(@NotNull Locale locale) {
 
-        Component banMessage = getCause().map(reason -> Component.translatable("multiplayer.diconnect.banned.reason", reason)).orElse(Component.translatable("multiplayer.diconnect.banned"));
+        Component banMessage = getCause().map(reason -> Component.translatable("multiplayer.disconnect.banned.reason", reason)).orElse(Component.translatable("multiplayer.disconnect.banned"));
         Optional<TranslatableComponent> optionalEnd = getEnd().map(end -> Component.translatable("multiplayer.disconnect.banned.expiration", DateFormat.getDateInstance(DateFormat.SHORT, locale).format(Date.from(end))));
         if(optionalEnd.isPresent())
         {

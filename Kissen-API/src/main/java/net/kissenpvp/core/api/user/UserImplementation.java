@@ -193,6 +193,8 @@ public interface UserImplementation extends Implementation {
      */
     @NotNull User getUser(@NotNull UUID uuid);
 
+    @NotNull User getUser(@NotNull String name) throws BackendException;
+
 
     /**
      * Returns the names of all players who have ever played on the server.
