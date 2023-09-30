@@ -66,16 +66,16 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     public boolean start() {
         KissenLocalizationImplementation kissenLocalizationImplementation = KissenCore.getInstance().getImplementation(KissenLocalizationImplementation.class);
         kissenLocalizationImplementation.register("server.ban.player.banned", new MessageFormat("Player {0} has been banned from this network."));
-        kissenLocalizationImplementation.register("server.ban.player.banned.reason", new MessageFormat("Player {0} has been banned from this network with the reason: \"{1}\"."));
+        kissenLocalizationImplementation.register("server.ban.player.banned.cause", new MessageFormat("Player {0} has been banned from this network with the cause: \"{1}\"."));
 
         kissenLocalizationImplementation.register("server.ban.player.muted", new MessageFormat("Player {0} has been muted on this network."));
-        kissenLocalizationImplementation.register("server.ban.player.muted.reason", new MessageFormat("Player {0} has been muted on this network with the reason: \"{1}\"."));
+        kissenLocalizationImplementation.register("server.ban.player.muted.cause", new MessageFormat("Player {0} has been muted on this network with the cause: \"{1}\"."));
 
         kissenLocalizationImplementation.register("server.ban.player.kicked", new MessageFormat("Player {0} has been kicked on this network."));
-        kissenLocalizationImplementation.register("server.ban.player.kicked.reason", new MessageFormat("Player {0} has been kicked from this network with the reason: \"{1}\"."));
+        kissenLocalizationImplementation.register("server.ban.player.kicked.cause", new MessageFormat("Player {0} has been kicked from this network with the cause: \"{1}\"."));
 
         kissenLocalizationImplementation.register("server.ban.player.warned", new MessageFormat("Player {0} has been warned {1} time(s)."));
-        kissenLocalizationImplementation.register("server.ban.player.warned.reason", new MessageFormat("Player {0} has been warned {1} time(s) with the reason: \"{2}\"."));
+        kissenLocalizationImplementation.register("server.ban.player.warned.cause", new MessageFormat("Player {0} has been warned {1} time(s) with the cause: \"{2}\"."));
 
         kissenLocalizationImplementation.register("server.ban.created.permanent", new MessageFormat("The ban has been created with the ID {0}, designated with the name {1}, classified under the type {2}, and assigned a permanent duration."));
         kissenLocalizationImplementation.register("server.ban.created", new MessageFormat("The ban has been created with the ID {0}, designated with the name {1}, classified under the type {2}, and assigned a duration of {3}."));
@@ -287,6 +287,29 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
         meta.setRecordList("punishment", totalID.toString(), punishmentRecordList);
     }
 
+    /**
+     * This function is responsible for removing an item with a specific identification number from the list of cached bans.
+     * The function operates on the data structure `cachedBans`, which is a list of `B` objects, where `B` is a class or interface type.
+     *
+     * @param ban  An instance of class (or interface) type `B` that is marked with `@NotNull`, denoting that this function expects a non-null object.
+     * The parameter `ban` here carries the ID of the ban which should be removed from `cachedBans`.
+     * <p>
+     * The method calls the `removeIf` method of the `cachedBans` list. `removeIf` is a default method in Java List interface, which removes all
+     * the elements of this list that satisfy the given predicate. The predicate is defined as a lambda function where the identification number
+     * of the current ban (`current.getID()`) is checked to see if it matches the identification number of the `ban` parameter (`ban.getID()`).
+     * <p>
+     * If the predicate returns true (meaning the IDs match), the current item will be removed from the list.
+     *
+     * @return A boolean value. This function will return `true` if at least one item was removed from `cachedBans` (meaning that at least one
+     * `B` object had the same ID as `ban`). If no items were removed, meaning that no object `B` in `cachedBans` had the same ID as `ban`,
+     * the function will return `false`.
+     * <p>
+     * Note that the function does not provide explicit handling for null values in `cachedBans` beyond the `removeIf` method's own exception
+     * handling.
+     * <p>
+     * This function does not modify the `ban` parameter or call any of its methods besides `getID()`, and as far as information flow/possible
+     * side effects are concerned, it treats `ban` as an essentially immutable object.
+     */
     public boolean remove(@NotNull B ban)
     {
         return cachedBans.removeIf(current -> current.getID() == ban.getID());
