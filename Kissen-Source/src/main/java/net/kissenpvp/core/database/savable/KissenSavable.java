@@ -31,6 +31,7 @@ import net.kissenpvp.core.database.savable.event.SavableDeletedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,6 +112,12 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
 
     @Override
     public void set(@NotNull String key, @Nullable String value) {
+
+        if(Arrays.asList(getKeys()).contains(key) && value == null)
+        {
+            throw new IllegalArgumentException(String.format("The key '%s' cannot be assigned a null value. Please provide a non-null value.", key));
+        }
+
         super.set(key, value);
         //TODO
         //sendData(KissenCore.getInstance().getImplementation(NetworkImplementation.class).createPackage("meta_update_entry", getSerializableSavableHandler(), key, value));
