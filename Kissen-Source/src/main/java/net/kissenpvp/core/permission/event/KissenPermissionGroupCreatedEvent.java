@@ -18,9 +18,7 @@
 
 package net.kissenpvp.core.permission.event;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import net.kissenpvp.core.api.permission.PermissionGroup;
 import net.kissenpvp.core.api.permission.event.PermissionGroupCreatedEvent;
 
-@AllArgsConstructor public class KissenPermissionGroupCreatedEvent implements PermissionGroupCreatedEvent { @Getter private final PermissionGroup<?> permissionGroup; }
+public record KissenPermissionGroupCreatedEvent(PermissionGroup<?> permissionGroup) implements PermissionGroupCreatedEvent {}

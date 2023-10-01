@@ -54,5 +54,5 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface PermissionGroupCreatedEvent extends EventClass
 {
-    @NotNull PermissionGroup<?> getPermissionGroup();
+    @NotNull PermissionGroup<?> permissionGroup();
 }
