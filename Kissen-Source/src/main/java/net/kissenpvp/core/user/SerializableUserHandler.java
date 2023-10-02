@@ -28,17 +28,40 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Represents the {@link SerializableUserHandler} class that implements {@link SerializableSavableHandler} interface.
+ * This class provides a mechanism to manipulate users' data and makes it serializable, for data saving purposes.
+ * <p>
+ * The {@link SerializableUserHandler} class has a unique user identifier (UUID) which is used to recognize each
+ * individual user.
+ * <p>
+ * This class is designed to function as an intermediary between the application and the underlying serialization system,
+ * and it ensures unique identification for serialized user's data.
+ * <p>
+ * This is typically a universally unique identifier (UUID).
+ */
 public class SerializableUserHandler implements SerializableSavableHandler {
+
     public final UUID UUID;
 
-    public SerializableUserHandler(java.util.UUID uuid) {
+    /**
+     * Constructs an instance of the {@link SerializableUserHandler} class using a unique identifier (UUID),
+     * assigning the provided UUID to the class's UUID field.
+     * <p>
+     * The UUID provided should be non-null and unique for each {@link SerializableUserHandler} instance to ensure accurate serialization and saving.
+     *
+     * @param uuid the unique identifier to be used for this instance of {@link SerializableUserHandler}. Must be non-null.
+     * @throws IllegalArgumentException If the uuid is null.
+     */
+    public SerializableUserHandler(@NotNull UUID uuid) {
         this.UUID = uuid;
     }
 
     @Override
-    public Savable getSavable() {
+    public @NotNull Savable getSavable() {
         return KissenCore.getInstance().getImplementation(UserImplementation.class).getUser(UUID);
     }
 
@@ -53,9 +76,7 @@ public class SerializableUserHandler implements SerializableSavableHandler {
     }
 
     @Override
-    public void create(@NotNull String name, @NotNull Map<String, String> data) {
-        /* ignored */
-    }
+    public void create(@NotNull String name, @NotNull Map<String, String> data) { /* ignored */ }
 
     @Override
     public void delete() throws BackendException {

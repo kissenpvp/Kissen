@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.user;
 
-import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
@@ -29,8 +28,6 @@ import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.message.localization.settings.HighlightVariables;
-import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,11 +62,8 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
         if (name != null && uuid != null) {
             if (!getNotNull("name").equals(name)) {
                 if (containsKey("name")) {
-                    ((KissenUserImplementation) KissenCore.getInstance()
-                            .getImplementation(UserImplementation.class)).getCachedNames().remove(getNotNull("name"));
-                    KissenCore.getInstance()
-                            .getLogger()
-                            .debug("The user '{}' has changed their name from '{}' to '{}'.", getRawID(), getNotNull("name"), name);
+                    ((KissenUserImplementation) KissenCore.getInstance().getImplementation(UserImplementation.class)).getCachedProfiles().removeIf(userInfoNode -> userInfoNode.name().equals(getNotNull("name")));
+                    KissenCore.getInstance().getLogger().debug("The user '{}' has changed their name from '{}' to '{}'.", getRawID(), getNotNull("name"), name);
                 }
 
                 set("name", name);
@@ -93,10 +87,7 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
     @Override
     public void setup(@NotNull String id, @Nullable Map<String, String> meta) throws SavableInitializeException, BackendException {
         super.setup(id, meta);
-        KissenCore.getInstance()
-                .getImplementation(KissenUserImplementation.class)
-                .getCachedNames()
-                .add(getNotNull("name"));
+        KissenCore.getInstance().getImplementation(KissenUserImplementation.class).getCachedProfiles().add(new UserInfoNode(UUID.fromString(id), getNotNull("name")));
     }
 
     @Override
@@ -109,6 +100,19 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
     public final @NotNull String getSaveID() {
         return ((KissenUserImplementation) KissenCore.getInstance()
                 .getImplementation(UserImplementation.class)).getUserSaveID();
+    }
+
+    @Override
+    public void set(@NotNull String key, @Nullable String value) {
+        String defaultLanguage = KissenCore.getInstance()
+                .getImplementation(LocalizationImplementation.class)
+                .getDefaultLocale()
+                .toString().toLowerCase();
+        if (key.equals("language") && Objects.equals(value, defaultLanguage)) {
+            delete(key); // delete if default language is updated
+            return;
+        }
+        super.set(key, value);
     }
 
     /**
@@ -179,18 +183,5 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
                 }
             }
         }
-    }
-
-    @Override
-    public void set(@NotNull String key, @Nullable String value) {
-        String defaultLanguage = KissenCore.getInstance()
-                .getImplementation(LocalizationImplementation.class)
-                .getDefaultLocale()
-                .toString().toLowerCase();
-        if (key.equals("language") && Objects.equals(value, defaultLanguage)) {
-            delete(key); // delete if default language is updated
-            return;
-        }
-        super.set(key, value);
     }
 }

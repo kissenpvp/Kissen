@@ -20,6 +20,7 @@ package net.kissenpvp.core.user;
 
 import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
+import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.user.User;
@@ -122,5 +123,10 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
             getStorage().put("time_joined", System.currentTimeMillis());
             getStorage().remove("block_networking_update", 0);
         }
+    }
+
+    @Override
+    public @NotNull ObjectMeta getMeta() {
+        return KissenCore.getInstance().getImplementation(KissenUserImplementation.class).getUserMeta();
     }
 }

@@ -136,7 +136,7 @@ public interface UserImplementation extends Implementation {
      * @see #isValid(String)
      * @see PlayerClient#getOnlineTime()
      */
-    boolean isValid(@NotNull UUID uuid) throws BackendException;
+    boolean isValid(@NotNull UUID uuid);
 
     /**
      * Checks whether a player with the specified name has a valid user account in the network's table.
@@ -173,7 +173,7 @@ public interface UserImplementation extends Implementation {
      * @see #isValid(UUID)
      * @see PlayerClient#getOnlineTime()
      */
-    boolean isValid(@NotNull String name) throws BackendException;
+    boolean isValid(@NotNull String name);
 
     /**
      * Returns a user account based on the provided UUID. If the user is not currently online, their account data
@@ -210,7 +210,11 @@ public interface UserImplementation extends Implementation {
      * @return A set of all usernames who have played on the network before.
      * @see User
      */
-    @Unmodifiable @NotNull Set<String> getUserNames();
+    @Unmodifiable @NotNull Set<UserInfo> getUserProfiles();
+
+    @Unmodifiable @NotNull Optional<UserInfo> getCachedUserProfile(@NotNull String name);
+
+    @Unmodifiable @NotNull Optional<UserInfo> getCachedUserProfile(@NotNull UUID uuid);
 
     /**
      * Registers a {@link PlayerSetting} that represents a user-configurable setting, such as the primary theme color.
