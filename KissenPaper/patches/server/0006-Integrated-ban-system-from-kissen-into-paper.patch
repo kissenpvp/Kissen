@@ -1126,7 +1126,7 @@ index 454cee69c217106b840dc5c0019f8f7f80ca3782..ed8a75e7654dd2d9fb578d40a941c8b3
      }
      // Spigot end
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 20d27e9c50e4acd4a49424aadccf6a2741256e6e..912e930068b8b0fe11859d66f0bfc707af875595 100644
+index 75fcd48b691e7a7879baaa7791ecef8c42e48f97..d4af120e214a618bf838251f1ff93f45543f4df7 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -165,7 +165,7 @@ public abstract class PlayerList {
@@ -1134,11 +1134,11 @@ index 20d27e9c50e4acd4a49424aadccf6a2741256e6e..912e930068b8b0fe11859d66f0bfc707
          // CraftBukkit end
  
 -        this.bans = new UserBanList(PlayerList.USERBANLIST_FILE);
-+        this.bans = new net.kissenpvp.paper.ban.KissenPaperPunishmentList(/*PlayerList.USERBANLIST_FILE*/); // KissenPaper - rework ban system
++        this.bans = /*new UserBanList(PlayerList.USERBANLIST_FILE);*/ new net.kissenpvp.paper.ban.KissenPaperPunishmentList(); // KissenPaper - rework ban system
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
-         this.ops = new ServerOpList(PlayerList.OPLIST_FILE);
-         this.whitelist = new UserWhiteList(PlayerList.WHITELIST_FILE);
-@@ -711,37 +711,39 @@ public abstract class PlayerList {
+         this.ops = /*new ServerOpList(PlayerList.OPLIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserOperatorList(); // KissenPaper
+         this.whitelist = /*new UserWhiteList(PlayerList.WHITELIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserWhiteList(); // KissenPaper
+@@ -714,37 +714,39 @@ public abstract class PlayerList {
          Player player = entity.getBukkitEntity();
          PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
  

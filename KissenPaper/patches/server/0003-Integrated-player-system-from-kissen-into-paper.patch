@@ -764,10 +764,10 @@ index 0000000000000000000000000000000000000000..7a22a03f4c65ff2c5cb8d8362802c26f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..2b9ccc1ec087d3bbec9255aa842e07e95bfdf416
+index 0000000000000000000000000000000000000000..6d60c4a461828192d629e5875c95ac8004162a8d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
-@@ -0,0 +1,224 @@
+@@ -0,0 +1,223 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -804,7 +804,6 @@ index 0000000000000000000000000000000000000000..2b9ccc1ec087d3bbec9255aa842e07e9
 +import net.kissenpvp.paper.api.permission.PaperPermissionGroup;
 +import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
 +import net.kissenpvp.paper.api.permission.PaperPrivatePermissionGroup;
-+import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
 +import net.kissenpvp.paper.permission.group.KissenPaperPermissionGroup;
 +import net.kissenpvp.paper.permission.group.KissenPaperPrivatePermissionGroup;
 +import net.kissenpvp.paper.permission.group.KissenPaperPublicPermissionGroup;
@@ -1816,9 +1815,30 @@ index 0000000000000000000000000000000000000000..55de8302538c8e5e85ccdd5f4250f240
 +        getPlayer().setOp(value);
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/user/KissenOperatorDataNode.java b/src/main/java/net/kissenpvp/paper/user/KissenOperatorDataNode.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6e27b52d62505e5669f8b13235aba2cca5f20457
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/KissenOperatorDataNode.java
+@@ -0,0 +1,15 @@
++package net.kissenpvp.paper.user;
++
++import com.mojang.authlib.GameProfile;
++import net.minecraft.server.players.ServerOpListEntry;
++import org.jetbrains.annotations.NotNull;
++
++public record KissenOperatorDataNode(int level, boolean bypassServerLimit)
++{
++
++    public @NotNull ServerOpListEntry getServerOpListEntry(@NotNull GameProfile profile)
++    {
++        return new ServerOpListEntry(profile, level(), bypassServerLimit());
++    }
++
++}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..685492b37d4ebfa0d618d65dc79d96cb03bd43af
+index 0000000000000000000000000000000000000000..03df81935b6b13e5f8dacf910b725181546f335b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
 @@ -0,0 +1,86 @@
@@ -1826,8 +1846,8 @@ index 0000000000000000000000000000000000000000..685492b37d4ebfa0d618d65dc79d96cb
 +
 +import com.mojang.authlib.GameProfile;
 +import com.mojang.authlib.GameProfileRepository;
-+import net.kissenpvp.core.api.database.meta.BackendException;
-+import net.kissenpvp.core.api.user.User;
++import net.kissenpvp.core.api.user.UserImplementation;
++import net.kissenpvp.core.api.user.UserInfo;
 +import net.kissenpvp.core.api.user.UserRepository;
 +import net.minecraft.server.players.GameProfileCache;
 +import org.bukkit.Bukkit;
@@ -1838,6 +1858,7 @@ index 0000000000000000000000000000000000000000..685492b37d4ebfa0d618d65dc79d96cb
 +import java.util.List;
 +import java.util.Optional;
 +import java.util.UUID;
++import java.util.function.Function;
 +
 +/**
 + * KissenPaperProfileCache is a cache specifically designed for KissenPaper profiles.
@@ -1863,29 +1884,24 @@ index 0000000000000000000000000000000000000000..685492b37d4ebfa0d618d65dc79d96cb
 +
 +    @Override
 +    public void add(@NotNull GameProfile profile) {
-+        //TODO
++        //TODO maybe insert players here instead
 +    }
 +
 +    @Nullable
 +    @Override
 +    public GameProfile getProfileIfCached(@NotNull String name) {
-+        return null; //TODO
++        return get(name).orElse(null);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<GameProfile> get(@NotNull String name) {
-+        try {
-+            User user = Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUser(name);
-+            return Optional.of(new GameProfile(UUID.fromString(user.getRawID()), user.getNotNull("name")));
-+        } catch (BackendException backendException) {
-+            throw new RuntimeException("It seems like the backend is not reachable. It's advised to shutdown the server to prevent further data damages or loss.", backendException);
-+        }
++        return Bukkit.getKissen().getImplementation(UserImplementation.class).getCachedUserProfile(name).map(transformUserInfo());
 +    }
++
 +
 +    @Override
 +    public @NotNull Optional<GameProfile> get(@NotNull UUID uuid) {
-+        User user = Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUser(uuid);
-+        return Optional.of(new GameProfile(UUID.fromString(user.getRawID()), user.getNotNull("name")));
++        return Bukkit.getKissen().getImplementation(UserImplementation.class).getCachedUserProfile(uuid).map(transformUserInfo());
 +    }
 +
 +    @Override
@@ -1899,6 +1915,10 @@ index 0000000000000000000000000000000000000000..685492b37d4ebfa0d618d65dc79d96cb
 +        // ignored
 +    }
 +
++    private @NotNull Function<UserInfo, GameProfile> transformUserInfo() {
++        return userInfo -> new GameProfile(userInfo.getUUID(), userInfo.getName());
++    }
++
 +    /**
 +     * Returns the UserRepository object used within this class.
 +     *
@@ -1910,10 +1930,10 @@ index 0000000000000000000000000000000000000000..685492b37d4ebfa0d618d65dc79d96cb
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..aa9b852e279e836c44ef3ddfded134fd14b2508c
+index 0000000000000000000000000000000000000000..77d31929ec28e774955713bce9a965a8b246b282
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
-@@ -0,0 +1,251 @@
+@@ -0,0 +1,258 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1937,6 +1957,7 @@ index 0000000000000000000000000000000000000000..aa9b852e279e836c44ef3ddfded134fd
 +import net.kissenpvp.core.api.base.Kissen;
 +import net.kissenpvp.core.api.database.StorageImplementation;
 +import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 +import net.kissenpvp.core.api.networking.socket.DataPackage;
@@ -1947,6 +1968,7 @@ index 0000000000000000000000000000000000000000..aa9b852e279e836c44ef3ddfded134fd
 +import net.kissenpvp.core.permission.KissenPermissionNode;
 +import net.kissenpvp.core.user.KissenPublicUser;
 +import net.kissenpvp.core.user.KissenUser;
++import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
 +import net.kissenpvp.paper.api.permission.PaperPermission;
 +import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
@@ -2113,7 +2135,12 @@ index 0000000000000000000000000000000000000000..aa9b852e279e836c44ef3ddfded134fd
 +
 +        @Override
 +        public @NotNull String getSaveID() {
-+            return "privateuser";
++            return Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUserSaveID(Context.LOCAL);
++        }
++
++        @Override
++        public @NotNull ObjectMeta getMeta() {
++            return Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUserMeta(Context.LOCAL);
 +        }
 +
 +        @Override
@@ -2167,10 +2194,10 @@ index 0000000000000000000000000000000000000000..aa9b852e279e836c44ef3ddfded134fd
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..33c1cd4ed28df0410382e79c084bfc014ded2ae8
+index 0000000000000000000000000000000000000000..3a381f524da1945b8af75cc7b55b273fc24c1c06
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
-@@ -0,0 +1,99 @@
+@@ -0,0 +1,134 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2192,10 +2219,13 @@ index 0000000000000000000000000000000000000000..33c1cd4ed28df0410382e79c084bfc01
 +package net.kissenpvp.paper.user;
 +
 +import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
 +import net.kissenpvp.core.api.networking.client.entitiy.UnknownPlayerException;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.user.KissenUserImplementation;
++import net.kissenpvp.paper.api.base.Context;
++import org.bukkit.Bukkit;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
 +
@@ -2236,13 +2266,45 @@ index 0000000000000000000000000000000000000000..33c1cd4ed28df0410382e79c084bfc01
 +    @Override
 +    public @NotNull User getUser(@NotNull String name) throws BackendException {
 +        try {
-+            if (!getUserNames().contains(name)) {
++            if (!getUserProfiles().contains(name)) {
 +                throw new UnknownPlayerException(name);
 +            }
 +            return super.getUser(name);
 +        } catch (UnknownPlayerException unknownPlayerException) {
 +            return kissenPaperProfileCache.getUserRepository().getUser(name).join().orElseThrow(() -> new UnknownPlayerException(name));
 +        }
++    }
++
++    /**
++     * Returns the User Save ID for the specified context.
++     *
++     * @param context an enum constant representing the context, either GLOBAL or LOCAL
++     * @return String representing the User Save ID. If context is GLOBAL, the ID is retrieved by getUserSaveID(),
++     * otherwise for LOCAL context, Returns the server's name concatenated with 'privateuser'.
++     */
++    public @NotNull String getUserSaveID(@NotNull Context context)
++    {
++        return switch (context)
++        {
++            case GLOBAL -> getUserSaveID();
++            case LOCAL -> Bukkit.getServer().getName() + "privateuser";
++        };
++    }
++
++    /**
++     * Returns the User MetaData for the specified context.
++     *
++     * @param context an enum constant indicating the context, either GLOBAL or LOCAL
++     * @return ObjectMeta instance representing User's metadata. If context is GLOBAL, the metadata is retrieved by getUserMeta(),
++     * otherwise for LOCAL context, Returns the private metadata available in Bukkit's 'Kissen'.
++     */
++    public @NotNull ObjectMeta getUserMeta(@NotNull Context context)
++    {
++        return switch (context)
++        {
++            case GLOBAL -> getUserMeta();
++            case LOCAL -> Bukkit.getKissen().getPrivateMeta();
++        };
 +    }
 +
 +    /**
@@ -2400,6 +2462,455 @@ index 0000000000000000000000000000000000000000..671da825ee272f8ef7a02e43ca5620df
 +     */
 +    private @NotNull User translate(@NotNull GameProfile gameProfile) throws BackendException {
 +        return new KissenPaperPublicUser(gameProfile.getId(), gameProfile.getName());
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..635706148645761a43f98b2d0afc4feecb911e33
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
+@@ -0,0 +1,251 @@
++package net.kissenpvp.paper.user;
++
++import com.google.gson.JsonObject;
++import com.mojang.authlib.GameProfile;
++import net.kissenpvp.core.api.database.DataImplementation;
++import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.api.database.meta.ObjectMeta;
++import net.kissenpvp.core.api.database.queryapi.Column;
++import net.kissenpvp.core.api.database.queryapi.FilterType;
++import net.kissenpvp.core.api.database.queryapi.QuerySelect;
++import net.kissenpvp.core.api.user.UserImplementation;
++import net.kissenpvp.core.api.user.UserInfo;
++import net.kissenpvp.paper.api.base.Context;
++import net.minecraft.server.players.ServerOpList;
++import net.minecraft.server.players.ServerOpListEntry;
++import net.minecraft.server.players.StoredUserEntry;
++import org.bukkit.Bukkit;
++import org.jetbrains.annotations.Contract;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++import org.jetbrains.annotations.Unmodifiable;
++
++import java.io.File;
++import java.util.Collection;
++import java.util.Collections;
++import java.util.HashSet;
++import java.util.Objects;
++import java.util.Set;
++import java.util.UUID;
++import java.util.concurrent.Executors;
++import java.util.stream.Collectors;
++
++/**
++ * This is a class that extends the functionality of StoredUserList. It provides functionality to manage a list
++ * of users and their operation permissions(data represented by type ServerOpListEntry), related to a game profile
++ * (data represented by type GameProfile).
++ * <p>
++ * An instance of it can be created by providing a file which acts as the storage medium for
++ * this user list.
++ * <p>
++ * This class may provide additions to StoredUserList, capturing behaviors specific to users
++ * who have operator permissions (as denoted by a ServerOpListEntry) linked to a specific game profile.
++ */
++public class KissenUserOperatorList extends ServerOpList {
++
++    private final Set<LinkedOperatorDataNode> linkedOperatorDataNodes;
++
++    /**
++     * This is a class that extends the functionality of StoredUserList. It provides functionality to manage a list
++     * of users and their operation permissions (data represented by type ServerOpListEntry), related to a game profile
++     * (data represented by type GameProfile).
++     * <p>
++     * It is initially not associated with any file storage. Thus, the user list is not loaded from any file nor
++     * does it persist between application invocations if not manually persisted.
++     * <p>
++     * This class may provide additions to StoredUserList, capturing behaviors specific to users
++     * who have operator permissions (as denoted by a ServerOpListEntry) linked to a specific game profile.
++     */
++    public KissenUserOperatorList() {
++        //noinspection DataFlowIssue
++        super(null); // not file based
++        this.linkedOperatorDataNodes = new HashSet<>();
++    }
++
++    @Override
++    public void add(@NotNull ServerOpListEntry entry) {
++        KissenOperatorDataNode operatorDataNode = new KissenOperatorDataNode(entry.getLevel(), entry.getBypassesPlayerLimit());
++        getLinkedOperatorDataNodes().removeIf(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().equals(entry.getUser()));
++        getLinkedOperatorDataNodes().add(new LinkedOperatorDataNode(Objects.requireNonNull(entry.getUser()), operatorDataNode));
++
++        Executors.newSingleThreadExecutor().submit(() -> {
++            try {
++                getLocalUserMeta().setRecord(getLocalUserSaveID() + Objects.requireNonNull(entry.getUser()).getId(), "operator", operatorDataNode);
++            } catch (BackendException backendException) {
++                throw new RuntimeException(String.format("Something went wrong when setting the operator data from user %s.", entry.getUser().getName()), backendException);
++            }
++        });
++    }
++
++    @Nullable
++    @Override
++    public ServerOpListEntry get(@NotNull GameProfile key) {
++        return getLinkedOperatorDataNodes().stream().filter(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().equals(key)).findFirst().map(LinkedOperatorDataNode::getServerOpListEntry).orElse(null);
++    }
++
++    @Override
++    public void remove(@NotNull GameProfile key) {
++        getLinkedOperatorDataNodes().removeIf(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().equals(key));
++        Executors.newSingleThreadExecutor().submit(() -> {
++            try {
++                getLocalUserMeta().delete(getLocalUserSaveID() + Objects.requireNonNull(key.getId(), "operator"));
++            } catch (BackendException backendException) {
++                throw new RuntimeException(String.format("An error occurred when removing operator rights from user %s.", key.getName()), backendException);
++            }
++        });
++    }
++
++    @Override
++    public void remove(@NotNull StoredUserEntry<GameProfile> entry) {
++        remove(Objects.requireNonNull(entry.getUser()));
++    }
++
++    @Override
++    public String @NotNull [] getUserList() {
++        return fetchOperators().stream().map(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().getName()).distinct().toArray(String[]::new);
++    }
++
++    @Override
++    public boolean isEmpty() {
++        return getLinkedOperatorDataNodes().isEmpty();
++    }
++
++    @Override
++    protected boolean contains(@NotNull GameProfile k0) {
++        return getLinkedOperatorDataNodes().stream().anyMatch(gameProfile -> gameProfile.gameProfile().equals(k0));
++    }
++
++    @Override
++    public @NotNull Collection<ServerOpListEntry> getEntries() {
++        return getLinkedOperatorDataNodes().stream().map(LinkedOperatorDataNode::getServerOpListEntry).collect(Collectors.toSet());
++    }
++
++    @Override
++    public void save() {
++        //ignored
++    }
++
++    @Override
++    protected @NotNull StoredUserEntry<GameProfile> createEntry(@NotNull JsonObject json) {
++        throw new UnsupportedOperationException();
++    }
++
++    @Override
++    public @NotNull File getFile() {
++        throw new UnsupportedOperationException();
++    }
++
++    @Override
++    public void load() {
++        getLinkedOperatorDataNodes().clear();
++        getLinkedOperatorDataNodes().addAll(fetchOperators());
++    }
++
++    @Override
++    protected @NotNull String getKeyForUser(@NotNull GameProfile profile) {
++        throw new UnsupportedOperationException();
++    }
++
++    /**
++     * This method fetch operators data from the local user metadata and returns an unmodifiable set of LinkedOperatorDataNode.
++     * Each LinkedOperatorDataNode record holds a GameProfile and a KissenOperatorDataNode which correlates user information and operator data.
++     * <p>
++     * An SQL SELECT query is constructed to fetch the TOTAL_ID and VALUE columns.
++     * Filters are appended to this query to match rows starting with local user SaveID and where KEY equals 'operator'.
++     * The information is fetched into the 'data' array where every array element corresponds to a row from the result.
++     * <p>
++     * The method iterates over each row from the query result:
++     * - Extracts UUID by stripping the SaveID off TOTAL_ID
++     * - Fetches UserInfo from user profiles matching the UUID
++     * - Throws a RuntimeException if no such profile is found
++     * - Constructs KissenOperatorDataNode from the VALUE column data
++     * - The UUID and KissenOperatorDataNode are combined into a new LinkedOperatorDataNode instance and added to the resultant set.
++     * <p>
++     * If any exception is raised during the backend processing, it is wrapped in a runtime exception with an appropriate
++     * error message and thrown, thus indicating the issue with loading operators.
++     * <p>
++     * The method guarantees to return a set of LinkedOperatorDataNode or throw an exception in case of an error.
++     *
++     * @return Set of LinkedOperatorDataNode containing operator data info and user profile
++     * @throws RuntimeException if any error occurs while fetching and processing records from the database
++     */
++    private @NotNull @Unmodifiable Set<LinkedOperatorDataNode> fetchOperators() {
++        try {
++            Set<LinkedOperatorDataNode> result = new HashSet<>();
++
++            QuerySelect select = getLocalUserMeta().select(Column.TOTAL_ID, Column.VALUE).appendFilter(Column.TOTAL_ID, getLocalUserSaveID(), FilterType.START).appendFilter(Column.KEY, "operator", FilterType.EQUALS);
++            String[][] data = getLocalUserMeta().execute(select);
++            for (String[] current : data) {
++                UUID uuid = UUID.fromString(current[0].substring(getLocalUserSaveID().length()));
++                UserInfo userInfo = Bukkit.getKissen().getImplementation(UserImplementation.class).getUserProfiles().stream().filter(currentUserInfo -> currentUserInfo.getUUID().equals(uuid)).findFirst().orElseThrow(() -> new RuntimeException(String.format("Unknown user profile %s.", uuid)));
++                KissenOperatorDataNode kissenOperatorDataNode = Bukkit.getKissen().getImplementation(DataImplementation.class).fromJson(current[1], KissenOperatorDataNode.class);
++
++                result.add(new LinkedOperatorDataNode(new GameProfile(userInfo.getUUID(), userInfo.getName()), kissenOperatorDataNode));
++            }
++            return result;
++        } catch (BackendException backendException) {
++            throw new RuntimeException("Something went wrong when loading all operator having users.", backendException);
++        }
++    }
++
++    /**
++     * Retrieves the local user save ID. This is typically used for persisting user data in the {@link Context#LOCAL}.
++     *
++     * @return saved ID of the local user.
++     */
++    private @NotNull String getLocalUserSaveID() {
++        return Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUserSaveID(Context.LOCAL);
++    }
++
++    /**
++     * Retrieves implementation of {@link KissenPaperUserImplementation} for {@link Context#LOCAL} and gets User Metadata.
++     *
++     * @return object meta of the local user.
++     */
++    private @NotNull ObjectMeta getLocalUserMeta() {
++        return Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUserMeta(Context.LOCAL);
++    }
++
++    /**
++     * Retrieves the set of LinkedOperatorDataNodes.
++     * <p>
++     * This method returns a set that contains all the LinkedOperatorDataNodes
++     * that are currently being managed.
++     *
++     * @return A Set containing all LinkedOperatorDataNodes.
++     * This returned set is not null.
++     */
++    protected @NotNull Set<LinkedOperatorDataNode> getLinkedOperatorDataNodes() {
++        return linkedOperatorDataNodes;
++    }
++
++    /**
++     * This is a record class that encapsulates a GameProfile and a KissenOperatorDataNode
++     * into a single entity, termed as a LinkedOperatorDataNode.
++     * <p>
++     * It provides a method `getServerOpListEntry()`, that utilizes `getServerOpListEntry`
++     * method from `kissenOperatorDataNode` and passes the `gameProfile` from this record.
++     * Resulting a ServerOpListEntry correlating user profile and operator data.
++     * <p>
++     * GameProfile part of this record is user's profile information & KissenOperatorDataNode is operator data.
++     * <p>
++     * The data items stored in a LinkedOperatorDataNode record can be accessed
++     * directly by name.
++     */
++    protected record LinkedOperatorDataNode(@NotNull GameProfile gameProfile,
++                                          @NotNull KissenOperatorDataNode kissenOperatorDataNode) {
++        /**
++         * Returns ServerOpListEntry that associates with this LinkedOperatorDataNode's operator data and game profile.
++         * The ServerOpListEntry is obtained by calling `getServerOpListEntry` method on `kissenOperatorDataNode`
++         * with `gameProfile` passed as parameter.
++         * <p>
++         * The method is expected to return a new ServerOpListEntry for every call.
++         *
++         * @return ServerOpListEntry constructed from gameProfile and kissenOperatorDataNode
++         */
++        @Contract(" -> new")
++        private @NotNull ServerOpListEntry getServerOpListEntry() {
++            return kissenOperatorDataNode.getServerOpListEntry(gameProfile);
++        }
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ecf76e7e10fbf7a66495223611058e2cf2976c48
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
+@@ -0,0 +1,186 @@
++package net.kissenpvp.paper.user;
++
++import com.google.gson.JsonObject;
++import com.mojang.authlib.GameProfile;
++import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.api.database.meta.ObjectMeta;
++import net.kissenpvp.core.api.database.queryapi.Column;
++import net.kissenpvp.core.api.database.queryapi.FilterType;
++import net.kissenpvp.core.api.database.queryapi.QuerySelect;
++import net.kissenpvp.core.api.user.UserImplementation;
++import net.kissenpvp.core.api.user.UserInfo;
++import net.kissenpvp.core.user.UserInfoNode;
++import net.kissenpvp.paper.api.base.Context;
++import net.minecraft.server.players.StoredUserEntry;
++import net.minecraft.server.players.UserWhiteList;
++import net.minecraft.server.players.UserWhiteListEntry;
++import org.bukkit.Bukkit;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++import org.jetbrains.annotations.Unmodifiable;
++
++import java.io.File;
++import java.io.IOException;
++import java.util.Arrays;
++import java.util.Collection;
++import java.util.HashSet;
++import java.util.Objects;
++import java.util.Set;
++import java.util.UUID;
++import java.util.concurrent.Executors;
++import java.util.function.Function;
++import java.util.function.Predicate;
++import java.util.function.Supplier;
++import java.util.stream.Collectors;
++
++
++public class KissenUserWhiteList extends UserWhiteList {
++
++    private final Set<UserInfo> whitelisted;
++
++    public KissenUserWhiteList() {
++        //noinspection DataFlowIssue
++        super(null); // not file based
++        this.whitelisted = new HashSet<>();
++    }
++
++    @Override
++    public @NotNull File getFile() {
++        throw new UnsupportedOperationException();
++    }
++
++    @Nullable
++    @Override
++    public UserWhiteListEntry get(@NotNull GameProfile key) {
++        return getWhitelisted().stream().filter(userInfo -> userInfo.getUUID().equals(key.getId())).map(user -> new UserWhiteListEntry(new GameProfile(user.getUUID(), user.getName()))).findFirst().orElse(null);
++    }
++
++    @Override
++    public boolean isEmpty() {
++        return getWhitelisted().isEmpty();
++    }
++
++    @Override
++    protected boolean contains(@NotNull GameProfile k0) {
++        return getWhitelisted().stream().anyMatch(userInfo -> userInfo.getUUID().equals(k0.getId()));
++    }
++
++    @Override
++    public @NotNull Collection<UserWhiteListEntry> getEntries() {
++        return getWhitelisted().stream().map(userInfo -> new GameProfile(userInfo.getUUID(), userInfo.getName())).map(UserWhiteListEntry::new).collect(Collectors.toSet());
++    }
++
++    @Override
++    public String @NotNull [] getUserList() {
++        return getWhitelisted().stream().map(UserInfo::getName).distinct().toArray(String[]::new);
++    }
++
++    @Override
++    public void add(@NotNull UserWhiteListEntry entry) {
++        if (!new io.papermc.paper.event.server.WhitelistStateUpdateEvent(com.destroystokyo.paper.profile.CraftPlayerProfile.asBukkitCopy(Objects.requireNonNull(entry.getUser())), io.papermc.paper.event.server.WhitelistStateUpdateEvent.WhitelistStatus.ADDED).callEvent()) {
++            return;
++        }
++        UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
++
++        Supplier<UserInfo> createNew = () -> new UserInfoNode(entry.getUser().getId(), entry.getUser().getName()).getUserInfo();
++        Predicate<UserInfo> userInfoPredicate = profile -> Objects.equals(entry.getUser().getId(), profile.getUUID());
++
++        getWhitelisted().removeIf(userInfo -> userInfo.getUUID().equals(entry.getUser().getId()));
++        getWhitelisted().add(userImplementation.getUserProfiles().stream().filter(userInfoPredicate).findFirst().orElseGet(createNew));
++
++        Executors.newSingleThreadExecutor().submit(() -> {
++            try {
++                getLocalUserMeta().setString(getLocalUserSaveID() + Objects.requireNonNull(entry.getUser()).getId(), "whitelist", "1");
++            } catch (BackendException backendException) {
++                throw new RuntimeException(String.format("An error occurred when adding user %s to the whitelist.", entry.getUser().getName()), backendException);
++            }
++        });
++    }
++
++    @Override
++    public void remove(@NotNull GameProfile profile) {
++
++        if (!new io.papermc.paper.event.server.WhitelistStateUpdateEvent(com.destroystokyo.paper.profile.CraftPlayerProfile.asBukkitCopy(profile), io.papermc.paper.event.server.WhitelistStateUpdateEvent.WhitelistStatus.REMOVED).callEvent()) {
++            return;
++        }
++
++        getWhitelisted().removeIf(userInfo -> Objects.equals(profile.getId(), userInfo.getUUID()));
++
++        Executors.newSingleThreadExecutor().submit(() -> {
++            try {
++                getLocalUserMeta().delete(getLocalUserSaveID() + profile.getId(), "whitelist");
++            } catch (BackendException backendException) {
++                throw new RuntimeException(String.format("An error occurred when deleting the whitelist value from user %s.", profile.getName()), backendException);
++            }
++        });
++    }
++
++    @Override
++    public void save() throws IOException {
++        // ignored
++    }
++
++    @Override
++    public void load() throws IOException {
++        getWhitelisted().clear();
++        getWhitelisted().addAll(fetchWhitelistedUsers());
++    }
++
++    @Override
++    public void remove(@NotNull StoredUserEntry<GameProfile> entry) {
++        remove(Objects.requireNonNull(entry.getUser()));
++    }
++
++    @Override
++    protected @NotNull StoredUserEntry<GameProfile> createEntry(@NotNull JsonObject json) {
++        throw new UnsupportedOperationException();
++    }
++
++    @Override
++    protected @NotNull String getKeyForUser(@NotNull GameProfile gameProfile) {
++        throw new UnsupportedOperationException();
++    }
++
++    protected @NotNull Set<UserInfo> getWhitelisted() {
++        return whitelisted;
++    }
++
++    /**
++     * Fetches all whitelisted users from the database.
++     * Each user is identified by their UUID.
++     * If a backend exception is thrown while fetching, it is encapsulated in a RuntimeException.
++     *
++     * @return A set of whitelisted {@link UserInfo} objects. The returned value is unmodifiable to prevent any unwanted modifications.
++     * @throws RuntimeException if there's a backend issue when fetching users
++     */
++    private @NotNull @Unmodifiable Set<UserInfo> fetchWhitelistedUsers() {
++        try {
++            QuerySelect querySelect = getLocalUserMeta().select(Column.TOTAL_ID).appendFilter(Column.KEY, "whitelist", FilterType.EQUALS).appendFilter(Column.VALUE, "1", FilterType.EQUALS);
++
++            Function<UUID, UserInfo> fetchUserProfile = uuid -> Bukkit.getKissen().getImplementation(UserImplementation.class).getCachedUserProfile(uuid).orElse(null);
++            Function<String[], UserInfo> parse = (userData) -> fetchUserProfile.apply(UUID.fromString(userData[0].substring(getLocalUserSaveID().length())));
++
++            return Arrays.stream(getLocalUserMeta().execute(querySelect)).map(parse).filter(Objects::nonNull).collect(Collectors.toSet());
++        } catch (BackendException backendException) {
++            throw new RuntimeException("Something went wrong when fetching all whitelisted users from the database.", backendException);
++        }
++    }
++
++    /**
++     * Retrieves implementation of {@link KissenPaperUserImplementation} for {@link Context#LOCAL} and gets User Metadata.
++     *
++     * @return object meta of the local user.
++     */
++    private @NotNull ObjectMeta getLocalUserMeta() {
++        return Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUserMeta(Context.LOCAL);
++    }
++
++    /**
++     * Retrieves the local user save ID. This is typically used for persisting user data in the {@link Context#LOCAL}.
++     *
++     * @return saved ID of the local user.
++     */
++    private @NotNull String getLocalUserSaveID() {
++        return Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUserSaveID(Context.LOCAL);
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperFallBackRank.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperFallBackRank.java
@@ -2607,6 +3118,19 @@ index a9b2c8cd4dcd3f884e4306bebee9334d3848fce5..c3510492a900bcf2782fa6af33222380
          // Paper start
          final java.nio.file.Path legacyConfigPath = ((File) optionSet.valueOf("paper-settings")).toPath();
          final java.nio.file.Path configDirPath = ((File) optionSet.valueOf("paper-settings-directory")).toPath();
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedPlayerList.java b/src/main/java/net/minecraft/server/dedicated/DedicatedPlayerList.java
+index 935dac757280731bfeb0a8f033cbe315ecac46da..932c83a9d41ddff73d38e87ac7d97fadf5c5b8c2 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedPlayerList.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedPlayerList.java
+@@ -30,7 +30,7 @@ public class DedicatedPlayerList extends PlayerList {
+         this.loadOps();
+         this.loadWhiteList();
+         this.saveOps();
+-        if (!this.getWhiteList().getFile().exists()) {
++        if (/*!this.getWhiteList().getFile().exists()*/ true) { // KissenPaper
+             this.saveWhiteList();
+         }
+ 
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 index ff2dd53e9e943aa929188fd9d4c35498b78c497a..454cee69c217106b840dc5c0019f8f7f80ca3782 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
@@ -2705,15 +3229,29 @@ index f4d903ed4342c3100c30deda291dfd6dd4e1ef40..b04ba26f9e04e31c5d4ba73436bf3492
          private final GameProfile profile;
          final Date expirationDate;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 48d1444fbad1c57738807d0128b94160a5a17a4d..20d27e9c50e4acd4a49424aadccf6a2741256e6e 100644
+index 48d1444fbad1c57738807d0128b94160a5a17a4d..75fcd48b691e7a7879baaa7791ecef8c42e48f97 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -321,6 +321,10 @@ public abstract class PlayerList {
+@@ -167,8 +167,8 @@ public abstract class PlayerList {
+ 
+         this.bans = new UserBanList(PlayerList.USERBANLIST_FILE);
+         this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
+-        this.ops = new ServerOpList(PlayerList.OPLIST_FILE);
+-        this.whitelist = new UserWhiteList(PlayerList.WHITELIST_FILE);
++        this.ops = /*new ServerOpList(PlayerList.OPLIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserOperatorList(); // KissenPaper
++        this.whitelist = /*new UserWhiteList(PlayerList.WHITELIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserWhiteList(); // KissenPaper
+         // CraftBukkit start
+         // this.stats = Maps.newHashMap();
+         // this.advancements = Maps.newHashMap();
+@@ -321,6 +321,13 @@ public abstract class PlayerList {
          // Ensure that player inventory is populated with its viewer
          player.containerMenu.transferTo(player.containerMenu, bukkitPlayer);
  
 +        // KissenPaper start
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.user.KissenUserImplementation.class).loginUser(bukkitPlayer.getUser());
++        if(!org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.user.KissenUserImplementation.class).loginUser(bukkitPlayer.getUser()))
++        {
++            //TODO disconnect player
++        }
 +        // KissenPaper end
 +
          PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(bukkitPlayer, io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
@@ -3284,7 +3822,7 @@ index 017e97c1618b8ee4640b36a0ec1b07026047bfc3..32787c6234ab6884b7ac0f62967ddc24
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..8fcc206acf02691bf5817de3fa087b9d8877ffc1 100644
+index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..358bafc0b9e7cd6d74d4a8cb1b88c6e7452d0c56 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -176,6 +176,39 @@ import org.jetbrains.annotations.NotNull;
@@ -3357,7 +3895,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..8fcc206acf02691bf5817de3fa087b9d
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2422,7 +2478,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2422,7 +2478,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -3370,12 +3908,15 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..8fcc206acf02691bf5817de3fa087b9d
 +                permissibleBase.clearPermissions();
 +            }
 +        }
-+        Bukkit.getKissen().getImplementation(KissenUserImplementation.class).logoutUser(getUser());
++        if(!Bukkit.getKissen().getImplementation(KissenUserImplementation.class).logoutUser(getUser()))
++        {
++            Bukkit.getKissen().getLogger().warn("Player {} was on the server but was not recognized by the system.", getName());
++        }
 +        // KissenPaper end
      }
  
      @Override
-@@ -2768,7 +2833,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2768,7 +2836,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -3384,7 +3925,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..8fcc206acf02691bf5817de3fa087b9d
      }
      // Paper end
      @Override
-@@ -3283,4 +3348,337 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3283,4 +3351,337 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end
