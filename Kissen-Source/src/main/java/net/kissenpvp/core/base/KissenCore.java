@@ -42,7 +42,12 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -146,12 +151,17 @@ public abstract class KissenCore implements Kissen {
     }
 
     public <T extends Implementation> @NotNull T getImplementation(@NotNull Class<T> implementation) {
-        return (T) Optional.ofNullable(this.implementation.get(implementation))
-                .orElseGet(() -> KissenCore.this.implementation.values()
-                        .stream()
-                        .filter(obj -> implementation.isAssignableFrom(obj.getClass()))
-                        .findFirst()
-                        .orElseThrow(ImplementationAbsentException::new));
+        Object obj = this.implementation.get(implementation);
+        if (obj != null) {
+            return implementation.cast(obj);
+        } else {
+            for (Object val : this.implementation.values()) {
+                if (implementation.isAssignableFrom(val.getClass())) {
+                    return implementation.cast(val);
+                }
+            }
+        }
+        throw new ImplementationAbsentException();
     }
 
     private void runOperation(@NotNull OperationState operationState) {
