@@ -21,6 +21,7 @@ package net.kissenpvp.core.database.jdbc;
 import lombok.Getter;
 import net.kissenpvp.core.api.database.connection.DatabaseDriver;
 import net.kissenpvp.core.api.database.connection.MYSQLDatabaseConnection;
+import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
@@ -85,12 +86,8 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     public @NotNull ObjectMeta createObjectMeta(@NotNull String table) {
         return new KissenObjectJDBCMeta(table) {
             @Override
-            public @NotNull PreparedStatement getPreparedStatement(@NotNull String query) throws SQLException {
-                try {
-                    return KissenJDBCDatabaseConnection.this.getPreparedStatement(query);
-                } catch (BackendException backendException) {
-                    throw (SQLException) backendException.getCause();
-                }
+            public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
+                KissenJDBCDatabaseConnection.this.getPreparedStatement(query, preparedStatementExecutor);
             }
         };
     }
@@ -99,29 +96,28 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     public @NotNull Meta createMeta(@NotNull String table, @NotNull String uuidColumn, @NotNull String keyColumn, @NotNull String valueColumn) {
         return new KissenJDBCMeta(table, uuidColumn, keyColumn, valueColumn) {
             @Override
-            public @NotNull PreparedStatement getPreparedStatement(@NotNull String query) throws SQLException {
-                try {
-                    return KissenJDBCDatabaseConnection.this.getPreparedStatement(query);
-                } catch (BackendException backendException) {
-                    throw (SQLException) backendException.getCause();
-                }
+            public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
+                KissenJDBCDatabaseConnection.this.getPreparedStatement(query, preparedStatementExecutor);
             }
         };
     }
 
-    @Override
-    public @NotNull PreparedStatement getPreparedStatement(@NotNull String query) throws BackendException {
+    public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor statementExecutor) {
 
         if (!isConnected()) {
             disconnect(); // clean up broken connection
             connect(); // reconnect if possible
         }
 
-        //noinspection SqlSourceToSinkFlow
-        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            return preparedStatement;
+        try {
+            @SuppressWarnings("SqlSourceToSinkFlow") PreparedStatement preparedStatement = connection.prepareStatement(query);
+            statementExecutor.execute(preparedStatement);
+            preparedStatement.close();
         } catch (SQLException sqlException) {
-            throw new BackendException(sqlException);
+            if (!statementExecutor.handle(sqlException))
+            {
+                throw new BackendException(sqlException);
+            }
         }
     }
 }

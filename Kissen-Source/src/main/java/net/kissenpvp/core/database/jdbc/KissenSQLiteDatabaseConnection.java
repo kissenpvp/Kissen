@@ -32,6 +32,7 @@ public class KissenSQLiteDatabaseConnection extends KissenJDBCDatabaseConnection
         if (!getConnectionString().toLowerCase().startsWith("jdbc:sqlite:")) {
             throw new BackendException(new IllegalStateException("Illegal connection string given to sqlite connection"));
         }
+
         super.connect();
     }
 }

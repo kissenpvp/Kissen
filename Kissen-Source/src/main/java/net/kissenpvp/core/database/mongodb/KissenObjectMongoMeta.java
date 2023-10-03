@@ -31,13 +31,13 @@ import net.kissenpvp.core.database.savable.KissenSavableMap;
 import org.bson.Document;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 import java.util.function.Function;
 
 public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implements ObjectMeta {
+
     public KissenObjectMongoMeta(String table) {
         super(table);
     }

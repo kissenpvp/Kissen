@@ -25,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 public class DatabaseDNS extends OptionString {
     @Override
     public @NotNull String getGroup() {
-        return "table";
+        return "database";
     }
 
     @Override

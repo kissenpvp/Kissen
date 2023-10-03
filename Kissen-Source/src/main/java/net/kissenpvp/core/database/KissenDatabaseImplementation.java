@@ -28,9 +28,13 @@ import net.kissenpvp.core.database.jdbc.KissenMySQLDatabaseConnection;
 import net.kissenpvp.core.database.jdbc.KissenSQLiteDatabaseConnection;
 import net.kissenpvp.core.database.mongodb.KissenMongoDatabaseConnection;
 import net.kissenpvp.core.database.settings.DatabaseDNS;
+import net.kissenpvp.core.database.settings.KeepSQLiteFile;
 import net.kissenpvp.core.reflection.KissenReflectionClass;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -54,8 +58,20 @@ public class KissenDatabaseImplementation implements DatabaseImplementation {
 
         String connectionQuery = KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DatabaseDNS.class);
         DatabaseConnection databaseConnection = databaseImplementation.createConnection("public", connectionQuery);
+        if(!(databaseConnection instanceof KissenSQLiteDatabaseConnection) && !KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(KeepSQLiteFile.class))
+        {
+            deleteObsoleteDatabaseFiles();
+        }
         KissenCore.getInstance().getLogger().info("The application is currently utilizing the backend driver '{}' for the database.", databaseConnection.getDriver());
         return databaseConnection;
+    }
+
+    private void deleteObsoleteDatabaseFiles() {
+        File[] files = Paths.get("").toAbsolutePath().toFile().listFiles((curr, s) -> s.endsWith(".db"));
+        if(files != null)
+        {
+            Arrays.stream(files).filter(file -> !file.delete()).forEach(file -> KissenCore.getInstance().getLogger().error("The system was unable to delete the file {}.", file));
+        }
     }
 
     @Override

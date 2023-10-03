@@ -24,5 +24,5 @@ import org.jetbrains.annotations.NotNull;
 import java.sql.PreparedStatement;
 
 public interface MYSQLDatabaseConnection extends DatabaseConnection {
-    @NotNull PreparedStatement getPreparedStatement(@NotNull String query) throws BackendException;
+    void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) throws BackendException;
 }

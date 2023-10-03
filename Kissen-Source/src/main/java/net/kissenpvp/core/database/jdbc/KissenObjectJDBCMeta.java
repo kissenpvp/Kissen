@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.database.jdbc;
 
+import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
@@ -25,11 +26,8 @@ import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.QuerySelect;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
-import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.KissenSavableMap;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.sql.PreparedStatement;
@@ -103,37 +101,30 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
     }
 
     @Override
-    public void add(@NotNull String id, @Nullable Map<String, String> data) throws BackendException {
-
-        try {
-            PreparedStatement deleteStatement = getPreparedStatement("DELETE FROM " + getTable() + " WHERE " + getTotalIDColumn() + " = ?;");
-            deleteStatement.setString(1, id);
-            spawnThread(id, "", data, mapWriter(), deleteStatement); //TODO key does not worki worki like this
-        } catch (SQLException sqlException) {
-            throw new BackendException(sqlException);
-        }
+    public void add(@NotNull String id, @NotNull Map<String, String> data) throws BackendException {
+        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn()), new PreparedStatementExecutor() {
+            @Override
+            public void execute(@NotNull PreparedStatement preparedStatement) throws SQLException {
+                for(Map.Entry<String, String> current : data.entrySet())
+                {
+                    preparedStatement.setString(1, id);
+                    preparedStatement.setString(2, current.getKey());
+                    preparedStatement.setString(3, current.getValue());
+                    preparedStatement.addBatch();
+                }
+                preparedStatement.executeBatch();
+            }
+        });
     }
 
     @Override
-    public @NotNull Optional<SavableMap> getData(@NotNull String totalId) {
-        Map<String, SavableMap> data = new HashMap<>();
-        try {
-            data.putAll(processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, totalId, FilterType.EQUALS)));
-        } catch (BackendException sqlException) {
-            KissenCore.getInstance().getLogger().error("Could not read data from database. This can lead to unwanted behaviour, it's recommended to shut down the server to prevent any harm to the servers data.", sqlException);
-        }
-        return Optional.ofNullable(data.get(totalId));
+    public @NotNull Optional<SavableMap> getData(@NotNull String totalId)  {
+        return Optional.ofNullable(processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, totalId, FilterType.EQUALS)).get(totalId));
     }
 
     @Override
     public @Unmodifiable @NotNull <T extends Savable> Map<@NotNull String, @NotNull SavableMap> getData(@NotNull T savable) {
-        Map<String, SavableMap> data = new HashMap<>();
-        try {
-            data.putAll(processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, savable.getSaveID(),
-                    FilterType.START)));
-        } catch (BackendException sqlException) {
-            KissenCore.getInstance().getLogger().error("Could not read data from database. This can lead to unwanted behaviour, it's recommended to shut down the server to prevent any harm to the servers data.", sqlException);
-        }
+        Map<String, SavableMap> data = new HashMap<>(processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, savable.getSaveID(), FilterType.START)));
         return Collections.unmodifiableMap(data);
     }
 
@@ -153,46 +144,5 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
             dataContainer.put(totalID, savableMap);
         }
         return dataContainer;
-    }
-
-    /**
-     * Returns a pure function that writes a map of string key-value pairs to the underlying database table.
-     *
-     * <p>
-     * This method returns a writer that can be used to insert or update a map of string key-value pairs
-     * into the database table associated with the current object instance.
-     * The map represents the data to be written, where each key-value pair corresponds to a column-value mapping in
-     * the table.
-     * The totalID1 parameter is used as the identifier for the dataset or table where the data will be written.
-     * </p>
-     *
-     * <p>
-     * The returned writer implementation utilizes prepared statements to efficiently execute batch insert operations.
-     * It iterates over the provided map, sets the values in the prepared statement based on the key-value pairs,
-     * and executes the batch operation to insert the data into the table.
-     * </p>
-     *
-     * @return A non-null writer implementation that can be used to write a map of string key-value pairs to the
-     * database table.
-     * @see Writer
-     * @see PreparedStatement
-     * @see #getPreparedStatement(String)
-     * @see #getTable()
-     */
-    @Contract(pure = true)
-    private @NotNull Writer<Map<String, String>> mapWriter() {
-        return (totalID1, key, value) ->
-        {
-            PreparedStatement preparedStatement = getPreparedStatement("INSERT INTO " + getTable() + " (uuid, identifier, value) VALUES (?, ?, ?);");
-
-            for (Map.Entry<String, String> entry : value.entrySet()) {
-                preparedStatement.setString(1, totalID1);
-                preparedStatement.setString(2, entry.getKey());
-                preparedStatement.setString(3, entry.getValue());
-                preparedStatement.addBatch();
-            }
-            preparedStatement.executeBatch();
-            preparedStatement.close();
-        };
     }
 }
