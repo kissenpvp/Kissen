@@ -73,7 +73,7 @@ index 0000000000000000000000000000000000000000..8f6f824aa92c7dd0c4bd28d2c8fef974
 +    @NotNull ObjectMeta getPrivateMeta();
 +}
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index f78b5fd3c3347d28da58777bff88903d2eb140f6..919fbe9fa5ee264023ea2dbdaa3db1bee352c1f9 100644
+index f78b5fd3c3347d28da58777bff88903d2eb140f6..decde953f1ec5ff7d50fcb949309c5a657856884 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
 @@ -2756,4 +2756,17 @@ public final class Bukkit {
@@ -83,7 +83,7 @@ index f78b5fd3c3347d28da58777bff88903d2eb140f6..919fbe9fa5ee264023ea2dbdaa3db1be
 +
 +    // KissenPaper start
 +    private static net.kissenpvp.paper.api.base.PaperKissen kissen;
-+    public static net.kissenpvp.paper.api.base.PaperKissen getKissen() {
++    public static @org.jetbrains.annotations.NotNull net.kissenpvp.paper.api.base.PaperKissen getKissen() {
 +        return kissen;
 +    }
 +    public static void setKissen(@NotNull net.kissenpvp.paper.api.base.PaperKissen kissen) {
