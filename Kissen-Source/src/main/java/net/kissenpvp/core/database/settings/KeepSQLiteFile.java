@@ -16,6 +16,6 @@ public class KeepSQLiteFile extends OptionBoolean {
 
     @Override
     public @NotNull Boolean getDefault() {
-        return false;
+        return true;
     }
 }

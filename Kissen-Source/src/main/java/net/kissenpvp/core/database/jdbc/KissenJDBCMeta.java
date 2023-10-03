@@ -82,7 +82,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     public @NotNull @Unmodifiable List<String> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException {
 
         AtomicReference<List<String>> listAtomicReference = new AtomicReference<>(new ArrayList<>());
-        getPreparedStatement("SELECT %s FROM %s WHERE %s = ? AND %s = ?;", (preparedStatement ->
+        getPreparedStatement(String.format("SELECT %s FROM %s WHERE %s = ? AND %s = ?;", getValueColumn(), getTable(), getTotalIDColumn(), getValueColumn()), (preparedStatement ->
         {
             preparedStatement.setString(1, totalID);
             preparedStatement.setString(2, key);
