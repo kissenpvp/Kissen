@@ -1838,19 +1838,21 @@ index 0000000000000000000000000000000000000000..6e27b52d62505e5669f8b13235aba2cc
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..03df81935b6b13e5f8dacf910b725181546f335b
+index 0000000000000000000000000000000000000000..191afa8a18bc693545ccce5e4dc2322182198a70
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
-@@ -0,0 +1,86 @@
+@@ -0,0 +1,97 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.mojang.authlib.GameProfile;
 +import com.mojang.authlib.GameProfileRepository;
++import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.UserInfo;
 +import net.kissenpvp.core.api.user.UserRepository;
 +import net.minecraft.server.players.GameProfileCache;
 +import org.bukkit.Bukkit;
++import org.jetbrains.annotations.Contract;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +
@@ -1895,13 +1897,12 @@ index 0000000000000000000000000000000000000000..03df81935b6b13e5f8dacf910b725181
 +
 +    @Override
 +    public @NotNull Optional<GameProfile> get(@NotNull String name) {
-+        return Bukkit.getKissen().getImplementation(UserImplementation.class).getCachedUserProfile(name).map(transformUserInfo());
++        return Bukkit.getKissen().getImplementation(UserImplementation.class).getCachedUserProfile(name).map(transformUserInfo()).or(() -> getUserRepository().getUser(name).join().map(translateUser()));
 +    }
-+
 +
 +    @Override
 +    public @NotNull Optional<GameProfile> get(@NotNull UUID uuid) {
-+        return Bukkit.getKissen().getImplementation(UserImplementation.class).getCachedUserProfile(uuid).map(transformUserInfo());
++        return Bukkit.getKissen().getImplementation(UserImplementation.class).getCachedUserProfile(uuid).map(transformUserInfo()).or(() -> getUserRepository().getUser(uuid).join().map(translateUser()));
 +    }
 +
 +    @Override
@@ -1926,6 +1927,16 @@ index 0000000000000000000000000000000000000000..03df81935b6b13e5f8dacf910b725181
 +     */
 +    public @NotNull UserRepository getUserRepository() {
 +        return userRepository;
++    }
++
++    /**
++     * Returns a Function that can be used to translate a User object into a GameProfile.
++     *
++     * @return Function that translates a User object into a GameProfile
++     */
++    @Contract(pure = true)
++    private @NotNull Function<User, GameProfile> translateUser() {
++        return user -> new GameProfile(UUID.fromString(user.getRawID()), user.getNotNull("name"));
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
