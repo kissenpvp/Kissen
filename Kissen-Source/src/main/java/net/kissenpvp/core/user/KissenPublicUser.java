@@ -87,7 +87,9 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
     @Override
     public void setup(@NotNull String id, @Nullable Map<String, String> meta) throws SavableInitializeException, BackendException {
         super.setup(id, meta);
-        KissenCore.getInstance().getImplementation(KissenUserImplementation.class).getCachedProfiles().add(new UserInfoNode(UUID.fromString(id), getNotNull("name")));
+
+        UserInfoNode user = new UserInfoNode(UUID.fromString(id), getNotNull("name"));
+        KissenCore.getInstance().getImplementation(KissenUserImplementation.class).cacheProfile(user);
     }
 
     @Override

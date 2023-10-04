@@ -1,8 +1,10 @@
 package net.kissenpvp.core.user;
 
 import net.kissenpvp.core.api.user.UserInfo;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -40,5 +42,24 @@ public record UserInfoNode(@NotNull UUID uuid, @NotNull String name) {
                 return name;
             }
         };
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        UserInfoNode that = (UserInfoNode) object;
+        return Objects.equals(uuid, that.uuid);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(uuid);
+    }
+
+    @Contract(pure = true)
+    @Override
+    public @NotNull String toString() {
+        return "UserInfoNode{uuid=" + uuid + ", name='" + name + '\'' + '}';
     }
 }

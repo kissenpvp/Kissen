@@ -6,10 +6,10 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..e98a60a3fa6d40df09de156b0f6bf7e08c5537bb
+index 0000000000000000000000000000000000000000..42bdaa6c19563943b5f56720704e3d0c457a7f09
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
-@@ -0,0 +1,312 @@
+@@ -0,0 +1,313 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -36,6 +36,7 @@ index 0000000000000000000000000000000000000000..e98a60a3fa6d40df09de156b0f6bf7e0
 +import net.kissenpvp.core.base.KissenCore;
 +import net.kissenpvp.core.command.KissenCommandImplementation;
 +import net.kissenpvp.core.command.argument.MethodEvaluator;
++import net.kissenpvp.core.command.handler.CommandExceptionHandler;
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 +import net.kissenpvp.paper.api.command.KissenCommand;
 +import net.kissenpvp.paper.api.command.PaperArgumentParser;
@@ -43,15 +44,13 @@ index 0000000000000000000000000000000000000000..e98a60a3fa6d40df09de156b0f6bf7e0
 +import net.kissenpvp.paper.command.command.KissenPaperAbstractCommand;
 +import net.kissenpvp.paper.command.command.plugin.KissenPaperPluginCommand;
 +import net.kissenpvp.paper.command.command.system.KissenPaperCommand;
++import net.kissenpvp.paper.command.handler.CompletionExceptionHandler;
++import net.kissenpvp.paper.command.handler.ProfileNotFoundExceptionHandler;
 +import net.kissenpvp.paper.command.handler.PlayerExceptionHandler;
 +import net.kissenpvp.paper.command.executor.KissenPaperCommandExecutor;
 +import net.kissenpvp.paper.command.executor.KissenPaperCompleteExecutor;
 +import net.kissenpvp.paper.command.parser.*;
 +import net.kissenpvp.paper.command.target.KissenPaperTargetValidator;
-+import net.minecraft.commands.Commands;
-+import net.minecraft.commands.arguments.GameProfileArgument;
-+import net.minecraft.commands.arguments.MessageArgument;
-+import net.minecraft.network.chat.Component;
 +import org.bukkit.Bukkit;
 +import org.bukkit.OfflinePlayer;
 +import org.bukkit.command.Command;
@@ -100,6 +99,8 @@ index 0000000000000000000000000000000000000000..e98a60a3fa6d40df09de156b0f6bf7e0
 +
 +        //Exception handler
 +        registerHandler(new PlayerExceptionHandler());
++        registerHandler(new CompletionExceptionHandler());
++        registerHandler(new ProfileNotFoundExceptionHandler());
 +    }
 +
 +    @Override
@@ -1342,6 +1343,30 @@ index 0000000000000000000000000000000000000000..e5453caa56d556e8c7b7e1c541369014
 +    }
 +
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/command/handler/CompletionExceptionHandler.java b/src/main/java/net/kissenpvp/paper/command/handler/CompletionExceptionHandler.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6290ac49c5c5e2352b46b2b1d2e5240ce97150eb
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/command/handler/CompletionExceptionHandler.java
+@@ -0,0 +1,18 @@
++package net.kissenpvp.paper.command.handler;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.base.KissenCore;
++import net.kissenpvp.core.command.KissenCommandImplementation;
++import net.kissenpvp.paper.api.command.PaperCommandExceptionHandler;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Optional;
++import java.util.concurrent.CompletionException;
++
++public class CompletionExceptionHandler implements PaperCommandExceptionHandler<CompletionException> {
++    @Override
++    public boolean handle(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull CompletionException throwable) {
++        return Optional.ofNullable(throwable.getCause()).map(cause -> KissenCore.getInstance().getImplementation(KissenCommandImplementation.class).handle(commandPayload, cause)).orElse(false);
++    }
++}
 diff --git a/src/main/java/net/kissenpvp/paper/command/handler/PlayerExceptionHandler.java b/src/main/java/net/kissenpvp/paper/command/handler/PlayerExceptionHandler.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..3109a2d03d33758a89ec9e23f77d3572deda8728
@@ -1365,12 +1390,33 @@ index 0000000000000000000000000000000000000000..3109a2d03d33758a89ec9e23f77d3572
 +        return true;
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/command/handler/ProfileNotFoundExceptionHandler.java b/src/main/java/net/kissenpvp/paper/command/handler/ProfileNotFoundExceptionHandler.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..28614cc43e212d3db66c898ad0a9aa39c2d7a609
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/command/handler/ProfileNotFoundExceptionHandler.java
+@@ -0,0 +1,15 @@
++package net.kissenpvp.paper.command.handler;
++
++import com.mojang.authlib.yggdrasil.ProfileNotFoundException;
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.paper.api.command.PaperCommandExceptionHandler;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++
++public class ProfileNotFoundExceptionHandler implements PaperCommandExceptionHandler<ProfileNotFoundException> {
++    @Override
++    public boolean handle(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull ProfileNotFoundException throwable) {
++        commandPayload.getSender().sendMessage("This player seems to have no mojang account.");
++        return true;
++    }
++}
 diff --git a/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java b/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..bfc553907ade3b3753852ed3e287d9d1e2035af2
+index 0000000000000000000000000000000000000000..a7521daf4c1d0e9f9661791007f3efab1b967868
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java
-@@ -0,0 +1,57 @@
+@@ -0,0 +1,56 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1421,7 +1467,6 @@ index 0000000000000000000000000000000000000000..bfc553907ade3b3753852ed3e287d9d1
 +            }
 +            return player;
 +        }
-+
 +        catch (NullPointerException nullPointerException)
 +        {
 +            throw new PlayerOfflineException(input);

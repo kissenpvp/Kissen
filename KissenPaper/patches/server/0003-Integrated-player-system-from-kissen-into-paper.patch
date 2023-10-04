@@ -151,10 +151,10 @@ index 0000000000000000000000000000000000000000..9c8dd9e8cbcfa11056597821e86ed59c
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..22a3009da1ce92c6a4337e24e4e3fae7ec5ab9fc
+index 0000000000000000000000000000000000000000..aad926d0bcdbe079fa86adc043a297c33ad4d918
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
-@@ -0,0 +1,346 @@
+@@ -0,0 +1,345 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -217,8 +217,7 @@ index 0000000000000000000000000000000000000000..22a3009da1ce92c6a4337e24e4e3fae7
 +    public @NotNull User getUser() {
 +        return Bukkit.getKissen()
 +                .getImplementation(UserImplementation.class)
-+                .getOnlineUser(getUniqueId())
-+                .orElseThrow(IllegalStateException::new);
++                .getUser(getUniqueId());
 +    }
 +
 +    @Override
@@ -1838,10 +1837,10 @@ index 0000000000000000000000000000000000000000..6e27b52d62505e5669f8b13235aba2cc
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..191afa8a18bc693545ccce5e4dc2322182198a70
+index 0000000000000000000000000000000000000000..dd5dbf555dc0ba2c939d510d3fb7e829933d9f36
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
-@@ -0,0 +1,97 @@
+@@ -0,0 +1,98 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.mojang.authlib.GameProfile;
@@ -1850,6 +1849,9 @@ index 0000000000000000000000000000000000000000..191afa8a18bc693545ccce5e4dc23221
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.UserInfo;
 +import net.kissenpvp.core.api.user.UserRepository;
++import net.kissenpvp.core.base.KissenCore;
++import net.kissenpvp.core.user.KissenUserImplementation;
++import net.kissenpvp.core.user.UserInfoNode;
 +import net.minecraft.server.players.GameProfileCache;
 +import org.bukkit.Bukkit;
 +import org.jetbrains.annotations.Contract;
@@ -1885,9 +1887,7 @@ index 0000000000000000000000000000000000000000..191afa8a18bc693545ccce5e4dc23221
 +    }
 +
 +    @Override
-+    public void add(@NotNull GameProfile profile) {
-+        //TODO maybe insert players here instead
-+    }
++    public void add(@NotNull GameProfile profile) { /* moved to net.kissenpvp.core.user.KissenPublicUser#setup(String, Map) */ }
 +
 +    @Nullable
 +    @Override
@@ -3269,7 +3269,7 @@ index 48d1444fbad1c57738807d0128b94160a5a17a4d..75fcd48b691e7a7879baaa7791ecef8c
          this.cserver.getPluginManager().callEvent(playerJoinEvent);
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index 03fc90a470c0f63d44161843cac88bea09166858..90054c751ba8ed69cbcd978fba3f84b06e97a740 100644
+index 03fc90a470c0f63d44161843cac88bea09166858..5df67de1b1d41d2b36979f987bf62ecc492d3062 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -34,6 +34,44 @@ import org.bukkit.metadata.MetadataValue;
@@ -3317,39 +3317,50 @@ index 03fc90a470c0f63d44161843cac88bea09166858..90054c751ba8ed69cbcd978fba3f84b0
  @SerializableAs("Player")
  public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializable {
      private static final org.slf4j.Logger LOGGER = com.mojang.logging.LogUtils.getLogger(); // Paper
-@@ -41,6 +79,26 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -41,6 +79,14 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
      private final CraftServer server;
      private final PlayerDataStorage storage;
  
 +    // KissenPaper start
-+    private final Permissible permissible = new KissenPaperPlayerPermissible(this);
-+    private final KissenPaperPlayerClient kissenPaperPlayerClient = new KissenPaperPlayerClient() {
-+        @Override
-+        public @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException {
-+            return (PaperPermissible) permissible;
-+        }
-+
-+        @Override
-+        public @NotNull UUID getUniqueId() {
-+            return CraftOfflinePlayer.this.getUniqueId();
-+        }
-+
-+        @Override
-+        public boolean isConnected() {
-+            return false;
-+        }
++    private final Permissible permissible = new KissenPaperPlayerPermissible(this) {
++        @Override public void permissionUpdate() { /* ignored */ }
++        @Override public void unsubscribe() { /* ignored */ }
 +    };
++    private KissenPaperPlayerClient kissenPaperPlayerClient;
 +    // KissenPaper end
 +
      protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
          this.server = server;
          this.profile = profile;
-@@ -567,4 +625,352 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -567,4 +613,375 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
              manager.save();
          }
      }
 +
-+    // KissenPaper start - integrate user things
++    // KissenPaper start - integrate kissen user
++
++    private @NotNull KissenPaperPlayerClient getKissenPaperPlayerClient()
++    {
++        if(kissenPaperPlayerClient == null) {
++            kissenPaperPlayerClient = new KissenPaperPlayerClient() {
++                @Override
++                public @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException {
++                    return (PaperPermissible) permissible;
++                }
++
++                @Override
++                public @NotNull UUID getUniqueId() {
++                    return CraftOfflinePlayer.this.getUniqueId();
++                }
++
++                @Override
++                public boolean isConnected() {
++                    return false;
++                }
++            };
++        }
++        return kissenPaperPlayerClient;
++    }
 +
 +    @Override
 +    public final boolean isClient() {
@@ -3358,342 +3369,342 @@ index 03fc90a470c0f63d44161843cac88bea09166858..90054c751ba8ed69cbcd978fba3f84b0
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException {
-+        return kissenPaperPlayerClient.getAltAccounts();
++        return getKissenPaperPlayerClient().getAltAccounts();
 +    }
 +
 +    @Override
 +    public @NotNull UUID getTotalID() {
-+        return kissenPaperPlayerClient.getTotalID();
++        return getKissenPaperPlayerClient().getTotalID();
 +    }
 +
 +    @Override
 +    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException {
-+        return kissenPaperPlayerClient.punish(ban, banOperator);
++        return getKissenPaperPlayerClient().punish(ban, banOperator);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException {
-+        return kissenPaperPlayerClient.punish(ban, banOperator, reason);
++        return getKissenPaperPlayerClient().punish(ban, banOperator, reason);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<PaperPunishment> getBan(@NotNull String id) throws BackendException {
-+        return kissenPaperPlayerClient.getBan(id);
++        return getKissenPaperPlayerClient().getBan(id);
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable List<PaperPunishment> getBanHistory() throws BackendException {
-+        return kissenPaperPlayerClient.getBanHistory();
++        return getKissenPaperPlayerClient().getBanHistory();
 +    }
 +
 +    @Override
 +    public @NotNull Component displayName() {
-+        return kissenPaperPlayerClient.displayName();
++        return getKissenPaperPlayerClient().displayName();
 +    }
 +
 +    @Override
 +    public @NotNull Component styledRankName() {
-+        return kissenPaperPlayerClient.styledRankName();
++        return getKissenPaperPlayerClient().styledRankName();
 +    }
 +
 +    @Override
 +    public @NotNull Set<Suffix> getSuffixSet() {
-+        return kissenPaperPlayerClient.getSuffixSet();
++        return getKissenPaperPlayerClient().getSuffixSet();
 +    }
 +
 +    @Override
 +    public @NotNull Optional<Suffix> getSuffix(@NotNull String name) {
-+        return kissenPaperPlayerClient.getSuffix(name);
++        return getKissenPaperPlayerClient().getSuffix(name);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
-+        return kissenPaperPlayerClient.setSuffix(name, content);
++        return getKissenPaperPlayerClient().setSuffix(name, content);
 +    }
 +
 +    @Override
 +    public boolean deleteSuffix(@NotNull String name) {
-+        return kissenPaperPlayerClient.deleteSuffix(name);
++        return getKissenPaperPlayerClient().deleteSuffix(name);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<Suffix> getSelectedSuffix() {
-+        return kissenPaperPlayerClient.getSelectedSuffix();
++        return getKissenPaperPlayerClient().getSelectedSuffix();
 +    }
 +
 +    @Override
 +    public void setSelectedSuffix(@NotNull String name) throws NullPointerException {
-+        kissenPaperPlayerClient.setSelectedSuffix(name);
++        getKissenPaperPlayerClient().setSelectedSuffix(name);
 +    }
 +
 +    @Override
 +    public long getOnlineTime() {
-+        return kissenPaperPlayerClient.getOnlineTime();
++        return getKissenPaperPlayerClient().getOnlineTime();
 +    }
 +
 +    @Override
 +    public @NotNull User getUser() {
-+        return kissenPaperPlayerClient.getUser();
++        return getKissenPaperPlayerClient().getUser();
 +    }
 +
 +    @Override
 +    public @NotNull <X> UserSetting<X> getUserSetting(Class<? extends PlayerSetting<X>> settingClass) {
-+        return kissenPaperPlayerClient.getUserSetting(settingClass);
++        return getKissenPaperPlayerClient().getUserSetting(settingClass);
 +    }
 +
 +    @Override
 +    public @NotNull Theme getTheme() {
-+        return kissenPaperPlayerClient.getTheme();
++        return getKissenPaperPlayerClient().getTheme();
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable List<PaperPlayerRank> getRankHistory() {
-+        return kissenPaperPlayerClient.getRankHistory();
++        return getKissenPaperPlayerClient().getRankHistory();
 +    }
 +
 +    @Override
 +    public @NotNull PaperPlayerRank getRank() {
-+        return kissenPaperPlayerClient.getRank();
++        return getKissenPaperPlayerClient().getRank();
 +    }
 +
 +    @Override
 +    public @NotNull PaperPlayerRank grantRank(@NotNull Rank rank) {
-+        return kissenPaperPlayerClient.grantRank(rank);
++        return getKissenPaperPlayerClient().grantRank(rank);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPlayerRank grantRank(@NotNull Rank rank, @Nullable AccurateDuration accurateDuration) {
-+        return kissenPaperPlayerClient.grantRank(rank, accurateDuration);
++        return getKissenPaperPlayerClient().grantRank(rank, accurateDuration);
 +    }
 +
 +    @Override
 +    public @NotNull Locale getCurrentLocale() {
-+        return kissenPaperPlayerClient.getCurrentLocale();
++        return getKissenPaperPlayerClient().getCurrentLocale();
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<@NotNull PaperOnlinePlayerClient> getOnlineAltAccounts() {
-+        return kissenPaperPlayerClient.getOnlineAltAccounts();
++        return getKissenPaperPlayerClient().getOnlineAltAccounts();
 +    }
 +
 +    @Override
 +    public @NotNull Set<Suffix> getSuffixSet(@NotNull Context context) {
-+        return kissenPaperPlayerClient.getSuffixSet(context);
++        return getKissenPaperPlayerClient().getSuffixSet(context);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<Suffix> getSuffix(@NotNull String name, @NotNull Context context) {
-+        return kissenPaperPlayerClient.getSuffix(name, context);
++        return getKissenPaperPlayerClient().getSuffix(name, context);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content, @NotNull Context context) {
-+        return kissenPaperPlayerClient.setSuffix(name, content, context);
++        return getKissenPaperPlayerClient().setSuffix(name, content, context);
 +    }
 +
 +    @Override
 +    public boolean deleteSuffix(@NotNull String name, @NotNull Context context) {
-+        return kissenPaperPlayerClient.deleteSuffix(name, context);
++        return getKissenPaperPlayerClient().deleteSuffix(name, context);
 +    }
 +
 +    @Override
 +    public void setSelectedSuffix(@NotNull String name, @NotNull Context context) throws NullPointerException {
-+        kissenPaperPlayerClient.setSelectedSuffix(name, context);
++        getKissenPaperPlayerClient().setSelectedSuffix(name, context);
 +    }
 +
 +    @Override
 +    public long getOnlineTime(@NotNull Context context) {
-+        return kissenPaperPlayerClient.getOnlineTime(context);
++        return getKissenPaperPlayerClient().getOnlineTime(context);
 +    }
 +
 +    @Override
 +    public long getLastPlayed(@NotNull Context context) {
-+        return kissenPaperPlayerClient.getLastPlayed(context);
++        return getKissenPaperPlayerClient().getLastPlayed(context);
 +    }
 +
 +    @Override
 +    public @NotNull User getUser(@NotNull Context context) {
-+        return kissenPaperPlayerClient.getUser(context);
++        return getKissenPaperPlayerClient().getUser(context);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException {
-+        return kissenPaperPlayerClient.getPermissible();
++        return getKissenPaperPlayerClient().getPermissible();
 +    }
 +
 +    @Override
 +    public boolean isPermissionSet(@NotNull String name) {
-+        return kissenPaperPlayerClient.isPermissionSet(name);
++        return getKissenPaperPlayerClient().isPermissionSet(name);
 +    }
 +
 +    @Override
 +    public boolean isPermissionSet(@NotNull Permission perm) {
-+        return kissenPaperPlayerClient.isPermissionSet(perm);
++        return getKissenPaperPlayerClient().isPermissionSet(perm);
 +    }
 +
 +    @Override
 +    public boolean hasPermission(@NotNull String name) {
-+        return kissenPaperPlayerClient.hasPermission(name);
++        return getKissenPaperPlayerClient().hasPermission(name);
 +    }
 +
 +    @Override
 +    public boolean hasPermission(@NotNull Permission perm) {
-+        return kissenPaperPlayerClient.hasPermission(perm);
++        return getKissenPaperPlayerClient().hasPermission(perm);
 +    }
 +
 +    @Override
 +    public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin, @NotNull String name, boolean value) {
-+        return kissenPaperPlayerClient.addAttachment(plugin, name, value);
++        return getKissenPaperPlayerClient().addAttachment(plugin, name, value);
 +    }
 +
 +    @Override
 +    public @NotNull PermissionAttachment addAttachment(@NotNull Plugin plugin) {
-+        return kissenPaperPlayerClient.addAttachment(plugin);
++        return getKissenPaperPlayerClient().addAttachment(plugin);
 +    }
 +
 +    @Override
 +    public @Nullable PermissionAttachment addAttachment(@NotNull Plugin plugin, @NotNull String name, boolean value, int ticks) {
-+        return kissenPaperPlayerClient.addAttachment(plugin, name, value, ticks);
++        return getKissenPaperPlayerClient().addAttachment(plugin, name, value, ticks);
 +    }
 +
 +    @Override
 +    public @Nullable PermissionAttachment addAttachment(@NotNull Plugin plugin, int ticks) {
-+        return kissenPaperPlayerClient.addAttachment(plugin, ticks);
++        return getKissenPaperPlayerClient().addAttachment(plugin, ticks);
 +    }
 +
 +    @Override
 +    public void removeAttachment(@NotNull PermissionAttachment attachment) {
-+        kissenPaperPlayerClient.removeAttachment(attachment);
++        getKissenPaperPlayerClient().removeAttachment(attachment);
 +    }
 +
 +    @Override
 +    public void recalculatePermissions() {
-+        kissenPaperPlayerClient.recalculatePermissions();
++        getKissenPaperPlayerClient().recalculatePermissions();
 +    }
 +
 +    @Override
 +    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions() {
-+        return kissenPaperPlayerClient.getEffectivePermissions();
++        return getKissenPaperPlayerClient().getEffectivePermissions();
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PaperPermission> getOwnPermissions() {
-+        return kissenPaperPlayerClient.getOwnPermissions();
++        return getKissenPaperPlayerClient().getOwnPermissions();
 +    }
 +
 +    @Override
 +    public int wipeGroups() {
-+        return kissenPaperPlayerClient.wipeGroups();
++        return getKissenPaperPlayerClient().wipeGroups();
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups() {
-+        return kissenPaperPlayerClient.getPermissionGroups();
++        return getKissenPaperPlayerClient().getPermissionGroups();
 +    }
 +
 +    @Override
 +    public boolean inGroup(@NotNull PermissionGroup<PaperPermission> permissionGroup) {
-+        return kissenPaperPlayerClient.inGroup(permissionGroup);
++        return getKissenPaperPlayerClient().inGroup(permissionGroup);
 +    }
 +
 +    @Override
 +    public @NotNull String getPermissionID() {
-+        return kissenPaperPlayerClient.getPermissionID();
++        return getKissenPaperPlayerClient().getPermissionID();
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull String permission) throws EventCancelledException {
-+        return kissenPaperPlayerClient.setPermission(permission);
++        return getKissenPaperPlayerClient().setPermission(permission);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull String permission, boolean value) throws EventCancelledException {
-+        return kissenPaperPlayerClient.setPermission(permission, value);
++        return getKissenPaperPlayerClient().setPermission(permission, value);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull PaperPermission permission) throws EventCancelledException {
-+        return kissenPaperPlayerClient.setPermission(permission);
++        return getKissenPaperPlayerClient().setPermission(permission);
 +    }
 +
 +    @Override
 +    public boolean unsetPermission(@NotNull String permission) {
-+        return kissenPaperPlayerClient.unsetPermission(permission);
++        return getKissenPaperPlayerClient().unsetPermission(permission);
 +    }
 +
 +    @Override
 +    public int wipePermissions() {
-+        return kissenPaperPlayerClient.wipePermissions();
++        return getKissenPaperPlayerClient().wipePermissions();
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PaperPermission> getPermissionList() {
-+        return kissenPaperPlayerClient.getPermissionList();
++        return getKissenPaperPlayerClient().getPermissionList();
 +    }
 +
 +    @Override
 +    public @NotNull Optional<PaperPermission> getPermission(@NotNull String permission) {
-+        return kissenPaperPlayerClient.getPermission(permission);
++        return getKissenPaperPlayerClient().getPermission(permission);
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<UUID> getAffectedPermissionPlayer() {
-+        return kissenPaperPlayerClient.getAffectedPermissionPlayer();
++        return getKissenPaperPlayerClient().getAffectedPermissionPlayer();
 +    }
 +
 +    @Override
 +    public void permissionUpdate() {
-+        kissenPaperPlayerClient.permissionUpdate();
++        getKissenPaperPlayerClient().permissionUpdate();
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PaperPermission> getOwnPermissions(@NotNull Context context) {
-+        return kissenPaperPlayerClient.getOwnPermissions(context);
++        return getKissenPaperPlayerClient().getOwnPermissions(context);
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups(@NotNull Context context) {
-+        return kissenPaperPlayerClient.getPermissionGroups(context);
++        return getKissenPaperPlayerClient().getPermissionGroups(context);
 +    }
 +
 +    @Override
 +    public boolean inGroup(@NotNull PermissionGroup<PaperPermission> permissionGroup, @NotNull Context context) {
-+        return kissenPaperPlayerClient.inGroup(permissionGroup, context);
++        return getKissenPaperPlayerClient().inGroup(permissionGroup, context);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull String permission, @NotNull Context context) throws EventCancelledException {
-+        return kissenPaperPlayerClient.setPermission(permission, context);
++        return getKissenPaperPlayerClient().setPermission(permission, context);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull String permission, boolean value, @NotNull Context context) throws EventCancelledException {
-+        return kissenPaperPlayerClient.setPermission(permission, value, context);
++        return getKissenPaperPlayerClient().setPermission(permission, value, context);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull PaperPermission permission, @NotNull Context context) throws EventCancelledException {
-+        return kissenPaperPlayerClient.setPermission(permission, context);
++        return getKissenPaperPlayerClient().setPermission(permission, context);
 +    }
 +
 +    @Override
 +    public boolean unsetPermission(@NotNull String permission, @NotNull Context context) {
-+        return kissenPaperPlayerClient.unsetPermission(permission, context);
++        return getKissenPaperPlayerClient().unsetPermission(permission, context);
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PaperPermission> getPermissionList(@NotNull Context context) {
-+        return kissenPaperPlayerClient.getPermissionList(context);
++        return getKissenPaperPlayerClient().getPermissionList(context);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<PaperPermission> getPermission(@NotNull String permission, @NotNull Context context) {
-+        return kissenPaperPlayerClient.getPermission(permission, context);
++        return getKissenPaperPlayerClient().getPermission(permission, context);
 +    }
 +
 +    @Override
 +    public boolean hasPermission(@NotNull String permission, @NotNull Context context) {
-+        return kissenPaperPlayerClient.hasPermission(permission, context);
++        return getKissenPaperPlayerClient().hasPermission(permission, context);
 +    }
 +    // KissenPaper end
  }
@@ -3833,34 +3844,55 @@ index 017e97c1618b8ee4640b36a0ec1b07026047bfc3..32787c6234ab6884b7ac0f62967ddc24
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..358bafc0b9e7cd6d74d4a8cb1b88c6e7452d0c56 100644
+index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c31706367596 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -176,6 +176,39 @@ import org.jetbrains.annotations.NotNull;
- 
- import net.md_5.bungee.api.chat.BaseComponent; // Spigot
- 
-+// KissenPaper start
-+import net.kissenpvp.core.user.KissenUserImplementation;
-+import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
-+import org.jetbrains.annotations.Unmodifiable;
-+import java.util.Locale;
+@@ -6,37 +6,40 @@ import com.google.common.collect.ImmutableSet;
+ import com.google.common.io.BaseEncoding;
+ import com.mojang.authlib.GameProfile;
+ import com.mojang.datafixers.util.Pair;
+-import io.netty.buffer.Unpooled;
 +import io.netty.channel.Channel;
-+import net.kyori.adventure.audience.Audience;
+ import it.unimi.dsi.fastutil.shorts.ShortArraySet;
+ import it.unimi.dsi.fastutil.shorts.ShortSet;
+-import java.io.ByteArrayOutputStream;
+-import java.io.IOException;
+-import java.lang.ref.WeakReference;
+-import java.net.InetAddress;
+-import java.net.InetSocketAddress;
+-import java.net.SocketAddress;
+-import java.time.Duration;
+-import java.time.Instant;
+-import java.util.ArrayList;
+-import java.util.Collection;
+-import java.util.Date;
+-import java.util.HashMap;
+-import java.util.HashSet;
+-import java.util.LinkedHashMap;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Optional;
+-import java.util.Set;
+-import java.util.UUID;
+-import java.util.WeakHashMap;
+-import java.util.logging.Level;
+-import java.util.logging.Logger;
+-import javax.annotation.Nullable;
 +import net.kissenpvp.core.api.ban.Ban;
 +import net.kissenpvp.core.api.ban.BanOperator;
-+import org.bukkit.permissions.PermissibleBase;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.event.EventCancelledException;
 +import net.kissenpvp.core.api.message.Theme;
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.permission.PermissionGroup;
++import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.rank.Rank;
 +import net.kissenpvp.core.api.user.suffix.Suffix;
 +import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 +import net.kissenpvp.core.api.user.usersetttings.UserSetting;
++import net.kissenpvp.core.user.KissenUserImplementation;
 +import net.kissenpvp.paper.api.ban.PaperPunishment;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
@@ -3868,45 +3900,96 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..358bafc0b9e7cd6d74d4a8cb1b88c6e7
 +import net.kissenpvp.paper.api.permission.PaperPermission;
 +import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
 +import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
-+import net.kissenpvp.paper.user.KissenPaperPublicUser;
 +import net.kissenpvp.paper.networking.client.entity.KissenPaperOnlinePlayerClient;
-+import net.kissenpvp.core.api.time.AccurateDuration;
++import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
++import net.kissenpvp.paper.user.KissenPaperPublicUser;
++import net.kyori.adventure.audience.Audience;
++import net.md_5.bungee.api.chat.BaseComponent;
+ import net.minecraft.advancements.AdvancementProgress;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Holder;
+ import net.minecraft.core.SectionPos;
+-import net.minecraft.core.registries.BuiltInRegistries;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.network.FriendlyByteBuf;
+ import net.minecraft.network.chat.Component;
+@@ -138,7 +141,6 @@ import org.bukkit.craftbukkit.advancement.CraftAdvancement;
+ import org.bukkit.craftbukkit.advancement.CraftAdvancementProgress;
+ import org.bukkit.craftbukkit.block.CraftBlockEntityState;
+ import org.bukkit.craftbukkit.block.CraftBlockState;
+-import org.bukkit.craftbukkit.block.CraftBlockStates;
+ import org.bukkit.craftbukkit.block.CraftSign;
+ import org.bukkit.craftbukkit.block.data.CraftBlockData;
+ import org.bukkit.craftbukkit.conversations.ConversationTracker;
+@@ -146,7 +148,6 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.craftbukkit.map.CraftMapView;
+ import org.bukkit.craftbukkit.map.RenderData;
+-import org.bukkit.craftbukkit.profile.CraftPlayerProfile;
+ import org.bukkit.craftbukkit.scoreboard.CraftScoreboard;
+ import org.bukkit.craftbukkit.util.CraftChatMessage;
+ import org.bukkit.craftbukkit.util.CraftLocation;
+@@ -159,7 +160,6 @@ import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
+ import org.bukkit.event.player.PlayerHideEntityEvent;
+ import org.bukkit.event.player.PlayerRegisterChannelEvent;
+ import org.bukkit.event.player.PlayerShowEntityEvent;
+-import org.bukkit.event.player.PlayerSpawnChangeEvent;
+ import org.bukkit.event.player.PlayerTeleportEvent;
+ import org.bukkit.event.player.PlayerUnregisterChannelEvent;
+ import org.bukkit.inventory.EquipmentSlot;
+@@ -168,13 +168,38 @@ import org.bukkit.inventory.ItemStack;
+ import org.bukkit.map.MapCursor;
+ import org.bukkit.map.MapView;
+ import org.bukkit.metadata.MetadataValue;
++import org.bukkit.permissions.PermissibleBase;
+ import org.bukkit.plugin.Plugin;
+ import org.bukkit.plugin.messaging.StandardMessenger;
+-import org.bukkit.profile.PlayerProfile;
+ import org.bukkit.scoreboard.Scoreboard;
+ import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
+ 
+-import net.md_5.bungee.api.chat.BaseComponent; // Spigot
++import javax.annotation.Nullable;
++import java.io.ByteArrayOutputStream;
++import java.io.IOException;
++import java.lang.ref.WeakReference;
++import java.net.InetAddress;
++import java.net.InetSocketAddress;
++import java.net.SocketAddress;
++import java.time.Duration;
++import java.time.Instant;
++import java.util.ArrayList;
++import java.util.Collection;
++import java.util.Date;
++import java.util.HashMap;
++import java.util.HashSet;
++import java.util.LinkedHashMap;
++import java.util.List;
++import java.util.Locale;
++import java.util.Map;
++import java.util.Optional;
++import java.util.Set;
++import java.util.UUID;
++import java.util.WeakHashMap;
++import java.util.logging.Level;
++import java.util.logging.Logger;
 +// KissenPaper stop
-+
+ 
  @DelegateDeserialization(CraftOfflinePlayer.class)
  public class CraftPlayer extends CraftHumanEntity implements Player {
-     private long firstPlayed = 0;
-@@ -199,6 +232,29 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -199,6 +224,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      private long lastSaveTime;
      // Paper end
  
 +    // KissenPaper start
-+    private final KissenPaperOnlinePlayerClient kissenPaperPlayer = new KissenPaperOnlinePlayerClient() {
-+        @Override
-+        public @NotNull CraftPlayer getCraftPlayer() {
-+            return CraftPlayer.this;
-+        }
-+
-+        @Override
-+        public @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException {
-+            if(!(perm instanceof PaperPermissible permissible))
-+            {
-+                throw new PermissibleOverriddenException();
-+            }
-+            return permissible;
-+        }
-+
-+        @Override
-+        public @NotNull UUID getUniqueId() {
-+            return CraftPlayer.this.getUniqueId();
-+        }
-+    };
++    private KissenPaperOnlinePlayerClient kissenPaperPlayer;
 +    // KissenPaper end
 +
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2422,7 +2478,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2422,7 +2451,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -3927,7 +4010,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..358bafc0b9e7cd6d74d4a8cb1b88c6e7
      }
  
      @Override
-@@ -2768,7 +2836,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2768,7 +2809,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -3936,12 +4019,37 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..358bafc0b9e7cd6d74d4a8cb1b88c6e7
      }
      // Paper end
      @Override
-@@ -3283,4 +3351,337 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3283,4 +3324,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end
 +
 +    // KissenPaper start - integrate user methods provided by the kissen implementation
++
++    private @NotNull KissenPaperOnlinePlayerClient getKissenPaperOnlinePlayerClient() {
++        if (kissenPaperPlayer == null) {
++            kissenPaperPlayer = new KissenPaperOnlinePlayerClient() {
++                @Override
++                public @NotNull CraftPlayer getCraftPlayer() {
++                    return CraftPlayer.this;
++                }
++
++                @Override
++                public @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException {
++                    if (!(perm instanceof PaperPermissible permissible)) {
++                        throw new PermissibleOverriddenException();
++                    }
++                    return permissible;
++                }
++
++                @Override
++                public @NotNull UUID getUniqueId() {
++                    return CraftPlayer.this.getUniqueId();
++                }
++            };
++        }
++        return kissenPaperPlayer;
++    }
 +
 +    @Override
 +    public @NotNull User getUser() {
@@ -3978,299 +4086,299 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..358bafc0b9e7cd6d74d4a8cb1b88c6e7
 +
 +    @Override
 +    public @NotNull Locale getCurrentLocale() {
-+        return kissenPaperPlayer.getCurrentLocale();
++        return getKissenPaperOnlinePlayerClient().getCurrentLocale();
 +    }
 +
 +    // -
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException {
-+        return kissenPaperPlayer.getAltAccounts();
++        return getKissenPaperOnlinePlayerClient().getAltAccounts();
 +    }
 +
 +    @Override
 +    public @NotNull UUID getTotalID() {
-+        return kissenPaperPlayer.getTotalID();
++        return getKissenPaperOnlinePlayerClient().getTotalID();
 +    }
 +
 +    @Override
 +    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException {
-+        return kissenPaperPlayer.punish(ban, banOperator);
++        return getKissenPaperOnlinePlayerClient().punish(ban, banOperator);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) throws BackendException {
-+        return kissenPaperPlayer.punish(ban, banOperator, reason);
++        return getKissenPaperOnlinePlayerClient().punish(ban, banOperator, reason);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<@org.jetbrains.annotations.Nullable PaperPunishment> getBan(@NotNull String id) throws BackendException {
-+        return kissenPaperPlayer.getBan(id);
++        return getKissenPaperOnlinePlayerClient().getBan(id);
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable List<PaperPunishment> getBanHistory() throws BackendException {
-+        return kissenPaperPlayer.getBanHistory();
++        return getKissenPaperOnlinePlayerClient().getBanHistory();
 +    }
 +
 +    @Override
 +    public net.kyori.adventure.text.@NotNull Component styledRankName() {
-+        return kissenPaperPlayer.styledRankName();
++        return getKissenPaperOnlinePlayerClient().styledRankName();
 +    }
 +
 +    @Override
 +    public @NotNull Set<Suffix> getSuffixSet() {
-+        return kissenPaperPlayer.getSuffixSet();
++        return getKissenPaperOnlinePlayerClient().getSuffixSet();
 +    }
 +
 +    @Override
 +    public @NotNull Optional<@org.jetbrains.annotations.Nullable Suffix> getSuffix(@NotNull String name) {
-+        return kissenPaperPlayer.getSuffix(name);
++        return getKissenPaperOnlinePlayerClient().getSuffix(name);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<@org.jetbrains.annotations.Nullable Suffix> setSuffix(@NotNull String name, net.kyori.adventure.text.@NotNull Component content) {
-+        return kissenPaperPlayer.setSuffix(name, content);
++        return getKissenPaperOnlinePlayerClient().setSuffix(name, content);
 +    }
 +
 +    @Override
 +    public boolean deleteSuffix(@NotNull String name) {
-+        return kissenPaperPlayer.deleteSuffix(name);
++        return getKissenPaperOnlinePlayerClient().deleteSuffix(name);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<@org.jetbrains.annotations.Nullable Suffix> getSelectedSuffix() {
-+        return kissenPaperPlayer.getSelectedSuffix();
++        return getKissenPaperOnlinePlayerClient().getSelectedSuffix();
 +    }
 +
 +    @Override
 +    public void setSelectedSuffix(@NotNull String name) throws NullPointerException {
-+        kissenPaperPlayer.setSelectedSuffix(name);
++        getKissenPaperOnlinePlayerClient().setSelectedSuffix(name);
 +    }
 +
 +    @Override
 +    public long getOnlineTime() {
-+        return kissenPaperPlayer.getOnlineTime();
++        return getKissenPaperOnlinePlayerClient().getOnlineTime();
 +    }
 +
 +    @Override
 +    public @NotNull <X> UserSetting<X> getUserSetting(Class<? extends PlayerSetting<X>> settingClass) {
-+        return kissenPaperPlayer.getUserSetting(settingClass);
++        return getKissenPaperOnlinePlayerClient().getUserSetting(settingClass);
 +    }
 +
 +    @Override
 +    public @NotNull Theme getTheme() {
-+        return kissenPaperPlayer.getTheme();
++        return getKissenPaperOnlinePlayerClient().getTheme();
 +    }
 +
 +    @Override
 +    public void kick(@NotNull String message) {
-+        kissenPaperPlayer.kick(message);
++        getKissenPaperOnlinePlayerClient().kick(message);
 +    }
 +
 +    @Override
 +    public void killConnection() {
-+        kissenPaperPlayer.killConnection();
++        getKissenPaperOnlinePlayerClient().killConnection();
 +    }
 +
 +    @Override
 +    public @org.jetbrains.annotations.Nullable String getCurrentServer() {
-+        return kissenPaperPlayer.getCurrentServer();
++        return getKissenPaperOnlinePlayerClient().getCurrentServer();
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable List<PaperPlayerRank> getRankHistory() {
-+        return kissenPaperPlayer.getRankHistory();
++        return getKissenPaperOnlinePlayerClient().getRankHistory();
 +    }
 +
 +    @Override
 +    public @NotNull PaperPlayerRank getRank() {
-+        return kissenPaperPlayer.getRank();
++        return getKissenPaperOnlinePlayerClient().getRank();
 +    }
 +
 +    @Override
 +    public @NotNull PaperPlayerRank grantRank(@NotNull Rank rank) {
-+        return kissenPaperPlayer.grantRank(rank);
++        return getKissenPaperOnlinePlayerClient().grantRank(rank);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPlayerRank grantRank(@NotNull Rank rank, @org.jetbrains.annotations.Nullable AccurateDuration accurateDuration) {
-+        return kissenPaperPlayer.grantRank(rank, accurateDuration);
++        return getKissenPaperOnlinePlayerClient().grantRank(rank, accurateDuration);
 +    }
 +
 +    @Override
 +    public int warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator) {
-+        return kissenPaperPlayer.warn(ban, warnOperator);
++        return getKissenPaperOnlinePlayerClient().warn(ban, warnOperator);
 +    }
 +
 +    @Override
 +    public int warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) {
-+        return kissenPaperPlayer.warn(ban, warnOperator, reason);
++        return getKissenPaperOnlinePlayerClient().warn(ban, warnOperator, reason);
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<@NotNull PaperOnlinePlayerClient> getOnlineAltAccounts() {
-+        return kissenPaperPlayer.getOnlineAltAccounts();
++        return getKissenPaperOnlinePlayerClient().getOnlineAltAccounts();
 +    }
 +
 +    @Override
 +    public @NotNull Set<Suffix> getSuffixSet(@NotNull Context context) {
-+        return kissenPaperPlayer.getSuffixSet(context);
++        return getKissenPaperOnlinePlayerClient().getSuffixSet(context);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<@org.jetbrains.annotations.Nullable Suffix> getSuffix(@NotNull String name, @NotNull Context context) {
-+        return kissenPaperPlayer.getSuffix(name, context);
++        return getKissenPaperOnlinePlayerClient().getSuffix(name, context);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<@org.jetbrains.annotations.Nullable Suffix> setSuffix(@NotNull String name, net.kyori.adventure.text.@NotNull Component content, @NotNull Context context) {
-+        return kissenPaperPlayer.setSuffix(name, content);
++        return getKissenPaperOnlinePlayerClient().setSuffix(name, content);
 +    }
 +
 +    @Override
 +    public boolean deleteSuffix(@NotNull String name, @NotNull Context context) {
-+        return kissenPaperPlayer.deleteSuffix(name, context);
++        return getKissenPaperOnlinePlayerClient().deleteSuffix(name, context);
 +    }
 +
 +    @Override
 +    public void setSelectedSuffix(@NotNull String name, @NotNull Context context) throws NullPointerException {
-+        kissenPaperPlayer.setSelectedSuffix(name, context);
++        getKissenPaperOnlinePlayerClient().setSelectedSuffix(name, context);
 +    }
 +
 +    @Override
 +    public long getOnlineTime(@NotNull Context context) {
-+        return kissenPaperPlayer.getOnlineTime(context);
++        return getKissenPaperOnlinePlayerClient().getOnlineTime(context);
 +    }
 +
 +    @Override
 +    public long getLastPlayed(@NotNull Context context) {
-+        return kissenPaperPlayer.getLastPlayed(context);
++        return getKissenPaperOnlinePlayerClient().getLastPlayed(context);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException {
-+        return kissenPaperPlayer.getPermissible();
++        return getKissenPaperOnlinePlayerClient().getPermissible();
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PaperPermission> getOwnPermissions() {
-+        return kissenPaperPlayer.getOwnPermissions();
++        return getKissenPaperOnlinePlayerClient().getOwnPermissions();
 +    }
 +
 +    @Override
 +    public int wipeGroups() {
-+        return kissenPaperPlayer.wipeGroups();
++        return getKissenPaperOnlinePlayerClient().wipeGroups();
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups() {
-+        return kissenPaperPlayer.getPermissionGroups();
++        return getKissenPaperOnlinePlayerClient().getPermissionGroups();
 +    }
 +
 +    @Override
 +    public boolean inGroup(@NotNull PermissionGroup<PaperPermission> permissionGroup) {
-+        return kissenPaperPlayer.inGroup(permissionGroup);
++        return getKissenPaperOnlinePlayerClient().inGroup(permissionGroup);
 +    }
 +
 +    @Override
 +    public @NotNull String getPermissionID() {
-+        return kissenPaperPlayer.getPermissionID();
++        return getKissenPaperOnlinePlayerClient().getPermissionID();
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull String permission) throws EventCancelledException {
-+        return kissenPaperPlayer.setPermission(permission);
++        return getKissenPaperOnlinePlayerClient().setPermission(permission);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull String permission, boolean value) throws EventCancelledException {
-+        return kissenPaperPlayer.setPermission(permission, value);
++        return getKissenPaperOnlinePlayerClient().setPermission(permission, value);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull PaperPermission permission) throws EventCancelledException {
-+        return kissenPaperPlayer.setPermission(permission);
++        return getKissenPaperOnlinePlayerClient().setPermission(permission);
 +    }
 +
 +    @Override
 +    public boolean unsetPermission(@NotNull String permission) {
-+        return kissenPaperPlayer.unsetPermission(permission);
++        return getKissenPaperOnlinePlayerClient().unsetPermission(permission);
 +    }
 +
 +    @Override
 +    public int wipePermissions() {
-+        return kissenPaperPlayer.wipePermissions();
++        return getKissenPaperOnlinePlayerClient().wipePermissions();
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PaperPermission> getPermissionList() {
-+        return kissenPaperPlayer.getPermissionList();
++        return getKissenPaperOnlinePlayerClient().getPermissionList();
 +    }
 +
 +    @Override
 +    public @NotNull Optional<@org.jetbrains.annotations.Nullable PaperPermission> getPermission(@NotNull String permission) {
-+        return kissenPaperPlayer.getPermission(permission);
++        return getKissenPaperOnlinePlayerClient().getPermission(permission);
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<UUID> getAffectedPermissionPlayer() {
-+        return kissenPaperPlayer.getAffectedPermissionPlayer();
++        return getKissenPaperOnlinePlayerClient().getAffectedPermissionPlayer();
 +    }
 +
 +    @Override
 +    public void permissionUpdate() {
-+        kissenPaperPlayer.permissionUpdate();
++        getKissenPaperOnlinePlayerClient().permissionUpdate();
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PaperPermission> getOwnPermissions(@NotNull Context context) {
-+        return kissenPaperPlayer.getOwnPermissions(context);
++        return getKissenPaperOnlinePlayerClient().getOwnPermissions(context);
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups(@NotNull Context context) {
-+        return kissenPaperPlayer.getPermissionGroups(context);
++        return getKissenPaperOnlinePlayerClient().getPermissionGroups(context);
 +    }
 +
 +    @Override
 +    public boolean inGroup(@NotNull PermissionGroup<PaperPermission> permissionGroup, @NotNull Context context) {
-+        return kissenPaperPlayer.inGroup(permissionGroup, context);
++        return getKissenPaperOnlinePlayerClient().inGroup(permissionGroup, context);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull String permission, @NotNull Context context) throws EventCancelledException {
-+        return kissenPaperPlayer.setPermission(permission, context);
++        return getKissenPaperOnlinePlayerClient().setPermission(permission, context);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull String permission, boolean value, @NotNull Context context) throws EventCancelledException {
-+        return kissenPaperPlayer.setPermission(permission, value, context);
++        return getKissenPaperOnlinePlayerClient().setPermission(permission, value, context);
 +    }
 +
 +    @Override
 +    public @NotNull PaperPermission setPermission(@NotNull PaperPermission permission, @NotNull Context context) throws EventCancelledException {
-+        return kissenPaperPlayer.setPermission(permission, context);
++        return getKissenPaperOnlinePlayerClient().setPermission(permission, context);
 +    }
 +
 +    @Override
 +    public boolean unsetPermission(@NotNull String permission, @NotNull Context context) {
-+        return kissenPaperPlayer.unsetPermission(permission, context);
++        return getKissenPaperOnlinePlayerClient().unsetPermission(permission, context);
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<PaperPermission> getPermissionList(@NotNull Context context) {
-+        return kissenPaperPlayer.getPermissionList(context);
++        return getKissenPaperOnlinePlayerClient().getPermissionList(context);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<@org.jetbrains.annotations.Nullable PaperPermission> getPermission(@NotNull String permission, @NotNull Context context) {
-+        return kissenPaperPlayer.getPermission(permission, context);
++        return getKissenPaperOnlinePlayerClient().getPermission(permission, context);
 +    }
 +
 +    @Override
 +    public boolean hasPermission(@NotNull String permission, @NotNull Context context) {
-+        return kissenPaperPlayer.hasPermission(permission, context);
++        return getKissenPaperOnlinePlayerClient().hasPermission(permission, context);
 +    }
 +    // KissenPaper end
  }

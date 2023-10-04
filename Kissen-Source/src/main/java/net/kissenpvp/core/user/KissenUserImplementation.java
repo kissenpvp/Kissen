@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.user;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
@@ -35,7 +36,6 @@ import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.UserInfo;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.task.KissenTaskImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -56,7 +56,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
     @Getter
     private final Set<User> onlineUserSet;
-    @Getter
+    @Getter(AccessLevel.PROTECTED)
     private final Set<UserInfoNode> cachedProfiles;
     private final Set<PlayerSetting<?>> userPlayerSettings;
 
@@ -170,9 +170,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @return A set of SavableMap objects representing the user's data. The returned set is unmodifiable.
      * @throws BackendException If an error occurs while trying to fetch the user's data from the backend data source.
      */
-    public @NotNull
-    @Unmodifiable
-    abstract Set<SavableMap> getUserData() throws BackendException;
+    public @NotNull @Unmodifiable abstract Set<SavableMap> getUserData() throws BackendException;
 
     /**
      * Provides a default user save ID.
@@ -308,5 +306,11 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
     private @NotNull Optional<UserInfo> getUserInfo(@NotNull Predicate<UserInfoNode> name) {
         return getCachedProfiles().stream().filter(name).map(UserInfoNode::getUserInfo).findFirst();
+    }
+
+    public void cacheProfile(@NotNull UserInfoNode userInfoNode)
+    {
+        getCachedProfiles().add(userInfoNode);
+        KissenCore.getInstance().getLogger().info("The profile {} has been cached now.", userInfoNode);
     }
 }
