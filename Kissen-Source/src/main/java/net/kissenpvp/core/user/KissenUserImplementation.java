@@ -310,6 +310,11 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
     public void cacheProfile(@NotNull UserInfoNode userInfoNode)
     {
+        if(getCachedProfiles().stream().anyMatch(current -> current.uuid().equals(userInfoNode.uuid()) && current.name().equals(userInfoNode.name())))
+        {
+            return;
+        }
+        getCachedProfiles().remove(userInfoNode);
         getCachedProfiles().add(userInfoNode);
         KissenCore.getInstance().getLogger().info("The profile {} has been cached now.", userInfoNode);
     }

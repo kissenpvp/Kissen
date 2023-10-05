@@ -3269,7 +3269,7 @@ index 48d1444fbad1c57738807d0128b94160a5a17a4d..75fcd48b691e7a7879baaa7791ecef8c
          this.cserver.getPluginManager().callEvent(playerJoinEvent);
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index 03fc90a470c0f63d44161843cac88bea09166858..5df67de1b1d41d2b36979f987bf62ecc492d3062 100644
+index 03fc90a470c0f63d44161843cac88bea09166858..a026e6169ff37415bc457790d6777442d4eb7d8a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -34,6 +34,44 @@ import org.bukkit.metadata.MetadataValue;
@@ -3332,7 +3332,7 @@ index 03fc90a470c0f63d44161843cac88bea09166858..5df67de1b1d41d2b36979f987bf62ecc
      protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
          this.server = server;
          this.profile = profile;
-@@ -567,4 +613,375 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -567,4 +613,387 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
              manager.save();
          }
      }
@@ -3343,6 +3343,18 @@ index 03fc90a470c0f63d44161843cac88bea09166858..5df67de1b1d41d2b36979f987bf62ecc
 +    {
 +        if(kissenPaperPlayerClient == null) {
 +            kissenPaperPlayerClient = new KissenPaperPlayerClient() {
++
++                private User cachedUser;
++
++                @Override
++                public @NotNull User getUser() {
++                    return Optional.ofNullable(cachedUser).orElseGet(() ->
++                    {
++                        cachedUser = super.getUser();
++                        return cachedUser;
++                    });
++                }
++
 +                @Override
 +                public @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException {
 +                    return (PaperPermissible) permissible;
