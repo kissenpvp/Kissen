@@ -20,6 +20,7 @@ package net.kissenpvp.core.api.networking.client.entitiy;
 
 import io.netty.channel.Channel;
 import net.kissenpvp.core.api.ban.Punishment;
+import net.kissenpvp.core.api.base.KissenServer;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.user.rank.PlayerRank;
 import net.kyori.adventure.text.Component;
@@ -38,5 +39,5 @@ public interface OnlinePlayerClient<P extends Permission, R extends PlayerRank<?
 
     void sendPacket(@NotNull Object object) throws ClassNotFoundException, ClassCastException;
 
-    @Nullable String getCurrentServer();
+    @Nullable KissenServer getCurrentServer();
 }

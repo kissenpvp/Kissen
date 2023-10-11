@@ -130,9 +130,18 @@ index 0000000000000000000000000000000000000000..4446e728cd8c2a3869d0092000c347a4
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 97745f0bab8d82d397c6c2a5775aed92bca0a034..0b5d01de7fbf2d8400aefd8781193d010ef600a8 100644
+index 97745f0bab8d82d397c6c2a5775aed92bca0a034..3e0a8f6d0b7dee3de553e20b5b3db9c8c5dbeef9 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -190,7 +190,7 @@ import org.bukkit.event.server.ServerLoadEvent;
+ 
+ import co.aikar.timings.MinecraftTimings; // Paper
+ 
+-public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements ServerInfo, CommandSource, AutoCloseable {
++public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements ServerInfo, CommandSource, AutoCloseable, net.kissenpvp.core.api.base.KissenServer {
+ 
+     private static MinecraftServer SERVER; // Paper
+     public static final Logger LOGGER = LogUtils.getLogger();
 @@ -971,6 +971,11 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
              this.getProfileCache().save(false); // Paper
          }
@@ -156,6 +165,15 @@ index 97745f0bab8d82d397c6c2a5775aed92bca0a034..0b5d01de7fbf2d8400aefd8781193d01
              this.nextTickTime = Util.getMillis();
              this.statusIcon = (ServerStatus.Favicon) this.loadStatusIcon().orElse(null); // CraftBukkit - decompile error
              this.status = this.buildServerStatus();
+@@ -1697,7 +1706,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+ 
+     @DontObfuscate
+     public String getServerModName() {
+-        return "Paper"; // Paper - Paper > // Spigot - Spigot > // CraftBukkit - cb > vanilla!
++        return "KissenPaper"; // KissenPaper - KissenPaper > // Paper - Paper > // Spigot - Spigot > // CraftBukkit - cb > vanilla!
+     }
+ 
+     public SystemReport fillSystemReport(SystemReport details) {
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 index dbccbcb9b44e4efacdf53c2d161115cc20b36cff..464c7940bf630731d56663d10003bb02138c44f7 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
@@ -178,7 +196,7 @@ index dbccbcb9b44e4efacdf53c2d161115cc20b36cff..464c7940bf630731d56663d10003bb02
              this.setLocalIp("127.0.0.1");
          } else {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index fcd5096d64edfaf6bce3ecce8c9b9afb84462786..7a7627de340ad8edcb4c2c2f80657146c1f6e992 100644
+index b7e7e6ed60f55d2ab5e4fcefb3638ad1768c3b7f..4075fbb8a74758cba1d841510afe421cd41aaacf 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -44,6 +44,8 @@ import java.util.logging.Level;

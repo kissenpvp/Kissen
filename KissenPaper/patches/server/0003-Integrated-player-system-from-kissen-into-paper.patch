@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated player system from kissen into paper
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
-index e513ce5bcb5070b8a57737228904381f1bda658e..d3079ec5b215e8711c39f76927ae134e30d11ff4 100644
+index b7da8606e24b216b39020130fd2c42c7cd387a3a..2d6f8671c449981a848393ad3e207e532a45b6a7 100644
 --- a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 +++ b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 @@ -31,6 +31,10 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
@@ -19,7 +19,7 @@ index e513ce5bcb5070b8a57737228904381f1bda658e..d3079ec5b215e8711c39f76927ae134e
      public CraftPlayerProfile(CraftPlayer player) {
          this.profile = player.getHandle().getGameProfile();
      }
-@@ -398,4 +402,12 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
+@@ -399,4 +403,12 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
              }
          }
      }
@@ -34,10 +34,10 @@ index e513ce5bcb5070b8a57737228904381f1bda658e..d3079ec5b215e8711c39f76927ae134e
  }
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..9c8dd9e8cbcfa11056597821e86ed59cc81d157d
+index 0000000000000000000000000000000000000000..153b5031f087ef3caec0d9a36fa410dc3e3946db
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
-@@ -0,0 +1,111 @@
+@@ -0,0 +1,113 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -60,6 +60,7 @@ index 0000000000000000000000000000000000000000..9c8dd9e8cbcfa11056597821e86ed59c
 +
 +import io.netty.channel.Channel;
 +import net.kissenpvp.core.api.ban.Ban;
++import net.kissenpvp.core.api.base.KissenServer;
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.message.KissenComponentSerializer;
@@ -68,6 +69,7 @@ index 0000000000000000000000000000000000000000..9c8dd9e8cbcfa11056597821e86ed59c
 +import net.kyori.adventure.audience.Audience;
 +import net.kyori.adventure.text.Component;
 +import net.minecraft.network.protocol.Packet;
++import net.minecraft.server.MinecraftServer;
 +import org.bukkit.craftbukkit.entity.CraftPlayer;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
@@ -116,13 +118,13 @@ index 0000000000000000000000000000000000000000..9c8dd9e8cbcfa11056597821e86ed59c
 +    }
 +
 +    @Override
-+    public void sendPacket(@NotNull Object object) throws ClassNotFoundException, ClassCastException {
++    public void sendPacket(@NotNull Object object) throws ClassCastException {
 +        getCraftPlayer().getHandle().connection.send((Packet<?>) object);
 +    }
 +
 +    @Override
-+    public @Nullable String getCurrentServer() {
-+        return null;
++    public @Nullable KissenServer getCurrentServer() {
++        return MinecraftServer.getServer();
 +    }
 +
 +    @Override
@@ -3811,10 +3813,10 @@ index 1c638a4b1f2c841928d8b2a7ae43e4ebb1f7eac7..31c40acd927245ad59d111e178a61d5f
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-index e932cfac619c30b8c7444a9fa41e0403a6eadf6a..77d5e6fe63109e97ce8bdb23a9b39cdbba250eb2 100644
+index 315d8260e196709ed9084272aa640f11e327c0a8..c63d5d0d6068b362eaad109ee84052b604b9796f 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-@@ -1506,4 +1506,27 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1523,4 +1523,27 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          return this.getHandle().getScoreboardName();
      }
      // Paper end - entity scoreboard name
@@ -3856,10 +3858,10 @@ index 017e97c1618b8ee4640b36a0ec1b07026047bfc3..32787c6234ab6884b7ac0f62967ddc24
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c31706367596 100644
+index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..98633ce2f722726bbecf6a5fea0a7e9872b54bdb 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -6,37 +6,40 @@ import com.google.common.collect.ImmutableSet;
+@@ -6,37 +6,41 @@ import com.google.common.collect.ImmutableSet;
  import com.google.common.io.BaseEncoding;
  import com.mojang.authlib.GameProfile;
  import com.mojang.datafixers.util.Pair;
@@ -3892,6 +3894,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c317
 -import javax.annotation.Nullable;
 +import net.kissenpvp.core.api.ban.Ban;
 +import net.kissenpvp.core.api.ban.BanOperator;
++import net.kissenpvp.core.api.base.KissenServer;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.event.EventCancelledException;
 +import net.kissenpvp.core.api.message.Theme;
@@ -3925,7 +3928,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c317
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.network.FriendlyByteBuf;
  import net.minecraft.network.chat.Component;
-@@ -138,7 +141,6 @@ import org.bukkit.craftbukkit.advancement.CraftAdvancement;
+@@ -138,7 +142,6 @@ import org.bukkit.craftbukkit.advancement.CraftAdvancement;
  import org.bukkit.craftbukkit.advancement.CraftAdvancementProgress;
  import org.bukkit.craftbukkit.block.CraftBlockEntityState;
  import org.bukkit.craftbukkit.block.CraftBlockState;
@@ -3933,7 +3936,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c317
  import org.bukkit.craftbukkit.block.CraftSign;
  import org.bukkit.craftbukkit.block.data.CraftBlockData;
  import org.bukkit.craftbukkit.conversations.ConversationTracker;
-@@ -146,7 +148,6 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
+@@ -146,7 +149,6 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
  import org.bukkit.craftbukkit.inventory.CraftItemStack;
  import org.bukkit.craftbukkit.map.CraftMapView;
  import org.bukkit.craftbukkit.map.RenderData;
@@ -3941,7 +3944,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c317
  import org.bukkit.craftbukkit.scoreboard.CraftScoreboard;
  import org.bukkit.craftbukkit.util.CraftChatMessage;
  import org.bukkit.craftbukkit.util.CraftLocation;
-@@ -159,7 +160,6 @@ import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
+@@ -159,7 +161,6 @@ import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
  import org.bukkit.event.player.PlayerHideEntityEvent;
  import org.bukkit.event.player.PlayerRegisterChannelEvent;
  import org.bukkit.event.player.PlayerShowEntityEvent;
@@ -3949,7 +3952,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c317
  import org.bukkit.event.player.PlayerTeleportEvent;
  import org.bukkit.event.player.PlayerUnregisterChannelEvent;
  import org.bukkit.inventory.EquipmentSlot;
-@@ -168,13 +168,38 @@ import org.bukkit.inventory.ItemStack;
+@@ -168,13 +169,38 @@ import org.bukkit.inventory.ItemStack;
  import org.bukkit.map.MapCursor;
  import org.bukkit.map.MapView;
  import org.bukkit.metadata.MetadataValue;
@@ -3990,7 +3993,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c317
  
  @DelegateDeserialization(CraftOfflinePlayer.class)
  public class CraftPlayer extends CraftHumanEntity implements Player {
-@@ -199,6 +224,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -199,6 +225,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      private long lastSaveTime;
      // Paper end
  
@@ -4001,7 +4004,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c317
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2422,7 +2451,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2422,7 +2452,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -4022,7 +4025,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c317
      }
  
      @Override
-@@ -2768,7 +2809,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2768,7 +2810,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -4031,7 +4034,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c317
      }
      // Paper end
      @Override
-@@ -3283,4 +3324,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3283,4 +3325,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end
@@ -4194,7 +4197,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..a3b2d0e404bcaeb9ef7b904ab3b9c317
 +    }
 +
 +    @Override
-+    public @org.jetbrains.annotations.Nullable String getCurrentServer() {
++    public @org.jetbrains.annotations.Nullable KissenServer getCurrentServer() {
 +        return getKissenPaperOnlinePlayerClient().getCurrentServer();
 +    }
 +
