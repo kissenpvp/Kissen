@@ -143,6 +143,11 @@ public abstract class KissenUserImplementation implements UserImplementation {
         return getUserInfo(userInfoNode -> userInfoNode.uuid().equals(uuid));
     }
 
+    @Override public @Unmodifiable @NotNull Set<UserInfo> getCachedUserProfiles()
+    {
+        return getCachedProfiles().stream().map(UserInfoNode::getUserInfo).collect(Collectors.toSet());
+    }
+
     @Override
     public @Unmodifiable @NotNull <T> Set<PlayerSetting<?>> registerUserSetting(@NotNull PlayerSetting<T> playerSetting) {
         Set<PlayerSetting<?>> playerSettings = userPlayerSettings.stream()
@@ -296,7 +301,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @return the number of rows affected by the update
      * @throws Exception if an error occurs during the execution of the update
      */
-    public long rewriteTotalID(@NotNull UUID from, @NotNull UUID to) throws Exception {
+    public long rewriteTotalID(@NotNull UUID from, @NotNull UUID to) {
         return getUserMeta().execute(getUserMeta().update(new QueryUpdateDirective(Column.VALUE, to.toString()))
                 .appendFilter(Column.TOTAL_ID, getUserSaveID(), FilterType.START)
                 .appendFilter(Column.KEY, "total_id", FilterType.EQUALS)

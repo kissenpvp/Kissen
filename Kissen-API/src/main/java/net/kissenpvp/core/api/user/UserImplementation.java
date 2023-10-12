@@ -131,8 +131,6 @@ public interface UserImplementation extends Implementation {
      *             "a1f6be9b-87a0-47e2-b1b0-4cbf26e1693d", etc.
      * @return {@code true} if the player with the specified UUID has a valid account in the network's table, {@code
      * false} otherwise.
-     * @throws Exception if an error occurs while executing the database query.
-     *                   In such cases, a {@link Exception} will be thrown to indicate the failure.
      * @see #isValid(String)
      * @see PlayerClient#getOnlineTime()
      */
@@ -168,8 +166,6 @@ public interface UserImplementation extends Implementation {
      *             It should be a non-null {@link String} representing the player's name.
      *             The player name is used to identify the account in the network's table.
      * @return {@code true} if the player name has a valid account in the network's table, {@code false} otherwise.
-     * @throws Exception if an error occurs while executing the database query.
-     *                   In such cases, a {@link Exception} will be thrown to indicate the failure.
      * @see #isValid(UUID)
      * @see PlayerClient#getOnlineTime()
      */
@@ -193,6 +189,22 @@ public interface UserImplementation extends Implementation {
      */
     @NotNull User getUser(@NotNull UUID uuid);
 
+    /**
+     * Returns a user account based on the provided username. If the user is not currently online, their account data
+     * will be loaded from the table. If the user has never played before, a new account will be created.
+     * This method can throw a BackendException if there is an issue while fetching the user data from the backend.
+     *
+     * <p>This method can have performance implications when creating multiple profiles at once. It is recommended to
+     * load profiles asynchronously whenever possible.
+     *
+     * <p>When the player is online, their account will be retrieved from the `getOnlineUser(String name)` method,
+     * which saves resources. The existence of this method is assumed based on the pattern shown in the `getUser(UUID uuid)` method.
+     *
+     * @param name The username of the player to retrieve the user account for.
+     * @return The user account, which depends on whether the player is online.
+     * @throws BackendException If there is an issue while fetching the user data from the backend.
+     * @see #getOnlineUser(UUID)
+     */
     @NotNull User getUser(@NotNull String name) throws BackendException;
 
 
@@ -212,9 +224,38 @@ public interface UserImplementation extends Implementation {
      */
     @Unmodifiable @NotNull Set<UserInfo> getUserProfiles();
 
-    @Unmodifiable @NotNull Optional<UserInfo> getCachedUserProfile(@NotNull String name);
+    /**
+     * Fetch a user profile by its name from the cache.
+     * <p>
+     * This method retrieves the cached user profile data for a given user specified by name. The user name must be given in a non-null and correct format. If the user profile is not found, an empty Optional is returned which can be checked using its relevant methods such as {@link java.util.Optional#isPresent()}. The method returns an instance of {@code Optional<UserInfo>} which may or may not contain the {@code UserInfo} instance.
+     *
+     * @param name a {@link java.lang.String} that represents the name of the user. It must not be null
+     * @return an {@link java.util.Optional} containing {@link UserInfo} instance if found in the cache, otherwise an empty Optional
+     * @throws NullPointerException if the given parameter is null
+     * @see #getCachedUserProfile(UUID) 
+     */
+    @NotNull Optional<UserInfo> getCachedUserProfile(@NotNull String name);
 
-    @Unmodifiable @NotNull Optional<UserInfo> getCachedUserProfile(@NotNull UUID uuid);
+    /**
+     * Fetch a user profile by its uuid from the cache.
+     * <p>
+     * Similarly to {@link #getCachedUserProfile(String)}, this method fetches the user profile data for a given user identified by UUID. If no user profile data is found matching the provided UUID, an empty Optional is returned.
+     *
+     * @param uuid a {@link java.util.UUID} that represents the unique identifier of the user. It must not be null.
+     * @return an {@link java.util.Optional} containing {@link UserInfo} instance if found in the cache, otherwise an empty Optional
+     * @throws NullPointerException if the given parameter is null
+     * @see #getCachedUserProfile(String) 
+     */
+    @NotNull Optional<UserInfo> getCachedUserProfile(@NotNull UUID uuid);
+
+    /**
+     * Fetches all user profiles from the cache.
+     * <p>
+     * This method fetches all the user profiles currently stored in the cache and returns a set of them. The set returned is unmodifiable, meaning that you cannot add or remove items from the set. If you attempt to modify the set, an {@link java.lang.UnsupportedOperationException} will be thrown. If no user profile data are found, an empty set is returned.
+     *
+     * @return an unmodifiable {@link java.util.Set} containing all cached {@link UserInfo} instances
+     */
+    @Unmodifiable @NotNull Set<UserInfo> getCachedUserProfiles();
 
     /**
      * Registers a {@link PlayerSetting} that represents a user-configurable setting, such as the primary theme color.
