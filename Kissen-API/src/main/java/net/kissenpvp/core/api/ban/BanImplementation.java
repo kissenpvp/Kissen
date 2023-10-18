@@ -21,6 +21,7 @@ package net.kissenpvp.core.api.ban;
 import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -110,7 +111,7 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * Applies the specified {@link Ban} to the player with the given UUID, without providing a reason for the ban.
      * The team member who applies the ban is identified by the given banner.
      * <p>
-     * It is recommended to use {@link #punish(UUID, Ban, BanOperator, Component)} to provide a reason for the ban.
+     * It is recommended to use {@link #punish(UUID, Ban, ServerEntity, Component)} to provide a reason for the ban.
      * </p>
      * <p>
      * Depending on the {@link Ban}, this punishment will be executed immediately and will affect all players who have the same {@link PlayerClient#getTotalID()} as the provided UUID.
@@ -123,15 +124,15 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @throws NullPointerException if either totalID, ban or banner are null.
      * @see Ban
      * @see Punishment
-     * @see #punish(UUID, Ban, BanOperator, Component)
+     * @see #punish(UUID, Ban, ServerEntity, Component)
      */
-    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator) throws BackendException;
+    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator) throws BackendException;
 
     /**
      * Applies the specified {@link Ban} to the player identified by the given {@code totalID} and returns a {@link Punishment} object that represents the newly applied ban.
      * If a reason for the ban is provided, it will be included in the {@link Punishment} object for future reference.
      * <p>
-     * If no reason is given, use {@link #punish(UUID, Ban, BanOperator)} instead.
+     * If no reason is given, use {@link #punish(UUID, Ban, ServerEntity)} instead.
      * </p>
      * <p>
      * The punishment specified by the {@link Ban} object will be executed immediately and will affect all players who have the same {@link PlayerClient#getTotalID()} as the one provided.
@@ -145,13 +146,13 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @throws NullPointerException if either totalID, ban, or banner is null
      * @see Ban
      * @see Punishment
-     * @see #punish(UUID, Ban, BanOperator)
+     * @see #punish(UUID, Ban, ServerEntity)
      */
-    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException;
+    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException;
 
-    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, boolean apply) throws BackendException;
+    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply) throws BackendException;
 
-    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, boolean apply, @Nullable Component reason) throws BackendException;
+    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason) throws BackendException;
 
 
     /**
@@ -159,7 +160,7 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * If no valid bans are found, an empty {@link Optional} is returned.
      *
      * <p>
-     * Bans can be applied to players using {@link #punish(UUID, Ban, BanOperator, Component)} or {@link #punish(UUID, Ban, BanOperator)}.
+     * Bans can be applied to players using {@link #punish(UUID, Ban, ServerEntity, Component)} or {@link #punish(UUID, Ban, ServerEntity)}.
      * </p>
      *
      * <p>
@@ -171,8 +172,8 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * or an empty {@link Optional} if no valid bans are found.
      * @throws NullPointerException if {@code totalID} is null.
      * @see Punishment#isValid()
-     * @see #punish(UUID, Ban, BanOperator, Component)
-     * @see #punish(UUID, Ban, BanOperator)
+     * @see #punish(UUID, Ban, ServerEntity, Component)
+     * @see #punish(UUID, Ban, ServerEntity)
      * @see #getLatestPunishment(UUID, BanType)
      */
     @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID) throws BackendException;
@@ -182,7 +183,7 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * If no valid bans of the specified type are found, an empty {@link Optional} is returned.
      *
      * <p>
-     * Bans can be applied to players using {@link #punish(UUID, Ban, BanOperator, Component)} or {@link #punish(UUID, Ban, BanOperator)}.
+     * Bans can be applied to players using {@link #punish(UUID, Ban, ServerEntity, Component)} or {@link #punish(UUID, Ban, ServerEntity)}.
      * </p>
      *
      * <p>
@@ -196,8 +197,8 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @throws NullPointerException if {@code totalID} or {@code banType} are null.
      * @see Punishment#isValid()
      * @see #getLatestPunishment(UUID)
-     * @see #punish(UUID, Ban, BanOperator, Component)
-     * @see #punish(UUID, Ban, BanOperator)
+     * @see #punish(UUID, Ban, ServerEntity, Component)
+     * @see #punish(UUID, Ban, ServerEntity)
      */
     @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType) throws BackendException;
 

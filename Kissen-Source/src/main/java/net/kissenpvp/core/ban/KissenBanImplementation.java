@@ -28,6 +28,7 @@ import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.QuerySelect;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TemporalObject;
 import net.kissenpvp.core.base.KissenCore;
@@ -136,22 +137,22 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     }
 
     @Override
-    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator) throws BackendException {
+    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator) throws BackendException {
         return punish(totalID, ban, banOperator, true);
     }
 
     @Override
-    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException {
+    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException {
         return punish(totalID, ban, banOperator, true, reason);
     }
 
     @Override
-    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, boolean apply) throws BackendException {
+    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply) throws BackendException {
         return punish(totalID, ban, banOperator, apply, null);
     }
 
     @Override
-    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, boolean apply, @Nullable Component reason) throws BackendException {
+    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason) throws BackendException {
         return punish(totalID, ban, banOperator, apply, reason, getMeta());
     }
 
@@ -196,7 +197,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @return the punishment object representing the applied ban
      * @throws BackendException if there is an error in the backend operation
      */
-    protected @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull BanOperator banOperator, boolean apply, @Nullable Component reason, @NotNull Meta meta) throws BackendException {
+    protected @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason, @NotNull Meta meta) throws BackendException {
         KissenPunishmentNode kissenPunishmentNode = constructPunishmentNode(ban, banOperator, Optional.ofNullable(reason).map(component -> KissenComponentSerializer.getInstance().getJsonSerializer().serialize(component)).orElse(null));
         set(totalID, kissenPunishmentNode, meta);
 
@@ -334,7 +335,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @param reason      the reason for the ban (can be null)
      * @return the constructed punishment node
      */
-    protected @NotNull KissenPunishmentNode constructPunishmentNode(@NotNull B ban, @NotNull BanOperator banOperator, @Nullable String reason) {
+    protected @NotNull KissenPunishmentNode constructPunishmentNode(@NotNull B ban, @NotNull ServerEntity banOperator, @Nullable String reason) {
         return new KissenPunishmentNode(ban, banOperator, reason);
     }
 

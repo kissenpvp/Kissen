@@ -19,7 +19,6 @@
 package net.kissenpvp.core.api.networking.client.entitiy;
 
 import net.kissenpvp.core.api.ban.Ban;
-import net.kissenpvp.core.api.ban.BanOperator;
 import net.kissenpvp.core.api.ban.Punishment;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
@@ -70,9 +69,9 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
 
     @NotNull R grantRank(@NotNull Rank rank, @Nullable AccurateDuration accurateDuration);
 
-    @NotNull B punish(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException;
+    @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator) throws BackendException;
 
-    @NotNull B punish(@NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException;
+    @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException;
 
     @NotNull Optional<B> getBan(@NotNull String id) throws BackendException;
 

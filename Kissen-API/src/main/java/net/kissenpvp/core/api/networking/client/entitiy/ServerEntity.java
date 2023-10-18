@@ -18,16 +18,18 @@
 
 package net.kissenpvp.core.api.networking.client.entitiy;
 
-import net.kissenpvp.core.api.ban.BanOperator;
 import net.kissenpvp.core.api.message.Theme;
 import net.kissenpvp.core.api.networking.client.Client;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
 
-public interface ServerEntity extends Client, BanOperator {
+public interface ServerEntity extends Client {
 
     @NotNull String getName();
+
+    @NotNull Component displayName();
 
     @NotNull Locale getCurrentLocale();
 

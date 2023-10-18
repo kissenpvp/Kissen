@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.ban;
 
-import net.kissenpvp.core.api.ban.BanOperator;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.ban.Punishment;
 import net.kissenpvp.core.api.database.DataImplementation;
@@ -77,13 +76,8 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
     }
 
     @Override
-    public @NotNull BanOperator getBanOperator() {
-        return new BanOperator() {
-            @Override
-            public @NotNull Component displayName() {
-                return kissenPunishmentNode.banOperator().displayName(); //TODO sync player
-            }
-        };
+    public @NotNull String getBanOperator() {
+        return kissenPunishmentNode.operator();
     }
 
     @Override

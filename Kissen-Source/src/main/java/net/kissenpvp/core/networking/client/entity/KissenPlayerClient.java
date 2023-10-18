@@ -20,7 +20,6 @@ package net.kissenpvp.core.networking.client.entity;
 
 import net.kissenpvp.core.api.ban.Ban;
 import net.kissenpvp.core.api.ban.BanImplementation;
-import net.kissenpvp.core.api.ban.BanOperator;
 import net.kissenpvp.core.api.ban.Punishment;
 import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
@@ -31,6 +30,7 @@ import net.kissenpvp.core.api.message.ComponentSerializer;
 import net.kissenpvp.core.api.message.Theme;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.user.User;
@@ -108,12 +108,12 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     @Override
-    public @NotNull B punish(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException {
+    public @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator) throws BackendException {
         return punish(ban, banOperator, null);
     }
 
     @Override
-    public @NotNull B punish(@NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException {
+    public @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException {
         return (B) KissenCore.getInstance()
                 .getImplementation(BanImplementation.class)
                 .punish(getTotalID(), ban, banOperator, reason);

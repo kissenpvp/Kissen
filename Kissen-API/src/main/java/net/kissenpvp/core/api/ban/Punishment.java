@@ -89,7 +89,7 @@ public interface Punishment<T> extends TemporalObject {
      *
      * @return the name of the team member who applied this player ban
      */
-    @NotNull BanOperator getBanOperator();
+    @NotNull String getBanOperator();
 
     /**
      * Returns the type of the ban associated with this player ban.

@@ -44,10 +44,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a16372d5374d4a1c538e7a4765a4026a9c31dd59
+index 0000000000000000000000000000000000000000..6088d7e6fd28523e39d39469772b7fab2efb3163
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,486 @@
+@@ -0,0 +1,510 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -71,12 +71,15 @@ index 0000000000000000000000000000000000000000..a16372d5374d4a1c538e7a4765a4026a
 +import com.destroystokyo.paper.profile.CraftPlayerProfile;
 +import com.destroystokyo.paper.profile.PlayerProfile;
 +import com.mojang.authlib.GameProfile;
-+import net.kissenpvp.core.api.ban.BanOperator;
 +import net.kissenpvp.core.api.ban.BanType;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.meta.Meta;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
++import net.kissenpvp.core.api.message.MessageImplementation;
++import net.kissenpvp.core.api.message.Theme;
++import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
++import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.time.TimeImplementation;
 +import net.kissenpvp.core.api.user.User;
@@ -107,12 +110,7 @@ index 0000000000000000000000000000000000000000..a16372d5374d4a1c538e7a4765a4026a
 +import java.time.Duration;
 +import java.time.Instant;
 +import java.time.temporal.ChronoUnit;
-+import java.util.Date;
-+import java.util.Map;
-+import java.util.Objects;
-+import java.util.Optional;
-+import java.util.Set;
-+import java.util.UUID;
++import java.util.*;
 +import java.util.function.Function;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
@@ -200,22 +198,22 @@ index 0000000000000000000000000000000000000000..a16372d5374d4a1c538e7a4765a4026a
 +    }
 +
 +    @Override
-+    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @Nullable Component cause, @NotNull Context context) throws BackendException {
++    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, @Nullable Component cause, @NotNull Context context) throws BackendException {
 +        return punish(totalID, ban, banOperator, true, cause);
 +    }
 +
 +    @Override
-+    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @NotNull Context context) throws BackendException {
++    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, @NotNull Context context) throws BackendException {
 +        return punish(totalID, ban, banOperator, true, context);
 +    }
 +
 +    @Override
-+    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, boolean apply, @NotNull Context context) throws BackendException {
++    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, boolean apply, @NotNull Context context) throws BackendException {
 +        return punish(totalID, ban, banOperator, apply, null, context);
 +    }
 +
 +    @Override
-+    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, boolean apply, @Nullable Component cause, @NotNull Context context) throws BackendException {
++    public @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component cause, @NotNull Context context) throws BackendException {
 +        return punish(totalID, ban, banOperator, apply, cause, getMeta(context));
 +    }
 +
@@ -449,10 +447,36 @@ index 0000000000000000000000000000000000000000..a16372d5374d4a1c538e7a4765a4026a
 +            if (source == null) {
 +                throw new IllegalArgumentException("Source must not be null");
 +            }
-+            return punish(target.getPlayerClient().getTotalID(), new MinecraftBan(BanType.BAN, durationTransformer.create()), new BanOperator() {
++            // Detect source
++            return punish(target.getPlayerClient().getTotalID(), new MinecraftBan(BanType.BAN, durationTransformer.create()), new ServerEntity() {
++                @Override
++                public @NotNull String getName() {
++                    return source;
++                }
++
 +                @Override
 +                public @NotNull Component displayName() {
-+                    return LegacyComponentSerializer.legacyAmpersand().deserialize(source);
++                    return Component.text(source);
++                }
++
++                @Override
++                public @NotNull Locale getCurrentLocale() {
++                    return Bukkit.getKissen().getImplementation(LocalizationImplementation.class).getDefaultLocale();
++                }
++
++                @Override
++                public @NotNull Theme getTheme() {
++                    return Bukkit.getKissen().getImplementation(MessageImplementation.class).getDefaultTheme();
++                }
++
++                @Override
++                public boolean isConnected() {
++                    return false;
++                }
++
++                @Override
++                public boolean isClient() {
++                    return true;
 +                }
 +            }, reason == null ? null : LegacyComponentSerializer.legacySection().deserialize(reason));
 +        } catch (BackendException backendException) {
@@ -536,7 +560,7 @@ index 0000000000000000000000000000000000000000..a16372d5374d4a1c538e7a4765a4026a
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..878a0e1616df6af206aaffbf15d4fa28f6da6ef1
+index 0000000000000000000000000000000000000000..2c3be7f05b8ecbcec508285cf874e3a5f38b7e32
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java
 @@ -0,0 +1,131 @@
@@ -633,7 +657,7 @@ index 0000000000000000000000000000000000000000..878a0e1616df6af206aaffbf15d4fa28
 +
 +    @Override
 +    public @NotNull String getSource() {
-+        return LegacyComponentSerializer.legacyAmpersand().serialize(getBanOperator().displayName());
++        return getBanOperator();
 +    }
 +
 +    @Override

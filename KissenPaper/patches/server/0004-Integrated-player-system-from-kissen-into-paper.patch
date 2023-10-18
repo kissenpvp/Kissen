@@ -3,6 +3,7 @@ From: Groldi <chniucg@gmail.com>
 Date: Fri, 15 Sep 2023 22:45:32 +0200
 Subject: [PATCH] Integrated player system from kissen into paper
 
+Signed-off-by: Ivo <chniucg@gmail.com>
 
 diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 index daa157eaa021d039f9a092bea0b78f7c1f746e3b..2445edc12487678c2db1f6b274f95a77eb4663c1 100644
@@ -3288,10 +3289,19 @@ index 48d1444fbad1c57738807d0128b94160a5a17a4d..75fcd48b691e7a7879baaa7791ecef8c
          this.cserver.getPluginManager().callEvent(playerJoinEvent);
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index 03fc90a470c0f63d44161843cac88bea09166858..a026e6169ff37415bc457790d6777442d4eb7d8a 100644
+index 03fc90a470c0f63d44161843cac88bea09166858..79543c80a8a5f781924963ceadacd99a2229392f 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-@@ -34,6 +34,44 @@ import org.bukkit.metadata.MetadataValue;
+@@ -9,6 +9,8 @@ import java.util.LinkedHashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.UUID;
++
++import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+ import net.minecraft.core.GlobalPos;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.NbtOps;
+@@ -34,6 +36,43 @@ import org.bukkit.metadata.MetadataValue;
  import org.bukkit.plugin.Plugin;
  import org.bukkit.profile.PlayerProfile;
  
@@ -3306,7 +3316,6 @@ index 03fc90a470c0f63d44161843cac88bea09166858..a026e6169ff37415bc457790d6777442
 +import java.util.Locale;
 +
 +import net.kissenpvp.core.api.ban.Ban;
-+import net.kissenpvp.core.api.ban.BanOperator;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.event.EventCancelledException;
 +import net.kissenpvp.core.api.message.Theme;
@@ -3336,7 +3345,7 @@ index 03fc90a470c0f63d44161843cac88bea09166858..a026e6169ff37415bc457790d6777442
  @SerializableAs("Player")
  public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializable {
      private static final org.slf4j.Logger LOGGER = com.mojang.logging.LogUtils.getLogger(); // Paper
-@@ -41,6 +79,14 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -41,6 +80,14 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
      private final CraftServer server;
      private final PlayerDataStorage storage;
  
@@ -3351,7 +3360,7 @@ index 03fc90a470c0f63d44161843cac88bea09166858..a026e6169ff37415bc457790d6777442
      protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
          this.server = server;
          this.profile = profile;
-@@ -567,4 +613,387 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -567,4 +614,387 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
              manager.save();
          }
      }
@@ -3409,12 +3418,12 @@ index 03fc90a470c0f63d44161843cac88bea09166858..a026e6169ff37415bc457790d6777442
 +    }
 +
 +    @Override
-+    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException {
++    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull ServerEntity banOperator) throws BackendException {
 +        return getKissenPaperPlayerClient().punish(ban, banOperator);
 +    }
 +
 +    @Override
-+    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator, @Nullable Component reason) throws BackendException {
++    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException {
 +        return getKissenPaperPlayerClient().punish(ban, banOperator, reason);
 +    }
 +
@@ -3875,7 +3884,7 @@ index 017e97c1618b8ee4640b36a0ec1b07026047bfc3..32787c6234ab6884b7ac0f62967ddc24
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..b885da9cd3dcfc7d7151936be1aa7dd009382246 100644
+index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..1972057382abda27d8349120711b0b0ee79cb642 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -6,37 +6,15 @@ import com.google.common.collect.ImmutableSet;
@@ -3943,7 +3952,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..b885da9cd3dcfc7d7151936be1aa7dd0
  import org.bukkit.event.player.PlayerTeleportEvent;
  import org.bukkit.event.player.PlayerUnregisterChannelEvent;
  import org.bukkit.inventory.EquipmentSlot;
-@@ -168,13 +143,66 @@ import org.bukkit.inventory.ItemStack;
+@@ -168,13 +143,65 @@ import org.bukkit.inventory.ItemStack;
  import org.bukkit.map.MapCursor;
  import org.bukkit.map.MapView;
  import org.bukkit.metadata.MetadataValue;
@@ -3983,7 +3992,6 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..b885da9cd3dcfc7d7151936be1aa7dd0
 +
 +// KissenPaper start
 +import net.kissenpvp.core.api.ban.Ban;
-+import net.kissenpvp.core.api.ban.BanOperator;
 +import net.kissenpvp.core.api.base.KissenServer;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.event.EventCancelledException;
@@ -4012,7 +4020,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..b885da9cd3dcfc7d7151936be1aa7dd0
  
  @DelegateDeserialization(CraftOfflinePlayer.class)
  public class CraftPlayer extends CraftHumanEntity implements Player {
-@@ -199,6 +227,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -199,6 +226,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      private long lastSaveTime;
      // Paper end
  
@@ -4023,7 +4031,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..b885da9cd3dcfc7d7151936be1aa7dd0
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2422,7 +2454,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2422,7 +2453,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -4044,7 +4052,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..b885da9cd3dcfc7d7151936be1aa7dd0
      }
  
      @Override
-@@ -2768,7 +2812,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2768,7 +2811,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -4053,7 +4061,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..b885da9cd3dcfc7d7151936be1aa7dd0
      }
      // Paper end
      @Override
-@@ -3283,4 +3327,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3283,4 +3326,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end
@@ -4136,12 +4144,12 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..b885da9cd3dcfc7d7151936be1aa7dd0
 +    }
 +
 +    @Override
-+    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator) throws BackendException {
++    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull ServerEntity banOperator) throws BackendException {
 +        return getKissenPaperOnlinePlayerClient().punish(ban, banOperator);
 +    }
 +
 +    @Override
-+    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull BanOperator banOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) throws BackendException {
++    public @NotNull PaperPunishment punish(@NotNull Ban ban, @NotNull ServerEntity banOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) throws BackendException {
 +        return getKissenPaperOnlinePlayerClient().punish(ban, banOperator, reason);
 +    }
 +

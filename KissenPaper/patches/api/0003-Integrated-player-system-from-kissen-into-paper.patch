@@ -45,10 +45,10 @@ index 0000000000000000000000000000000000000000..3665cb5da0501f7cda075a633bab7cad
 +public interface PaperBan extends Ban {}
 diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0e31335d4cf1324119f8e4b6175f445bcbfd7259
+index 0000000000000000000000000000000000000000..80a250a61e514ae4186171404c1155427b4e0c81
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,108 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -71,6 +71,7 @@ index 0000000000000000000000000000000000000000..0e31335d4cf1324119f8e4b6175f445b
 +
 +import net.kissenpvp.core.api.ban.*;
 +import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kyori.adventure.text.Component;
 +import org.bukkit.ban.ProfileBanList;
@@ -148,13 +149,13 @@ index 0000000000000000000000000000000000000000..0e31335d4cf1324119f8e4b6175f445b
 +     * @return The created {@link PaperPunishment} instance.
 +     * @throws BackendException if an error occurs when trying to create or persist the punishment in the backend.
 +     */
-+    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @Nullable Component reason, @NotNull Context context) throws BackendException;
++    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, @Nullable Component reason, @NotNull Context context) throws BackendException;
 +
-+    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, @NotNull Context context) throws BackendException;
++    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, @NotNull Context context) throws BackendException;
 +
-+    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, boolean apply, @NotNull Context context) throws BackendException;
++    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, boolean apply, @NotNull Context context) throws BackendException;
 +
-+    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull BanOperator banOperator, boolean apply, @Nullable Component reason, @NotNull Context context) throws BackendException;
++    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason, @NotNull Context context) throws BackendException;
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java
 new file mode 100644
