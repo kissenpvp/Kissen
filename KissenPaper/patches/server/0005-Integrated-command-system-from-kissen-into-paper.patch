@@ -1415,10 +1415,10 @@ index 0000000000000000000000000000000000000000..301adc5b7fd02b66e120454188b394be
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java b/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a7521daf4c1d0e9f9661791007f3efab1b967868
+index 0000000000000000000000000000000000000000..bc40900b5f59cdf9a86ad8f542892af00abde3b3
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,67 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1439,13 +1439,19 @@ index 0000000000000000000000000000000000000000..a7521daf4c1d0e9f9661791007f3efab
 +
 +package net.kissenpvp.paper.command.parser;
 +
++import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerOfflineException;
++import net.kissenpvp.core.api.user.UserImplementation;
++import net.kissenpvp.core.api.user.UserInfo;
 +import net.kissenpvp.paper.api.command.PaperArgumentParser;
 +import org.bukkit.Bukkit;
 +import org.bukkit.OfflinePlayer;
++import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
 +
++import java.util.Collection;
 +import java.util.UUID;
++import java.util.stream.Collectors;
 +
 +
 +/**
@@ -1473,6 +1479,11 @@ index 0000000000000000000000000000000000000000..a7521daf4c1d0e9f9661791007f3efab
 +        {
 +            throw new PlayerOfflineException(input);
 +        }
++    }
++
++    @Override public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
++    {
++        return Bukkit.getKissen().getImplementation(UserImplementation.class).getUserProfiles().stream().map(UserInfo::getName).collect(Collectors.toSet());
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/parser/PlayerParser.java b/src/main/java/net/kissenpvp/paper/command/parser/PlayerParser.java

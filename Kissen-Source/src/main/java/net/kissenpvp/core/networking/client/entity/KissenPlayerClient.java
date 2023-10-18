@@ -94,10 +94,9 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     @Override
     public @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException {
         return Arrays.stream(getUser().getMeta()
-                        .execute(getUser().getMeta()
                                 .select(Column.TOTAL_ID)
                                 .appendFilter(Column.KEY, "total_id", FilterType.EQUALS)
-                                .appendFilter(Column.VALUE, getTotalID().toString(), FilterType.EQUALS)))
+                                .appendFilter(Column.VALUE, getTotalID().toString(), FilterType.EQUALS).execute())
                 .map(data -> data[0].substring(getUser().getSaveID().length()))
                 .map(UUID::fromString)
                 .collect(Collectors.toSet());

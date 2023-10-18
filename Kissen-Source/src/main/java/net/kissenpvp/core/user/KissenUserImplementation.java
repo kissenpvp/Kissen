@@ -107,7 +107,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
         return getOnlineUser().stream().filter(user -> user.getNotNull("name").equals(name)).findFirst().orElseGet(() ->
         {
             try {
-                String[][] data = getUserMeta().execute(getUserMeta().select(Column.TOTAL_ID).appendFilter(Column.KEY, "name", FilterType.EQUALS).appendFilter(Column.VALUE, name, FilterType.EQUALS));
+                String[][] data = getUserMeta().select(Column.TOTAL_ID).appendFilter(Column.KEY, "name", FilterType.EQUALS).appendFilter(Column.VALUE, name, FilterType.EQUALS).execute();
                 if (data.length != 0) {
                     return getUser(UUID.fromString(data[0][0].substring(getUserSaveID().length())));
                 }
@@ -208,7 +208,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
         Set<UserInfoNode> userInfos = new HashSet<>();
         QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).appendFilter(Column.TOTAL_ID, getUserSaveID(), FilterType.START).appendFilter(Column.KEY, "name", FilterType.EQUALS);
         try {
-            String[][] data = getUserMeta().execute(querySelect);
+            String[][] data = querySelect.execute();
             for (String[] user : data) {
                 UUID uuid = UUID.fromString(user[0].substring(getUserSaveID().length()));
                 String name = user[1];
@@ -302,10 +302,10 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @throws Exception if an error occurs during the execution of the update
      */
     public long rewriteTotalID(@NotNull UUID from, @NotNull UUID to) {
-        return getUserMeta().execute(getUserMeta().update(new QueryUpdateDirective(Column.VALUE, to.toString()))
+        return getUserMeta().update(new QueryUpdateDirective(Column.VALUE, to.toString()))
                 .appendFilter(Column.TOTAL_ID, getUserSaveID(), FilterType.START)
                 .appendFilter(Column.KEY, "total_id", FilterType.EQUALS)
-                .appendFilter(Column.VALUE, from.toString(), FilterType.EQUALS));
+                .appendFilter(Column.VALUE, from.toString(), FilterType.EQUALS).execute();
 
     }
 

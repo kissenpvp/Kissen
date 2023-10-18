@@ -32,6 +32,31 @@ index b7da8606e24b216b39020130fd2c42c7cd387a3a..2d6f8671c449981a848393ad3e207e53
 +    }
 +    // KissenPaper end
  }
+diff --git a/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java b/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..55167ae5fef79f24545df34479443dbb74399a57
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
+@@ -0,0 +1,19 @@
++package net.kissenpvp.paper.ban.command;
++
++import net.kissenpvp.paper.api.ban.PaperPunishment;
++import net.kissenpvp.paper.api.command.PaperArgumentParser;
++import org.jetbrains.annotations.NotNull;
++
++public class PaperPunishmentParser implements PaperArgumentParser<PaperPunishment>
++{
++    @Override public @NotNull String serialize(@NotNull PaperPunishment object)
++    {
++        return object.getID();
++    }
++
++    @Override public @NotNull PaperPunishment deserialize(@NotNull String input)
++    {
++        //TODO
++        return null;
++    }
++}
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..153b5031f087ef3caec0d9a36fa410dc3e3946db
@@ -555,10 +580,10 @@ index 0000000000000000000000000000000000000000..b09c3c75fd962ed7aab8f694f4bea263
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..e5dd3964f95ca1dcdc8f0d7145b566ce16ffe9af
+index 0000000000000000000000000000000000000000..d90715d018e9baf7466767cc23f1db9a8d61ae09
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java
-@@ -0,0 +1,164 @@
+@@ -0,0 +1,163 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -586,7 +611,6 @@ index 0000000000000000000000000000000000000000..e5dd3964f95ca1dcdc8f0d7145b566ce
 +import net.kissenpvp.paper.api.permission.PaperGroubablePermissionEntry;
 +import net.kissenpvp.paper.api.permission.PaperPermission;
 +import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
 +import java.util.Optional;
@@ -1536,10 +1560,10 @@ index 0000000000000000000000000000000000000000..9b3dd93968395c211b8ca8975895b13b
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java b/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3b0a7ee3337d6dd8ebec45533d0957f0691f78c2
+index 0000000000000000000000000000000000000000..ebc9bf7c16e1eb3b79553c4d7d9db54ccf8eaed4
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java
-@@ -0,0 +1,197 @@
+@@ -0,0 +1,194 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1561,13 +1585,11 @@ index 0000000000000000000000000000000000000000..3b0a7ee3337d6dd8ebec45533d0957f0
 +package net.kissenpvp.paper.permission.permissible;
 +
 +import net.kissenpvp.core.api.message.ComponentSerializer;
-+import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.permission.PaperPermissible;
 +import net.kissenpvp.paper.api.permission.PaperPermission;
 +import net.kissenpvp.paper.permission.KissenPaperAttachmentPermission;
 +import net.kissenpvp.paper.permission.KissenPaperGroupablePermissionEntry;
 +import net.kissenpvp.paper.permission.RemoveAttachmentRunnable;
-+import net.kissenpvp.paper.user.KissenPaperPublicUser;
 +import org.bukkit.Bukkit;
 +import org.bukkit.permissions.*;
 +import org.bukkit.plugin.Plugin;
@@ -1691,14 +1713,13 @@ index 0000000000000000000000000000000000000000..3b0a7ee3337d6dd8ebec45533d0957f0
 +
 +    @Override
 +    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions() {
-+        Set<PermissionAttachmentInfo> permissionAttachments = getPermissionList().stream().map(permission -> {
++        return getPermissionList().stream().map(permission -> {
 +            PermissionAttachment attachment = null;
 +            if (permission instanceof KissenPaperAttachmentPermission kissenPaperAttachmentPermission) {
 +                attachment = kissenPaperAttachmentPermission.getPermissionAttachment();
 +            }
 +            return new PermissionAttachmentInfo(parent, permission.getName(), attachment, permission.getValue());
 +        }).collect(Collectors.toSet());
-+        return permissionAttachments;
 +    }
 +
 +    @Override
@@ -1839,10 +1860,10 @@ index 0000000000000000000000000000000000000000..6e27b52d62505e5669f8b13235aba2cc
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..dd5dbf555dc0ba2c939d510d3fb7e829933d9f36
+index 0000000000000000000000000000000000000000..1dc4273c190d512036b4257a6370d112b1670cc6
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,95 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.mojang.authlib.GameProfile;
@@ -1851,9 +1872,6 @@ index 0000000000000000000000000000000000000000..dd5dbf555dc0ba2c939d510d3fb7e829
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.UserInfo;
 +import net.kissenpvp.core.api.user.UserRepository;
-+import net.kissenpvp.core.base.KissenCore;
-+import net.kissenpvp.core.user.KissenUserImplementation;
-+import net.kissenpvp.core.user.UserInfoNode;
 +import net.minecraft.server.players.GameProfileCache;
 +import org.bukkit.Bukkit;
 +import org.jetbrains.annotations.Contract;
@@ -2207,7 +2225,7 @@ index 0000000000000000000000000000000000000000..77d31929ec28e774955713bce9a965a8
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3a381f524da1945b8af75cc7b55b273fc24c1c06
+index 0000000000000000000000000000000000000000..0e55279320e158cb99830041f56a37e668eaf170
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 @@ -0,0 +1,134 @@
@@ -2279,7 +2297,7 @@ index 0000000000000000000000000000000000000000..3a381f524da1945b8af75cc7b55b273f
 +    @Override
 +    public @NotNull User getUser(@NotNull String name) throws BackendException {
 +        try {
-+            if (!getUserProfiles().contains(name)) {
++            if (getUserProfiles().stream().noneMatch(userInfo -> userInfo.getName().equals(name))) {
 +                throw new UnknownPlayerException(name);
 +            }
 +            return super.getUser(name);
@@ -2479,10 +2497,10 @@ index 0000000000000000000000000000000000000000..671da825ee272f8ef7a02e43ca5620df
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..635706148645761a43f98b2d0afc4feecb911e33
+index 0000000000000000000000000000000000000000..d577f93302821b058eaaa12834da9a16908fb76b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
-@@ -0,0 +1,251 @@
+@@ -0,0 +1,250 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.google.gson.JsonObject;
@@ -2507,7 +2525,6 @@ index 0000000000000000000000000000000000000000..635706148645761a43f98b2d0afc4fee
 +
 +import java.io.File;
 +import java.util.Collection;
-+import java.util.Collections;
 +import java.util.HashSet;
 +import java.util.Objects;
 +import java.util.Set;
@@ -2659,7 +2676,7 @@ index 0000000000000000000000000000000000000000..635706148645761a43f98b2d0afc4fee
 +            Set<LinkedOperatorDataNode> result = new HashSet<>();
 +
 +            QuerySelect select = getLocalUserMeta().select(Column.TOTAL_ID, Column.VALUE).appendFilter(Column.TOTAL_ID, getLocalUserSaveID(), FilterType.START).appendFilter(Column.KEY, "operator", FilterType.EQUALS);
-+            String[][] data = getLocalUserMeta().execute(select);
++            String[][] data = select.execute();
 +            for (String[] current : data) {
 +                UUID uuid = UUID.fromString(current[0].substring(getLocalUserSaveID().length()));
 +                UserInfo userInfo = Bukkit.getKissen().getImplementation(UserImplementation.class).getUserProfiles().stream().filter(currentUserInfo -> currentUserInfo.getUUID().equals(uuid)).findFirst().orElseThrow(() -> new RuntimeException(String.format("Unknown user profile %s.", uuid)));
@@ -2736,7 +2753,7 @@ index 0000000000000000000000000000000000000000..635706148645761a43f98b2d0afc4fee
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ecf76e7e10fbf7a66495223611058e2cf2976c48
+index 0000000000000000000000000000000000000000..70f34a75978203c8af045f79ba7eecc7a484fdaa
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
 @@ -0,0 +1,186 @@
@@ -2902,7 +2919,7 @@ index 0000000000000000000000000000000000000000..ecf76e7e10fbf7a66495223611058e2c
 +            Function<UUID, UserInfo> fetchUserProfile = uuid -> Bukkit.getKissen().getImplementation(UserImplementation.class).getCachedUserProfile(uuid).orElse(null);
 +            Function<String[], UserInfo> parse = (userData) -> fetchUserProfile.apply(UUID.fromString(userData[0].substring(getLocalUserSaveID().length())));
 +
-+            return Arrays.stream(getLocalUserMeta().execute(querySelect)).map(parse).filter(Objects::nonNull).collect(Collectors.toSet());
++            return Arrays.stream(querySelect.execute()).map(parse).filter(Objects::nonNull).collect(Collectors.toSet());
 +        } catch (BackendException backendException) {
 +            throw new RuntimeException("Something went wrong when fetching all whitelisted users from the database.", backendException);
 +        }
@@ -3813,10 +3830,10 @@ index 1c638a4b1f2c841928d8b2a7ae43e4ebb1f7eac7..31c40acd927245ad59d111e178a61d5f
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-index 315d8260e196709ed9084272aa640f11e327c0a8..c63d5d0d6068b362eaad109ee84052b604b9796f 100644
+index f7ebddd35ff5a60a81034fd7de035ebba83e9517..1441e648c1dfa3dd775c0b609a581eca84b74779 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-@@ -1523,4 +1523,27 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1527,4 +1527,27 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          return this.getHandle().getScoreboardName();
      }
      // Paper end - entity scoreboard name
@@ -3858,10 +3875,10 @@ index 017e97c1618b8ee4640b36a0ec1b07026047bfc3..32787c6234ab6884b7ac0f62967ddc24
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..98633ce2f722726bbecf6a5fea0a7e9872b54bdb 100644
+index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..b885da9cd3dcfc7d7151936be1aa7dd009382246 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -6,37 +6,41 @@ import com.google.common.collect.ImmutableSet;
+@@ -6,37 +6,15 @@ import com.google.common.collect.ImmutableSet;
  import com.google.common.io.BaseEncoding;
  import com.mojang.authlib.GameProfile;
  import com.mojang.datafixers.util.Pair;
@@ -3892,32 +3909,6 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..98633ce2f722726bbecf6a5fea0a7e98
 -import java.util.logging.Level;
 -import java.util.logging.Logger;
 -import javax.annotation.Nullable;
-+import net.kissenpvp.core.api.ban.Ban;
-+import net.kissenpvp.core.api.ban.BanOperator;
-+import net.kissenpvp.core.api.base.KissenServer;
-+import net.kissenpvp.core.api.database.meta.BackendException;
-+import net.kissenpvp.core.api.event.EventCancelledException;
-+import net.kissenpvp.core.api.message.Theme;
-+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
-+import net.kissenpvp.core.api.permission.PermissionGroup;
-+import net.kissenpvp.core.api.time.AccurateDuration;
-+import net.kissenpvp.core.api.user.User;
-+import net.kissenpvp.core.api.user.UserImplementation;
-+import net.kissenpvp.core.api.user.rank.Rank;
-+import net.kissenpvp.core.api.user.suffix.Suffix;
-+import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
-+import net.kissenpvp.core.api.user.usersetttings.UserSetting;
-+import net.kissenpvp.core.user.KissenUserImplementation;
-+import net.kissenpvp.paper.api.ban.PaperPunishment;
-+import net.kissenpvp.paper.api.base.Context;
-+import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
-+import net.kissenpvp.paper.api.permission.PaperPermissible;
-+import net.kissenpvp.paper.api.permission.PaperPermission;
-+import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
-+import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
-+import net.kissenpvp.paper.networking.client.entity.KissenPaperOnlinePlayerClient;
-+import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
-+import net.kissenpvp.paper.user.KissenPaperPublicUser;
 +import net.kyori.adventure.audience.Audience;
 +import net.md_5.bungee.api.chat.BaseComponent;
  import net.minecraft.advancements.AdvancementProgress;
@@ -3928,7 +3919,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..98633ce2f722726bbecf6a5fea0a7e98
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.network.FriendlyByteBuf;
  import net.minecraft.network.chat.Component;
-@@ -138,7 +142,6 @@ import org.bukkit.craftbukkit.advancement.CraftAdvancement;
+@@ -138,7 +116,6 @@ import org.bukkit.craftbukkit.advancement.CraftAdvancement;
  import org.bukkit.craftbukkit.advancement.CraftAdvancementProgress;
  import org.bukkit.craftbukkit.block.CraftBlockEntityState;
  import org.bukkit.craftbukkit.block.CraftBlockState;
@@ -3936,7 +3927,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..98633ce2f722726bbecf6a5fea0a7e98
  import org.bukkit.craftbukkit.block.CraftSign;
  import org.bukkit.craftbukkit.block.data.CraftBlockData;
  import org.bukkit.craftbukkit.conversations.ConversationTracker;
-@@ -146,7 +149,6 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
+@@ -146,7 +123,6 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
  import org.bukkit.craftbukkit.inventory.CraftItemStack;
  import org.bukkit.craftbukkit.map.CraftMapView;
  import org.bukkit.craftbukkit.map.RenderData;
@@ -3944,7 +3935,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..98633ce2f722726bbecf6a5fea0a7e98
  import org.bukkit.craftbukkit.scoreboard.CraftScoreboard;
  import org.bukkit.craftbukkit.util.CraftChatMessage;
  import org.bukkit.craftbukkit.util.CraftLocation;
-@@ -159,7 +161,6 @@ import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
+@@ -159,7 +135,6 @@ import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
  import org.bukkit.event.player.PlayerHideEntityEvent;
  import org.bukkit.event.player.PlayerRegisterChannelEvent;
  import org.bukkit.event.player.PlayerShowEntityEvent;
@@ -3952,7 +3943,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..98633ce2f722726bbecf6a5fea0a7e98
  import org.bukkit.event.player.PlayerTeleportEvent;
  import org.bukkit.event.player.PlayerUnregisterChannelEvent;
  import org.bukkit.inventory.EquipmentSlot;
-@@ -168,13 +169,38 @@ import org.bukkit.inventory.ItemStack;
+@@ -168,13 +143,66 @@ import org.bukkit.inventory.ItemStack;
  import org.bukkit.map.MapCursor;
  import org.bukkit.map.MapView;
  import org.bukkit.metadata.MetadataValue;
@@ -3989,11 +3980,39 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..98633ce2f722726bbecf6a5fea0a7e98
 +import java.util.WeakHashMap;
 +import java.util.logging.Level;
 +import java.util.logging.Logger;
++
++// KissenPaper start
++import net.kissenpvp.core.api.ban.Ban;
++import net.kissenpvp.core.api.ban.BanOperator;
++import net.kissenpvp.core.api.base.KissenServer;
++import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.api.event.EventCancelledException;
++import net.kissenpvp.core.api.message.Theme;
++import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
++import net.kissenpvp.core.api.permission.PermissionGroup;
++import net.kissenpvp.core.api.time.AccurateDuration;
++import net.kissenpvp.core.api.user.User;
++import net.kissenpvp.core.api.user.UserImplementation;
++import net.kissenpvp.core.api.user.rank.Rank;
++import net.kissenpvp.core.api.user.suffix.Suffix;
++import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
++import net.kissenpvp.core.api.user.usersetttings.UserSetting;
++import net.kissenpvp.core.user.KissenUserImplementation;
++import net.kissenpvp.paper.api.ban.PaperPunishment;
++import net.kissenpvp.paper.api.base.Context;
++import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
++import net.kissenpvp.paper.api.permission.PaperPermissible;
++import net.kissenpvp.paper.api.permission.PaperPermission;
++import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
++import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
++import net.kissenpvp.paper.networking.client.entity.KissenPaperOnlinePlayerClient;
++import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
++import net.kissenpvp.paper.user.KissenPaperPublicUser;
 +// KissenPaper stop
  
  @DelegateDeserialization(CraftOfflinePlayer.class)
  public class CraftPlayer extends CraftHumanEntity implements Player {
-@@ -199,6 +225,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -199,6 +227,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      private long lastSaveTime;
      // Paper end
  
@@ -4004,7 +4023,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..98633ce2f722726bbecf6a5fea0a7e98
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2422,7 +2452,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2422,7 +2454,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -4025,7 +4044,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..98633ce2f722726bbecf6a5fea0a7e98
      }
  
      @Override
-@@ -2768,7 +2810,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2768,7 +2812,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -4034,7 +4053,7 @@ index e188bb3ba5d2ec28421947c0b66b25eecb569bfe..98633ce2f722726bbecf6a5fea0a7e98
      }
      // Paper end
      @Override
-@@ -3283,4 +3325,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3283,4 +3327,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end
