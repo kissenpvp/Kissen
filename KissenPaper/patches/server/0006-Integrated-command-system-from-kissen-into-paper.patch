@@ -3,6 +3,7 @@ From: Groldi <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:30:00 +0200
 Subject: [PATCH] Integrated command system from kissen into paper
 
+Signed-off-by: Ivo <chniucg@gmail.com>
 
 diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
 new file mode 100644
@@ -326,10 +327,10 @@ index 0000000000000000000000000000000000000000..fb8a79bfc5d63b85c2ca48b6bb93a902
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..1ced7e59004442e0d3cd94caad778199ce5bcf04
+index 0000000000000000000000000000000000000000..9c51f522d4ff5a75ee3aeeb5381e3cc87446f91f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
-@@ -0,0 +1,404 @@
+@@ -0,0 +1,422 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -354,6 +355,7 @@ index 0000000000000000000000000000000000000000..1ced7e59004442e0d3cd94caad778199
 +import net.kissenpvp.core.api.command.annotations.CommandData;
 +import net.kissenpvp.core.api.command.executor.CommandExecutor;
 +import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
++import net.kissenpvp.core.api.database.StorageImplementation;
 +import net.kissenpvp.core.command.CommandHolder;
 +import net.kissenpvp.core.command.CommandInfo;
 +import net.kissenpvp.core.command.argument.Argument;
@@ -369,6 +371,7 @@ index 0000000000000000000000000000000000000000..1ced7e59004442e0d3cd94caad778199
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
 +
++import java.time.Duration;
 +import java.util.*;
 +
 +/**
@@ -436,6 +439,9 @@ index 0000000000000000000000000000000000000000..1ced7e59004442e0d3cd94caad778199
 +            return false;
 +        }
 +
++        String container = sender.getName() + ".commandcache";
++        Bukkit.getKissen().getImplementation(StorageImplementation.class).dropStorage(container);
++
 +        if (args.length > 0) {
 +            Boolean data = getChildCommand(args[0]).map(command -> command.execute(sender, commandLabel, Arrays.copyOfRange(args, 1, args.length)))
 +                    .orElse(null);
@@ -460,14 +466,27 @@ index 0000000000000000000000000000000000000000..1ced7e59004442e0d3cd94caad778199
 +
 +    @Override
 +    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
-+
 +        List<String> result = new ArrayList<>();
 +
 +        if (!validate(sender)) {
 +            return result;
 +        }
 +
-+        if (!(result = obtainChildrenTabSuggestions(sender, alias, args).orElse(obtainTabSuggestions(sender, new KissenPaperCommandPayload(alias, sender, getTargetValidator().parseSender(sender), args, this)))).isEmpty()) {
++        if (!(result = obtainChildrenTabSuggestions(sender, alias, args).orElseGet(() ->
++        {
++            String container = sender.getName() + ".commandcache";
++            String cacheKey = getFullName() + "." + alias + "." + args.length + ".";
++
++            Map<String, Object> data = Bukkit.getKissen().getImplementation(StorageImplementation.class).getStorage(container, Duration.ofSeconds(10));
++            if(data.containsKey(cacheKey))
++            {
++                return (List<String>) data.get(cacheKey);
++            }
++
++            List<String> tabOptions = obtainTabSuggestions(sender, new KissenPaperCommandPayload(alias, sender, getTargetValidator().parseSender(sender), args, this));
++            data.put(cacheKey, tabOptions);
++            return tabOptions;
++        })).isEmpty()) {
 +            result.remove("");
 +            return result;
 +        }
