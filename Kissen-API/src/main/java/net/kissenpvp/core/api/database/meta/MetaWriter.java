@@ -19,8 +19,6 @@
 package net.kissenpvp.core.api.database.meta;
 
 import net.kissenpvp.core.api.database.DataImplementation;
-import net.kissenpvp.core.api.database.queryapi.QuerySelect;
-import net.kissenpvp.core.api.database.queryapi.QueryUpdate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
