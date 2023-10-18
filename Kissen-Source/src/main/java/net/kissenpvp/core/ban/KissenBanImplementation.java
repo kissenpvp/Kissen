@@ -18,6 +18,8 @@
 
 package net.kissenpvp.core.ban;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import net.kissenpvp.core.api.ban.*;
 import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
@@ -37,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.lang.reflect.Type;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Function;
@@ -88,7 +91,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     @Override
     public boolean postStart() {
         try {
-            cachedBans.addAll(obtainBanSet());
+            cachedBans.addAll(fetchBanSet());
         } catch (BackendException backendException) {
             KissenCore.getInstance()
                     .getLogger()
@@ -253,13 +256,14 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @throws BackendException if there is an issue retrieving the player bans from the backend
      */
     protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull Meta meta) throws BackendException {
+        final Type type = new TypeToken<List<KissenPunishmentNode>>(){}.getType();
         QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, "punishment", FilterType.EQUALS);
         String[][] data = querySelect.execute();
-        return Stream.of(data).map(result ->
+        return Stream.of(data).flatMap(result ->
         {
             UUID totalID = UUID.fromString(result[0]);
-            KissenPunishmentNode kissenPunishmentNode = KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(result[1], KissenPunishmentNode.class);
-            return translatePunishment(totalID, kissenPunishmentNode, meta);
+            List<KissenPunishmentNode> kissenPunishmentNodes = new Gson().fromJson(result[1], type);
+            return kissenPunishmentNodes.stream().map(punishment -> translatePunishment(totalID, punishment, meta));
         }).collect(Collectors.toSet());
     }
 
@@ -359,7 +363,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      *                          query execution errors, timeout, or any other low-level
      *                          database related errors.
      */
-    protected abstract @NotNull @Unmodifiable Set<B> obtainBanSet() throws BackendException;
+    protected abstract @NotNull @Unmodifiable Set<B> fetchBanSet() throws BackendException;
 
     /**
      * Retrieves the meta information for the current object.

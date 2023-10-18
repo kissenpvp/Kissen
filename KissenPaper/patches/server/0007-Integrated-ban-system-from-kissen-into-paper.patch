@@ -3,6 +3,7 @@ From: Groldi <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:30:52 +0200
 Subject: [PATCH] Integrated ban system from kissen into paper
 
+Signed-off-by: Ivo <chniucg@gmail.com>
 
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBan.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBan.java
 new file mode 100644
@@ -43,10 +44,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3d6516ea5690079668e840928b745a890d621f13
+index 0000000000000000000000000000000000000000..a16372d5374d4a1c538e7a4765a4026a9c31dd59
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,484 @@
+@@ -0,0 +1,486 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -89,13 +90,13 @@ index 0000000000000000000000000000000000000000..3d6516ea5690079668e840928b745a89
 +import net.kissenpvp.paper.api.command.PaperCommandImplementation;
 +import net.kissenpvp.paper.ban.command.KissenPaperBanCommand;
 +import net.kissenpvp.paper.ban.command.PaperBanParser;
++import net.kissenpvp.paper.ban.command.PaperPunishmentParser;
 +import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
 +import net.kyori.adventure.text.Component;
 +import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 +import net.minecraft.server.MinecraftServer;
 +import org.bukkit.BanEntry;
 +import org.bukkit.Bukkit;
-+import org.bukkit.ban.ProfileBanList;
 +import org.bukkit.entity.Player;
 +import org.bukkit.event.player.PlayerKickEvent;
 +import org.jetbrains.annotations.Contract;
@@ -121,7 +122,9 @@ index 0000000000000000000000000000000000000000..3d6516ea5690079668e840928b745a89
 +    @Override
 +    public boolean preStart() {
 +        Bukkit.getKissen().getImplementation(PaperCommandImplementation.class).registerParser(PaperBan.class, new PaperBanParser());
++        Bukkit.getKissen().getImplementation(PaperCommandImplementation.class).registerParser(PaperPunishment.class, new PaperPunishmentParser());
 +        Bukkit.getKissen().getImplementation(PaperCommandImplementation.class).registerHandler(new PaperBanParser());
++        Bukkit.getKissen().getImplementation(PaperCommandImplementation.class).registerHandler(new PaperPunishmentParser());
 +        return super.preStart();
 +    }
 +
@@ -145,7 +148,7 @@ index 0000000000000000000000000000000000000000..3d6516ea5690079668e840928b745a89
 +    }
 +
 +    @Override
-+    protected @NotNull @Unmodifiable Set<PaperBan> obtainBanSet() throws BackendException {
++    protected @NotNull @Unmodifiable Set<PaperBan> fetchBanSet() throws BackendException {
 +        return Stream.concat(queryBanStream(getMeta()), queryBanStream(getMeta(Context.LOCAL)))
 +                .filter(Objects::nonNull)
 +                .collect(Collectors.toSet());
@@ -297,7 +300,7 @@ index 0000000000000000000000000000000000000000..3d6516ea5690079668e840928b745a89
 +
 +    @Override
 +    public <E extends BanEntry<? super PlayerProfile>> @Nullable E getBanEntry(@NotNull String target) {
-+        return (E) getBanEntry(resolvePlayerProfile(target));
++        return (E) getBanEntry(Objects.requireNonNull(resolvePlayerProfile(target)));
 +    }
 +
 +    @Override
@@ -411,9 +414,9 @@ index 0000000000000000000000000000000000000000..3d6516ea5690079668e840928b745a89
 +        if(target.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"))
 +        {
 +            UUID targetUUID = UUID.fromString(target);
-+            return MinecraftServer.getServer().getProfileCache().get(targetUUID).orElse(null);
++            return Objects.requireNonNull(MinecraftServer.getServer().getProfileCache()).get(targetUUID).orElse(null);
 +        }
-+        return MinecraftServer.getServer().getProfileCache().get(target).orElse(null);
++        return Objects.requireNonNull(MinecraftServer.getServer().getProfileCache()).get(target).orElse(null);
 +    }
 +
 +    /**
@@ -866,10 +869,10 @@ index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..9fd38ea496875a626312b828df29ae4130b1fe59
+index 0000000000000000000000000000000000000000..f765915f6240ba3b096dbb69162842d041fa8a53
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
-@@ -0,0 +1,133 @@
+@@ -0,0 +1,141 @@
 +package net.kissenpvp.paper.ban.command;
 +
 +import net.kissenpvp.core.api.ban.BanType;
@@ -881,6 +884,7 @@ index 0000000000000000000000000000000000000000..9fd38ea496875a626312b828df29ae41
 +import net.kissenpvp.core.time.KissenAccurateDuration;
 +import net.kissenpvp.paper.api.ban.PaperBan;
 +import net.kissenpvp.paper.api.ban.PaperBanImplementation;
++import net.kissenpvp.paper.api.ban.PaperPunishment;
 +import net.kyori.adventure.text.Component;
 +import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 +import org.bukkit.Bukkit;
@@ -889,6 +893,8 @@ index 0000000000000000000000000000000000000000..9fd38ea496875a626312b828df29ae41
 +import org.bukkit.entity.Player;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
++
++import java.time.Instant;
 +
 +public class KissenPaperBanCommand {
 +
@@ -950,6 +956,11 @@ index 0000000000000000000000000000000000000000..9fd38ea496875a626312b828df29ae41
 +        payload.getSender().sendMessage(obtainWarnedMessage(player.displayName(), Component.text(player.warn(paperBan, payload.getSender(), transformedReason.orElse(null))), transformedReason.orElse(null)));
 +    }
 +
++    @CommandData(value = "unban", description = "This command is used to lift a specific ban, identifying it by its unique ID.")
++    public void executeUnban(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperBan)  {
++        paperBan.setEnd(Instant.now());
++        payload.getSender().sendMessage("The ban, bearing the ID " + paperBan.getID() + ", has been revoked.");
++    }
 +
 +    /**
 +     * Obtain the punished message for a given display name, ban type, and reason component.
@@ -1067,16 +1078,77 @@ index 0000000000000000000000000000000000000000..a5483cbe7117fb928201a6ca56c71400
 +        return true;
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java b/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
+index 55167ae5fef79f24545df34479443dbb74399a57..8e61b4e0432ccf74bc354b5d9fd40ab19e784ae1 100644
+--- a/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
++++ b/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
+@@ -1,19 +1,39 @@
+ package net.kissenpvp.paper.ban.command;
+ 
++import net.kissenpvp.core.api.ban.Punishment;
++import net.kissenpvp.core.api.ban.exception.NonexistentPunishmentException;
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.time.TemporalObject;
++import net.kissenpvp.paper.api.ban.PaperBanImplementation;
+ import net.kissenpvp.paper.api.ban.PaperPunishment;
+ import net.kissenpvp.paper.api.command.PaperArgumentParser;
++import net.kissenpvp.paper.api.command.PaperCommandExceptionHandler;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
+ import org.jetbrains.annotations.NotNull;
+ 
+-public class PaperPunishmentParser implements PaperArgumentParser<PaperPunishment>
+-{
+-    @Override public @NotNull String serialize(@NotNull PaperPunishment object)
+-    {
++import java.util.Collection;
++import java.util.stream.Collectors;
++
++public class PaperPunishmentParser implements PaperArgumentParser<PaperPunishment>, PaperCommandExceptionHandler<NonexistentPunishmentException> {
++    @Override
++    public @NotNull String serialize(@NotNull PaperPunishment object) {
+         return object.getID();
+     }
+ 
+-    @Override public @NotNull PaperPunishment deserialize(@NotNull String input)
+-    {
+-        //TODO
+-        return null;
++    @Override
++    public @NotNull PaperPunishment deserialize(@NotNull String input) {
++        return Bukkit.getKissen().getImplementation(PaperBanImplementation.class).getPunishmentSet().stream().filter(punishment -> punishment.getID().equals(input)).findFirst().orElseThrow(() -> new NonexistentPunishmentException(input));
++    }
++
++    @Override
++    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
++        return Bukkit.getKissen().getImplementation(PaperBanImplementation.class).getPunishmentSet().stream().filter(TemporalObject::isValid).map(Punishment::getID).collect(Collectors.toSet());
++    }
++
++    @Override
++    public boolean handle(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull NonexistentPunishmentException throwable) {
++        commandPayload.getSender().sendMessage("The punishment " + throwable.getPunishment() + " was not found");
++        return true;
+     }
+ }
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 454cee69c217106b840dc5c0019f8f7f80ca3782..ed8a75e7654dd2d9fb578d40a941c8b31596c57b 100644
+index 454cee69c217106b840dc5c0019f8f7f80ca3782..cdcc088906a6ff01d4e425fbd8c967ef42de4df9 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-@@ -422,6 +422,13 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
+ import javax.annotation.Nullable;
+ import javax.crypto.Cipher;
+ import javax.crypto.SecretKey;
++
++import net.kissenpvp.core.api.ban.BanType;
+ import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.core.UUIDUtil;
+ import net.minecraft.network.Connection;
+@@ -422,6 +424,13 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                      return false;
                  }
  
 +                net.kissenpvp.paper.api.ban.PaperBanImplementation banImplementation = org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class);
-+                net.kissenpvp.paper.api.ban.PaperPunishment paperPunishment = banImplementation.getLatestPunishment(kissenPaperPublicUser.get("total_id").map(UUID::fromString).orElse(gameProfile.getId())).orElse(null);
++                net.kissenpvp.paper.api.ban.PaperPunishment paperPunishment = banImplementation.getLatestPunishment(kissenPaperPublicUser.get("total_id").map(UUID::fromString).orElse(gameProfile.getId()), BanType.BAN).orElse(null);
 +                if (paperPunishment != null) {
 +                    disconnect(io.papermc.paper.adventure.PaperAdventure.asVanilla(paperPunishment.getPunishmentText(getLocale(kissenPaperPublicUser))));
 +                    return false;
@@ -1085,7 +1157,7 @@ index 454cee69c217106b840dc5c0019f8f7f80ca3782..ed8a75e7654dd2d9fb578d40a941c8b3
                  kissenPaperPublicUser.getPrivateUserEntry(); // load private user
              } catch (BackendException backendException) {
                  disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
-@@ -429,6 +436,39 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -429,6 +438,39 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
              }
              return true;
          }
