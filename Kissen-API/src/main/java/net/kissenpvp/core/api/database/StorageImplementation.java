@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Map;
 
 /**
@@ -64,6 +65,40 @@ public interface StorageImplementation extends Implementation {
      * @return a map containing the previously saved data, or an empty map if the ID does not exist.
      */
     @NotNull Map<String, Object> getStorage(@NotNull String id);
+
+    /**
+     * This method is responsible for retrieving a storage map, which contains the relationship between some
+     * arbitrary strings and objects, for a given storage ID. The storage retrieval operation may be time-bound,
+     * which can be controlled by the `duration` parameter.
+     *
+     * <p> Usage example:
+     * <pre>
+     *     {@code
+     *     String storageId = "uniqueStorageId123";
+     *     Duration timeBound = Duration.ofSeconds(60);
+     *
+     *     // Assuming the existence of 'storageHandler' object
+     *     Map<String, Object> storage = storageHandler.getStorage(storageId, timeBound);
+     *     }
+     * </pre>
+     *
+     * <strong>Note:</strong> Thread-safe implementation of this method is strongly recommended.
+     *
+     * @param id       the unique identifier of the storage to retrieve. This parameter is marked with {@code @NotNull}
+     *                 annotation, which means this method will not accept null values for the `id` parameter. Any
+     *                 attempt
+     *                 to call this method with null `id` parameter will result in a {@code IllegalArgumentException}.
+     * @param duration {@code Duration} specifying the maximum time to wait for storage retrieval. It is acceptable
+     *                 to pass null for this parameter, which is indicated by the {@code @Nullable} annotation. A
+     *                 null value implies no time limit for the operation. A set timeout value will limit
+     *                 the time spent on trying to retrieve the requested storage.
+     * @return a {@code Map<String, Object>} that contains the contents of the requested storage. The returned map
+     * is guaranteed to be not null. However, it may be empty if there is no data in the given storage.
+     * If the specified `duration` expires before the storage is retrieved, the method will return an empty
+     * map. The `@NotNull` annotation ensures that this method will not return a null value.
+     * @throws IllegalArgumentException If `id` is null, an IllegalArgumentException will be thrown.
+     */
+    @NotNull Map<String, Object> getStorage(@NotNull String id, @Nullable Duration duration);
 
     /**
      * Drops the stored data associated with the specified ID.

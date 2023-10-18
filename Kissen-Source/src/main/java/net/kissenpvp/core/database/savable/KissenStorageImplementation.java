@@ -28,69 +28,92 @@ import java.io.File;
 import java.io.IOException;
 import java.io.NotSerializableException;
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 
-public class KissenStorageImplementation implements StorageImplementation {
+public class KissenStorageImplementation implements StorageImplementation
+{
 
     private final Set<StorageContainer> userStorageContainer;
     private final KissenObjectFile kissenObjectFile;
 
-    @SneakyThrows
-    public KissenStorageImplementation() {
+    @SneakyThrows public KissenStorageImplementation()
+    {
         this.userStorageContainer = new HashSet<>();
         kissenObjectFile = new KissenObjectFile(new File(".objcache"));
     }
 
-    @Override
-    public @NotNull Map<String, Object> getStorage(@NotNull String id) {
-        StorageContainer storageContainer =
-                userStorageContainer.stream().filter(storage -> storage.id().equals(id)).findFirst().orElse(null);
-        if (storageContainer == null) {
-            storageContainer = new StorageContainer(id, new HashMap<>());
-            userStorageContainer.add(storageContainer);
-        }
-        return storageContainer.storage();
+    @Override public @NotNull Map<String, Object> getStorage(@NotNull String id)
+    {
+        return getStorage(id, null);
     }
 
-    @Override
-    public void dropStorage(@NotNull String id) {
+    @Override public @NotNull Map<String, Object> getStorage(@NotNull String id, @Nullable Duration duration)
+    {
+        userStorageContainer.removeIf(storageContainer -> !storageContainer.valid());
+        Optional<StorageContainer> stringObjectMap =
+                userStorageContainer.stream().filter(container -> container.id().equals(
+                id)).findFirst();
+
+        return stringObjectMap.map(StorageContainer::storage).orElseGet(() ->
+        {
+            Instant end = Optional.ofNullable(duration).map(current -> Instant.now().plus(current)).orElse(null);
+            StorageContainer storageContainer = new StorageContainer(id, new HashMap<>(), end);
+            userStorageContainer.add(storageContainer);
+            return storageContainer.storage();
+        });
+    }
+
+    @Override public void dropStorage(@NotNull String id)
+    {
         userStorageContainer.removeIf(storageContainer -> storageContainer.id().equals(id));
     }
 
-    @Override
-    public boolean containsCacheObject(@NotNull String key) {
+    @Override public boolean containsCacheObject(@NotNull String key)
+    {
         return kissenObjectFile.getStringSerializableMap().containsKey(key);
     }
 
-    @Override
-    public synchronized boolean deleteCacheObject(@NotNull String key) throws IOException {
+    @Override public synchronized boolean deleteCacheObject(@NotNull String key) throws IOException
+    {
         boolean contains = kissenObjectFile.getStringSerializableMap().containsKey(key);
         writeCacheObject(key, null);
         return contains == kissenObjectFile.getStringSerializableMap().containsKey(key);
     }
 
-    @Override
-    public synchronized <T extends Serializable> void writeCacheObject(@NotNull String key, @Nullable T serializable) throws IllegalArgumentException, IOException {
-        try {
+    @Override public synchronized <T extends Serializable> void writeCacheObject(@NotNull String key,
+                                                                                 @Nullable T serializable) throws IllegalArgumentException, IOException
+    {
+        try
+        {
             kissenObjectFile.getStringSerializableMap().remove(key);
-            if (serializable != null) {
+            if (serializable != null)
+            {
                 kissenObjectFile.getStringSerializableMap().put(key, serializable);
             }
             kissenObjectFile.write();
-        } catch (NotSerializableException notSerializableException) {
-            if (serializable != null) {
-                throw new IllegalArgumentException(serializable.getClass().getName() + " is not serializable.", notSerializableException);
+        }
+        catch (NotSerializableException notSerializableException)
+        {
+            if (serializable != null)
+            {
+                throw new IllegalArgumentException(serializable.getClass().getName() + " is not serializable.",
+                        notSerializableException);
             }
         }
     }
 
-    @Override
-    public synchronized <T extends Serializable> @NotNull T readCacheObject(@NotNull String key, @NotNull Class<T> clazz) throws ClassCastException, NullPointerException {
-        if (!kissenObjectFile.getStringSerializableMap().containsKey(key)) {
+    @Override public synchronized <T extends Serializable> @NotNull T readCacheObject(@NotNull String key,
+                                                                                      @NotNull Class<T> clazz) throws ClassCastException, NullPointerException
+    {
+        if (!kissenObjectFile.getStringSerializableMap().containsKey(key))
+        {
             throw new NullPointerException("The requested cache object with the key " + key + " did not exits.");
         }
         return (T) kissenObjectFile.getStringSerializableMap().get(key);
@@ -102,6 +125,13 @@ public class KissenStorageImplementation implements StorageImplementation {
      * @author groldi
      * @since 1.0.0-SNAPSHOT
      */
-    private record StorageContainer(String id, Map<String, Object> storage) {
+    private record StorageContainer(@NotNull String id, @NotNull Map<String, Object> storage, @Nullable Instant expiry)
+    {
+
+        private boolean valid()
+        {
+            return expiry == null || expiry.isAfter(Instant.now());
+        }
+
     }
 }
