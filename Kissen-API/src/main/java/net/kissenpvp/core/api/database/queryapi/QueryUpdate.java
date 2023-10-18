@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 public interface QueryUpdate extends QueryComponent<QueryUpdate>
 {
-
     @NotNull QueryUpdateDirective[] getColumns();
+
+    long execute();
 }

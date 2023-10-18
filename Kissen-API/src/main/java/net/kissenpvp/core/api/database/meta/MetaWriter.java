@@ -539,9 +539,4 @@ public interface MetaWriter extends Serializable {
      * @see DataImplementation#toJson(Record)
      */
     <T extends Record> void setRecord(@NotNull String key, @NotNull T value) throws BackendException;
-
-    @NotNull String[][] execute(@NotNull QuerySelect querySelect) throws BackendException;
-
-    long execute(@NotNull QueryUpdate queryUpdate) throws BackendException;
-
 }

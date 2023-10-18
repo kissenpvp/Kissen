@@ -21,7 +21,7 @@ package net.kissenpvp.core.database.queryapi;
 import net.kissenpvp.core.api.database.queryapi.QueryUpdate;
 import net.kissenpvp.core.api.database.queryapi.QueryUpdateDirective;
 
-public class KissenQueryUpdate extends KissenQueryComponent<QueryUpdate> implements QueryUpdate
+public abstract class KissenQueryUpdate extends KissenQueryComponent<QueryUpdate> implements QueryUpdate
 {
     private final QueryUpdateDirective[] queryUpdateDirectives;
 

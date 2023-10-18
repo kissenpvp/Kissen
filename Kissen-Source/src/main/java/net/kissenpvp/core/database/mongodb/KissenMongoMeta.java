@@ -63,7 +63,7 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
     }
 
     @Override
-    public @NotNull String[][] execute(@NotNull QuerySelect querySelect) throws BackendException {
+    protected @NotNull String[][] execute(@NotNull QuerySelect querySelect) throws BackendException {
 
         FindIterable<Document> documents = getCollection().find(
                 Filters.and(decodeFilterQueries(querySelect.getFilterQueries())));
@@ -94,7 +94,7 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
     }
 
     @Override
-    public long execute(@NotNull QueryUpdate queryUpdate) throws BackendException {
+    protected long execute(@NotNull QueryUpdate queryUpdate) throws BackendException {
 
         return getCollection().updateMany(Filters.and(decodeFilterQueries(queryUpdate.getFilterQueries())),
                 Updates.combine(

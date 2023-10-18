@@ -116,7 +116,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     }
 
     @Override
-    public @NotNull String[][] execute(@NotNull QuerySelect querySelect) throws BackendException {
+    protected @NotNull String[][] execute(@NotNull QuerySelect querySelect) throws BackendException {
 
         StringBuilder sql = new StringBuilder("SELECT").append(" ");
         sql.append(transformSelectColumns(querySelect.getColumns())).append(" ");
@@ -133,7 +133,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     }
 
     @Override
-    public long execute(@NotNull QueryUpdate queryUpdate) throws BackendException {
+    protected long execute(@NotNull QueryUpdate queryUpdate) throws BackendException {
         StringBuilder sql = new StringBuilder("UPDATE").append(" ").append(getTable()).append(" ").append("SET").append(" ");
         String[] updateValues = transformUpdateColumns(sql, queryUpdate.getColumns());
         String[] whereValues = transformFilters(sql, queryUpdate.getFilterQueries());

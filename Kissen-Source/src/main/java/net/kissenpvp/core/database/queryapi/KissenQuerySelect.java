@@ -22,7 +22,7 @@ import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.QuerySelect;
 import org.jetbrains.annotations.NotNull;
 
-public class KissenQuerySelect extends KissenQueryComponent<QuerySelect> implements QuerySelect {
+public abstract class KissenQuerySelect extends KissenQueryComponent<QuerySelect> implements QuerySelect {
     private final Column[] columns;
 
     public KissenQuerySelect(@NotNull Column... columns) {

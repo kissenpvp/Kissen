@@ -23,4 +23,5 @@ import org.jetbrains.annotations.NotNull;
 public interface QuerySelect extends QueryComponent<QuerySelect>
 {
     @NotNull Column[] getColumns();
+    String[][] execute();
 }

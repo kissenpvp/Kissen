@@ -254,13 +254,25 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull QueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective) {
-        return new KissenQueryUpdate(queryUpdateDirective);
+    public @NotNull QuerySelect select(@NotNull Column... columns) {
+        return new KissenQuerySelect(columns)
+        {
+            @Override public String[][] execute()
+            {
+                return KissenBaseMeta.this.execute(this);
+            }
+        };
     }
 
     @Override
-    public @NotNull QuerySelect select(@NotNull Column... columns) {
-        return new KissenQuerySelect(columns);
+    public @NotNull QueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective) {
+        return new KissenQueryUpdate(queryUpdateDirective)
+        {
+            @Override public long execute()
+            {
+                return KissenBaseMeta.this.execute(this);
+            }
+        };
     }
 
     @Override
@@ -289,4 +301,7 @@ public abstract class KissenBaseMeta implements Meta {
     protected @NotNull QuerySelect getDefaultQuery(@NotNull String totalID, @NotNull String key) {
         return select(Column.VALUE).appendFilter(Column.TOTAL_ID, totalID, FilterType.EQUALS).appendFilter(Column.KEY, key, FilterType.EQUALS);
     }
+
+    protected abstract String[][] execute(@NotNull QuerySelect querySelect);
+    protected abstract long execute(@NotNull QueryUpdate queryUpdate);
 }
