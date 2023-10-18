@@ -41,6 +41,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * This class is an abstract implementation of the BanImplementation interface.
@@ -252,8 +253,14 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @throws BackendException if there is an issue retrieving the player bans from the backend
      */
     protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull Meta meta) throws BackendException {
-        //return Arrays.stream(meta.getRecordList("punishment")).map(dataProcessor()).collect(Collectors.toSet());
-        return new HashSet<>(); //TODO
+        QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, "punishment", FilterType.EQUALS);
+        String[][] data = querySelect.execute();
+        return Stream.of(data).map(result ->
+        {
+            UUID totalID = UUID.fromString(result[0]);
+            KissenPunishmentNode kissenPunishmentNode = KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(result[1], KissenPunishmentNode.class);
+            return translatePunishment(totalID, kissenPunishmentNode, meta);
+        }).collect(Collectors.toSet());
     }
 
     /**
