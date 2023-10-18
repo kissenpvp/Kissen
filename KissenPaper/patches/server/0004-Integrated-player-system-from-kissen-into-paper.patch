@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated player system from kissen into paper
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
-index b7da8606e24b216b39020130fd2c42c7cd387a3a..2d6f8671c449981a848393ad3e207e532a45b6a7 100644
+index daa157eaa021d039f9a092bea0b78f7c1f746e3b..2445edc12487678c2db1f6b274f95a77eb4663c1 100644
 --- a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 +++ b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 @@ -31,6 +31,10 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
@@ -19,7 +19,7 @@ index b7da8606e24b216b39020130fd2c42c7cd387a3a..2d6f8671c449981a848393ad3e207e53
      public CraftPlayerProfile(CraftPlayer player) {
          this.profile = player.getHandle().getGameProfile();
      }
-@@ -399,4 +403,12 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
+@@ -406,4 +410,12 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
              }
          }
      }
