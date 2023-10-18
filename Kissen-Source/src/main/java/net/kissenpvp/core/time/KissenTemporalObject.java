@@ -45,6 +45,6 @@ public abstract class KissenTemporalObject implements TemporalObject {
 
     @Override
     public boolean isValid() {
-        return getEnd().map(end -> end.isBefore(Instant.now())).orElse(true);
+        return getEnd().map(end -> end.isAfter(Instant.now())).orElse(true);
     }
 }
