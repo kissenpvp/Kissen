@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  kissenmongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: kissen
+    ports:
+      - "1200:27017"
+    volumes:
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+  kissenmysql:
+    image: mariadb:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: kissen
+      MYSQL_USER: kissen
+      MYSQL_PASSWORD: kissen
+    ports:
+      - "1201:3306"
+    volumes:
+      - ./config/init-mariadb.sql:/docker-entrypoint-initdb.d/init-mariadb.sql:ro
