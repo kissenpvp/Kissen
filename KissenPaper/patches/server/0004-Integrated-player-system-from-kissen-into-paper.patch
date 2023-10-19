@@ -3289,7 +3289,7 @@ index 48d1444fbad1c57738807d0128b94160a5a17a4d..75fcd48b691e7a7879baaa7791ecef8c
          this.cserver.getPluginManager().callEvent(playerJoinEvent);
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index 03fc90a470c0f63d44161843cac88bea09166858..79543c80a8a5f781924963ceadacd99a2229392f 100644
+index 03fc90a470c0f63d44161843cac88bea09166858..937fda2e3420376745fc1fc89cbec22e3ae8589a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -9,6 +9,8 @@ import java.util.LinkedHashMap;
@@ -3301,10 +3301,17 @@ index 03fc90a470c0f63d44161843cac88bea09166858..79543c80a8a5f781924963ceadacd99a
  import net.minecraft.core.GlobalPos;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.nbt.NbtOps;
-@@ -34,6 +36,43 @@ import org.bukkit.metadata.MetadataValue;
+@@ -27,12 +29,47 @@ import org.bukkit.ban.ProfileBanList;
+ import org.bukkit.configuration.serialization.ConfigurationSerializable;
+ import org.bukkit.configuration.serialization.SerializableAs;
+ import org.bukkit.craftbukkit.entity.memory.CraftMemoryMapper;
+-import org.bukkit.craftbukkit.profile.CraftPlayerProfile;
+ import org.bukkit.entity.EntityType;
+ import org.bukkit.entity.Player;
+ import org.bukkit.metadata.MetadataValue;
  import org.bukkit.plugin.Plugin;
- import org.bukkit.profile.PlayerProfile;
- 
+-import org.bukkit.profile.PlayerProfile;
++
 +// KissenPaper start
 +import org.bukkit.permissions.Permission;
 +import org.bukkit.permissions.Permissible;
@@ -3341,11 +3348,10 @@ index 03fc90a470c0f63d44161843cac88bea09166858..79543c80a8a5f781924963ceadacd99a
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +// KissenPaper end
-+
+ 
  @SerializableAs("Player")
  public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializable {
-     private static final org.slf4j.Logger LOGGER = com.mojang.logging.LogUtils.getLogger(); // Paper
-@@ -41,6 +80,14 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -41,6 +78,14 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
      private final CraftServer server;
      private final PlayerDataStorage storage;
  
@@ -3360,7 +3366,7 @@ index 03fc90a470c0f63d44161843cac88bea09166858..79543c80a8a5f781924963ceadacd99a
      protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
          this.server = server;
          this.profile = profile;
-@@ -567,4 +614,387 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -567,4 +612,387 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
              manager.save();
          }
      }
@@ -3428,13 +3434,13 @@ index 03fc90a470c0f63d44161843cac88bea09166858..79543c80a8a5f781924963ceadacd99a
 +    }
 +
 +    @Override
-+    public @NotNull Optional<PaperPunishment> getBan(@NotNull String id) throws BackendException {
-+        return getKissenPaperPlayerClient().getBan(id);
++    public @NotNull Optional<PaperPunishment> getPunishment(@NotNull String id) throws BackendException {
++        return getKissenPaperPlayerClient().getPunishment(id);
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable List<PaperPunishment> getBanHistory() throws BackendException {
-+        return getKissenPaperPlayerClient().getBanHistory();
++    public @NotNull @Unmodifiable List<PaperPunishment> getPunishmentHistory() throws BackendException {
++        return getKissenPaperPlayerClient().getPunishmentHistory();
 +    }
 +
 +    @Override
@@ -3884,7 +3890,7 @@ index 017e97c1618b8ee4640b36a0ec1b07026047bfc3..32787c6234ab6884b7ac0f62967ddc24
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..1972057382abda27d8349120711b0b0ee79cb642 100644
+index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..27398dccf429528ed6a04ce476ce936bbae4ccbd 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -6,37 +6,15 @@ import com.google.common.collect.ImmutableSet;
@@ -4154,13 +4160,13 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..1972057382abda27d8349120711b0b0e
 +    }
 +
 +    @Override
-+    public @NotNull Optional<@org.jetbrains.annotations.Nullable PaperPunishment> getBan(@NotNull String id) throws BackendException {
-+        return getKissenPaperOnlinePlayerClient().getBan(id);
++    public @NotNull Optional<@org.jetbrains.annotations.Nullable PaperPunishment> getPunishment(@NotNull String id) throws BackendException {
++        return getKissenPaperOnlinePlayerClient().getPunishment(id);
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable List<PaperPunishment> getBanHistory() throws BackendException {
-+        return getKissenPaperOnlinePlayerClient().getBanHistory();
++    public @NotNull @Unmodifiable List<PaperPunishment> getPunishmentHistory() throws BackendException {
++        return getKissenPaperOnlinePlayerClient().getPunishmentHistory();
 +    }
 +
 +    @Override
