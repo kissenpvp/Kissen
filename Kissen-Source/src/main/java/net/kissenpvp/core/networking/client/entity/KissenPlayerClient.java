@@ -62,14 +62,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
 
     @Override
     public @NotNull @Unmodifiable List<R> getRankHistory() {
-        return getUser().getList("rank_list")
-                .map(list -> list.toRecordList(KissenPlayerRankNode.class)
-                        .toRecordList()
-                        .stream()
-                        .map(rank -> translateRank(rank, getRankSaveChanges()))
-                        .sorted(Comparator.comparing(PlayerRank::getStart))
-                        .toList())
-                .orElse(new ArrayList<>());
+        return getUser().getList("rank_list").map(list -> list.toRecordList(KissenPlayerRankNode.class).toRecordList().stream().map(rank -> translateRank(rank, getRankSaveChanges())).sorted(Comparator.comparing(PlayerRank::getStart)).toList()).orElse(new ArrayList<>());
     }
 
     @Override
@@ -86,20 +79,15 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     public @NotNull R grantRank(@NotNull Rank rank, @Nullable AccurateDuration accurateDuration) {
         String id = KissenCore.getInstance().getImplementation(DataImplementation.class).generateID();
         KissenPlayerRankNode kissenPlayerRankNode = new KissenPlayerRankNode(id, rank.getName(), new TemporalMeasureNode(accurateDuration));
-        R playerRank = translateRank(kissenPlayerRankNode, record -> {});
+        R playerRank = translateRank(kissenPlayerRankNode, record -> {
+        });
         setRank(playerRank);
         return playerRank;
     }
 
     @Override
     public @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException {
-        return Arrays.stream(getUser().getMeta()
-                                .select(Column.TOTAL_ID)
-                                .appendFilter(Column.KEY, "total_id", FilterType.EQUALS)
-                                .appendFilter(Column.VALUE, getTotalID().toString(), FilterType.EQUALS).execute())
-                .map(data -> data[0].substring(getUser().getSaveID().length()))
-                .map(UUID::fromString)
-                .collect(Collectors.toSet());
+        return Arrays.stream(getUser().getMeta().select(Column.TOTAL_ID).appendFilter(Column.KEY, "total_id", FilterType.EQUALS).appendFilter(Column.VALUE, getTotalID().toString(), FilterType.EQUALS).execute()).map(data -> data[0].substring(getUser().getSaveID().length())).map(UUID::fromString).collect(Collectors.toSet());
     }
 
     @Override
@@ -114,21 +102,17 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
 
     @Override
     public @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException {
-        return (B) KissenCore.getInstance()
-                .getImplementation(BanImplementation.class)
-                .punish(getTotalID(), ban, banOperator, reason);
+        return (B) KissenCore.getInstance().getImplementation(BanImplementation.class).punish(getTotalID(), ban, banOperator, reason);
     }
 
     @Override
-    public @NotNull Optional<B> getBan(@NotNull String id) throws BackendException {
-        return getBanHistory().stream().filter(punishment -> punishment.getID().equals(id)).findFirst();
+    public @NotNull Optional<B> getPunishment(@NotNull String id) throws BackendException {
+        return getPunishmentHistory().stream().filter(punishment -> punishment.getID().equals(id)).findFirst();
     }
 
     @Override
-    public @NotNull @Unmodifiable List<B> getBanHistory() throws BackendException {
-        return (List<B>) KissenCore.getInstance()
-                .getImplementation(BanImplementation.class)
-                .getPunishmentSet(getTotalID());
+    public @NotNull @Unmodifiable List<B> getPunishmentHistory() throws BackendException {
+        return KissenCore.getInstance().getImplementation(BanImplementation.class).getPunishmentSet(getTotalID()).stream().sorted((Comparator<B>) (punishment1, punishment2) -> punishment2.getStart().compareTo(punishment1.getStart())).toList();
     }
 
     @Override
@@ -143,12 +127,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
 
     @Override
     public @NotNull Set<Suffix> getSuffixSet() {
-        return getUser().getListNotNull("suffix_list")
-                .toRecordList(SuffixNode.class)
-                .toRecordList()
-                .stream()
-                .map(KissenSuffix::new)
-                .collect(Collectors.toUnmodifiableSet());
+        return getUser().getListNotNull("suffix_list").toRecordList(SuffixNode.class).toRecordList().stream().map(KissenSuffix::new).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
@@ -158,29 +137,22 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
 
     @Override
     public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
-        SuffixNode suffixNode = new SuffixNode(name, ComponentSerializer.getInstance()
-                .getJsonSerializer()
-                .serialize(content));
-        SavableRecordList<SuffixNode> savableRecordList = getUser().getListNotNull("suffix_list")
-                .toRecordList(SuffixNode.class);
+        SuffixNode suffixNode = new SuffixNode(name, ComponentSerializer.getInstance().getJsonSerializer().serialize(content));
+        SavableRecordList<SuffixNode> savableRecordList = getUser().getListNotNull("suffix_list").toRecordList(SuffixNode.class);
 
         if (savableRecordList.contains(suffixNode)) {
             return overrideSuffix(name, savableRecordList, suffixNode);
         }
 
         if (!savableRecordList.add(suffixNode)) {
-            KissenCore.getInstance()
-                    .getLogger()
-                    .error("A suffix by the name '{}' from user '{}' could not be added and only god knows why (and probably some programmers who are better than me).", name, getName());
+            KissenCore.getInstance().getLogger().error("A suffix by the name '{}' from user '{}' could not be added and only god knows why (and probably some programmers who are better than me).", name, getName());
         }
         return Optional.empty();
     }
 
     @Override
     public boolean deleteSuffix(@NotNull String name) {
-        return getUser().getListNotNull("suffix_list")
-                .toRecordList(SuffixNode.class)
-                .removeIfRecord(currentRecord -> currentRecord.name().equals(name));
+        return getUser().getListNotNull("suffix_list").toRecordList(SuffixNode.class).removeIfRecord(currentRecord -> currentRecord.name().equals(name));
     }
 
     @Override
@@ -190,42 +162,24 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
 
     @Override
     public void setSelectedSuffix(@NotNull String name) throws NullPointerException {
-        getUser().set("selected_suffix", Objects.requireNonNull(getSuffix(name).orElseThrow(NullPointerException::new))
-                .getName());
+        getUser().set("selected_suffix", Objects.requireNonNull(getSuffix(name).orElseThrow(NullPointerException::new)).getName());
     }
 
     @Override
     public @NotNull Locale getCurrentLocale() {
-        LocalizationImplementation localizationImplementation = KissenCore.getInstance()
-                .getImplementation(LocalizationImplementation.class);
-        return localizationImplementation.getLocale(getUser().get("forced_language")
-                .orElse(getUser().get("language").orElse(localizationImplementation.getDefaultLocale().toString())));
+        LocalizationImplementation localizationImplementation = KissenCore.getInstance().getImplementation(LocalizationImplementation.class);
+        return localizationImplementation.getLocale(getUser().get("forced_language").orElse(getUser().get("language").orElse(localizationImplementation.getDefaultLocale().toString())));
     }
 
     @Override
     public @NotNull Component styledRankName() {
-        return getRank().getSource()
-                .map(rank -> Component.empty()
-                        .append(rank.getPrefix()
-                                .map(prefix -> prefix.append(Component.space()))
-                                .orElse(Component.empty()))
-                        .append(displayName())
-                        .append(rank.getSuffix()
-                                .map(suffix -> Component.space().append(suffix))
-                                .orElse(Component.empty())))
-                .orElse(Component.empty().append(displayName()));
+        return getRank().getSource().map(rank -> Component.empty().append(rank.getPrefix().map(prefix -> prefix.append(Component.space())).orElse(Component.empty())).append(displayName()).append(rank.getSuffix().map(suffix -> Component.space().append(suffix)).orElse(Component.empty()))).orElse(Component.empty().append(displayName()));
     }
 
     @Override
     public @NotNull <X> UserSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass) {
         try {
-            return (UserSetting<X>) new KissenUserBoundSettings<>(KissenCore.getInstance()
-                    .getImplementation(UserImplementation.class)
-                    .getUserSettings()
-                    .stream()
-                    .filter(currentSetting -> currentSetting.getClass().equals(settingClass))
-                    .findFirst()
-                    .orElseThrow(ClassCastException::new), this.getUniqueId());
+            return (UserSetting<X>) new KissenUserBoundSettings<>(KissenCore.getInstance().getImplementation(UserImplementation.class).getUserSettings().stream().filter(currentSetting -> currentSetting.getClass().equals(settingClass)).findFirst().orElseThrow(ClassCastException::new), this.getUniqueId());
         } catch (ClassCastException classCastException) {
             throw new IllegalArgumentException(String.format("Attempted to request content from setting %s which isn't registered. Please ensure the setting %s is correctly registered before trying to fetch its content.", settingClass.getSimpleName(), settingClass.getSimpleName()));
         }
@@ -254,17 +208,10 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     @SuppressWarnings("UnusedReturnValue")
     public @NotNull Optional<R> setRank(@NotNull R playerRank) {
         KissenPlayerRankNode kissenPlayerRankNode = ((KissenPlayerRank<?>) playerRank).getKissenPlayerRankNode();
-        return getUser().getListNotNull("rank_list")
-                .toRecordList(KissenPlayerRankNode.class)
-                .toRecordList()
-                .stream()
-                .filter(rank -> rank.equals(kissenPlayerRankNode))
-                .findFirst()
-                .map(oldOne -> Optional.of(overrideRank(translateRank(oldOne, null), playerRank)))
-                .orElseGet(() -> {
-                    addRank(kissenPlayerRankNode);
-                    return Optional.empty();
-                });
+        return getUser().getListNotNull("rank_list").toRecordList(KissenPlayerRankNode.class).toRecordList().stream().filter(rank -> rank.equals(kissenPlayerRankNode)).findFirst().map(oldOne -> Optional.of(overrideRank(translateRank(oldOne, null), playerRank))).orElseGet(() -> {
+            addRank(kissenPlayerRankNode);
+            return Optional.empty();
+        });
     }
 
     /**
@@ -286,9 +233,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     private @NotNull R overrideRank(@NotNull R oldRank, @NotNull R playerRank) {
         KissenPlayerRankNode kissenPlayerRankNode = ((KissenPlayerRank<?>) playerRank).getKissenPlayerRankNode();
         //TODO events
-        getUser().getListNotNull("rank_list")
-                .toRecordList(KissenPlayerRankNode.class)
-                .replaceRecord((rank -> rank.equals(kissenPlayerRankNode)), kissenPlayerRankNode);
+        getUser().getListNotNull("rank_list").toRecordList(KissenPlayerRankNode.class).replaceRecord((rank -> rank.equals(kissenPlayerRankNode)), kissenPlayerRankNode);
         return oldRank;
     }
 
@@ -309,9 +254,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     private void addRank(@NotNull KissenPlayerRankNode kissenPlayerRankNode) throws NullPointerException {
 
         if (!getUser().containsList("rank_list")) {
-            String jsonRankNode = KissenCore.getInstance()
-                    .getImplementation(DataImplementation.class)
-                    .toJson(kissenPlayerRankNode);
+            String jsonRankNode = KissenCore.getInstance().getImplementation(DataImplementation.class).toJson(kissenPlayerRankNode);
             getUser().setList("rank_list", Collections.singletonList(jsonRankNode));
             return;
         }
@@ -337,8 +280,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
      */
     protected @NotNull DataWriter getRankSaveChanges() {
         return record -> {
-            SavableRecordList<KissenPlayerRankNode> savableRecordList = getUser().getListNotNull("rank_list")
-                    .toRecordList(KissenPlayerRankNode.class);
+            SavableRecordList<KissenPlayerRankNode> savableRecordList = getUser().getListNotNull("rank_list").toRecordList(KissenPlayerRankNode.class);
             if (savableRecordList.contains((KissenPlayerRankNode) record)) {
                 savableRecordList.replaceRecord((currentRank) -> currentRank.equals(record), (KissenPlayerRankNode) record);
                 return;
@@ -370,9 +312,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     public long getOnlineTime(User user) {
-        return isConnected() ? Long.parseLong(user.get("online_time")
-                .orElse("0")) + (System.currentTimeMillis() - (long) user.getStorage()
-                .get("time_joined")) : Long.parseLong(user.get("online_time").orElse("-1"));
+        return isConnected() ? Long.parseLong(user.get("online_time").orElse("0")) + (System.currentTimeMillis() - (long) user.getStorage().get("time_joined")) : Long.parseLong(user.get("online_time").orElse("-1"));
     }
 
     public long getLastPlayed(User user) {
@@ -380,20 +320,14 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     private @NotNull Optional<Suffix> overrideSuffix(@NotNull String name, SavableRecordList<SuffixNode> savableRecordList, SuffixNode suffixNode) {
-        Optional<Suffix> suffix = savableRecordList.toRecordList()
-                .stream()
-                .filter(currentSuffix -> currentSuffix.name().equals(name))
-                .findFirst()
-                .map(KissenSuffix::new);
+        Optional<Suffix> suffix = savableRecordList.toRecordList().stream().filter(currentSuffix -> currentSuffix.name().equals(name)).findFirst().map(KissenSuffix::new);
 
         switch (savableRecordList.replaceRecord((current -> current.equals(suffixNode)), suffixNode)) {
-            case 0 -> KissenCore.getInstance()
-                    .getLogger()
-                    .warn("A suffix by the name '{}' from user '{}' was found in the list but was not replaced.", name, getName());
+            case 0 ->
+                    KissenCore.getInstance().getLogger().warn("A suffix by the name '{}' from user '{}' was found in the list but was not replaced.", name, getName());
             case 1 -> { /* ignored */ }
-            default -> KissenCore.getInstance()
-                    .getLogger()
-                    .warn("A duplicated suffix by the name '{}' from user '{}' has been detected, this can only happen, if the dataset was manually adjusted. It's advised to clear this duplicate.", name, getName());
+            default ->
+                    KissenCore.getInstance().getLogger().warn("A duplicated suffix by the name '{}' from user '{}' has been detected, this can only happen, if the dataset was manually adjusted. It's advised to clear this duplicate.", name, getName());
         }
         return suffix;
     }

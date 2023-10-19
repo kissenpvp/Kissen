@@ -73,7 +73,7 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
 
     @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException;
 
-    @NotNull Optional<B> getBan(@NotNull String id) throws BackendException;
+    @NotNull Optional<B> getPunishment(@NotNull String id) throws BackendException;
 
     /**
      * Returns a {@link List} containing all {@link Punishment} this player had.
@@ -81,7 +81,7 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
      *
      * @return a list containing all bans this player ever had.
      */
-    @NotNull @Unmodifiable List<B> getBanHistory() throws BackendException;
+    @NotNull @Unmodifiable List<B> getPunishmentHistory() throws BackendException;
 
     @NotNull Component displayName();
 
