@@ -81,11 +81,6 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
 
         kissenLocalizationImplementation.register("server.ban.player.warned", new MessageFormat("Player {0} has been warned {1} time(s)."));
         kissenLocalizationImplementation.register("server.ban.player.warned.cause", new MessageFormat("Player {0} has been warned {1} time(s) with the cause: \"{2}\"."));
-
-        kissenLocalizationImplementation.register("server.ban.created.permanent", new MessageFormat("The ban has been created with the ID {0}, designated with the name {1}, classified under the type {2}, and assigned a permanent duration."));
-        kissenLocalizationImplementation.register("server.ban.created", new MessageFormat("The ban has been created with the ID {0}, designated with the name {1}, classified under the type {2}, and assigned a duration of {3}."));
-        kissenLocalizationImplementation.register("server.ban.deleted", new MessageFormat("The ban with ID {0} was successfully deleted."));
-        kissenLocalizationImplementation.register("server.ban.invalid", new MessageFormat("The ban with ID {0} was not found."));
         return BanImplementation.super.start();
     }
 
