@@ -35,7 +35,6 @@ import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.message.KissenComponentSerializer;
 import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -43,7 +42,6 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.lang.reflect.Type;
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -172,16 +170,6 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     }
 
     /**
-     * Filters the punishment based on the given metadata.
-     *
-     * @param meta The metadata used for filtering the punishment.
-     * @return A QuerySelect object that represents the filtered punishment.
-     */
-    private @NotNull QuerySelect punishmentFilter(@NotNull Meta meta) {
-        return meta.select(Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, "punishment", FilterType.EQUALS);
-    }
-
-    /**
      * Applies a ban to a specified user with the given parameters.
      *
      * @param totalID     the UUID of the user to be banned
@@ -197,7 +185,9 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
         set(totalID, kissenPunishmentNode, meta);
 
         P punishment = translatePunishment(totalID, kissenPunishmentNode, meta);
-        applyBan(punishment);
+        if(apply) {
+            applyBan(punishment);
+        }
 
         return punishment;
     }
@@ -252,31 +242,22 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @throws BackendException if there is an issue retrieving the player bans from the backend
      */
     protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull Meta meta) throws BackendException {
-        final Type type = new TypeToken<List<KissenPunishmentNode>>(){}.getType();
+        final Type type = new TypeToken<List<String>>(){}.getType();
         QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, "punishment", FilterType.EQUALS);
         String[][] data = querySelect.execute();
         return Stream.of(data).flatMap(result ->
         {
             UUID totalID = UUID.fromString(result[0]);
-            List<KissenPunishmentNode> kissenPunishmentNodes = new Gson().fromJson(result[1], type);
-            return kissenPunishmentNodes.stream().map(punishment -> translatePunishment(totalID, punishment, meta));
+            List<String> kissenPunishmentNodes = new Gson().fromJson(result[1], type);
+
+            return kissenPunishmentNodes.stream().map(node ->
+            {
+                KissenPunishmentNode punishment = KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(node, KissenPunishmentNode.class);
+                return translatePunishment(totalID, punishment, meta);
+            });
         }).collect(Collectors.toSet());
     }
 
-    /**
-     * Processes the given data to produce an instance of type P.
-     *
-     * @return a function that accepts a String array and returns an instance of type P.
-     */
-    @Contract(pure = true)
-    private @NotNull Function<? super String[], ? extends P> dataProcessor() {
-        return (Function<String[], P>) data -> {
-            KissenPunishmentNode kissenPunishmentNode = KissenCore.getInstance()
-                    .getImplementation(DataImplementation.class)
-                    .fromJson(data[1], KissenPunishmentNode.class);
-            return translatePunishment(UUID.fromString(data[0]), kissenPunishmentNode, getMeta());
-        };
-    }
 
     /**
      * Sets a KissenPunishmentNode in the metadata for a given totalID.
