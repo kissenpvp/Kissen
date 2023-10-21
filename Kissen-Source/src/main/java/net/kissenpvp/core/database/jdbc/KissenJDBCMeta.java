@@ -82,7 +82,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     public @NotNull @Unmodifiable List<String> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException {
 
         AtomicReference<List<String>> listAtomicReference = new AtomicReference<>(new ArrayList<>());
-        getPreparedStatement(String.format("SELECT %s FROM %s WHERE %s = ? AND %s = ?;", getValueColumn(), getTable(), getTotalIDColumn(), getValueColumn()), (preparedStatement ->
+        getPreparedStatement(String.format("SELECT %s FROM %s WHERE %s = ? AND %s = ?;", getValueColumn(), getTable(), getTotalIDColumn(), getKeyColumn()), (preparedStatement ->
         {
             preparedStatement.setString(1, totalID);
             preparedStatement.setString(2, key);
@@ -101,6 +101,13 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
 
     @Override
     public void setString(@NotNull String totalID, @NotNull String key, @Nullable String value) throws BackendException {
+        getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND %s = ?;", getTable(), getTotalIDColumn(), getKeyColumn()), (preparedStatement ->
+        {
+            preparedStatement.setString(1, totalID);
+            preparedStatement.setString(2, key);
+            preparedStatement.executeUpdate();
+        })); // I love sql and especially sqlite
+
         getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn()), (preparedStatement ->
         {
             preparedStatement.setString(1, totalID);
