@@ -21,7 +21,7 @@ This project provides a robust and comprehensive API solution specifically desig
 
    You should have the following installed:
 
-    - Java SDK version 20
+    - Java SDK version 17
 
 2. **Dependency Management**
 
