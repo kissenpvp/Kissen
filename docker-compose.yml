@@ -23,4 +23,4 @@ services:
     ports:
       - "1201:3306"
     volumes:
-      - ./config/init-mariadb.sql:/docker-entrypoint-initdb.d/init-mariadb.sql:ro
+      - ./scripts/init-mariadb.sql:/docker-entrypoint-initdb.d/init-mariadb.sql:ro
