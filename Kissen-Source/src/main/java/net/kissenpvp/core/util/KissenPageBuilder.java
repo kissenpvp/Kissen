@@ -66,36 +66,23 @@ public class KissenPageBuilder<T> implements PageBuilder<T>
     {
         if (this.entries.isEmpty())
         {
-            throw new NullPointerException("List of entries cannot be empty!");
+            throw new IllegalArgumentException("List of entries cannot be empty!");
         }
 
-        final List<T> PAGE_ENTRIES = new ArrayList<>();
+        List<T> pageEntries = new ArrayList<>();
 
-        if (currentPage < 1)
+        currentPage = Math.max(1, currentPage);
+        currentPage = Math.min(currentPage, this.getLastPage());
+
+        int startIndex = (currentPage - 1) * this.splitter;
+        int endIndex = Math.min(startIndex + this.splitter, this.entries.size());
+
+        for (int i = startIndex; i < endIndex; i++)
         {
-            currentPage = 1;
-        }
-        else
-        {
-            if (currentPage > this.getLastPage())
-            {
-                currentPage = this.getLastPage();
-            }
+            pageEntries.add(this.entries.get(i));
         }
 
-        for (int i = ((currentPage - 1) * this.splitter); i < (((currentPage - 1) * this.splitter) + this.splitter); i++)
-        {
-            try
-            {
-                PAGE_ENTRIES.add(this.entries.get(i));
-            }
-            catch (IndexOutOfBoundsException ignored)
-            {
-            }
-
-        }
-
-        return PAGE_ENTRIES;
+        return pageEntries;
     }
 
     /**
