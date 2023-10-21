@@ -7,10 +7,10 @@ Signed-off-by: Ivo <chniucg@gmail.com>
 
 diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..fb8a79bfc5d63b85c2ca48b6bb93a9026c580e16
+index 0000000000000000000000000000000000000000..540e5653878ccd1172efaa59573317c92082889a
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
-@@ -0,0 +1,314 @@
+@@ -0,0 +1,321 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -37,7 +37,6 @@ index 0000000000000000000000000000000000000000..fb8a79bfc5d63b85c2ca48b6bb93a902
 +import net.kissenpvp.core.base.KissenCore;
 +import net.kissenpvp.core.command.KissenCommandImplementation;
 +import net.kissenpvp.core.command.argument.MethodEvaluator;
-+import net.kissenpvp.core.command.handler.CommandExceptionHandler;
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 +import net.kissenpvp.paper.api.command.KissenCommand;
 +import net.kissenpvp.paper.api.command.PaperArgumentParser;
@@ -110,6 +109,14 @@ index 0000000000000000000000000000000000000000..fb8a79bfc5d63b85c2ca48b6bb93a902
 +        kissenLocalizationImplementation.register("server.command.mojang.profile.invalid", new MessageFormat("Mojangs repository does not contain the specified profile."));
 +        kissenLocalizationImplementation.register("server.command.player.offline", new MessageFormat("The player {0} seems to be offline."));
 +        kissenLocalizationImplementation.register("server.command.unknown", new MessageFormat("Unknown command. Type \"/help\" for help."));
++
++        kissenLocalizationImplementation.register("server.command.general.header", new MessageFormat("===== [ {0} ] ====="));
++        kissenLocalizationImplementation.register("server.command.general.header.paged", new MessageFormat("===== [ {0} ({1}/{2}) ] ====="));
++        kissenLocalizationImplementation.register("server.command.general.footer", new MessageFormat("===== [ {0} ] ====="));
++        kissenLocalizationImplementation.register("server.command.general.footer.paged", new MessageFormat("===== [ {0} ({1}/{2}) ] ====="));
++
++        kissenLocalizationImplementation.register("server.command.general.key.value", new MessageFormat("{0}: {1}"));
++
 +        return super.start();
 +    }
 +
