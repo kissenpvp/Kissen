@@ -67,3 +67,41 @@ index 0000000000000000000000000000000000000000..40392c8b5f129106015ab5b49dc8764a
 +                .serialize(Component.translatable(languageKey)));
 +    }
 +}
+diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+index 4771748712fdb7270f0a9872af88402a96821ced..cec511973c0f1612042cc921965fa78997258088 100644
+--- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
++++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+@@ -2061,6 +2061,7 @@ public class ServerPlayer extends Player {
+     }
+     public void updateOptionsNoEvents(ClientInformation clientOptions) {
+         // Paper end
++        updateLocale(clientOptions.language()); // KissenPaper
+         this.language = clientOptions.language();
+         this.adventure$locale = net.kyori.adventure.translation.Translator.parseLocale(this.language); // Paper
+         this.requestedViewDistance = clientOptions.viewDistance();
+@@ -2659,4 +2660,12 @@ public class ServerPlayer extends Player {
+         return (CraftPlayer) super.getBukkitEntity();
+     }
+     // CraftBukkit end
++
++    // KissenPaper start
++    public void updateLocale(@org.jetbrains.annotations.NotNull String locale)
++    {
++        getBukkitEntity().getUser().set("locale", locale);
++    }
++    // KissenPaper end
++
+ }
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index a88ea78714a1a0ba120928edb2290ff6491f33d5..b853623e5e596ad2864af9fdc0ce0dc475e61184 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -3143,7 +3143,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+ 
+     @Override
+     public void openBook(final net.kyori.adventure.inventory.Book book) {
+-        final java.util.Locale locale = this.getHandle().adventure$locale;
++        final java.util.Locale locale = getCurrentLocale(); //this.getHandle().adventure$locale; // KissenPaper
+         final net.minecraft.world.item.ItemStack item = io.papermc.paper.adventure.PaperAdventure.asItemStack(book, locale);
+         final ServerPlayer player = this.getHandle();
+         final ServerGamePacketListenerImpl connection = player.connection;

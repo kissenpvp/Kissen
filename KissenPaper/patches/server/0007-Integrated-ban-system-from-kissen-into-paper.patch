@@ -925,7 +925,7 @@ index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..2fa3642fc2db394d53c9c79a7565c571ea82357e
+index 0000000000000000000000000000000000000000..7306a0567fca56d621d2f1ac6c2975cc03c71361
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 @@ -0,0 +1,239 @@
@@ -938,6 +938,7 @@ index 0000000000000000000000000000000000000000..2fa3642fc2db394d53c9c79a7565c571
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.util.PageBuilder;
++import net.kissenpvp.core.message.EnumColorProvider;
 +import net.kissenpvp.core.util.KissenPageBuilder;
 +import net.kissenpvp.paper.api.ban.PaperBan;
 +import net.kissenpvp.paper.api.ban.PaperBanImplementation;
@@ -1053,15 +1054,14 @@ index 0000000000000000000000000000000000000000..2fa3642fc2db394d53c9c79a7565c571
 +    @CommandData(value = "baninfo", aliases = {"punishmentinfo", "bi", "pi"})
 +    public void banInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperPunishment) {
 +
-+        Component valid = Component.text("[" + (paperPunishment.isValid() ? "✔" : "❌") + "]");
-+        Component header = Component.translatable("server.command.general.header", Component.text(paperPunishment.getName()).append(Component.space()).append(valid));
-+        Component footer = Component.translatable("server.command.general.footer", Component.text(paperPunishment.getName()).append(Component.space()).append(valid));
++        Component header = Component.translatable("server.command.general.header", Component.text(paperPunishment.getName()));
++        Component footer = Component.translatable("server.command.general.footer", Component.text(paperPunishment.getName()));
 +
-+        Component id = Component.translatable("server.ban.punishment.id");
-+        Component by = Component.translatable("server.ban.punishment.operator");
-+        Component start = Component.translatable("server.ban.punishment.start");
-+        Component predictedEnd = Component.translatable("server.ban.punishment.predicted.end");
-+        Component end = Component.translatable("server.ban.punishment.end");
++        Component id = Component.translatable("server.ban.punishment.id").color(EnumColorProvider.DEFAULT.getTextColor());
++        Component by = Component.translatable("server.ban.punishment.operator").color(EnumColorProvider.DEFAULT.getTextColor());
++        Component start = Component.translatable("server.ban.punishment.start").color(EnumColorProvider.DEFAULT.getTextColor());
++        Component predictedEnd = Component.translatable("server.ban.punishment.predicted.end").color(EnumColorProvider.DEFAULT.getTextColor());
++        Component end = Component.translatable("server.ban.punishment.end").color(EnumColorProvider.DEFAULT.getTextColor());
 +
 +        TranslatableComponent banInfo = Component.translatable("server.command.general.key.value");
 +
@@ -1069,9 +1069,9 @@ index 0000000000000000000000000000000000000000..2fa3642fc2db394d53c9c79a7565c571
 +        builder.appendNewline().append(banInfo.args(id, constructCopyable(paperPunishment.getID())));
 +        builder.appendNewline().append(banInfo.args(by, Component.text(paperPunishment.getBanOperator())));
 +        paperPunishment.getCause().ifPresent(cause ->
-+                builder.appendNewline().append(banInfo.args(Component.translatable("server.ban.punishment.cause"), cause)));
++                builder.appendNewline().append(banInfo.args(Component.translatable("server.ban.punishment.cause").color(EnumColorProvider.DEFAULT.getTextColor()), cause)));
 +
-+        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault()).withLocale(payload.getSender().getCurrentLocale());
++        DateTimeFormatter formatter = payload.getSender().getFormatter(FormatStyle.SHORT);
 +        builder.appendNewline().append(banInfo.args(start, Component.text(formatter.format(paperPunishment.getStart()))));
 +        builder.appendNewline().append(banInfo.args(predictedEnd, paperPunishment.getPredictedEnd().map(formatter::format).map(Component::text).orElse(Component.text("permanent"))));
 +        if(!paperPunishment.getEnd().equals(paperPunishment.getPredictedEnd()))
