@@ -110,7 +110,7 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
                 .getImplementation(LocalizationImplementation.class)
                 .getDefaultLocale()
                 .toString().toLowerCase();
-        if (key.equals("language") && Objects.equals(value, defaultLanguage)) {
+        if (key.equals("locale") && Objects.equals(value, defaultLanguage)) {
             delete(key); // delete if default language is updated
             return;
         }

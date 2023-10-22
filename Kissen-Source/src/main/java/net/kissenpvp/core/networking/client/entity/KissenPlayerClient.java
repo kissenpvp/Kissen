@@ -168,7 +168,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     @Override
     public @NotNull Locale getCurrentLocale() {
         LocalizationImplementation localizationImplementation = KissenCore.getInstance().getImplementation(LocalizationImplementation.class);
-        return localizationImplementation.getLocale(getUser().get("forced_language").orElse(getUser().get("language").orElse(localizationImplementation.getDefaultLocale().toString())));
+        return localizationImplementation.getLocale(getUser().get("forced_locale").orElse(getUser().get("locale").orElse(localizationImplementation.getDefaultLocale().toString())));
     }
 
     @Override
