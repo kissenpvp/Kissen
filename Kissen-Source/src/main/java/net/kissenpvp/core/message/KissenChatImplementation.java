@@ -21,20 +21,15 @@ package net.kissenpvp.core.message;
 import net.kissenpvp.core.api.message.ChatImplementation;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.Optional;
 
-
-public class KissenChatImplementation implements ChatImplementation {
-
+public class KissenChatImplementation implements ChatImplementation
+{
     @Override
-    public @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity serverEntity, net.kyori.adventure.text.@NotNull Component @org.jetbrains.annotations.NotNull ... components) {
-
-        System.out.println(sender + " " + serverEntity + " " + Arrays.toString(components));
-
-        return Optional.of(Component.join(JoinConfiguration.noSeparators(), components));
+    public @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity serverEntity, @NotNull Component @NotNull ... components)
+    {
+        return Optional.of(serverEntity.getTheme().style(components));
     }
 }
