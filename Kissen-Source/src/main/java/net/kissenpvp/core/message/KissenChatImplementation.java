@@ -30,6 +30,12 @@ public class KissenChatImplementation implements ChatImplementation
     @Override
     public @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity serverEntity, @NotNull Component @NotNull ... components)
     {
-        return Optional.of(serverEntity.getTheme().style(components));
+        return Optional.of(styleComponent(serverEntity, components));
+    }
+
+    @Override
+    public @NotNull Component styleComponent(@NotNull ServerEntity serverEntity, @NotNull Component... components)
+    {
+        return serverEntity.getTheme().style(components);
     }
 }
