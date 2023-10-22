@@ -925,10 +925,10 @@ index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..12a3e11f91cf85b13d08de7f601287a2d5c1f80c
+index 0000000000000000000000000000000000000000..2fa3642fc2db394d53c9c79a7565c571ea82357e
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
-@@ -0,0 +1,327 @@
+@@ -0,0 +1,239 @@
 +package net.kissenpvp.paper.ban.command;
 +
 +import net.kissenpvp.core.api.ban.BanType;
@@ -936,7 +936,6 @@ index 0000000000000000000000000000000000000000..12a3e11f91cf85b13d08de7f601287a2
 +import net.kissenpvp.core.api.command.annotations.CommandData;
 +import net.kissenpvp.core.api.command.annotations.Optional;
 +import net.kissenpvp.core.api.database.meta.BackendException;
-+import net.kissenpvp.core.api.message.Comment;
 +import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.util.PageBuilder;
 +import net.kissenpvp.core.util.KissenPageBuilder;
@@ -961,8 +960,6 @@ index 0000000000000000000000000000000000000000..12a3e11f91cf85b13d08de7f601287a2
 +import java.time.format.DateTimeFormatter;
 +import java.time.format.FormatStyle;
 +import java.util.List;
-+import java.util.Objects;
-+import java.util.Set;
 +
 +public class KissenPaperBanCommand {
 +
@@ -1043,11 +1040,11 @@ index 0000000000000000000000000000000000000000..12a3e11f91cf85b13d08de7f601287a2
 +        Component currentPageComponent = Component.text(currentPage);
 +        Component lastPageComponent = Component.text(pageBuilder.getLastPage());
 +
-+        Component header = Component.translatable("server.general.header.paged", offlinePlayer.displayName(), currentPageComponent, lastPageComponent);
-+        Component footer = Component.translatable("server.general.footer.paged", offlinePlayer.displayName(), currentPageComponent, lastPageComponent);
++        Component header = Component.translatable("server.command.general.header.paged", offlinePlayer.displayName(), currentPageComponent, lastPageComponent);
++        Component footer = Component.translatable("server.command.general.footer.paged", offlinePlayer.displayName(), currentPageComponent, lastPageComponent);
 +
 +        Builder builder = Component.text().appendNewline().append(header);
-+        builder.append(punishmentHistory(payload, pageBuilder.getEntries(currentPage)));
++        builder.append(buildCompactHistory(payload, pageBuilder.getEntries(currentPage)));
 +
 +        builder.appendNewline().append(footer).appendNewline();
 +        payload.getSender().sendMessage(builder);
@@ -1057,16 +1054,16 @@ index 0000000000000000000000000000000000000000..12a3e11f91cf85b13d08de7f601287a2
 +    public void banInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperPunishment) {
 +
 +        Component valid = Component.text("[" + (paperPunishment.isValid() ? "✔" : "❌") + "]");
-+        Component header = Component.translatable("server.general.header", Component.text(paperPunishment.getName()).append(Component.space()).append(valid));
-+        Component footer = Component.translatable("server.general.footer", Component.text(paperPunishment.getName()).append(Component.space()).append(valid));
++        Component header = Component.translatable("server.command.general.header", Component.text(paperPunishment.getName()).append(Component.space()).append(valid));
++        Component footer = Component.translatable("server.command.general.footer", Component.text(paperPunishment.getName()).append(Component.space()).append(valid));
 +
 +        Component id = Component.translatable("server.ban.punishment.id");
 +        Component by = Component.translatable("server.ban.punishment.operator");
 +        Component start = Component.translatable("server.ban.punishment.start");
-+        Component end = Component.translatable("server.ban.punishment.end");
 +        Component predictedEnd = Component.translatable("server.ban.punishment.predicted.end");
++        Component end = Component.translatable("server.ban.punishment.end");
 +
-+        TranslatableComponent banInfo = Component.translatable("server.general.key.value");
++        TranslatableComponent banInfo = Component.translatable("server.command.general.key.value");
 +
 +        Builder builder = Component.text().appendNewline().append(header);
 +        builder.appendNewline().append(banInfo.args(id, constructCopyable(paperPunishment.getID())));
@@ -1076,10 +1073,10 @@ index 0000000000000000000000000000000000000000..12a3e11f91cf85b13d08de7f601287a2
 +
 +        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault()).withLocale(payload.getSender().getCurrentLocale());
 +        builder.appendNewline().append(banInfo.args(start, Component.text(formatter.format(paperPunishment.getStart()))));
-+        builder.appendNewline().append(banInfo.args(end, paperPunishment.getEnd().map(formatter::format).map(Component::text).orElse(Component.text("permanent"))));
++        builder.appendNewline().append(banInfo.args(predictedEnd, paperPunishment.getPredictedEnd().map(formatter::format).map(Component::text).orElse(Component.text("permanent"))));
 +        if(!paperPunishment.getEnd().equals(paperPunishment.getPredictedEnd()))
 +        {
-+            builder.appendNewline().append(banInfo.args(end, paperPunishment.getPredictedEnd().map(formatter::format).map(Component::text).orElse(Component.text("permanent"))));
++            builder.appendNewline().append(banInfo.args(end, paperPunishment.getEnd().map(formatter::format).map(Component::text).orElse(Component.text("permanent"))));
 +        }
 +
 +        builder.appendNewline().append(footer);
@@ -1096,7 +1093,7 @@ index 0000000000000000000000000000000000000000..12a3e11f91cf85b13d08de7f601287a2
 +        }).orElse(1);
 +    }
 +
-+    private @NotNull Component punishmentHistory(@NotNull CommandPayload<CommandSender> payload, @NotNull List<PaperPunishment> punishmentHistory) {
++    private @NotNull Component buildCompactHistory(@NotNull CommandPayload<CommandSender> payload, @NotNull List<PaperPunishment> punishmentHistory) {
 +        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault()).withLocale(payload.getSender().getCurrentLocale());
 +        Builder component = Component.text();
 +        for (PaperPunishment paperPunishment : punishmentHistory) {
@@ -1114,91 +1111,6 @@ index 0000000000000000000000000000000000000000..12a3e11f91cf85b13d08de7f601287a2
 +        }
 +
 +        return component.asComponent();
-+    }
-+
-+    public void banInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer offlinePlayer) {
-+        CommandSender sender = payload.getSender();
-+
-+        try {
-+            Component header = Component.translatable("server.general.header", Component.translatable("server.player.details"));
-+            Builder builder = Component.text().appendNewline().append(header);
-+
-+            String name = Objects.requireNonNull(offlinePlayer.getName());
-+            String playerID = offlinePlayer.getUniqueId().toString();
-+            String totalID = offlinePlayer.getTotalID().toString();
-+
-+            builder.appendNewline().append(Component.translatable("server.general.key.value", Component.translatable("server.player.name"), constructCopyable(name)));
-+            builder.appendNewline().append(Component.translatable("server.general.key.value", Component.translatable("server.player.id"), constructCopyable(playerID)));
-+            builder.appendNewline().append(Component.translatable("server.general.key.value", Component.translatable("server.total.id"), constructCopyable(totalID)));
-+
-+            List<PaperPunishment> punishmentHistory = offlinePlayer.getPunishmentHistory();
-+            if (!punishmentHistory.isEmpty()) {
-+                builder.appendNewline().append(punishmentHistory(payload, punishmentHistory));
-+            }
-+
-+            builder.appendNewline().append(Component.translatable("server.general.footer", Component.translatable("server.player.details")));
-+
-+            sender.sendMessage(builder.appendNewline());
-+        } catch (BackendException backendException) {
-+            sender.sendMessage("An error occurred while fetching player data.");
-+        }
-+    }
-+
-+    @CommandData(value = "ban.info", aliases = "ban.list")
-+    public void banInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull java.util.Optional<PaperPunishment> paperPunishment) {
-+        paperPunishment.ifPresentOrElse(selectedPunishment -> specificBanInfo(payload, selectedPunishment), () -> sendAllBansInfo(payload.getSender()));
-+    }
-+
-+    public void specificBanInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperPunishment) {
-+        CommandSender sender = payload.getSender();
-+
-+        Component header = Component.translatable("server.general.header", Component.translatable("server.ban.punishment.details"));
-+        Builder builder = Component.text().appendNewline().append(header);
-+
-+        Component templateName = Component.translatable(" (" + paperPunishment.getName() + ")");
-+        builder.appendNewline().append(Component.text("Ban ID: ").append(constructCopyable(paperPunishment.getID()))).append(templateName);
-+        builder.appendNewline().append(Component.text("Ban Operator: " + paperPunishment.getBanOperator()));
-+
-+        paperPunishment.getCause().ifPresent(cause -> builder.appendNewline().append(Component.text("Ban Cause: ").append(cause)));
-+
-+        List<Comment> comments = paperPunishment.getComments();
-+        if (!comments.isEmpty()) {
-+            builder.append(Component.text("\nComments: "));
-+            for (Comment comment : comments) {
-+                builder.appendNewline().append(Component.text("  - " + comment.getSender().getName() + ": " + comment.getText()));
-+            }
-+        }
-+        builder.appendNewline().append(Component.translatable("server.general.footer", Component.translatable("server.ban.punishment.details")));
-+
-+        sender.sendMessage(builder.appendNewline());
-+    }
-+
-+    public void sendAllBansInfo(@NotNull CommandSender sender) {
-+        Set<PaperBan> banSet = Bukkit.getKissen().getImplementation(PaperBanImplementation.class).getBanSet();
-+        if (banSet.isEmpty()) {
-+            sender.sendMessage("No bans available!");
-+            return;
-+        }
-+
-+        sender.sendMessage("========== [All Bans] ==========");
-+        for (PaperBan ban : banSet) {
-+            sender.sendMessage(formatBan(ban));
-+        }
-+        sender.sendMessage("========== [All Bans] ==========");
-+    }
-+
-+    private @NotNull String formatBan(@NotNull PaperBan ban) {
-+        StringBuilder banInfo = new StringBuilder();
-+
-+        banInfo.append("Ban ID: ").append(ban.getID()).append("\n");
-+        banInfo.append("Ban Name: ").append(ban.getName()).append("\n");
-+        banInfo.append("Ban Type: ").append(ban.getBanType());
-+
-+        if (ban.getAccurateDuration().isPresent()) {
-+            banInfo.append("\nBan Duration: ").append(ban.getAccurateDuration().get());
-+        }
-+
-+        return banInfo.toString();
 +    }
 +
 +    private @NotNull Component constructCopyable(@NotNull String text) {
