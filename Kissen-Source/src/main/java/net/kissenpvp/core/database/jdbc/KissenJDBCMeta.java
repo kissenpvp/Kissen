@@ -108,13 +108,16 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             preparedStatement.executeUpdate();
         })); // I love sql and especially sqlite
 
-        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn()), (preparedStatement ->
+        if(value != null)
         {
-            preparedStatement.setString(1, totalID);
-            preparedStatement.setString(2, key);
-            preparedStatement.setString(3, value);
-            preparedStatement.executeUpdate();
-        }));
+            getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn()), (preparedStatement ->
+            {
+                preparedStatement.setString(1, totalID);
+                preparedStatement.setString(2, key);
+                preparedStatement.setString(3, value);
+                preparedStatement.executeUpdate();
+            }));
+        }
     }
 
     @Override
