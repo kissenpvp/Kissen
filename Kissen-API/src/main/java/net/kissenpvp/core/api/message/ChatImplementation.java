@@ -25,10 +25,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-
 public interface ChatImplementation extends Implementation {
-
-
     @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity serverEntity, @NotNull Component... components);
 
+    @NotNull Component styleComponent(@NotNull ServerEntity serverEntity, @NotNull Component... components);
 }
