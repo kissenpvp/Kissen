@@ -67,25 +67,6 @@ public class DefaultTheme implements Theme
         return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultDisabledColor.class);
     }
 
-    public @NotNull Component replaceColors(@NotNull String... strings)
-    {
-        return Component.join(JoinConfiguration.noSeparators(), Arrays.stream(strings).map(this::transformString).toList());
-    }
-
-    public @NotNull Component transformString(@NotNull String string)
-    {
-        return KissenComponentSerializer.getInstance().getLegacySerializer().deserialize(string);
-    }
-
-    public @NotNull String transformJson(@NotNull String input)
-    {
-        return KissenComponentSerializer.getInstance().getJsonSerializer().serialize(
-                KissenComponentSerializer.getInstance().getLegacySerializer().deserialize(
-                        KissenComponentSerializer.getInstance().getLegacySerializer().serialize(
-                                KissenComponentSerializer.getInstance().getJsonSerializer().deserialize(
-                                        input))));
-    }
-
     /**
      * Replaces the colors of the provided components with personalized colors based on their current color values.
      * This method converts each component's color by mapping it to a personalized color obtained from the
@@ -129,7 +110,7 @@ public class DefaultTheme implements Theme
         {
             return (BuildableComponent<?, ?>) buildableComponent.color(getPersonalColorByCode(textColor.value()));
         }
-        return buildableComponent;
+        return (BuildableComponent<?, ?>) buildableComponent.color(getDefaultColor());
     }
 
     @NotNull private BuildableComponent<?, ?> legacyColorCodeResolver(@NotNull BuildableComponent<?, ?> buildableComponent)
