@@ -19,42 +19,16 @@
 package net.kissenpvp.core.api.message;
 
 import net.kissenpvp.core.api.base.Implementation;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+import java.util.Optional;
 
 
 public interface ChatImplementation extends Implementation {
 
-    void broadcast(@NotNull String message);
 
-    void broadcast(@Nullable String permission, @NotNull String message);
+    @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity serverEntity, @NotNull Component... components);
 
-    void broadcast(@Nullable ChatImportance chatImportance, @NotNull String message);
-
-    void broadcast(@Nullable ChatImportance chatImportance, @Nullable String permission, @NotNull String message);
-
-    void broadcast(@NotNull Component chatComponent);
-
-    void broadcast(@NotNull String permission, @NotNull Component chatComponent);
-
-    void broadcast(@Nullable ChatImportance chatImportance, @NotNull Component chatComponent);
-
-    void broadcast(@Nullable ChatImportance chatImportance, @Nullable String permission, @NotNull Component chatComponent);
-
-    void notifyTeam(@NotNull String message);
-
-    void notifyTeam(@NotNull Component chatComponent);
-
-    void notifyTeam(@Nullable ChatImportance chatImportance, @NotNull String message);
-
-    void notifyTeam(@Nullable ChatImportance chatImportance, @NotNull Component chatComponent);
-
-    void notifySupport(@NotNull String message);
-
-    void notifySupport(@NotNull Component chatComponent);
-
-    void notifySupport(@Nullable ChatImportance chatImportance, @NotNull String message);
-
-    void notifySupport(@Nullable ChatImportance chatImportance, @NotNull Component chatComponent);
 }

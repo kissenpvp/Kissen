@@ -3162,6 +3162,44 @@ index 935dac757280731bfeb0a8f033cbe315ecac46da..932c83a9d41ddff73d38e87ac7d97fad
              this.saveWhiteList();
          }
  
+diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+index ba972d1661426d7e30f6f61bad3b9608e66ea721..4771748712fdb7270f0a9872af88402a96821ced 100644
+--- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
++++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
+@@ -1984,17 +1984,23 @@ public class ServerPlayer extends Player {
+ 
+     public void sendSystemMessage(Component message, boolean overlay) {
+         if (this.acceptsSystemMessages(overlay)) {
+-            this.connection.send(new ClientboundSystemChatPacket(PaperAdventure.asAdventure(message), overlay), PacketSendListener.exceptionallySend(() -> { // Paper - Adventure
+-                if (this.acceptsSystemMessages(false)) {
+-                    boolean flag1 = true;
+-                    String s = message.getString(256);
+-                    MutableComponent ichatmutablecomponent = Component.literal(s).withStyle(ChatFormatting.YELLOW);
+ 
+-                    return new ClientboundSystemChatPacket(PaperAdventure.asAdventure(Component.translatable("multiplayer.message_not_delivered", ichatmutablecomponent).withStyle(ChatFormatting.RED)), false); // Paper - Adventure
+-                } else {
+-                    return null;
+-                }
+-            }));
++            // KissenPaper start - add custom renderer
++            net.kyori.adventure.text.Component component = PaperAdventure.asAdventure(message);
++            Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.ChatImplementation.class).prepareMessage(Bukkit.getConsoleSender(), getBukkitEntity(), component).ifPresent(styled ->
++            this.connection.send(new ClientboundSystemChatPacket(styled, overlay), PacketSendListener.exceptionallySend(() -> { // Paper - Adventure
++                    if (this.acceptsSystemMessages(false)) {
++                        boolean flag1 = true;
++                        String s = message.getString(256);
++                        MutableComponent ichatmutablecomponent = Component.literal(s).withStyle(ChatFormatting.YELLOW);
++
++                        return new ClientboundSystemChatPacket(PaperAdventure.asAdventure(Component.translatable("multiplayer.message_not_delivered", ichatmutablecomponent).withStyle(ChatFormatting.RED)), false); // Paper - Adventure
++                    } else {
++                        return null;
++                    }
++                }))
++            );
++            // KissenPaper end
+         }
+     }
+ 
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 index ff2dd53e9e943aa929188fd9d4c35498b78c497a..454cee69c217106b840dc5c0019f8f7f80ca3782 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
@@ -3890,7 +3928,7 @@ index 017e97c1618b8ee4640b36a0ec1b07026047bfc3..32787c6234ab6884b7ac0f62967ddc24
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..27398dccf429528ed6a04ce476ce936bbae4ccbd 100644
+index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..a88ea78714a1a0ba120928edb2290ff6491f33d5 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -6,37 +6,15 @@ import com.google.common.collect.ImmutableSet;
@@ -3969,8 +4007,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..27398dccf429528ed6a04ce476ce936b
  import org.bukkit.scoreboard.Scoreboard;
  import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
- 
--import net.md_5.bungee.api.chat.BaseComponent; // Spigot
++
 +import javax.annotation.Nullable;
 +import java.io.ByteArrayOutputStream;
 +import java.io.IOException;
@@ -3995,7 +4032,8 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..27398dccf429528ed6a04ce476ce936b
 +import java.util.WeakHashMap;
 +import java.util.logging.Level;
 +import java.util.logging.Logger;
-+
+ 
+-import net.md_5.bungee.api.chat.BaseComponent; // Spigot
 +// KissenPaper start
 +import net.kissenpvp.core.api.ban.Ban;
 +import net.kissenpvp.core.api.base.KissenServer;
@@ -4067,7 +4105,40 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..27398dccf429528ed6a04ce476ce936b
      }
      // Paper end
      @Override
-@@ -3283,4 +3326,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2942,7 +2985,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
+         if (getHandle().connection == null) return;
+         final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
+-        this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundSystemChatPacket(message, false));
++
++        // KissenPaper start - add custom renderer
++        Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.ChatImplementation.class).prepareMessage(Bukkit.getConsoleSender(), this, message).ifPresent(styled ->
++
++            this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundSystemChatPacket(styled, false))
++
++        );
++        // KissenPaper end
+     }
+ 
+     @Override
+@@ -3217,7 +3267,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+         public void sendMessage(net.md_5.bungee.api.ChatMessageType position, UUID sender, BaseComponent... components) {
+             if ( CraftPlayer.this.getHandle().connection == null ) return;
+ 
+-            CraftPlayer.this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundSystemChatPacket(components, position == net.md_5.bungee.api.ChatMessageType.ACTION_BAR));
++            // KissenPaper start - add custom renderer
++            net.kyori.adventure.text.Component[] componentData = java.util.Arrays.stream(components).map(net.md_5.bungee.chat.ComponentSerializer::toString).map(json ->
++                net.kyori.adventure.text.serializer.json.JSONComponentSerializer.json().deserialize(json)
++            ).toList().toArray(new net.kyori.adventure.text.Component[0]);
++
++            Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.ChatImplementation.class).prepareMessage(Bukkit.getConsoleSender(), CraftPlayer.this, componentData).ifPresent(styled ->
++                CraftPlayer.this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundSystemChatPacket(styled, position == net.md_5.bungee.api.ChatMessageType.ACTION_BAR))
++            );
++            // KissenPaper end
+         }
+ 
+         // Paper start
+@@ -3283,4 +3341,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end

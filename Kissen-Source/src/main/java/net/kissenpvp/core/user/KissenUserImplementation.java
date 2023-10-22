@@ -82,6 +82,13 @@ public abstract class KissenUserImplementation implements UserImplementation {
             TaskImplementation taskImplementation = KissenCore.getInstance().getImplementation(TaskImplementation.class);
             Runnable runnable = () -> getOnlineUser().stream().filter(userEntry -> userEntry.getStorage().containsKey("tick")).forEach(user -> ((KissenUser<? extends Permission>) user).tick());
             taskImplementation.registerAsyncTask("user_tick", 20, runnable);
+
+            registerUserSetting(new net.kissenpvp.core.message.usersettings.PrimaryUserColor());
+            registerUserSetting(new net.kissenpvp.core.message.usersettings.SecondaryUserColor());
+            registerUserSetting(new net.kissenpvp.core.message.usersettings.DefaultUserColor());
+            registerUserSetting(new net.kissenpvp.core.message.usersettings.EnabledUserColor());
+            registerUserSetting(new net.kissenpvp.core.message.usersettings.DisabledUserColor());
+
         } catch (TaskException taskException) {
             throw new IllegalStateException("Cannot start user tick!", taskException);
         }

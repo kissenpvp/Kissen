@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.api.message;
 
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,4 +33,6 @@ public interface Theme
     @NotNull TextColor getEnabledColor();
 
     @NotNull TextColor getDisabledColor();
+
+    @NotNull Component style(@NotNull Component... component);
 }

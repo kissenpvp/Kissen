@@ -95,7 +95,7 @@ public class DefaultTheme implements Theme
      * @return a new Component with the replaced colors.
      * @throws NullPointerException if the component array or any of its elements are null.
      */
-    public @NotNull Component replaceColors(@NotNull Component... component)
+    @Override public @NotNull Component style(@NotNull Component... component)
     {
         return Component.join(JoinConfiguration.noSeparators(), Arrays.stream(component).map(this::transformComponent).toList());
     }
