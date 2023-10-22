@@ -27,12 +27,15 @@ import net.kissenpvp.core.message.settings.*;
 import net.kyori.adventure.text.BuildableComponent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public class DefaultTheme implements Theme
 {
@@ -80,7 +83,6 @@ public class DefaultTheme implements Theme
     {
         return Component.join(JoinConfiguration.noSeparators(), Arrays.stream(component).map(this::transformComponent).toList());
     }
-
     /**
      * Converts a Component by replacing its color with a personalized color based on the current color value.
      * This method retrieves the personalized color by querying the ColorProviderImplementation.
@@ -89,10 +91,16 @@ public class DefaultTheme implements Theme
      * @return the converted Component with the personalized color.
      * @throws NullPointerException if the component is null.
      */
-    private @NotNull Component transformComponent(@NotNull Component component)
-    {
-        return Component.empty().append(component).toBuilder().mapChildrenDeep(this::transformSpecifiedComponent).asComponent();
+    private @NotNull Component transformComponent(@NotNull Component component) {
+        return transformComponent(component, getDefaultColor());
     }
+
+
+    private @NotNull Component transformComponent(@NotNull Component component, @NotNull TextColor fallBack)
+    {
+        return Component.empty().append(component).toBuilder().mapChildrenDeep(buildableComponent -> transformSpecifiedComponent(buildableComponent, fallBack)).asComponent();
+    }
+
 
     /**
      * Transforms a specified {@link BuildableComponent} by replacing its color with a personalized color based on
@@ -102,15 +110,24 @@ public class DefaultTheme implements Theme
      * @return the transformed {@link BuildableComponent} with the personalized color.
      * @throws NullPointerException if the buildableComponent is null.
      */
-    private @NotNull BuildableComponent<?, ?> transformSpecifiedComponent(@NotNull BuildableComponent<?, ?> buildableComponent)
+    private @NotNull BuildableComponent<?, ?> transformSpecifiedComponent(@NotNull BuildableComponent<?, ?> buildableComponent, @NotNull TextColor fallBack)
     {
+        if (buildableComponent instanceof TranslatableComponent translatableComponent) {
+
+            Function<Component, Component> argumentMapper = argument -> transformComponent(argument, getPrimaryAccentColor());
+            List<Component> transformedArgs = translatableComponent.args().stream().map(argumentMapper).toList();
+            return translatableComponent.color(getDefaultColor()).args(transformedArgs.toArray(new Component[0]));
+        }
+
         buildableComponent = legacyColorCodeResolver(buildableComponent);
         TextColor textColor = buildableComponent.color();
         if (textColor != null)
         {
             return (BuildableComponent<?, ?>) buildableComponent.color(getPersonalColorByCode(textColor.value()));
         }
-        return (BuildableComponent<?, ?>) buildableComponent.color(getDefaultColor());
+
+
+        return (BuildableComponent<?, ?>) buildableComponent.color(fallBack);
     }
 
     @NotNull private BuildableComponent<?, ?> legacyColorCodeResolver(@NotNull BuildableComponent<?, ?> buildableComponent)

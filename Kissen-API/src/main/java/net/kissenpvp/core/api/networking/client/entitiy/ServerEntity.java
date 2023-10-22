@@ -23,6 +23,9 @@ import net.kissenpvp.core.api.networking.client.Client;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Locale;
 
 public interface ServerEntity extends Client {
@@ -32,6 +35,11 @@ public interface ServerEntity extends Client {
     @NotNull Component displayName();
 
     @NotNull Locale getCurrentLocale();
+
+    default @NotNull DateTimeFormatter getFormatter(@NotNull FormatStyle formatStyle)
+    {
+        return DateTimeFormatter.ofLocalizedDateTime(formatStyle).withZone(ZoneId.systemDefault()).withLocale(getCurrentLocale());
+    }
 
     @NotNull Theme getTheme();
 }
