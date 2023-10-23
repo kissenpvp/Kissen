@@ -36,6 +36,7 @@ import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.UserInfo;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.message.usersettings.GeneralUserColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -85,7 +86,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
             registerUserSetting(new net.kissenpvp.core.message.usersettings.PrimaryUserColor());
             registerUserSetting(new net.kissenpvp.core.message.usersettings.SecondaryUserColor());
-            registerUserSetting(new net.kissenpvp.core.message.usersettings.DefaultUserColor());
+            registerUserSetting(new GeneralUserColor());
             registerUserSetting(new net.kissenpvp.core.message.usersettings.EnabledUserColor());
             registerUserSetting(new net.kissenpvp.core.message.usersettings.DisabledUserColor());
 

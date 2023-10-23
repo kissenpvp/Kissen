@@ -41,7 +41,7 @@ public class PlayerTheme extends DefaultTheme {
 
     @Override
     public @NotNull TextColor getDefaultColor() {
-        return playerClient.getUserSetting(DefaultUserColor.class).getValue();
+        return playerClient.getUserSetting(GeneralUserColor.class).getValue();
     }
 
     @Override

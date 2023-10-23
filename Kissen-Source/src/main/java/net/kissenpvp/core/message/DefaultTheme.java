@@ -19,9 +19,8 @@
 package net.kissenpvp.core.message;
 
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
-import net.kissenpvp.core.api.message.ColorProvider;
-import net.kissenpvp.core.api.message.ComponentSerializer;
 import net.kissenpvp.core.api.message.Theme;
+import net.kissenpvp.core.api.message.ThemeProvider;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.message.settings.*;
 import net.kyori.adventure.text.BuildableComponent;
@@ -29,12 +28,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 public class DefaultTheme implements Theme
@@ -133,7 +130,7 @@ public class DefaultTheme implements Theme
     @NotNull private BuildableComponent<?, ?> legacyColorCodeResolver(@NotNull BuildableComponent<?, ?> buildableComponent)
     {
         Map<String, TextColor> replacements = new HashMap<>();
-        String legacy = ComponentSerializer.getInstance().getLegacySerializer().serialize(buildableComponent);
+        String legacy = LegacyComponentSerializer.legacyAmpersand().serialize(buildableComponent);
         for (String textPassage : legacy.split("§"))
         {
             if (textPassage.length() > 1)
@@ -173,13 +170,6 @@ public class DefaultTheme implements Theme
      */
     private @NotNull TextColor getPersonalColorByCode(int value)
     {
-        return ((KissenColorProvider) ColorProvider.getInstance()).getColor(value).map(provider -> switch (provider)
-        {
-            case PRIMARY -> getPrimaryAccentColor();
-            case SECONDARY -> getSecondaryAccentColor();
-            case DEFAULT -> getDefaultColor();
-            case ENABLED -> getEnabledColor();
-            case DISABLED -> getDisabledColor();
-        }).orElseGet(() -> TextColor.color(value));
+        return ThemeProvider.getColor((theme) -> theme.value() == value).orElse(TextColor.color(value));
     }
 }

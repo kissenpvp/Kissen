@@ -35,7 +35,6 @@ import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.DataWriter;
 import net.kissenpvp.core.message.CommentNode;
 import net.kissenpvp.core.message.KissenComment;
-import net.kissenpvp.core.message.KissenComponentSerializer;
 import net.kissenpvp.core.time.KissenTemporalObject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -97,7 +96,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
     public @NotNull Optional<Component> getCause() {
         return kissenPunishmentNode.cause()
                 .toOptional()
-                .map(text -> KissenComponentSerializer.getInstance().getJsonSerializer().deserialize(text));
+                .map(text -> JSONComponentSerializer.json().deserialize(text));
     }
 
     @Override

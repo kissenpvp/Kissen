@@ -30,8 +30,6 @@ import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.reflection.ReflectionPackage;
 import net.kissenpvp.core.config.KissenConfigurationImplementation;
 import net.kissenpvp.core.database.KissenDatabaseImplementation;
-import net.kissenpvp.core.message.KissenColorProvider;
-import net.kissenpvp.core.message.KissenComponentSerializer;
 import net.kissenpvp.core.permission.event.KissenPermissionGroupCreateEvent;
 import net.kissenpvp.core.reflection.KissenReflectionClass;
 import net.kissenpvp.core.reflection.KissenReflectionPackage;
@@ -75,10 +73,6 @@ public abstract class KissenCore implements Kissen {
         //Load plugin implementations
         long time = System.currentTimeMillis();
         KissenCore.instance = this;
-
-        //Load serializer
-        new KissenComponentSerializer();
-        new KissenColorProvider();
 
         implementation = new HashMap<>();
         Set<Class<?>> reflectionClasses = loadClasses(new KissenReflectionPackage("net.kissenpvp.core", KissenCore.class), new KissenReflectionPackage("net.kissenpvp.core.api", Kissen.class), new KissenReflectionPackage("net.kissenpvp", clazz));

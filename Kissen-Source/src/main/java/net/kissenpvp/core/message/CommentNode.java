@@ -18,12 +18,12 @@
 
 package net.kissenpvp.core.message;
 
-import net.kissenpvp.core.api.message.Comment;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.util.Container;
 import net.kissenpvp.core.base.KissenCore;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +45,7 @@ public record CommentNode(@NotNull String id, @NotNull List<CommentMessageNode> 
     }
 
     public CommentNode(@NotNull String id, @NotNull Component comment, @Nullable UUID sender, long timeStamp) {
-        this(id, List.of(new CommentMessageNode(KissenComponentSerializer.getInstance().getJsonSerializer().serialize(comment), timeStamp)), sender, timeStamp, new Container<>(false));
+        this(id, List.of(new CommentMessageNode(JSONComponentSerializer.json().serialize(comment), timeStamp)), sender, timeStamp, new Container<>(false));
     }
 
     public ServerEntity getSender() {

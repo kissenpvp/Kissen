@@ -32,9 +32,9 @@ import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TemporalObject;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.message.KissenComponentSerializer;
 import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -181,7 +181,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @throws BackendException if there is an error in the backend operation
      */
     protected @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason, @NotNull Meta meta) throws BackendException {
-        KissenPunishmentNode kissenPunishmentNode = constructPunishmentNode(ban, banOperator, Optional.ofNullable(reason).map(component -> KissenComponentSerializer.getInstance().getJsonSerializer().serialize(component)).orElse(null));
+        KissenPunishmentNode kissenPunishmentNode = constructPunishmentNode(ban, banOperator, Optional.ofNullable(reason).map(component -> JSONComponentSerializer.json().serialize(component)).orElse(null));
         set(totalID, kissenPunishmentNode, meta);
 
         P punishment = translatePunishment(totalID, kissenPunishmentNode, meta);

@@ -25,7 +25,7 @@ import net.kissenpvp.core.message.settings.DefaultColor;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 
-public class DefaultUserColor extends UserColorSetting
+public class GeneralUserColor extends UserColorSetting
 {
     @Override public @NotNull String getKey()
     {

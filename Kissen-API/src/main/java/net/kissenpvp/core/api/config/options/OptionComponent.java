@@ -25,13 +25,15 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class OptionComponent extends AbstractOption<Component>
 {
+    //TODO implement mini messages
+
     @Override public @NotNull String serialize(@NotNull Component object)
     {
-        return ComponentSerializer.getInstance().getMiniSerializer().serialize(object);
+        return object.toString();
     }
 
     @Override public @NotNull Component deserialize(@NotNull String input)
     {
-        return ComponentSerializer.getInstance().getMiniSerializer().deserialize(input);
+        return Component.text(input);
     }
 }
