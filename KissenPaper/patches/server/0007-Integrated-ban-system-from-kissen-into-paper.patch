@@ -4,6 +4,7 @@ Date: Sun, 24 Sep 2023 13:30:52 +0200
 Subject: [PATCH] Integrated ban system from kissen into paper
 
 Signed-off-by: Ivo <chniucg@gmail.com>
+Signed-off-by: ivo <chniucg@gmail.com>
 
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBan.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBan.java
 new file mode 100644
@@ -925,7 +926,7 @@ index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7306a0567fca56d621d2f1ac6c2975cc03c71361
+index 0000000000000000000000000000000000000000..55e8962ecd82c420aca143cd7568b8ed564b7aca
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 @@ -0,0 +1,239 @@
@@ -936,9 +937,9 @@ index 0000000000000000000000000000000000000000..7306a0567fca56d621d2f1ac6c2975cc
 +import net.kissenpvp.core.api.command.annotations.CommandData;
 +import net.kissenpvp.core.api.command.annotations.Optional;
 +import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.api.message.ThemeProvider;
 +import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.util.PageBuilder;
-+import net.kissenpvp.core.message.EnumColorProvider;
 +import net.kissenpvp.core.util.KissenPageBuilder;
 +import net.kissenpvp.paper.api.ban.PaperBan;
 +import net.kissenpvp.paper.api.ban.PaperBanImplementation;
@@ -1057,11 +1058,11 @@ index 0000000000000000000000000000000000000000..7306a0567fca56d621d2f1ac6c2975cc
 +        Component header = Component.translatable("server.command.general.header", Component.text(paperPunishment.getName()));
 +        Component footer = Component.translatable("server.command.general.footer", Component.text(paperPunishment.getName()));
 +
-+        Component id = Component.translatable("server.ban.punishment.id").color(EnumColorProvider.DEFAULT.getTextColor());
-+        Component by = Component.translatable("server.ban.punishment.operator").color(EnumColorProvider.DEFAULT.getTextColor());
-+        Component start = Component.translatable("server.ban.punishment.start").color(EnumColorProvider.DEFAULT.getTextColor());
-+        Component predictedEnd = Component.translatable("server.ban.punishment.predicted.end").color(EnumColorProvider.DEFAULT.getTextColor());
-+        Component end = Component.translatable("server.ban.punishment.end").color(EnumColorProvider.DEFAULT.getTextColor());
++        Component id = Component.translatable("server.ban.punishment.id").color(ThemeProvider.general());
++        Component by = Component.translatable("server.ban.punishment.operator").color(ThemeProvider.general());
++        Component start = Component.translatable("server.ban.punishment.start").color(ThemeProvider.general());
++        Component predictedEnd = Component.translatable("server.ban.punishment.predicted.end").color(ThemeProvider.general());
++        Component end = Component.translatable("server.ban.punishment.end").color(ThemeProvider.general());
 +
 +        TranslatableComponent banInfo = Component.translatable("server.command.general.key.value");
 +
@@ -1069,7 +1070,7 @@ index 0000000000000000000000000000000000000000..7306a0567fca56d621d2f1ac6c2975cc
 +        builder.appendNewline().append(banInfo.args(id, constructCopyable(paperPunishment.getID())));
 +        builder.appendNewline().append(banInfo.args(by, Component.text(paperPunishment.getBanOperator())));
 +        paperPunishment.getCause().ifPresent(cause ->
-+                builder.appendNewline().append(banInfo.args(Component.translatable("server.ban.punishment.cause").color(EnumColorProvider.DEFAULT.getTextColor()), cause)));
++                builder.appendNewline().append(banInfo.args(Component.translatable("server.ban.punishment.cause").color(ThemeProvider.general()), cause)));
 +
 +        DateTimeFormatter formatter = payload.getSender().getFormatter(FormatStyle.SHORT);
 +        builder.appendNewline().append(banInfo.args(start, Component.text(formatter.format(paperPunishment.getStart()))));

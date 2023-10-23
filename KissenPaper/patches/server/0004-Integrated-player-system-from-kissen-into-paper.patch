@@ -4,6 +4,7 @@ Date: Fri, 15 Sep 2023 22:45:32 +0200
 Subject: [PATCH] Integrated player system from kissen into paper
 
 Signed-off-by: Ivo <chniucg@gmail.com>
+Signed-off-by: ivo <chniucg@gmail.com>
 
 diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 index daa157eaa021d039f9a092bea0b78f7c1f746e3b..2445edc12487678c2db1f6b274f95a77eb4663c1 100644
@@ -60,7 +61,7 @@ index 0000000000000000000000000000000000000000..55167ae5fef79f24545df34479443dbb
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..153b5031f087ef3caec0d9a36fa410dc3e3946db
+index 0000000000000000000000000000000000000000..24dc0f73925de7b7353c9db5c2d3dc0f4d4fa67d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
 @@ -0,0 +1,113 @@
@@ -89,11 +90,11 @@ index 0000000000000000000000000000000000000000..153b5031f087ef3caec0d9a36fa410dc
 +import net.kissenpvp.core.api.base.KissenServer;
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.user.User;
-+import net.kissenpvp.core.message.KissenComponentSerializer;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
 +import net.kyori.adventure.audience.Audience;
 +import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.minimessage.MiniMessage;
 +import net.minecraft.network.protocol.Packet;
 +import net.minecraft.server.MinecraftServer;
 +import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -125,7 +126,7 @@ index 0000000000000000000000000000000000000000..153b5031f087ef3caec0d9a36fa410dc
 +
 +    @Override
 +    public void kick(@NotNull String message) {
-+        kick(KissenComponentSerializer.getInstance().getMiniSerializer().deserialize(message));
++        kick(MiniMessage.miniMessage().deserialize(message));
 +    }
 +
 +    @Override

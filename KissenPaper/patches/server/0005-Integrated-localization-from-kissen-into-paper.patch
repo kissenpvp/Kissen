@@ -1,15 +1,16 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Groldi <chniucg@gmail.com>
+From: Ivo <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:28:51 +0200
 Subject: [PATCH] Integrated localization from kissen into paper
 
+Signed-off-by: ivo <chniucg@gmail.com>
 
 diff --git a/src/main/java/net/kissenpvp/paper/message/localization/KissenPaperLocalizationImplementation.java b/src/main/java/net/kissenpvp/paper/message/localization/KissenPaperLocalizationImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..40392c8b5f129106015ab5b49dc8764ae72387df
+index 0000000000000000000000000000000000000000..e085d4c120a323b555970b7643b7280a95f2cc71
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/message/localization/KissenPaperLocalizationImplementation.java
-@@ -0,0 +1,57 @@
+@@ -0,0 +1,58 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -30,9 +31,11 @@ index 0000000000000000000000000000000000000000..40392c8b5f129106015ab5b49dc8764a
 +
 +package net.kissenpvp.paper.message.localization;
 +
-+import net.kissenpvp.core.message.KissenComponentSerializer;
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 +import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.minimessage.MiniMessage;
++import org.jetbrains.annotations.Contract;
++import org.jetbrains.annotations.NotNull;
 +
 +import java.text.MessageFormat;
 +
@@ -61,10 +64,9 @@ index 0000000000000000000000000000000000000000..40392c8b5f129106015ab5b49dc8764a
 +     * @param languageKey the string representing the language key for the translation
 +     * @return the translated message format
 +     */
-+    private MessageFormat getTranslation(String languageKey) {
-+        return new MessageFormat(KissenComponentSerializer.getInstance()
-+                .getMiniSerializer()
-+                .serialize(Component.translatable(languageKey)));
++    @Contract("_ -> new")
++    private @NotNull MessageFormat getTranslation(String languageKey) {
++        return new MessageFormat(MiniMessage.miniMessage().serialize(Component.translatable(languageKey)));
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
