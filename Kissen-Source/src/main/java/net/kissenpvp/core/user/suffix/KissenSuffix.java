@@ -18,9 +18,9 @@
 
 package net.kissenpvp.core.user.suffix;
 
-import net.kissenpvp.core.api.message.ComponentSerializer;
 import net.kissenpvp.core.api.user.suffix.Suffix;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -42,7 +42,7 @@ public class KissenSuffix implements Suffix
 
     @Override public @NotNull Component getContent()
     {
-        return ComponentSerializer.getInstance().getJsonSerializer().deserialize(suffixNode.content());
+        return JSONComponentSerializer.json().deserialize(suffixNode.content());
     }
 
     @Override public boolean equals(Object o)

@@ -19,7 +19,6 @@
 package net.kissenpvp.core.api.config.options;
 
 import net.kissenpvp.core.api.config.AbstractOption;
-import net.kissenpvp.core.api.message.ComponentSerializer;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 

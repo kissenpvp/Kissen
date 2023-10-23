@@ -26,7 +26,6 @@ import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.savable.list.SavableRecordList;
-import net.kissenpvp.core.api.message.ComponentSerializer;
 import net.kissenpvp.core.api.message.Theme;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
@@ -50,6 +49,7 @@ import net.kissenpvp.core.user.suffix.SuffixNode;
 import net.kissenpvp.core.user.usersettings.KissenUserBoundSettings;
 import net.kissenpvp.core.time.TemporalMeasureNode;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -137,7 +137,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
 
     @Override
     public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
-        SuffixNode suffixNode = new SuffixNode(name, ComponentSerializer.getInstance().getJsonSerializer().serialize(content));
+        SuffixNode suffixNode = new SuffixNode(name, JSONComponentSerializer.json().serialize(content));
         SavableRecordList<SuffixNode> savableRecordList = getUser().getListNotNull("suffix_list").toRecordList(SuffixNode.class);
 
         if (savableRecordList.contains(suffixNode)) {

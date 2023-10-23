@@ -19,7 +19,7 @@
 package net.kissenpvp.core.message.settings.prefix;
 
 
-import net.kissenpvp.core.message.EnumColorProvider;
+import net.kissenpvp.core.api.message.ThemeProvider;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
@@ -33,11 +33,11 @@ public class PrefixError extends OptionPrefix {
     @Override
     public @NotNull Component getDefault() {
         return Component.text("Kissen")
-                .color(EnumColorProvider.PRIMARY.getTextColor())
-                .append(Component.text("PvP").color(EnumColorProvider.SECONDARY.getTextColor()))
+                .color(ThemeProvider.primary())
+                .append(Component.text("PvP").color(ThemeProvider.secondary()))
                 .append(Component.space())
                 .append(Component.text("»").color(NamedTextColor.DARK_RED))
-                .append(Component.empty().color(EnumColorProvider.DEFAULT.getTextColor()));
+                .append(Component.empty().color(ThemeProvider.general()));
     }
 
     @Override

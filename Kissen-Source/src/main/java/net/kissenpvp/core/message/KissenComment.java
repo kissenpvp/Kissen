@@ -19,10 +19,10 @@
 package net.kissenpvp.core.message;
 
 import net.kissenpvp.core.api.message.Comment;
-import net.kissenpvp.core.api.message.ComponentSerializer;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.database.DataWriter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -53,15 +53,13 @@ public class KissenComment implements Comment {
     public @Unmodifiable @NotNull List<Component> getEdits() {
         return commentNode.messages()
                 .stream()
-                .map(message -> ComponentSerializer.getInstance().getJsonSerializer().deserialize(message.message()))
+                .map(message -> JSONComponentSerializer.json().deserialize(message.message()))
                 .toList();
     }
 
     @Override
     public @NotNull Component getText() {
-        return ComponentSerializer.getInstance()
-                .getJsonSerializer()
-                .deserialize(commentNode.messages().get(commentNode.messages().size() - 1).message());
+        return JSONComponentSerializer.json().deserialize(commentNode.messages().get(commentNode.messages().size() - 1).message());
     }
 
     @Override
@@ -75,7 +73,7 @@ public class KissenComment implements Comment {
             throw new UnsupportedOperationException("This object is immutable.");
         }
 
-        commentNode.messages().add(new CommentMessageNode(ComponentSerializer.getInstance().getJsonSerializer().serialize(component), System.currentTimeMillis()));
+        commentNode.messages().add(new CommentMessageNode(JSONComponentSerializer.json().serialize(component), System.currentTimeMillis()));
         dataWriter.update(commentNode);
     }
 

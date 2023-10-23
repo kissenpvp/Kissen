@@ -1562,10 +1562,10 @@ index 0000000000000000000000000000000000000000..9b3dd93968395c211b8ca8975895b13b
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java b/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ebc9bf7c16e1eb3b79553c4d7d9db54ccf8eaed4
+index 0000000000000000000000000000000000000000..891e6d54a66d5be1aed5469ce33861e21a5431c3
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java
-@@ -0,0 +1,194 @@
+@@ -0,0 +1,190 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1586,12 +1586,12 @@ index 0000000000000000000000000000000000000000..ebc9bf7c16e1eb3b79553c4d7d9db54c
 +
 +package net.kissenpvp.paper.permission.permissible;
 +
-+import net.kissenpvp.core.api.message.ComponentSerializer;
 +import net.kissenpvp.paper.api.permission.PaperPermissible;
 +import net.kissenpvp.paper.api.permission.PaperPermission;
 +import net.kissenpvp.paper.permission.KissenPaperAttachmentPermission;
 +import net.kissenpvp.paper.permission.KissenPaperGroupablePermissionEntry;
 +import net.kissenpvp.paper.permission.RemoveAttachmentRunnable;
++import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 +import org.bukkit.Bukkit;
 +import org.bukkit.permissions.*;
 +import org.bukkit.plugin.Plugin;
@@ -1680,9 +1680,7 @@ index 0000000000000000000000000000000000000000..ebc9bf7c16e1eb3b79553c4d7d9db54c
 +                .scheduleSyncDelayedTask(plugin, new RemoveAttachmentRunnable(result), ticks) == -1) {
 +            Bukkit.getServer()
 +                    .getLogger()
-+                    .log(Level.WARNING, "Could not add PermissionAttachment to " + ComponentSerializer.getInstance()
-+                            .getLegacySerializer()
-+                            .serialize(displayName()) + " for plugin " + plugin.getPluginMeta()
++                    .log(Level.WARNING, "Could not add PermissionAttachment to " + LegacyComponentSerializer.legacySection().serialize(displayName()) + " for plugin " + plugin.getPluginMeta()
 +                            .getDisplayName() + ": Scheduler returned -1");
 +            result.remove();
 +            return null;
@@ -1702,9 +1700,7 @@ index 0000000000000000000000000000000000000000..ebc9bf7c16e1eb3b79553c4d7d9db54c
 +
 +            permissionUpdate();
 +        } else {
-+            throw new IllegalArgumentException("Given attachment is not part of Permissible object " + ComponentSerializer.getInstance()
-+                    .getLegacySerializer()
-+                    .serialize(displayName()));
++            throw new IllegalArgumentException("Given attachment is not part of Permissible object " + LegacyComponentSerializer.legacySection().serialize(displayName()));
 +        }
 +    }
 +

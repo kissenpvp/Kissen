@@ -20,7 +20,6 @@ package net.kissenpvp.core.user.rank;
 
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.savable.Savable;
-import net.kissenpvp.core.api.message.ComponentSerializer;
 import net.kissenpvp.core.api.user.rank.Rank;
 import net.kissenpvp.core.api.user.rank.RankImplementation;
 import net.kissenpvp.core.base.KissenCore;
@@ -28,6 +27,7 @@ import net.kissenpvp.core.database.savable.KissenSavable;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -63,7 +63,7 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
     @Override
     public @NotNull Optional<Component> getPrefix() {
         if (containsKey("prefix")) {
-            return Optional.of(ComponentSerializer.getInstance().getJsonSerializer().deserialize(getNotNull("prefix")));
+            return Optional.of(JSONComponentSerializer.json().deserialize(getNotNull("prefix")));
         }
         return Optional.empty();
     }
@@ -74,7 +74,7 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
             delete("prefix");
             return;
         }
-        set("prefix", ComponentSerializer.getInstance().getJsonSerializer().serialize(prefix));
+        set("prefix", JSONComponentSerializer.json().serialize(prefix));
     }
 
     @Override
@@ -90,7 +90,7 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
     @Override
     public @NotNull Optional<Component> getSuffix() {
         if (containsKey("suffix")) {
-            return Optional.of(ComponentSerializer.getInstance().getJsonSerializer().deserialize(getNotNull("suffix")));
+            return Optional.of(JSONComponentSerializer.json().deserialize(getNotNull("suffix")));
         }
         return Optional.empty();
     }
@@ -101,7 +101,7 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
             delete("suffix");
             return;
         }
-        set("suffix", ComponentSerializer.getInstance().getJsonSerializer().serialize(suffix));
+        set("suffix", JSONComponentSerializer.json().serialize(suffix));
     }
 
     @Override

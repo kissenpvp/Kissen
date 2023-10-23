@@ -19,7 +19,7 @@
 package net.kissenpvp.core.message.settings.prefix;
 
 
-import net.kissenpvp.core.message.EnumColorProvider;
+import net.kissenpvp.core.api.message.ThemeProvider;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
@@ -33,10 +33,10 @@ public class PrefixSupport extends OptionPrefix {
     @Override
     public @NotNull Component getDefault() {
         return Component.text("Support")
-                .color(EnumColorProvider.PRIMARY.getTextColor())
+                .color(ThemeProvider.primary())
                 .append(Component.space())
                 .append(Component.text("»").color(NamedTextColor.YELLOW))
-                .append(Component.empty().color(EnumColorProvider.DEFAULT.getTextColor()));
+                .append(Component.empty().color(ThemeProvider.general()));
     }
 
     @Override
