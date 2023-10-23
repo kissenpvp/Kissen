@@ -45,10 +45,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f0073776ab6d910142ac4e4270becd34843b7fdb
+index 0000000000000000000000000000000000000000..3d94909d26417258f13eaea941e7ba4d0ca9d22f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,542 @@
+@@ -0,0 +1,543 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -134,12 +134,13 @@ index 0000000000000000000000000000000000000000..f0073776ab6d910142ac4e4270becd34
 +
 +        kissenLocalizationImplementation.register("server.ban.punishment.compact", new MessageFormat("[{7}] [{3}] {1} #{0}"));
 +
-+        kissenLocalizationImplementation.register("server.ban.punishment.id", new MessageFormat("ID"));
 +        kissenLocalizationImplementation.register("server.ban.punishment.operator", new MessageFormat("Operator"));
 +        kissenLocalizationImplementation.register("server.ban.punishment.cause", new MessageFormat("Cause"));
 +        kissenLocalizationImplementation.register("server.ban.punishment.start", new MessageFormat("Start"));
-+        kissenLocalizationImplementation.register("server.ban.punishment.end", new MessageFormat("End"));
++        kissenLocalizationImplementation.register("server.ban.punishment.actual.end", new MessageFormat("Actual End"));
 +        kissenLocalizationImplementation.register("server.ban.punishment.predicted.end", new MessageFormat("Expected End"));
++
++        kissenLocalizationImplementation.register("server.ban.punishment.end.never", new MessageFormat("never"));
 +
 +        return super.start();
 +    }
@@ -926,10 +927,10 @@ index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a1e855830729570420f3955a749ec1c898b5ab5a
+index 0000000000000000000000000000000000000000..a7213009734e00df7a76fa1bf774d904312f4c1e
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
-@@ -0,0 +1,310 @@
+@@ -0,0 +1,329 @@
 +package net.kissenpvp.paper.ban.command;
 +
 +import net.kissenpvp.core.api.ban.BanType;
@@ -962,6 +963,7 @@ index 0000000000000000000000000000000000000000..a1e855830729570420f3955a749ec1c8
 +import java.time.ZoneId;
 +import java.time.format.DateTimeFormatter;
 +import java.time.format.FormatStyle;
++import java.util.Comparator;
 +import java.util.List;
 +
 +public class KissenPaperBanCommand {
@@ -1055,7 +1057,7 @@ index 0000000000000000000000000000000000000000..a1e855830729570420f3955a749ec1c8
 +
 +    @CommandData(value = "baninfo", aliases = {"punishmentinfo", "bi", "pi"})
 +    public void banInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperPunishment) {
-+        payload.getSender().sendMessage(buildPunishmentInfo(payload, paperPunishment));
++        payload.getSender().sendMessage(punishmentInfo(payload, paperPunishment));
 +    }
 +
 +    /**
@@ -1082,16 +1084,16 @@ index 0000000000000000000000000000000000000000..a1e855830729570420f3955a749ec1c8
 +     * @throws NullPointerException if either payload or paperPunishment is null.
 +     */
 +    @NotNull
-+    private Component buildPunishmentInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperPunishment) {
++    private Component punishmentInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperPunishment) {
 +        TextColor isValidColor = paperPunishment.isValid() ? ThemeProvider.enabled() : ThemeProvider.disabled();
 +        Component header = Component.translatable("server.command.general.header", Component.text(paperPunishment.getName()).color(isValidColor));
 +        Component footer = Component.translatable("server.command.general.footer", Component.text(paperPunishment.getName()).color(isValidColor));
 +
-+        Component id = Component.translatable("server.ban.punishment.id").color(ThemeProvider.general());
++        Component id = Component.translatable("server.general.id").color(ThemeProvider.general());
 +        Component by = Component.translatable("server.ban.punishment.operator").color(ThemeProvider.general());
 +        Component start = Component.translatable("server.ban.punishment.start").color(ThemeProvider.general());
 +        Component predictedEnd = Component.translatable("server.ban.punishment.predicted.end").color(ThemeProvider.general());
-+        Component end = Component.translatable("server.ban.punishment.end").color(ThemeProvider.general());
++        Component end = Component.translatable("server.ban.punishment.actual.end").color(ThemeProvider.general());
 +
 +        TranslatableComponent banInfo = Component.translatable("server.command.general.key.value");
 +
@@ -1103,25 +1105,24 @@ index 0000000000000000000000000000000000000000..a1e855830729570420f3955a749ec1c8
 +
 +        DateTimeFormatter formatter = payload.getSender().getFormatter(FormatStyle.SHORT);
 +        builder.appendNewline().append(banInfo.args(start, Component.text(formatter.format(paperPunishment.getStart()))));
-+        builder.appendNewline().append(banInfo.args(predictedEnd, paperPunishment.getPredictedEnd().map(formatter::format).map(Component::text).orElse(Component.text("permanent"))));
++        builder.appendNewline().append(banInfo.args(predictedEnd, normalizeDate(formatter, paperPunishment.getPredictedEnd().orElse(null))));
 +        if(!paperPunishment.getEnd().equals(paperPunishment.getPredictedEnd()))
 +        {
-+            builder.appendNewline().append(banInfo.args(end, paperPunishment.getEnd().map(formatter::format).map(Component::text).orElse(Component.text("permanent"))));
++            builder.appendNewline().append(banInfo.args(end, normalizeDate(formatter, paperPunishment.getEnd().orElse(null))));
 +        }
 +
 +        builder.appendNewline().append(footer);
 +        return builder.asComponent();
 +    }
 +
++    private @NotNull Component banInfo(@NotNull CommandPayload<CommandSender> payload) {
++        Component header = Component.translatable("server.command.general.header", Component.text("Ban List"));
++        Component footer = Component.translatable("server.command.general.footer", Component.text("Ban List"));
 +
-+    private <T> int normalizePage(java.util.@NotNull Optional<Integer> page, @NotNull PageBuilder<T> pageBuilder) {
-+        return page.map(current ->
-+        {
-+            if (current > pageBuilder.getLastPage()) {
-+                return pageBuilder.getLastPage();
-+            }
-+            return current;
-+        }).orElse(1);
++        Component id = Component.translatable("server.general.id").color(ThemeProvider.general());
++        Component name = Component.translatable("server.ban.punishment.id").color(ThemeProvider.general());
++
++        return Component.text().asComponent();
 +    }
 +
 +    /**
@@ -1158,13 +1159,32 @@ index 0000000000000000000000000000000000000000..a1e855830729570420f3955a749ec1c8
 +                    Component.text(paperPunishment.getBanType().toString()).color(ThemeProvider.secondary()),
 +                    Component.text(paperPunishment.getTotalID().toString()).color(ThemeProvider.secondary()),
 +                    Component.text(formatter.format(paperPunishment.getStart())).color(ThemeProvider.secondary()),
-+                    paperPunishment.getEnd().map(formatter::format).map(Component::text).orElse(Component.text("permanent")),
++                    normalizeDate(formatter, paperPunishment.getEnd().orElse(null)),
 +                    Component.text(paperPunishment.isValid() ? "✔" : "❌").color(statusColor)
 +            };
 +            component.appendNewline().append(Component.translatable("server.ban.punishment.compact", arguments));
 +        }
 +
 +        return component.asComponent();
++    }
++
++    private @NotNull Component normalizeDate(@NotNull DateTimeFormatter dateTimeFormatter, @Nullable Instant instant)
++    {
++        if(instant == null)
++        {
++            return Component.translatable("server.ban.punishment.end.never");
++        }
++        return Component.text(dateTimeFormatter.format(instant));
++    }
++
++    private <T> int normalizePage(java.util.@NotNull Optional<Integer> page, @NotNull PageBuilder<T> pageBuilder) {
++        return page.map(current ->
++        {
++            if (current > pageBuilder.getLastPage()) {
++                return pageBuilder.getLastPage();
++            }
++            return current;
++        }).orElse(1);
 +    }
 +
 +    /**
