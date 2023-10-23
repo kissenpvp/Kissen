@@ -128,7 +128,13 @@ public class DefaultTheme implements Theme
     private TranslatableComponent transformTranslatableComponent(@NotNull TranslatableComponent translatableComponent, @NotNull TextColor fallBack) {
         Function<Component, Component> argumentMapper = argument -> transformComponent(argument, getPrimaryAccentColor());
         List<Component> transformedArgs = translatableComponent.args().stream().map(argumentMapper).toList();
-        return translatableComponent.color(Objects.requireNonNullElse(translatableComponent.color(), fallBack)).args(transformedArgs.toArray(new Component[0]));
+
+        TextColor textColor = Objects.requireNonNullElse(translatableComponent.color(), fallBack);
+        if(!textColor.equals(fallBack))
+        {
+            textColor = getPersonalColorByCode(textColor.value());
+        }
+        return translatableComponent.color(textColor).args(transformedArgs.toArray(new Component[0]));
     }
 
     @NotNull private BuildableComponent<?, ?> legacyColorCodeResolver(@NotNull BuildableComponent<?, ?> buildableComponent)
@@ -174,6 +180,21 @@ public class DefaultTheme implements Theme
      */
     private @NotNull TextColor getPersonalColorByCode(int value)
     {
-        return ThemeProvider.getColor((theme) -> theme.value() == value).orElse(TextColor.color(value));
+        Map<TextColor, net.kyori.adventure.text.format.TextColor> colorMap = Map.of(
+                ThemeProvider.primary(), getPrimaryAccentColor(),
+                ThemeProvider.secondary(), getSecondaryAccentColor(),
+                ThemeProvider.general(), getDefaultColor(),
+                ThemeProvider.enabled(), getEnabledColor(),
+                ThemeProvider.disabled(), getDisabledColor()
+        );
+        TextColor color = TextColor.color(value);
+
+        return Optional.ofNullable(colorMap.get(color)).orElse(color);
+    }
+
+    @org.jetbrains.annotations.Contract(pure = true)
+    private @org.jetbrains.annotations.Nullable TextColor resolveColorValue(int color)
+    {
+        return null;
     }
 }

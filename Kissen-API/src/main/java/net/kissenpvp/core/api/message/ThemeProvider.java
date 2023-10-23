@@ -40,7 +40,7 @@ public class ThemeProvider {
     public static @NotNull TextColor @NotNull [] values()
     {
         //noinspection SuspiciousToArrayCall
-        return Arrays.stream(ThemeProvider.class.getFields()).filter(field -> field.getType().equals(TextColor.class)).map(field -> {
+        return Arrays.stream(ThemeProvider.class.getDeclaredFields()).filter(field -> field.getType().equals(TextColor.class)).map(field -> {
             try {
                 return field.get(null);
             } catch (IllegalAccessException ignored) { return null; }
