@@ -334,10 +334,10 @@ index 0000000000000000000000000000000000000000..540e5653878ccd1172efaa59573317c9
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..9c51f522d4ff5a75ee3aeeb5381e3cc87446f91f
+index 0000000000000000000000000000000000000000..de7e70ed63cb8ff0720a69fa696181d4624cfd26
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
-@@ -0,0 +1,422 @@
+@@ -0,0 +1,421 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -732,9 +732,8 @@ index 0000000000000000000000000000000000000000..9c51f522d4ff5a75ee3aeeb5381e3cc8
 +        String[] args = commandSenderCommandPayload.getArguments();
 +        List<String> suggestions = new ArrayList<>();
 +        if (!getChildCommandList().isEmpty() && args.length != 0) {
-+
 +            for (C command : getChildCommandList()) {
-+                if (command.getPosition() == args.length && (command.getName()
++                if ((command.getPosition() == args.length || command.getPosition() == args.length + 1) && (command.getName()
 +                        .toLowerCase()
 +                        .startsWith(args[args.length - 1].toLowerCase())) && command.testPermissionSilent(sender)) {
 +                    suggestions.add(command.getName());
@@ -1170,10 +1169,10 @@ index 0000000000000000000000000000000000000000..6032f5bf3442e03bdd95d095341c6323
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCommandExecutor.java b/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCommandExecutor.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7ad49c7b6994051722f387d08fa2cdc4023056f3
+index 0000000000000000000000000000000000000000..e62e6bac461dbae9353bf6a5e887e9bc463d3cf6
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/executor/KissenPaperCommandExecutor.java
-@@ -0,0 +1,118 @@
+@@ -0,0 +1,119 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1255,6 +1254,7 @@ index 0000000000000000000000000000000000000000..7ad49c7b6994051722f387d08fa2cdc4
 +     */
 +    public boolean invokeCommand(@NotNull CommandPayload<CommandSender> context) {
 +        try {
++            method.setAccessible(true);
 +            if (evaluator.arguments().isEmpty()) {
 +                if (useMethodValue) {
 +                    return (boolean) method.invoke(holder);
