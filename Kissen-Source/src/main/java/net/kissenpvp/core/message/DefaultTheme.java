@@ -111,7 +111,7 @@ public class DefaultTheme implements Theme
     {
         if (buildableComponent instanceof TranslatableComponent translatableComponent) {
 
-            return transformTranslatableComponent(translatableComponent);
+            return transformTranslatableComponent(translatableComponent, fallBack);
         }
 
         buildableComponent = legacyColorCodeResolver(buildableComponent);
@@ -125,10 +125,10 @@ public class DefaultTheme implements Theme
     }
 
     @NotNull
-    private TranslatableComponent transformTranslatableComponent(@NotNull TranslatableComponent translatableComponent) {
+    private TranslatableComponent transformTranslatableComponent(@NotNull TranslatableComponent translatableComponent, @NotNull TextColor fallBack) {
         Function<Component, Component> argumentMapper = argument -> transformComponent(argument, getPrimaryAccentColor());
         List<Component> transformedArgs = translatableComponent.args().stream().map(argumentMapper).toList();
-        return translatableComponent.color(getDefaultColor()).args(transformedArgs.toArray(new Component[0]));
+        return translatableComponent.color(Objects.requireNonNullElse(translatableComponent.color(), fallBack)).args(transformedArgs.toArray(new Component[0]));
     }
 
     @NotNull private BuildableComponent<?, ?> legacyColorCodeResolver(@NotNull BuildableComponent<?, ?> buildableComponent)
