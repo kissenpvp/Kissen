@@ -45,7 +45,7 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ba8d3c617475a78301c73d589e35713688c59273
+index 0000000000000000000000000000000000000000..f0073776ab6d910142ac4e4270becd34843b7fdb
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 @@ -0,0 +1,542 @@
@@ -132,7 +132,7 @@ index 0000000000000000000000000000000000000000..ba8d3c617475a78301c73d589e357136
 +        kissenLocalizationImplementation.register("server.ban.punishment.invalid", new MessageFormat("The punishment with ID {0} was not found."));
 +        kissenLocalizationImplementation.register("server.ban.punishment.pardoned", new MessageFormat("The ban, bearing the ID {0}, has been revoked."));
 +
-+        kissenLocalizationImplementation.register("server.ban.punishment.compact", new MessageFormat("[{7} / {3}] {1} #{0}"));
++        kissenLocalizationImplementation.register("server.ban.punishment.compact", new MessageFormat("[{7}] [{3}] {1} #{0}"));
 +
 +        kissenLocalizationImplementation.register("server.ban.punishment.id", new MessageFormat("ID"));
 +        kissenLocalizationImplementation.register("server.ban.punishment.operator", new MessageFormat("Operator"));
@@ -926,10 +926,10 @@ index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..55e8962ecd82c420aca143cd7568b8ed564b7aca
+index 0000000000000000000000000000000000000000..a1e855830729570420f3955a749ec1c898b5ab5a
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
-@@ -0,0 +1,239 @@
+@@ -0,0 +1,310 @@
 +package net.kissenpvp.paper.ban.command;
 +
 +import net.kissenpvp.core.api.ban.BanType;
@@ -949,6 +949,7 @@ index 0000000000000000000000000000000000000000..55e8962ecd82c420aca143cd7568b8ed
 +import net.kyori.adventure.text.TranslatableComponent;
 +import net.kyori.adventure.text.event.ClickEvent;
 +import net.kyori.adventure.text.event.HoverEvent;
++import net.kyori.adventure.text.format.TextColor;
 +import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 +import org.bukkit.Bukkit;
 +import org.bukkit.OfflinePlayer;
@@ -1054,9 +1055,37 @@ index 0000000000000000000000000000000000000000..55e8962ecd82c420aca143cd7568b8ed
 +
 +    @CommandData(value = "baninfo", aliases = {"punishmentinfo", "bi", "pi"})
 +    public void banInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperPunishment) {
++        payload.getSender().sendMessage(buildPunishmentInfo(payload, paperPunishment));
++    }
 +
-+        Component header = Component.translatable("server.command.general.header", Component.text(paperPunishment.getName()));
-+        Component footer = Component.translatable("server.command.general.footer", Component.text(paperPunishment.getName()));
++    /**
++     * This method is responsible for building the information of a punishment given on a server.
++     * The necessary parameters are a payload and a specific instance of a PaperPunishment.
++     * <p>
++     * The method first checks if the punishment is still valid. Depending on the validity, it sets the text color of the punishment name to either
++     * enabled or disabled using the ThemeProvider class.
++     * It then creates a header and footer for the punishment information with the punishment name in the appropriate color.
++     * Next, it creates Component instances for the punishment details including: ID, operator, start date, predicted end date, and actual end date.
++     * It then sets up a builder object to start constructing the punishment information block.
++     * The constructed information block consists of key-value pairs of punishment detail labels and their corresponding values.
++     * For each detail, it appends a new line with translated key-value pairs to the message.
++     * In the case of a cause for the punishment being present, it includes this in the message as well.
++     * This method also formats the start, predicted end, and the actual end dates according to a specific date format style.
++     * If the punishment doesn't have an end (is permanent), it reflects this in the result as well.
++     * Finally, this method appends the footer to the information block and returns the constructed Component.
++     *
++     * @param payload         the CommandPayload that contains the context for this command execution.
++     *                        It contains information about the command sender and any possible arguments used in the command.
++     * @param paperPunishment the instance of the PaperPunishment class which contains the information of the punishment.
++     *                        It includes details such as the ID, the operator who imposed the punishment, the start and end of the punishment, and the reason for the punishment if applicable.
++     * @return a Component that contains the punishment information block to be displayed to the command sender.
++     * @throws NullPointerException if either payload or paperPunishment is null.
++     */
++    @NotNull
++    private Component buildPunishmentInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperPunishment) {
++        TextColor isValidColor = paperPunishment.isValid() ? ThemeProvider.enabled() : ThemeProvider.disabled();
++        Component header = Component.translatable("server.command.general.header", Component.text(paperPunishment.getName()).color(isValidColor));
++        Component footer = Component.translatable("server.command.general.footer", Component.text(paperPunishment.getName()).color(isValidColor));
 +
 +        Component id = Component.translatable("server.ban.punishment.id").color(ThemeProvider.general());
 +        Component by = Component.translatable("server.ban.punishment.operator").color(ThemeProvider.general());
@@ -1081,8 +1110,9 @@ index 0000000000000000000000000000000000000000..55e8962ecd82c420aca143cd7568b8ed
 +        }
 +
 +        builder.appendNewline().append(footer);
-+        payload.getSender().sendMessage(builder);
++        return builder.asComponent();
 +    }
++
 +
 +    private <T> int normalizePage(java.util.@NotNull Optional<Integer> page, @NotNull PageBuilder<T> pageBuilder) {
 +        return page.map(current ->
@@ -1094,19 +1124,42 @@ index 0000000000000000000000000000000000000000..55e8962ecd82c420aca143cd7568b8ed
 +        }).orElse(1);
 +    }
 +
++    /**
++     * This method builds a compact history of punishments based on a provided list of PaperPunishment instances.
++     * This version of punishment history is intended to provide a brief snapshot of several punishments with their essential information in a compact format.
++     * <p>
++     * The method first sets up a DateTimeFormatter that formats dates in a localized short style,
++     * using the locale of the command sender and the system default timezone.
++     * It then creates an empty Component builder that will be used to build the result history block.
++     * It then traverses the list of punishments, and for each punishment:
++     * It figures out the status color based on whether the punishment is still valid.
++     * It builds an array of arguments containing essential information of the punishment formatted as Components.
++     * These arguments include: ID, name, operating user, ban type, total ID, start date, end date (or "permanent" if not applicable)
++     * and a validity status ('✔' if valid, '❌' if not).
++     * These arguments are then appended to the builder with a new line and a translatable history entry string.
++     * After traversing all punishments, this method calls asComponent() on the builder to build the compact punishment history,
++     * which is then returned as a Component.
++     *
++     * @param payload           the CommandPayload that contains the context for this command execution.
++     *                          It contains information about the command sender and any possible arguments used in the command.
++     * @param punishmentHistory a List of PaperPunishment instances that represent the punishment history for a user/server.
++     * @return a Component that represents a compact history of paper punishments in the form of key-value pairs.
++     * @throws NullPointerException if either payload or punishmentHistory is null.
++     */
 +    private @NotNull Component buildCompactHistory(@NotNull CommandPayload<CommandSender> payload, @NotNull List<PaperPunishment> punishmentHistory) {
 +        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault()).withLocale(payload.getSender().getCurrentLocale());
 +        Builder component = Component.text();
 +        for (PaperPunishment paperPunishment : punishmentHistory) {
++            TextColor statusColor = paperPunishment.isValid() ? ThemeProvider.enabled() : ThemeProvider.disabled();
 +            Component[] arguments = {
 +                    Component.text(paperPunishment.getID()).hoverEvent(HoverEvent.showText(Component.translatable("server.general.show.more"))),
-+                    Component.text(paperPunishment.getName()),
-+                    Component.text(paperPunishment.getBanOperator()),
-+                    Component.text(paperPunishment.getBanType().toString()),
-+                    Component.text(paperPunishment.getTotalID().toString()),
-+                    Component.text(formatter.format(paperPunishment.getStart())),
++                    Component.text(paperPunishment.getName()).color(ThemeProvider.general()),
++                    Component.text(paperPunishment.getBanOperator()).color(ThemeProvider.secondary()),
++                    Component.text(paperPunishment.getBanType().toString()).color(ThemeProvider.secondary()),
++                    Component.text(paperPunishment.getTotalID().toString()).color(ThemeProvider.secondary()),
++                    Component.text(formatter.format(paperPunishment.getStart())).color(ThemeProvider.secondary()),
 +                    paperPunishment.getEnd().map(formatter::format).map(Component::text).orElse(Component.text("permanent")),
-+                    Component.text(paperPunishment.isValid() ? "✔" : "❌")
++                    Component.text(paperPunishment.isValid() ? "✔" : "❌").color(statusColor)
 +            };
 +            component.appendNewline().append(Component.translatable("server.ban.punishment.compact", arguments));
 +        }
@@ -1114,6 +1167,24 @@ index 0000000000000000000000000000000000000000..55e8962ecd82c420aca143cd7568b8ed
 +        return component.asComponent();
 +    }
 +
++    /**
++     * This method is responsible for constructing a clickable text component that,
++     * when clicked, copies the provided text to the clipboard.
++     * On hovering over this component, a tooltip saying "copy to clipboard" is shown.
++     * <p>
++     * The method first calls Component.text() to convert the raw string into a Component.
++     * It then sets up a clickEvent for this Component using ClickEvent.copyToClipboard().
++     * This click event will copy the provided raw string to the user's clipboard when the Component is clicked.
++     * Further, it sets up a hover event for this Component using HoverEvent.showText() to show a tooltip when the user hovers over this Component.
++     * The text of the tooltip is set to "copy to clipboard".
++     * This method could be used to construct clickable and copyable command outputs, URLs, token strings, etc
++     * for an interactive and user-friendly experience.
++     *
++     * @param text the raw string that will be converted into a Component,
++     *             and also the string that will be copied to the clipboard when the user clicks the resulting Component.
++     * @return a Component that, when clicked, copies the provided string to the clipboard and shows a tooltip on hover.
++     * @throws NullPointerException if text is null.
++     */
 +    private @NotNull Component constructCopyable(@NotNull String text) {
 +        return Component.text(text).clickEvent(ClickEvent.copyToClipboard(text)).hoverEvent(HoverEvent.showText(Component.text("copy to clipboard")));
 +    }
@@ -1234,7 +1305,7 @@ index 0000000000000000000000000000000000000000..a5483cbe7117fb928201a6ca56c71400
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java b/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
-index 55167ae5fef79f24545df34479443dbb74399a57..c0a2c32cbba508f0060fb8af35fef868b0c15fdd 100644
+index 55167ae5fef79f24545df34479443dbb74399a57..5d3e45f35d6de0479938d85e13c1ae57cf1eaba7 100644
 --- a/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
 @@ -1,19 +1,40 @@
@@ -1277,7 +1348,7 @@ index 55167ae5fef79f24545df34479443dbb74399a57..c0a2c32cbba508f0060fb8af35fef868
 +
 +    @Override
 +    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
-+        return Bukkit.getKissen().getImplementation(PaperBanImplementation.class).getPunishmentSet().stream().filter(TemporalObject::isValid).map(Punishment::getID).collect(Collectors.toSet());
++        return Bukkit.getKissen().getImplementation(PaperBanImplementation.class).getPunishmentSet().stream().map(Punishment::getID).collect(Collectors.toSet());
 +    }
 +
 +    @Override
