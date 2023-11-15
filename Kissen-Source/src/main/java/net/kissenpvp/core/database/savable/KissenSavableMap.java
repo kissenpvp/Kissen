@@ -142,11 +142,7 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
 
     @Override
     public @NotNull String getNotNull(@NotNull String key) {
-        Optional<String> value = get(key);
-        if (value.isEmpty()) {
-            throw new NullPointerException();
-        }
-        return value.get();
+        return get(key).orElseThrow(NullPointerException::new);
     }
 
     @Override
