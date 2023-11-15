@@ -37,3 +37,5 @@ This project is licensed under the Apache License 2.0.
 
 ## Disclaimer
 Developers are solely responsible for the use of the API and need to adhere to the requirements and guidelines provided by the game creator, as well as staying in compliance with any relevant terms of service.
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J3J1M3QF6)
