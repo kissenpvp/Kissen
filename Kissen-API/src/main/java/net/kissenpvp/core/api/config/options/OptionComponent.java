@@ -20,19 +20,18 @@ package net.kissenpvp.core.api.config.options;
 
 import net.kissenpvp.core.api.config.AbstractOption;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class OptionComponent extends AbstractOption<Component>
 {
-    //TODO implement mini messages
-
     @Override public @NotNull String serialize(@NotNull Component object)
     {
-        return object.toString();
+        return MiniMessage.miniMessage().serialize(object);
     }
 
     @Override public @NotNull Component deserialize(@NotNull String input)
     {
-        return Component.text(input);
+        return MiniMessage.miniMessage().deserialize(input);
     }
 }
