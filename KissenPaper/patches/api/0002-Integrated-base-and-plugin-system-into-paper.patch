@@ -73,10 +73,10 @@ index 0000000000000000000000000000000000000000..8f6f824aa92c7dd0c4bd28d2c8fef974
 +    @NotNull ObjectMeta getPrivateMeta();
 +}
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index f78b5fd3c3347d28da58777bff88903d2eb140f6..decde953f1ec5ff7d50fcb949309c5a657856884 100644
+index 884902cb7f86c0b56594ccafc7d05c6c7a23ab53..21d06b37a3a3717f8b3b1b097af691d410e60e6c 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
-@@ -2756,4 +2756,17 @@ public final class Bukkit {
+@@ -2832,4 +2832,17 @@ public final class Bukkit {
      public static Server.Spigot spigot() {
          return server.spigot();
      }

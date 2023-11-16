@@ -3160,7 +3160,7 @@ index 935dac757280731bfeb0a8f033cbe315ecac46da..932c83a9d41ddff73d38e87ac7d97fad
          }
  
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index ba972d1661426d7e30f6f61bad3b9608e66ea721..4771748712fdb7270f0a9872af88402a96821ced 100644
+index f71a4a8307fb092d33545e12d253e0b80c884168..891abe4cd218e13b3ad1f584feeb22a65a554115 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -1984,17 +1984,23 @@ public class ServerPlayer extends Player {
@@ -3198,7 +3198,7 @@ index ba972d1661426d7e30f6f61bad3b9608e66ea721..4771748712fdb7270f0a9872af88402a
      }
  
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index ff2dd53e9e943aa929188fd9d4c35498b78c497a..454cee69c217106b840dc5c0019f8f7f80ca3782 100644
+index 1c4f272219e68373eaae93fc5ea9af7d8f3fd6f9..4a86b6b944fd0a934779873ba61d22364b544482 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -44,6 +44,13 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
@@ -3295,7 +3295,7 @@ index f4d903ed4342c3100c30deda291dfd6dd4e1ef40..b04ba26f9e04e31c5d4ba73436bf3492
          private final GameProfile profile;
          final Date expirationDate;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 48d1444fbad1c57738807d0128b94160a5a17a4d..75fcd48b691e7a7879baaa7791ecef8c42e48f97 100644
+index 33abcf12b4426572b74ca4c813e4392c823494bc..bdf80b667bb22672fcae729b2eff963703fb678a 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -167,8 +167,8 @@ public abstract class PlayerList {
@@ -3309,7 +3309,7 @@ index 48d1444fbad1c57738807d0128b94160a5a17a4d..75fcd48b691e7a7879baaa7791ecef8c
          // CraftBukkit start
          // this.stats = Maps.newHashMap();
          // this.advancements = Maps.newHashMap();
-@@ -321,6 +321,13 @@ public abstract class PlayerList {
+@@ -342,6 +342,13 @@ public abstract class PlayerList {
          // Ensure that player inventory is populated with its viewer
          player.containerMenu.transferTo(player.containerMenu, bukkitPlayer);
  
@@ -3324,7 +3324,7 @@ index 48d1444fbad1c57738807d0128b94160a5a17a4d..75fcd48b691e7a7879baaa7791ecef8c
          this.cserver.getPluginManager().callEvent(playerJoinEvent);
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index 03fc90a470c0f63d44161843cac88bea09166858..937fda2e3420376745fc1fc89cbec22e3ae8589a 100644
+index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..5ac23239b1a49104ba29de7e3e5f35137e99a8e5 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -9,6 +9,8 @@ import java.util.LinkedHashMap;
@@ -3880,7 +3880,7 @@ index 1c638a4b1f2c841928d8b2a7ae43e4ebb1f7eac7..31c40acd927245ad59d111e178a61d5f
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-index f7ebddd35ff5a60a81034fd7de035ebba83e9517..1441e648c1dfa3dd775c0b609a581eca84b74779 100644
+index 0e6c7284b9aee6c5f2454a3a095ebf349f887740..722fc5997290fbc92276b742e1338da970019cda 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 @@ -1527,4 +1527,27 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
@@ -3912,7 +3912,7 @@ index f7ebddd35ff5a60a81034fd7de035ebba83e9517..1441e648c1dfa3dd775c0b609a581eca
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-index 017e97c1618b8ee4640b36a0ec1b07026047bfc3..32787c6234ab6884b7ac0f62967ddc242630a918 100644
+index aefb9879b2edadfb4b21d80135d713b9d34c9941..377cc051d7c93c193ab7780b14ac80a2b60901db 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 @@ -71,7 +71,7 @@ import org.bukkit.plugin.Plugin;
@@ -3925,112 +3925,13 @@ index 017e97c1618b8ee4640b36a0ec1b07026047bfc3..32787c6234ab6884b7ac0f62967ddc24
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..a88ea78714a1a0ba120928edb2290ff6491f33d5 100644
+index 83aaf3e6e377d731ce02f779f80b7bf5db46f89f..39f7acf0cb718bfbcc18382c260bae8b36092782 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -6,37 +6,15 @@ import com.google.common.collect.ImmutableSet;
- import com.google.common.io.BaseEncoding;
- import com.mojang.authlib.GameProfile;
- import com.mojang.datafixers.util.Pair;
--import io.netty.buffer.Unpooled;
-+import io.netty.channel.Channel;
- import it.unimi.dsi.fastutil.shorts.ShortArraySet;
- import it.unimi.dsi.fastutil.shorts.ShortSet;
--import java.io.ByteArrayOutputStream;
--import java.io.IOException;
--import java.lang.ref.WeakReference;
--import java.net.InetAddress;
--import java.net.InetSocketAddress;
--import java.net.SocketAddress;
--import java.time.Duration;
--import java.time.Instant;
--import java.util.ArrayList;
--import java.util.Collection;
--import java.util.Date;
--import java.util.HashMap;
--import java.util.HashSet;
--import java.util.LinkedHashMap;
--import java.util.List;
--import java.util.Map;
--import java.util.Optional;
--import java.util.Set;
--import java.util.UUID;
--import java.util.WeakHashMap;
--import java.util.logging.Level;
--import java.util.logging.Logger;
--import javax.annotation.Nullable;
-+import net.kyori.adventure.audience.Audience;
-+import net.md_5.bungee.api.chat.BaseComponent;
- import net.minecraft.advancements.AdvancementProgress;
- import net.minecraft.core.BlockPos;
- import net.minecraft.core.Holder;
- import net.minecraft.core.SectionPos;
--import net.minecraft.core.registries.BuiltInRegistries;
- import net.minecraft.nbt.CompoundTag;
- import net.minecraft.network.FriendlyByteBuf;
- import net.minecraft.network.chat.Component;
-@@ -138,7 +116,6 @@ import org.bukkit.craftbukkit.advancement.CraftAdvancement;
- import org.bukkit.craftbukkit.advancement.CraftAdvancementProgress;
- import org.bukkit.craftbukkit.block.CraftBlockEntityState;
- import org.bukkit.craftbukkit.block.CraftBlockState;
--import org.bukkit.craftbukkit.block.CraftBlockStates;
- import org.bukkit.craftbukkit.block.CraftSign;
- import org.bukkit.craftbukkit.block.data.CraftBlockData;
- import org.bukkit.craftbukkit.conversations.ConversationTracker;
-@@ -146,7 +123,6 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
- import org.bukkit.craftbukkit.inventory.CraftItemStack;
- import org.bukkit.craftbukkit.map.CraftMapView;
- import org.bukkit.craftbukkit.map.RenderData;
--import org.bukkit.craftbukkit.profile.CraftPlayerProfile;
- import org.bukkit.craftbukkit.scoreboard.CraftScoreboard;
- import org.bukkit.craftbukkit.util.CraftChatMessage;
- import org.bukkit.craftbukkit.util.CraftLocation;
-@@ -159,7 +135,6 @@ import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
- import org.bukkit.event.player.PlayerHideEntityEvent;
- import org.bukkit.event.player.PlayerRegisterChannelEvent;
- import org.bukkit.event.player.PlayerShowEntityEvent;
--import org.bukkit.event.player.PlayerSpawnChangeEvent;
- import org.bukkit.event.player.PlayerTeleportEvent;
- import org.bukkit.event.player.PlayerUnregisterChannelEvent;
- import org.bukkit.inventory.EquipmentSlot;
-@@ -168,13 +143,65 @@ import org.bukkit.inventory.ItemStack;
- import org.bukkit.map.MapCursor;
- import org.bukkit.map.MapView;
- import org.bukkit.metadata.MetadataValue;
-+import org.bukkit.permissions.PermissibleBase;
- import org.bukkit.plugin.Plugin;
- import org.bukkit.plugin.messaging.StandardMessenger;
--import org.bukkit.profile.PlayerProfile;
- import org.bukkit.scoreboard.Scoreboard;
- import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Unmodifiable;
-+
-+import javax.annotation.Nullable;
-+import java.io.ByteArrayOutputStream;
-+import java.io.IOException;
-+import java.lang.ref.WeakReference;
-+import java.net.InetAddress;
-+import java.net.InetSocketAddress;
-+import java.net.SocketAddress;
-+import java.time.Duration;
-+import java.time.Instant;
-+import java.util.ArrayList;
-+import java.util.Collection;
-+import java.util.Date;
-+import java.util.HashMap;
-+import java.util.HashSet;
-+import java.util.LinkedHashMap;
-+import java.util.List;
-+import java.util.Locale;
-+import java.util.Map;
-+import java.util.Optional;
-+import java.util.Set;
-+import java.util.UUID;
-+import java.util.WeakHashMap;
-+import java.util.logging.Level;
-+import java.util.logging.Logger;
+@@ -176,6 +176,35 @@ import org.jetbrains.annotations.NotNull;
  
--import net.md_5.bungee.api.chat.BaseComponent; // Spigot
+ import net.md_5.bungee.api.chat.BaseComponent; // Spigot
+ 
 +// KissenPaper start
 +import net.kissenpvp.core.api.ban.Ban;
 +import net.kissenpvp.core.api.base.KissenServer;
@@ -4057,11 +3958,13 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..a88ea78714a1a0ba120928edb2290ff6
 +import net.kissenpvp.paper.networking.client.entity.KissenPaperOnlinePlayerClient;
 +import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
 +import net.kissenpvp.paper.user.KissenPaperPublicUser;
++import org.jetbrains.annotations.Unmodifiable;
 +// KissenPaper stop
- 
++
  @DelegateDeserialization(CraftOfflinePlayer.class)
  public class CraftPlayer extends CraftHumanEntity implements Player {
-@@ -199,6 +226,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     private long firstPlayed = 0;
+@@ -199,6 +228,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      private long lastSaveTime;
      // Paper end
  
@@ -4072,16 +3975,16 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..a88ea78714a1a0ba120928edb2290ff6
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2422,7 +2453,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2412,7 +2445,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
--        perm.clearPermissions();
+-        this.perm.clearPermissions();
 +        // KissenPaper start
 +        try {
 +            ((KissenPaperPermissible) getPermissible()).unsubscribe();
 +        } catch (PermissibleOverriddenException ignored) {
-+            if (perm instanceof PermissibleBase permissibleBase) {
++            if (this.perm instanceof org.bukkit.permissions.PermissibleBase permissibleBase) {
 +                permissibleBase.clearPermissions();
 +            }
 +        }
@@ -4093,7 +3996,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..a88ea78714a1a0ba120928edb2290ff6
      }
  
      @Override
-@@ -2768,7 +2811,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2760,7 +2805,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -4102,7 +4005,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..a88ea78714a1a0ba120928edb2290ff6
      }
      // Paper end
      @Override
-@@ -2942,7 +2985,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2934,7 +2979,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
          if (getHandle().connection == null) return;
          final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
@@ -4118,7 +4021,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..a88ea78714a1a0ba120928edb2290ff6
      }
  
      @Override
-@@ -3217,7 +3267,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3209,7 +3261,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          public void sendMessage(net.md_5.bungee.api.ChatMessageType position, UUID sender, BaseComponent... components) {
              if ( CraftPlayer.this.getHandle().connection == null ) return;
  
@@ -4135,7 +4038,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..a88ea78714a1a0ba120928edb2290ff6
          }
  
          // Paper start
-@@ -3283,4 +3341,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3287,4 +3347,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end
@@ -4186,7 +4089,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..a88ea78714a1a0ba120928edb2290ff6
 +    }
 +
 +    @Override
-+    public @NotNull Channel getConnection() {
++    public @NotNull io.netty.channel.Channel getConnection() {
 +        return getHandle().connection.connection.channel;
 +    }
 +
@@ -4196,12 +4099,12 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..a88ea78714a1a0ba120928edb2290ff6
 +    }
 +
 +    @Override
-+    public @NotNull Audience getKyoriAudience() {
++    public @NotNull net.kyori.adventure.audience.Audience getKyoriAudience() {
 +        return this;
 +    }
 +
 +    @Override
-+    public @NotNull Locale getCurrentLocale() {
++    public @NotNull java.util.Locale getCurrentLocale() {
 +        return getKissenPaperOnlinePlayerClient().getCurrentLocale();
 +    }
 +
@@ -4499,7 +4402,7 @@ index 604ed1f6742a6b028b9db2809f7bd4b9a3b38f4d..a88ea78714a1a0ba120928edb2290ff6
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java b/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
-index 51a6e84198f5b95488e8c757951ba14be4c55625..bb2c06fbe964c382de2ae2b5b86638cd7b95fb88 100644
+index c08006a010606fac5d290889a3ad9fdf9008ee72..ebd54b15481c3d15afff625b0661db8dce392584 100644
 --- a/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
 +++ b/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
 @@ -54,6 +54,10 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky

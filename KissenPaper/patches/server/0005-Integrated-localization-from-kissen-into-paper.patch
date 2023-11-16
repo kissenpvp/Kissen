@@ -70,7 +70,7 @@ index 0000000000000000000000000000000000000000..e085d4c120a323b555970b7643b7280a
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 4771748712fdb7270f0a9872af88402a96821ced..cec511973c0f1612042cc921965fa78997258088 100644
+index 891abe4cd218e13b3ad1f584feeb22a65a554115..5e9fda46753bb43000af4e5daa76114ce917d09d 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -2061,6 +2061,7 @@ public class ServerPlayer extends Player {
@@ -81,7 +81,7 @@ index 4771748712fdb7270f0a9872af88402a96821ced..cec511973c0f1612042cc921965fa789
          this.language = clientOptions.language();
          this.adventure$locale = net.kyori.adventure.translation.Translator.parseLocale(this.language); // Paper
          this.requestedViewDistance = clientOptions.viewDistance();
-@@ -2659,4 +2660,12 @@ public class ServerPlayer extends Player {
+@@ -2662,4 +2663,12 @@ public class ServerPlayer extends Player {
          return (CraftPlayer) super.getBukkitEntity();
      }
      // CraftBukkit end
@@ -95,10 +95,10 @@ index 4771748712fdb7270f0a9872af88402a96821ced..cec511973c0f1612042cc921965fa789
 +
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index a88ea78714a1a0ba120928edb2290ff6491f33d5..b853623e5e596ad2864af9fdc0ce0dc475e61184 100644
+index 39f7acf0cb718bfbcc18382c260bae8b36092782..7252829abf923d4b0413636ef6a89a9a5ec75187 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -3143,7 +3143,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3137,7 +3137,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      @Override
      public void openBook(final net.kyori.adventure.inventory.Book book) {

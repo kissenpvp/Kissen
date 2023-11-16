@@ -1378,7 +1378,7 @@ index 55167ae5fef79f24545df34479443dbb74399a57..5d3e45f35d6de0479938d85e13c1ae57
      }
  }
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 454cee69c217106b840dc5c0019f8f7f80ca3782..cdcc088906a6ff01d4e425fbd8c967ef42de4df9 100644
+index 4a86b6b944fd0a934779873ba61d22364b544482..62d1e91cfb1b11e40dc01de2a64ea9c6b2e406df 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
@@ -1445,7 +1445,7 @@ index 454cee69c217106b840dc5c0019f8f7f80ca3782..cdcc088906a6ff01d4e425fbd8c967ef
      }
      // Spigot end
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 75fcd48b691e7a7879baaa7791ecef8c42e48f97..d4af120e214a618bf838251f1ff93f45543f4df7 100644
+index bdf80b667bb22672fcae729b2eff963703fb678a..b82bcc0c2a0484a39505ed9945458b1e75252388 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -165,7 +165,7 @@ public abstract class PlayerList {
@@ -1457,7 +1457,7 @@ index 75fcd48b691e7a7879baaa7791ecef8c42e48f97..d4af120e214a618bf838251f1ff93f45
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
          this.ops = /*new ServerOpList(PlayerList.OPLIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserOperatorList(); // KissenPaper
          this.whitelist = /*new UserWhiteList(PlayerList.WHITELIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserWhiteList(); // KissenPaper
-@@ -714,37 +714,39 @@ public abstract class PlayerList {
+@@ -735,37 +735,39 @@ public abstract class PlayerList {
          Player player = entity.getBukkitEntity();
          PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
  
@@ -1525,10 +1525,10 @@ index 75fcd48b691e7a7879baaa7791ecef8c42e48f97..d4af120e214a618bf838251f1ff93f45
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 4075fbb8a74758cba1d841510afe421cd41aaacf..f6f549df66368b6af2f0faca1599d9ae02e16321 100644
+index c730394bd84c21e7c697acbe2d05962c450e5a37..cd73586c78556a21020a9ed9c5eceaca84d84acf 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -2103,12 +2103,19 @@ public final class CraftServer implements Server {
+@@ -2165,12 +2165,19 @@ public final class CraftServer implements Server {
  
      @Override
      public <T extends BanList<?>> T getBanList(BanList.Type type) {
