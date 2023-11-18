@@ -25,6 +25,7 @@ import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.base.KissenCore;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
@@ -102,6 +103,7 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
         };
     }
 
+    @SuppressWarnings("SqlSourceToSinkFlow") // prepared statement
     public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor statementExecutor) {
 
         if (!isConnected()) {
@@ -110,7 +112,8 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
         }
 
         try {
-            @SuppressWarnings("SqlSourceToSinkFlow") PreparedStatement preparedStatement = connection.prepareStatement(query);
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            KissenCore.getInstance().getLogger().info("Run sql query {}.", query);
             statementExecutor.execute(preparedStatement);
             preparedStatement.close();
         } catch (SQLException sqlException) {

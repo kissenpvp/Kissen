@@ -18,10 +18,7 @@
 
 package net.kissenpvp.core.database.queryapi;
 
-import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.FilterQuery;
-import net.kissenpvp.core.api.database.queryapi.FilterType;
-import net.kissenpvp.core.api.database.queryapi.QueryComponent;
+import net.kissenpvp.core.api.database.queryapi.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -41,9 +38,21 @@ public class KissenQueryComponent<T extends QueryComponent<?>> implements QueryC
         return filterQueries.toArray(new FilterQuery[0]);
     }
 
-    @Override public @NotNull T appendFilter(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType)
+    @Override
+    public @NotNull T or(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType) {
+        filterQueries.add(new KissenFilterQuery(column, value, filterType, FilterOperator.OR));
+        return (T) this;
+    }
+
+    @Override
+    public @NotNull T and(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType) {
+        filterQueries.add(new KissenFilterQuery(column, value, filterType, FilterOperator.AND));
+        return (T) this;
+    }
+
+    public @NotNull T initialise(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType)
     {
-        filterQueries.add(new KissenFilterQuery(column, value, filterType));
+        filterQueries.add(new KissenFilterQuery(column, value, filterType, FilterOperator.INIT));
         return (T) this;
     }
 }

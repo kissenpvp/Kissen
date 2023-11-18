@@ -19,11 +19,12 @@
 package net.kissenpvp.core.database.queryapi;
 
 import net.kissenpvp.core.api.database.queryapi.Column;
+import net.kissenpvp.core.api.database.queryapi.FilterOperator;
 import net.kissenpvp.core.api.database.queryapi.FilterQuery;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import org.jetbrains.annotations.NotNull;
 
-public record KissenFilterQuery(Column column, String value, FilterType filterType) implements FilterQuery
+public record KissenFilterQuery(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType, @NotNull FilterOperator filterOperator) implements FilterQuery
 {
     @Override public @NotNull Column getColumn()
     {
@@ -38,5 +39,10 @@ public record KissenFilterQuery(Column column, String value, FilterType filterTy
     @Override public @NotNull FilterType getFilterType()
     {
         return filterType;
+    }
+
+    @Override
+    public @NotNull FilterOperator getFilterOperator() {
+        return filterOperator;
     }
 }

@@ -16,12 +16,20 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.api.database.queryapi;
+package net.kissenpvp.core.api.database.queryapi.update;
 
+import net.kissenpvp.core.api.database.queryapi.QueryComponent;
+import net.kissenpvp.core.api.database.queryapi.RootQueryComponent;
 import org.jetbrains.annotations.NotNull;
 
-public interface QuerySelect extends QueryComponent<QuerySelect>
+public interface QueryUpdate extends QueryComponent<QueryUpdate>
 {
-    @NotNull Column[] getColumns();
-    String[][] execute();
+    @NotNull QueryUpdateDirective[] getColumns();
+
+    long execute();
+
+    interface RootQueryUpdate extends RootQueryComponent<QueryUpdate>
+    {
+        long execute();
+    }
 }

@@ -29,5 +29,6 @@ public interface FilterQuery
 
     @NotNull FilterType getFilterType();
 
+    @NotNull FilterOperator getFilterOperator();
 
 }

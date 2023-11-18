@@ -75,7 +75,10 @@ public abstract class KissenCore implements Kissen {
         KissenCore.instance = this;
 
         implementation = new HashMap<>();
-        Set<Class<?>> reflectionClasses = loadClasses(new KissenReflectionPackage("net.kissenpvp.core", KissenCore.class), new KissenReflectionPackage("net.kissenpvp.core.api", Kissen.class), new KissenReflectionPackage("net.kissenpvp", clazz));
+        Set<Class<?>> reflectionClasses = loadClasses(
+                new KissenReflectionPackage("net.kissenpvp.core", KissenCore.class),
+                new KissenReflectionPackage("net.kissenpvp.core.api", Kissen.class),
+                new KissenReflectionPackage("net.kissenpvp", clazz));
         injectImplementations(reflectionClasses);
 
         getLogger().debug("The following implementations have been loaded: ");
@@ -114,7 +117,8 @@ public abstract class KissenCore implements Kissen {
             try {
                 value.stop();
             } catch (Exception exception) {
-                getLogger().error("An error occurred when shutting down implementation '" + key.getSimpleName() + "'", exception);
+                getLogger().error("An error occurred when shutting down implementation '" + key.getSimpleName() + "'",
+                        exception);
             }
         });
     }
@@ -123,16 +127,17 @@ public abstract class KissenCore implements Kissen {
         getLogger().debug("Scan for class scanner entries.");
 
         File file = new File("kissen.properties");
-        getImplementation(KissenConfigurationImplementation.class).loadInternalConfiguration(file, classes.stream()
-                .filter(clazz -> Option.class.isAssignableFrom(clazz) && !Modifier.isInterface(clazz.getModifiers()) && !Modifier.isAbstract(clazz.getModifiers()))
-                .map(clazz -> ((Class<? extends Option<?>>) clazz))
-                .collect(Collectors.toSet()));
-        getLogger().info("Configuration loaded from '{}'. Any missing values have been written to the file.", file.getAbsolutePath());
+        getImplementation(KissenConfigurationImplementation.class).loadInternalConfiguration(file,
+                classes.stream().filter(clazz -> Option.class.isAssignableFrom(clazz) && !Modifier.isInterface(
+                        clazz.getModifiers()) && !Modifier.isAbstract(clazz.getModifiers())).map(
+                        clazz -> ((Class<? extends Option<?>>) clazz)).collect(Collectors.toSet()));
+        getLogger().info("Configuration loaded from '{}'. Any missing values have been written to the file.",
+                file.getAbsolutePath());
 
         getLogger().debug("Enable locale system and load Languages.");
 
-        publicMeta = getImplementation(KissenDatabaseImplementation.class).connectDatabase()
-                .createObjectMeta("kissen_public_meta");
+        publicMeta = getImplementation(KissenDatabaseImplementation.class).connectDatabase().createObjectMeta(
+                "kissen_public_meta");
 
         getLogger().debug("## Start ##");
 
@@ -175,85 +180,73 @@ public abstract class KissenCore implements Kissen {
                 }
                 alreadyExecuted.add(implementation);
             } catch (Exception exception) {
-                throw new IllegalStateException(String.format("An error occurred when running %s on implementation %s", operationState.name()
-                        .toLowerCase(Locale.ENGLISH), implementation.getClass().getName()), exception);
+                throw new IllegalStateException(String.format("An error occurred when running %s on implementation %s",
+                        operationState.name().toLowerCase(Locale.ENGLISH), implementation.getClass().getName()),
+                        exception);
             }
         }
     }
 
     private @Unmodifiable @NotNull Set<Class<?>> loadClasses(@NotNull ReflectionPackage... reflectionPackage) {
         Set<Class<?>> classes = new HashSet<>();
-        Arrays.stream(reflectionPackage)
-                .map(reflectionPackage1 -> reflectionPackage1.getClasses()
-                        .stream()
-                        .filter(clazz -> !clazz.isAnnotationPresent(Ignore.class))
-                        .collect(Collectors.toSet()))
-                .forEach(classes::addAll);
+        Arrays.stream(reflectionPackage).map(reflectionPackage1 -> reflectionPackage1.getClasses().stream().filter(
+                clazz -> !clazz.isAnnotationPresent(Ignore.class)).collect(Collectors.toSet())).forEach(
+                classes::addAll);
         return classes;
     }
 
     public @NotNull @Unmodifiable Set<KissenImplementation> getKissenImplementations() {
-        return KissenCore.getInstance()
-                .getImplementation()
-                .values()
-                .stream()
-                .filter(implementation -> implementation instanceof KissenImplementation)
-                .map(implementation1 -> (KissenImplementation) implementation1)
-                .collect(Collectors.toSet());
+        return KissenCore.getInstance().getImplementation().values().stream().filter(
+                implementation -> implementation instanceof KissenImplementation).map(
+                implementation1 -> (KissenImplementation) implementation1).collect(Collectors.toSet());
     }
 
     private void injectImplementations(@NotNull Set<Class<?>> reflectionClasses) {
-        Set<Class<?>> allFiles = reflectionClasses.stream()
-                .filter(Implementation.class::isAssignableFrom)
-                .collect(Collectors.toUnmodifiableSet());
+        Set<Class<?>> allFiles = reflectionClasses.stream().filter(Implementation.class::isAssignableFrom).collect(
+                Collectors.toUnmodifiableSet());
 
-        Set<Class<?>> implementationFiles = allFiles.stream()
-                .filter(clazz -> Modifier.isInterface(clazz.getModifiers()))
-                .filter(clazz -> !clazz.equals(Implementation.class) && !clazz.equals(KissenImplementation.class))
-                .collect(Collectors.toSet());
+        Set<Class<?>> implementationFiles = allFiles.stream().filter(
+                clazz -> Modifier.isInterface(clazz.getModifiers())).filter(
+                clazz -> !clazz.equals(Implementation.class) && !clazz.equals(KissenImplementation.class)).collect(
+                Collectors.toSet());
 
-        Set<Class<?>> sourceFiles = allFiles.stream()
-                .filter(clazz -> !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()))
-                .filter(clazz -> allFiles.stream()
-                        .noneMatch(intern -> clazz != intern && clazz.isAssignableFrom(intern)))
-                .collect(Collectors.toSet());
+        Set<Class<?>> sourceFiles = allFiles.stream().filter(
+                clazz -> !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())).filter(
+                clazz -> allFiles.stream().noneMatch(
+                        intern -> clazz != intern && clazz.isAssignableFrom(intern))).collect(Collectors.toSet());
 
         sourceFiles.forEach(sourceClazz -> {
-            Implementation implementationInstance = (Implementation) new KissenReflectionClass(sourceClazz).newInstance();
-            implementationFiles.stream()
-                    .filter(clazz -> clazz.isAssignableFrom(sourceClazz))
-                    .findFirst()
-                    .ifPresentOrElse(clazz -> implementation.put((Class<? extends Implementation>) clazz, implementationInstance),
-                            () -> implementation.put((Class<? extends Implementation>) sourceClazz, implementationInstance));
+            Implementation implementationInstance = (Implementation) new KissenReflectionClass(
+                    sourceClazz).newInstance();
+            implementationFiles.stream().filter(
+                    clazz -> clazz.isAssignableFrom(sourceClazz)).findFirst().ifPresentOrElse(
+                    clazz -> implementation.put((Class<? extends Implementation>) clazz, implementationInstance),
+                    () -> implementation.put((Class<? extends Implementation>) sourceClazz, implementationInstance));
         });
     }
 
-    public void load(@NotNull PluginState pluginState, @NotNull KissenPlugin kissenPlugin)
-    {
+    public void load(@NotNull PluginState pluginState, @NotNull KissenPlugin kissenPlugin) {
         switch (pluginState) {
             case PRE -> iterateKissenImplementation(implementation -> implementation.load(kissenPlugin));
             case POST -> iterateKissenImplementation(implementation -> implementation.postLoad(kissenPlugin));
         }
     }
 
-    public void enable(@NotNull PluginState pluginState, @NotNull KissenPlugin kissenPlugin)
-    {
+    public void enable(@NotNull PluginState pluginState, @NotNull KissenPlugin kissenPlugin) {
         switch (pluginState) {
             case PRE -> iterateKissenImplementation(implementation -> implementation.enable(kissenPlugin));
             case POST -> iterateKissenImplementation(implementation -> implementation.postEnable(kissenPlugin));
         }
     }
 
-    public void disable(@NotNull PluginState pluginState, @NotNull KissenPlugin kissenPlugin)
-    {
+    public void disable(@NotNull PluginState pluginState, @NotNull KissenPlugin kissenPlugin) {
         switch (pluginState) {
             case PRE -> iterateKissenImplementation(implementation -> implementation.disable(kissenPlugin));
             case POST -> iterateKissenImplementation(implementation -> implementation.postDisable(kissenPlugin));
         }
     }
 
-    private void iterateKissenImplementation(@NotNull Consumer<KissenImplementation> kissenImplementationConsumer)
-    {
+    private void iterateKissenImplementation(@NotNull Consumer<KissenImplementation> kissenImplementationConsumer) {
         getKissenImplementations().forEach(kissenImplementationConsumer);
     }
 

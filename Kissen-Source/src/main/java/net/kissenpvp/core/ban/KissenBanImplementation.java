@@ -27,7 +27,7 @@ import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
-import net.kissenpvp.core.api.database.queryapi.QuerySelect;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TemporalObject;
@@ -243,7 +243,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      */
     protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull Meta meta) throws BackendException {
         final Type type = new TypeToken<List<String>>(){}.getType();
-        QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, "punishment", FilterType.EQUALS);
+        QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, "punishment", FilterType.EQUALS);
         return Stream.of(querySelect.execute()).flatMap(result ->
         {
             UUID totalID = UUID.fromString(result[0]);

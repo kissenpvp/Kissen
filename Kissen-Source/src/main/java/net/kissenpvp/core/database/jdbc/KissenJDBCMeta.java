@@ -24,10 +24,11 @@ import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.queryapi.Column;
+import net.kissenpvp.core.api.database.queryapi.FilterOperator;
 import net.kissenpvp.core.api.database.queryapi.FilterQuery;
-import net.kissenpvp.core.api.database.queryapi.QuerySelect;
-import net.kissenpvp.core.api.database.queryapi.QueryUpdate;
-import net.kissenpvp.core.api.database.queryapi.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
 import net.kissenpvp.core.database.KissenBaseMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +38,6 @@ import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -138,7 +138,6 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             values = transformFilters(sql, querySelect.getFilterQueries());
         }
         sql.append(";");
-
         return runSelectQuery(sql.toString(), values, querySelect.getColumns());
     }
 
@@ -152,12 +151,12 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
         System.arraycopy(updateValues, 0, total, 0, updateValues.length);
         System.arraycopy(whereValues, 0, total, updateValues.length, whereValues.length);
 
-        return runUpdateQuery(sql.toString(), total, Arrays.stream(queryUpdate.getColumns()).map(QueryUpdateDirective::column).distinct().toArray(Column[]::new));
+        return runUpdateQuery(sql.toString(), total);
     }
 
     public abstract void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor);
 
-    private long runUpdateQuery(@NotNull String sql, @NotNull String @NotNull [] parameterValues, @NotNull Column... columns) throws BackendException {
+    private long runUpdateQuery(@NotNull String sql, @NotNull String @NotNull [] parameterValues) throws BackendException {
         AtomicLong atomicLong = new AtomicLong();
         getPreparedStatement(sql, preparedStatement -> {
             for (int i = 0; i < parameterValues.length; i++) {
@@ -193,7 +192,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
         for (int i = 0; i < columns.length; i++) {
             stringBuilder.append(getColumn(columns[i].column())).append("=").append(" ").append("?");
             updateValues[i] = columns[i].value();
-            if(i <= columns.length)
+            if(i <= columns.length - 1)
             {
                 stringBuilder.append(", ");
             }
@@ -217,6 +216,11 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             FilterQuery filterQuery = filterQueries[i];
             String column = getColumn(filterQuery.getColumn());
 
+            if(!filterQuery.getFilterOperator().equals(FilterOperator.INIT))
+            {
+                sql.append(" ").append(filterQuery.getFilterOperator().name()).append(" ");
+            }
+
             sql.append(switch (filterQuery.getFilterType()) {
                 case EQUALS -> {
                     values[i] = filterQuery.getValue();
@@ -231,9 +235,6 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
                     yield column + " LIKE ?";
                 }
             });
-            if (i < (filterQueries.length - 1)) {
-                sql.append(" AND ");
-            }
         }
         return values;
     }

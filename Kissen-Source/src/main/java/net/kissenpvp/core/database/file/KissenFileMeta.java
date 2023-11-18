@@ -21,6 +21,9 @@ package net.kissenpvp.core.database.file;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.queryapi.*;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
 import net.kissenpvp.core.database.KissenBaseMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -118,6 +121,7 @@ public class KissenFileMeta extends KissenBaseMeta implements Meta {
     private @NotNull @Unmodifiable List<String> getFilteredData(@NotNull List<String> data, @NotNull FilterQuery @NotNull ... filterQueries) {
         List<String> filtered = new ArrayList<>(data);
         for (FilterQuery filterQuery : filterQueries) {
+            //TODO implement or operator in file
             filtered.removeAll(data.stream().filter(line ->
             {
                 String value = getColumnValue(filterQuery.getColumn(), line);

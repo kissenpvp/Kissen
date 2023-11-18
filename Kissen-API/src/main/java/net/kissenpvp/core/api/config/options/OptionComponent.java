@@ -23,15 +23,14 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class OptionComponent extends AbstractOption<Component>
-{
-    @Override public @NotNull String serialize(@NotNull Component object)
-    {
+public abstract class OptionComponent extends AbstractOption<Component> {
+    @Override
+    public @NotNull String serialize(@NotNull Component object) {
         return MiniMessage.miniMessage().serialize(object);
     }
 
-    @Override public @NotNull Component deserialize(@NotNull String input)
-    {
+    @Override
+    public @NotNull Component deserialize(@NotNull String input) {
         return MiniMessage.miniMessage().deserialize(input);
     }
 }

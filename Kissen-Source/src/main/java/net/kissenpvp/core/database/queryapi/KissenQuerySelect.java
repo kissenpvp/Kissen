@@ -19,7 +19,7 @@
 package net.kissenpvp.core.database.queryapi;
 
 import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.QuerySelect;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class KissenQuerySelect extends KissenQueryComponent<QuerySelect> implements QuerySelect {
@@ -32,5 +32,17 @@ public abstract class KissenQuerySelect extends KissenQueryComponent<QuerySelect
     @Override
     public @NotNull Column @NotNull [] getColumns() {
         return columns;
+    }
+
+    public abstract static class KissenRootQuerySelect extends KissenRootQueryComponent<QuerySelect> implements RootQuerySelect {
+
+        public KissenRootQuerySelect(@NotNull Column... columns) {
+            this.setQueryComponent(new KissenQuerySelect(columns) {
+                @Override
+                public String[][] execute() {
+                    return KissenRootQuerySelect.this.execute();
+                }
+            });
+        }
     }
 }

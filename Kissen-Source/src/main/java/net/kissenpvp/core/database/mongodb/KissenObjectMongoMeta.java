@@ -23,7 +23,7 @@ import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
-import net.kissenpvp.core.api.database.queryapi.QuerySelect;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.base.KissenCore;
@@ -68,12 +68,12 @@ public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implem
 
     @Override
     public @NotNull Optional<SavableMap> getData(@NotNull String totalId) throws BackendException {
-        return Optional.ofNullable(processQuery(totalId, select(Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, totalId, FilterType.EQUALS)).get(totalId));
+        return Optional.ofNullable(processQuery(totalId, select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId, FilterType.EQUALS)).get(totalId));
     }
 
     @Override
     public @Unmodifiable @NotNull <T extends Savable> Map<@NotNull String, @NotNull SavableMap> getData(@NotNull T savable) throws BackendException {
-        return processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, savable.getSaveID(), FilterType.START));
+        return processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, savable.getSaveID(), FilterType.START));
     }
 
     private @NotNull Map<String, SavableMap> processQuery(@NotNull QuerySelect querySelect) throws BackendException {

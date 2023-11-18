@@ -20,14 +20,9 @@ package net.kissenpvp.core.api.database.queryapi;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface QueryComponent<T extends QueryComponent<?>>
+public interface RootQueryComponent<T extends QueryComponent<?>>
 {
 
-    FilterQuery[] getFilterQueries();
-
-    @NotNull T or(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType);
-
-    @NotNull T and(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType);
-
+    @NotNull T where(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType);
 
 }

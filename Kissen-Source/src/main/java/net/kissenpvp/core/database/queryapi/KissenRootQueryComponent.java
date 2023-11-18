@@ -16,13 +16,25 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.api.database.queryapi;
+package net.kissenpvp.core.database.queryapi;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import net.kissenpvp.core.api.database.queryapi.*;
 import org.jetbrains.annotations.NotNull;
 
-public interface QueryUpdate extends QueryComponent<QueryUpdate>
+public class KissenRootQueryComponent<T extends QueryComponent<?>> implements RootQueryComponent<T>
 {
-    @NotNull QueryUpdateDirective[] getColumns();
 
-    long execute();
+    @Getter(AccessLevel.PROTECTED) @Setter(AccessLevel.PROTECTED) private KissenQueryComponent<T> queryComponent;
+
+    @Override public @NotNull T where(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType)
+    {
+        return getQueryComponent().initialise(column, value, filterType);
+    }
+
+    public @NotNull T getQuery() {
+        return (T) queryComponent;
+    }
 }

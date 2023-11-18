@@ -87,7 +87,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
 
     @Override
     public @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException {
-        return Arrays.stream(getUser().getMeta().select(Column.TOTAL_ID).appendFilter(Column.KEY, "total_id", FilterType.EQUALS).appendFilter(Column.VALUE, getTotalID().toString(), FilterType.EQUALS).execute()).map(data -> data[0].substring(getUser().getSaveID().length())).map(UUID::fromString).filter(uuid -> !getUniqueId().equals(uuid)).collect(Collectors.toSet());
+        return Arrays.stream(getUser().getMeta().select(Column.TOTAL_ID).where(Column.KEY, "total_id", FilterType.EQUALS).and(Column.VALUE, getTotalID().toString(), FilterType.EQUALS).execute()).map(data -> data[0].substring(getUser().getSaveID().length())).map(UUID::fromString).filter(uuid -> !getUniqueId().equals(uuid)).collect(Collectors.toSet());
     }
 
     @Override
@@ -311,12 +311,12 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return Optional.ofNullable(index);
     }
 
-    public long getOnlineTime(User user) {
+    public long getOnlineTime(@NotNull User user) {
         return isConnected() ? Long.parseLong(user.get("online_time").orElse("0")) + (System.currentTimeMillis() - (long) user.getStorage().get("time_joined")) : Long.parseLong(user.get("online_time").orElse("-1"));
     }
 
-    public long getLastPlayed(User user) {
-        return isConnected() ? System.currentTimeMillis() : Long.parseLong(getUser().get("last_played").orElse("-1"));
+    public long getLastPlayed(@NotNull User user) {
+        return isConnected() ? System.currentTimeMillis() : Long.parseLong(user.get("last_played").orElse("-1"));
     }
 
     private @NotNull Optional<Suffix> overrideSuffix(@NotNull String name, SavableRecordList<SuffixNode> savableRecordList, SuffixNode suffixNode) {

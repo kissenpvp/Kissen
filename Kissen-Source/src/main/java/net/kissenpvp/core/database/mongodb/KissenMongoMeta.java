@@ -24,10 +24,11 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import net.kissenpvp.core.api.database.meta.BackendException;
+import net.kissenpvp.core.api.database.queryapi.FilterOperator;
 import net.kissenpvp.core.api.database.queryapi.FilterQuery;
-import net.kissenpvp.core.api.database.queryapi.QuerySelect;
-import net.kissenpvp.core.api.database.queryapi.QueryUpdate;
-import net.kissenpvp.core.api.database.queryapi.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.KissenBaseMeta;
 import org.bson.Document;
@@ -113,16 +114,37 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
 
     @NotNull
     private Bson @NotNull [] decodeFilterQueries(@NotNull FilterQuery @NotNull ... querySelect) {
-        Bson[] filters = new Bson[querySelect.length];
-        for (int i = 0; i < filters.length; i++) {
-            FilterQuery filterQuery = querySelect[i];
-            filters[i] = switch (filterQuery.getFilterType()) {
+        List<Bson> filters = new ArrayList<>();
+        FilterOperator currentOperator = FilterOperator.INIT;
+        List<Bson> currentOperatorFilters = new ArrayList<>();
+
+        for (FilterQuery filterQuery : querySelect) {
+            Bson filter = switch (filterQuery.getFilterType()) {
                 case EQUALS -> Filters.eq(getColumn(filterQuery.getColumn()), filterQuery.getValue());
                 case END -> Filters.regex(getColumn(filterQuery.getColumn()), filterQuery.getValue() + "$");
                 case START -> Filters.regex(getColumn(filterQuery.getColumn()), "^" + filterQuery.getValue());
             };
+
+            if (currentOperator != filterQuery.getFilterOperator() && !currentOperatorFilters.isEmpty()) {
+                switch (currentOperator) {
+                    case AND -> filters.add(Filters.and(currentOperatorFilters));
+                    case OR -> filters.add(Filters.or(currentOperatorFilters));
+                    case INIT -> filters.addAll(currentOperatorFilters);
+                }
+                currentOperatorFilters.clear();
+            }
+
+            currentOperator = filterQuery.getFilterOperator();
+            currentOperatorFilters.add(filter);
         }
-        return filters;
+
+        switch (currentOperator) {
+            case AND -> filters.add(Filters.and(currentOperatorFilters));
+            case OR -> filters.add(Filters.or(currentOperatorFilters));
+            case INIT -> filters.addAll(currentOperatorFilters);
+        }
+
+        return filters.toArray(new Bson[0]);
     }
 
     protected abstract @NotNull MongoCollection<Document> getCollection();

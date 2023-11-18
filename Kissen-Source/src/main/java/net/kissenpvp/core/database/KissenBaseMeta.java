@@ -24,6 +24,9 @@ import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.queryapi.*;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.queryapi.KissenQuerySelect;
 import net.kissenpvp.core.database.queryapi.KissenQueryUpdate;
@@ -254,23 +257,22 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull QuerySelect select(@NotNull Column... columns) {
-        return new KissenQuerySelect(columns)
-        {
-            @Override public String[][] execute()
-            {
-                return KissenBaseMeta.this.execute(this);
+    public @NotNull QuerySelect.RootQuerySelect select(@NotNull Column... columns) {
+        return new KissenQuerySelect.KissenRootQuerySelect(columns) {
+            @Override
+            public String[][] execute() {
+                return KissenBaseMeta.this.execute(getQuery());
             }
         };
     }
 
     @Override
-    public @NotNull QueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective) {
-        return new KissenQueryUpdate(queryUpdateDirective)
+    public @NotNull QueryUpdate.RootQueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective) {
+        return new KissenQueryUpdate.KissenRootQueryUpdate(queryUpdateDirective)
         {
             @Override public long execute()
             {
-                return KissenBaseMeta.this.execute(this);
+                return KissenBaseMeta.this.execute(getQuery());
             }
         };
     }
@@ -299,9 +301,10 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     protected @NotNull QuerySelect getDefaultQuery(@NotNull String totalID, @NotNull String key) {
-        return select(Column.VALUE).appendFilter(Column.TOTAL_ID, totalID, FilterType.EQUALS).appendFilter(Column.KEY, key, FilterType.EQUALS);
+        return select(Column.VALUE).where(Column.TOTAL_ID, totalID, FilterType.EQUALS).and(Column.KEY, key, FilterType.EQUALS);
     }
 
     protected abstract String[][] execute(@NotNull QuerySelect querySelect);
+
     protected abstract long execute(@NotNull QueryUpdate queryUpdate);
 }

@@ -18,21 +18,16 @@
 
 package net.kissenpvp.core.database.jdbc;
 
-import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
-import net.kissenpvp.core.api.database.queryapi.QuerySelect;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.database.savable.KissenSavableMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -102,35 +97,34 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
 
     @Override
     public void add(@NotNull String id, @NotNull Map<String, String> data) throws BackendException {
-        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn()), new PreparedStatementExecutor() {
-            @Override
-            public void execute(@NotNull PreparedStatement preparedStatement) throws SQLException {
-                for(Map.Entry<String, String> current : data.entrySet())
-                {
-                    preparedStatement.setString(1, id);
-                    preparedStatement.setString(2, current.getKey());
-                    preparedStatement.setString(3, current.getValue());
-                    preparedStatement.addBatch();
-                }
-                preparedStatement.executeBatch();
-            }
-        });
+        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn()),
+                preparedStatement -> {
+                    for(Map.Entry<String, String> current : data.entrySet())
+                    {
+                        preparedStatement.setString(1, id);
+                        preparedStatement.setString(2, current.getKey());
+                        preparedStatement.setString(3, current.getValue());
+                        preparedStatement.addBatch();
+                    }
+                    preparedStatement.executeBatch();
+                });
     }
 
     @Override
     public @NotNull Optional<SavableMap> getData(@NotNull String totalId)  {
-        return Optional.ofNullable(processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, totalId, FilterType.EQUALS)).get(totalId));
+        String[][] data = select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId, FilterType.EQUALS).execute();
+        return Optional.ofNullable(processQuery(data).get(totalId));
     }
 
     @Override
     public @Unmodifiable @NotNull <T extends Savable> Map<@NotNull String, @NotNull SavableMap> getData(@NotNull T savable) {
-        Map<String, SavableMap> data = new HashMap<>(processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).appendFilter(Column.TOTAL_ID, savable.getSaveID(), FilterType.START)));
-        return Collections.unmodifiableMap(data);
+        String[][] data = select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, savable.getSaveID(), FilterType.START).execute();
+        return Map.copyOf(processQuery(data));
     }
 
-    private @NotNull Map<String, SavableMap> processQuery(@NotNull QuerySelect querySelect) throws BackendException {
+    private @NotNull Map<String, SavableMap> processQuery(@NotNull String[] @NotNull [] data) throws BackendException {
         Map<String, SavableMap> dataContainer = new HashMap<>();
-        for (String[] current : execute(querySelect)) {
+        for (String[] current : data) {
             String totalID = current[0], key = current[1], value = current[2];
 
             dataContainer.putIfAbsent(totalID, new KissenSavableMap(totalID, KissenObjectJDBCMeta.this));

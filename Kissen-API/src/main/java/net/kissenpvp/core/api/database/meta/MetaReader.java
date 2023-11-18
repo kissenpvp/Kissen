@@ -19,12 +19,11 @@
 package net.kissenpvp.core.api.database.meta;
 
 import net.kissenpvp.core.api.database.DataImplementation;
-import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.QuerySelect;
-import net.kissenpvp.core.api.database.queryapi.QueryUpdate;
-import net.kissenpvp.core.api.database.queryapi.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.queryapi.*;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.Serializable;
@@ -710,7 +709,7 @@ public interface MetaReader extends Serializable {
      */
     <T extends Record> @NotNull Optional<T> getRecord(@NotNull String key, @NotNull Class<T> record) throws BackendException;
 
-    @NotNull QueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective);
+    @NotNull QueryUpdate.RootQueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective);
 
-    @NotNull QuerySelect select(@NotNull Column... columns);
+    @NotNull QuerySelect.RootQuerySelect select(@NotNull Column... columns);
 }

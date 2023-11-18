@@ -18,8 +18,9 @@
 
 package net.kissenpvp.core.database.queryapi;
 
-import net.kissenpvp.core.api.database.queryapi.QueryUpdate;
-import net.kissenpvp.core.api.database.queryapi.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class KissenQueryUpdate extends KissenQueryComponent<QueryUpdate> implements QueryUpdate
 {
@@ -33,5 +34,17 @@ public abstract class KissenQueryUpdate extends KissenQueryComponent<QueryUpdate
     @Override public QueryUpdateDirective[] getColumns()
     {
         return queryUpdateDirectives;
+    }
+
+    public abstract static class KissenRootQueryUpdate extends KissenRootQueryComponent<QueryUpdate> implements RootQueryUpdate {
+
+        public KissenRootQueryUpdate(@NotNull QueryUpdateDirective... queryUpdateDirectives) {
+            this.setQueryComponent(new KissenQueryUpdate(queryUpdateDirectives) {
+                @Override
+                public long execute() {
+                    return KissenRootQueryUpdate.this.execute();
+                }
+            });
+        }
     }
 }

@@ -24,8 +24,8 @@ import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
-import net.kissenpvp.core.api.database.queryapi.QuerySelect;
-import net.kissenpvp.core.api.database.queryapi.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
+import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.networking.client.entitiy.UnknownPlayerException;
 import net.kissenpvp.core.api.permission.Permission;
@@ -36,7 +36,7 @@ import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.UserInfo;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.message.usersettings.GeneralUserColor;
+import net.kissenpvp.core.message.usersettings.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -84,11 +84,11 @@ public abstract class KissenUserImplementation implements UserImplementation {
             Runnable runnable = () -> getOnlineUser().stream().filter(userEntry -> userEntry.getStorage().containsKey("tick")).forEach(user -> ((KissenUser<? extends Permission>) user).tick());
             taskImplementation.registerAsyncTask("user_tick", 20, runnable);
 
-            registerUserSetting(new net.kissenpvp.core.message.usersettings.PrimaryUserColor());
-            registerUserSetting(new net.kissenpvp.core.message.usersettings.SecondaryUserColor());
+            registerUserSetting(new PrimaryUserColor());
+            registerUserSetting(new SecondaryUserColor());
             registerUserSetting(new GeneralUserColor());
-            registerUserSetting(new net.kissenpvp.core.message.usersettings.EnabledUserColor());
-            registerUserSetting(new net.kissenpvp.core.message.usersettings.DisabledUserColor());
+            registerUserSetting(new EnabledUserColor());
+            registerUserSetting(new DisabledUserColor());
 
         } catch (TaskException taskException) {
             throw new IllegalStateException("Cannot start user tick!", taskException);
@@ -115,7 +115,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
         return getOnlineUser().stream().filter(user -> user.getNotNull("name").equals(name)).findFirst().orElseGet(() ->
         {
             try {
-                String[][] data = getUserMeta().select(Column.TOTAL_ID).appendFilter(Column.KEY, "name", FilterType.EQUALS).appendFilter(Column.VALUE, name, FilterType.EQUALS).execute();
+                String[][] data = getUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "name", FilterType.EQUALS).and(Column.VALUE, name, FilterType.EQUALS).execute();
                 if (data.length != 0) {
                     return getUser(UUID.fromString(data[0][0].substring(getUserSaveID().length())));
                 }
@@ -214,7 +214,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      */
     private @Unmodifiable @NotNull Set<UserInfoNode> fetchUserProfiles() {
         Set<UserInfoNode> userInfos = new HashSet<>();
-        QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).appendFilter(Column.TOTAL_ID, getUserSaveID(), FilterType.START).appendFilter(Column.KEY, "name", FilterType.EQUALS);
+        QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getUserSaveID(), FilterType.START).and(Column.KEY, "name", FilterType.EQUALS);
         try {
             String[][] data = querySelect.execute();
             for (String[] user : data) {
@@ -311,9 +311,9 @@ public abstract class KissenUserImplementation implements UserImplementation {
      */
     public long rewriteTotalID(@NotNull UUID from, @NotNull UUID to) {
         return getUserMeta().update(new QueryUpdateDirective(Column.VALUE, to.toString()))
-                .appendFilter(Column.TOTAL_ID, getUserSaveID(), FilterType.START)
-                .appendFilter(Column.KEY, "total_id", FilterType.EQUALS)
-                .appendFilter(Column.VALUE, from.toString(), FilterType.EQUALS).execute();
+                .where(Column.TOTAL_ID, getUserSaveID(), FilterType.START)
+                .and(Column.KEY, "total_id", FilterType.EQUALS)
+                .and(Column.VALUE, from.toString(), FilterType.EQUALS).execute();
 
     }
 

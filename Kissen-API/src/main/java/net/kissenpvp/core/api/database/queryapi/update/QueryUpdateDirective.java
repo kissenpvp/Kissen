@@ -16,18 +16,9 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.api.database.queryapi;
+package net.kissenpvp.core.api.database.queryapi.update;
 
-import org.jetbrains.annotations.NotNull;
+import net.kissenpvp.core.api.database.queryapi.Column;
 
-public interface QueryComponent<T extends QueryComponent<?>>
-{
-
-    FilterQuery[] getFilterQueries();
-
-    @NotNull T or(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType);
-
-    @NotNull T and(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType);
-
-
-}
+public record QueryUpdateDirective(Column column, String value)
+{}
