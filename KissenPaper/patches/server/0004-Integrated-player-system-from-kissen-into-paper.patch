@@ -3,8 +3,6 @@ From: Groldi <chniucg@gmail.com>
 Date: Fri, 15 Sep 2023 22:45:32 +0200
 Subject: [PATCH] Integrated player system from kissen into paper
 
-Signed-off-by: Ivo <chniucg@gmail.com>
-Signed-off-by: ivo <chniucg@gmail.com>
 
 diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 index daa157eaa021d039f9a092bea0b78f7c1f746e3b..2445edc12487678c2db1f6b274f95a77eb4663c1 100644
@@ -2495,7 +2493,7 @@ index 0000000000000000000000000000000000000000..671da825ee272f8ef7a02e43ca5620df
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d577f93302821b058eaaa12834da9a16908fb76b
+index 0000000000000000000000000000000000000000..b540c96052ab7bcef7dd9cc371a260cda07db0e0
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
 @@ -0,0 +1,250 @@
@@ -2508,7 +2506,7 @@ index 0000000000000000000000000000000000000000..d577f93302821b058eaaa12834da9a16
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.database.queryapi.Column;
 +import net.kissenpvp.core.api.database.queryapi.FilterType;
-+import net.kissenpvp.core.api.database.queryapi.QuerySelect;
++import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.UserInfo;
 +import net.kissenpvp.paper.api.base.Context;
@@ -2673,7 +2671,7 @@ index 0000000000000000000000000000000000000000..d577f93302821b058eaaa12834da9a16
 +        try {
 +            Set<LinkedOperatorDataNode> result = new HashSet<>();
 +
-+            QuerySelect select = getLocalUserMeta().select(Column.TOTAL_ID, Column.VALUE).appendFilter(Column.TOTAL_ID, getLocalUserSaveID(), FilterType.START).appendFilter(Column.KEY, "operator", FilterType.EQUALS);
++            QuerySelect select = getLocalUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getLocalUserSaveID(), FilterType.START).and(Column.KEY, "operator", FilterType.EQUALS);
 +            String[][] data = select.execute();
 +            for (String[] current : data) {
 +                UUID uuid = UUID.fromString(current[0].substring(getLocalUserSaveID().length()));
@@ -2751,7 +2749,7 @@ index 0000000000000000000000000000000000000000..d577f93302821b058eaaa12834da9a16
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..70f34a75978203c8af045f79ba7eecc7a484fdaa
+index 0000000000000000000000000000000000000000..fa0adc270bf8a4449121a2b91dda692fa1e739ff
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
 @@ -0,0 +1,186 @@
@@ -2763,7 +2761,7 @@ index 0000000000000000000000000000000000000000..70f34a75978203c8af045f79ba7eecc7
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.database.queryapi.Column;
 +import net.kissenpvp.core.api.database.queryapi.FilterType;
-+import net.kissenpvp.core.api.database.queryapi.QuerySelect;
++import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.UserInfo;
 +import net.kissenpvp.core.user.UserInfoNode;
@@ -2912,7 +2910,7 @@ index 0000000000000000000000000000000000000000..70f34a75978203c8af045f79ba7eecc7
 +     */
 +    private @NotNull @Unmodifiable Set<UserInfo> fetchWhitelistedUsers() {
 +        try {
-+            QuerySelect querySelect = getLocalUserMeta().select(Column.TOTAL_ID).appendFilter(Column.KEY, "whitelist", FilterType.EQUALS).appendFilter(Column.VALUE, "1", FilterType.EQUALS);
++            QuerySelect querySelect = getLocalUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "whitelist", FilterType.EQUALS).and(Column.VALUE, "1", FilterType.EQUALS);
 +
 +            Function<UUID, UserInfo> fetchUserProfile = uuid -> Bukkit.getKissen().getImplementation(UserImplementation.class).getCachedUserProfile(uuid).orElse(null);
 +            Function<String[], UserInfo> parse = (userData) -> fetchUserProfile.apply(UUID.fromString(userData[0].substring(getLocalUserSaveID().length())));
