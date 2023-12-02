@@ -112,13 +112,13 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
 
     @Override
     public @NotNull Optional<SavableMap> getData(@NotNull String totalId)  {
-        String[][] data = select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId, FilterType.EQUALS).execute();
+        String[][] data = select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId, FilterType.EXACT_MATCH).execute();
         return Optional.ofNullable(processQuery(data).get(totalId));
     }
 
     @Override
     public @Unmodifiable @NotNull <T extends Savable> Map<@NotNull String, @NotNull SavableMap> getData(@NotNull T savable) {
-        String[][] data = select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, savable.getSaveID(), FilterType.START).execute();
+        String[][] data = select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, savable.getSaveID(), FilterType.STARTS_WITH).execute();
         return Map.copyOf(processQuery(data));
     }
 

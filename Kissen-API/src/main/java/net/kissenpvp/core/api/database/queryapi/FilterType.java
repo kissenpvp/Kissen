@@ -18,10 +18,22 @@
 
 package net.kissenpvp.core.api.database.queryapi;
 
-public enum FilterType
-{
-    START,
-    EQUALS,
-    END
-
+/**
+ * The {@code FilterType} enum is utilized to define the type of filtering operation to be applied
+ * during a query. Each value of this enum represents a different kind of comparison operation
+ * for filtering records based on column values.
+ *
+ * <p> Each {@code FilterType} corresponds to a specific comparison operation:
+ *
+ * <ul>
+ * <li>{@code STARTS_WITH} is used to filter records where the column value begins with a specified string.
+ * <li>{@code EXACT_MATCH} is used for filtering records based on an exact match with the specified value.
+ * <li>{@code ENDS_WITH} is used to filter records where the column value terminates with a specified string.
+ * </ul>
+ *
+ * <p> The specific behavior of these comparison operations might depend on the particularities of the
+ * database technology in use and the way the query is interpreted.
+ */
+public enum FilterType {
+    STARTS_WITH, EXACT_MATCH, ENDS_WITH
 }

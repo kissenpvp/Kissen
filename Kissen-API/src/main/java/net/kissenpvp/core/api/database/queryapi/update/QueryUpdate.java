@@ -22,14 +22,45 @@ import net.kissenpvp.core.api.database.queryapi.QueryComponent;
 import net.kissenpvp.core.api.database.queryapi.RootQueryComponent;
 import org.jetbrains.annotations.NotNull;
 
-public interface QueryUpdate extends QueryComponent<QueryUpdate>
-{
+/**
+ * The {@code QueryUpdate} interface provides a contract for creating and executing
+ * update queries. It extends the {@link QueryComponent} interface, with {@code QueryUpdate}
+ * as its generic parameter to allow for method chaining.
+ *
+ * <p>Note: The exact interpretation and execution of these methods may depend on the
+ * specific database technology in use.
+ */
+public interface QueryUpdate extends QueryComponent<QueryUpdate> {
+    /**
+     * Gets the columns that are to be updated in the query.
+     *
+     * @return An array of {@link QueryUpdateDirective}, which represents the columns to be updated.
+     */
     @NotNull QueryUpdateDirective[] getColumns();
 
+    /**
+     * Executes the update query that has been built.
+     *
+     * @return A long value indicating the execution result. The interpretation of this
+     * result may depend on the specific database technology in use.
+     */
     long execute();
 
-    interface RootQueryUpdate extends RootQueryComponent<QueryUpdate>
-    {
+    /**
+     * The {@code RootQueryUpdate} interface provides a contract for the root of an update query.
+     * It extends the {@link RootQueryComponent} interface with {@code QueryUpdate} as its
+     * generic parameter.
+     *
+     * <p>Note: The exact interpretation and execution of these methods may depend on the
+     * specific database technology in use.
+     */
+    interface RootQueryUpdate extends RootQueryComponent<QueryUpdate> {
+        /**
+         * Executes the root update query that has been built.
+         *
+         * @return A long value indicating the execution result. The interpretation of this
+         * result may depend on the specific database technology in use.
+         */
         long execute();
     }
 }

@@ -301,7 +301,7 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     protected @NotNull QuerySelect getDefaultQuery(@NotNull String totalID, @NotNull String key) {
-        return select(Column.VALUE).where(Column.TOTAL_ID, totalID, FilterType.EQUALS).and(Column.KEY, key, FilterType.EQUALS);
+        return select(Column.VALUE).where(Column.TOTAL_ID, totalID, FilterType.EXACT_MATCH).and(Column.KEY, key, FilterType.EXACT_MATCH);
     }
 
     protected abstract String[][] execute(@NotNull QuerySelect querySelect);

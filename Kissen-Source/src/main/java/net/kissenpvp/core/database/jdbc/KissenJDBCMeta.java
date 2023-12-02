@@ -222,15 +222,15 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             }
 
             sql.append(switch (filterQuery.getFilterType()) {
-                case EQUALS -> {
+                case EXACT_MATCH -> {
                     values[i] = filterQuery.getValue();
                     yield column + " = ?";
                 }
-                case START -> {
+                case STARTS_WITH -> {
                     values[i] = filterQuery.getValue() + "%";
                     yield column + " LIKE ?";
                 }
-                case END -> {
+                case ENDS_WITH -> {
                     values[i] = "%" + filterQuery.getValue();
                     yield column + " LIKE ?";
                 }

@@ -19,6 +19,20 @@
 package net.kissenpvp.core.api.database.queryapi.update;
 
 import net.kissenpvp.core.api.database.queryapi.Column;
+import org.jetbrains.annotations.NotNull;
 
-public record QueryUpdateDirective(Column column, String value)
-{}
+/**
+ * The {@code QueryUpdateDirective} record represents a simple data holder for a column to-be-updated
+ * and its new value within an update query. It consists of a {@link Column} and the corresponding
+ * value as a {@code String}. The {@code QueryUpdateDirective} allows for easy specification and handling
+ * of update operations for columns in a query.
+ *
+ * <p> Note: The {@link Column} and the value are annotated with {@code @NotNull} to indicate that they
+ * cannot be {@code null}, and a valid {@code QueryUpdateDirective} should always have these fields
+ * populated.
+ *
+ * @param column The {@link Column} object representing the column to be updated.
+ * @param value  The new value for the column in {@code String} format.
+ */
+public record QueryUpdateDirective(@NotNull Column column, @NotNull String value) {
+}

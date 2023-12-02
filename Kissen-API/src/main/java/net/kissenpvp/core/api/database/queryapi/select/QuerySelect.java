@@ -23,15 +23,47 @@ import net.kissenpvp.core.api.database.queryapi.QueryComponent;
 import net.kissenpvp.core.api.database.queryapi.RootQueryComponent;
 import org.jetbrains.annotations.NotNull;
 
-public interface QuerySelect extends QueryComponent<QuerySelect>
-{
+/**
+ * The {@code QuerySelect} interface provides a contract for creating and executing
+ * select queries. It extends the {@link QueryComponent} interface, with {@code QuerySelect}
+ * as its generic parameter to allow for method chaining.
+ *
+ * <p>Note: The exact interpretation and execution of these methods may depend on the
+ * specific database technology in use.
+ */
+public interface QuerySelect extends QueryComponent<QuerySelect> {
+    /**
+     * The {@code QuerySelect} interface provides a contract for creating and executing
+     * select queries. It extends the {@link QueryComponent} interface, with {@code QuerySelect}
+     * as its generic parameter to allow for method chaining.
+     *
+     * <p>Note: The exact interpretation and execution of these methods may depend on the
+     * specific database technology in use.
+     */
     @NotNull Column[] getColumns();
 
-    String[][] execute();
+    /**
+     * Executes the select query that has been built and returns the result.
+     *
+     * @return A 2D array of {@link String}, where each inner array represents rows of the result.
+     */
+    @NotNull String[][] execute();
 
-    interface RootQuerySelect extends RootQueryComponent<QuerySelect>
-    {
-        String[][] execute();
+    /**
+     * The {@code RootQuerySelect} interface provides a contract for the root of a select query.
+     * It extends the {@link RootQueryComponent} interface with {@code QuerySelect} as its
+     * generic parameter.
+     *
+     * <p>Note: The exact interpretation and execution of these methods may depend on the
+     * specific database technology in use.
+     */
+    interface RootQuerySelect extends RootQueryComponent<QuerySelect> {
+        /**
+         * Executes the root select query that has been built and returns the result.
+         *
+         * @return A 2D array of {@link String}, where each inner array represents rows of the result.
+         */
+        @NotNull String[][] execute();
     }
 
 }

@@ -20,9 +20,29 @@ package net.kissenpvp.core.api.database.queryapi;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface RootQueryComponent<T extends QueryComponent<?>>
-{
-
+/**
+ * The RootQueryComponent interface expands upon the {@link QueryComponent} interface by
+ * providing functionality of a root query. This interface is intended for use with types
+ * of queries that can be considered the start or root of a query chain.
+ *
+ * <p> The RootQueryComponent interface is a generic interface, following the same design
+ * as QueryComponent, and its generic parameter T represents the type of the implementing
+ * class, which must also be a type of QueryComponent. This design allows the interface
+ * to initiate a fluent method chain.
+ *
+ * @param <T> The type of the implementing class. This type will be returned when chaining methods together.
+ * @see QueryComponent
+ */
+public interface RootQueryComponent<T extends QueryComponent<?>> {
+    /**
+     * This method applies a WHERE filter condition to the implementing class. This method
+     * is primarily expected to be the first method in a method chain, aligning with the SQL
+     * standard where a query generally starts with a WHERE clause.
+     *
+     * @param column     The column to apply the WHERE condition on.
+     * @param value      The value for the column to be compared against.
+     * @param filterType The comparison type to perform on the pair, column-value.
+     * @return The implementing class, to enable method chaining.
+     */
     @NotNull T where(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType);
-
 }

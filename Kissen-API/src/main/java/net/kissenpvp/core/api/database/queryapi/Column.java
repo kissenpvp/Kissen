@@ -18,9 +18,18 @@
 
 package net.kissenpvp.core.api.database.queryapi;
 
-public enum Column
-{
-    TOTAL_ID,
-    KEY,
-    VALUE
+/**
+ * The {@code Column} enumeration is used to specify the columns in the database that
+ * can be used in filter conditions. Each enumerated value corresponds to a different database column.
+ *
+ * <p> The enumeration values include:
+ *
+ * <ul>
+ * <li>{@code TOTAL_ID} represents the 'total_id' column in the database.
+ * <li>{@code KEY} represents the 'identifier' column in the database.
+ * <li>{@code VALUE} represents the 'value' column in the database.
+ * </ul>
+ */
+public enum Column {
+    TOTAL_ID, KEY, VALUE
 }

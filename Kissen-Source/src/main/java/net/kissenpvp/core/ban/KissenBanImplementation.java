@@ -243,7 +243,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      */
     protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull Meta meta) throws BackendException {
         final Type type = new TypeToken<List<String>>(){}.getType();
-        QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, "punishment", FilterType.EQUALS);
+        QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, "punishment", FilterType.EXACT_MATCH);
         return Stream.of(querySelect.execute()).flatMap(result ->
         {
             UUID totalID = UUID.fromString(result[0]);

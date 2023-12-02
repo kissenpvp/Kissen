@@ -126,9 +126,9 @@ public class KissenFileMeta extends KissenBaseMeta implements Meta {
             {
                 String value = getColumnValue(filterQuery.getColumn(), line);
                 return !switch (filterQuery.getFilterType()) {
-                    case EQUALS -> filterQuery.getValue().equals(value);
-                    case START -> value.startsWith(filterQuery.getValue());
-                    case END -> value.endsWith(filterQuery.getValue());
+                    case EXACT_MATCH -> filterQuery.getValue().equals(value);
+                    case STARTS_WITH -> value.startsWith(filterQuery.getValue());
+                    case ENDS_WITH -> value.endsWith(filterQuery.getValue());
                 };
             }).collect(Collectors.toSet()));
         }

@@ -68,12 +68,12 @@ public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implem
 
     @Override
     public @NotNull Optional<SavableMap> getData(@NotNull String totalId) throws BackendException {
-        return Optional.ofNullable(processQuery(totalId, select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId, FilterType.EQUALS)).get(totalId));
+        return Optional.ofNullable(processQuery(totalId, select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId, FilterType.EXACT_MATCH)).get(totalId));
     }
 
     @Override
     public @Unmodifiable @NotNull <T extends Savable> Map<@NotNull String, @NotNull SavableMap> getData(@NotNull T savable) throws BackendException {
-        return processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, savable.getSaveID(), FilterType.START));
+        return processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, savable.getSaveID(), FilterType.STARTS_WITH));
     }
 
     private @NotNull Map<String, SavableMap> processQuery(@NotNull QuerySelect querySelect) throws BackendException {

@@ -5,10 +5,10 @@ Subject: [PATCH] Adjusted gradle script
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 149f9088fe806467656e8b1c4157df60fda69ba7..e46fd215fea2be1a5667f40cef4de401592ce01f 100644
+index e827ee211e3c65dc68ac5867fd8476639df63645..cefb880624f392fe26b79099099f3a79f85da7a9 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
-@@ -51,6 +51,10 @@ dependencies {
+@@ -52,6 +52,10 @@ dependencies {
      implementation("org.ow2.asm:asm-commons:9.4")
      // Paper end
  

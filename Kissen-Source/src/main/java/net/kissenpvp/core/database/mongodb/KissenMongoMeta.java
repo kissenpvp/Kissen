@@ -120,9 +120,9 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
 
         for (FilterQuery filterQuery : querySelect) {
             Bson filter = switch (filterQuery.getFilterType()) {
-                case EQUALS -> Filters.eq(getColumn(filterQuery.getColumn()), filterQuery.getValue());
-                case END -> Filters.regex(getColumn(filterQuery.getColumn()), filterQuery.getValue() + "$");
-                case START -> Filters.regex(getColumn(filterQuery.getColumn()), "^" + filterQuery.getValue());
+                case EXACT_MATCH -> Filters.eq(getColumn(filterQuery.getColumn()), filterQuery.getValue());
+                case ENDS_WITH -> Filters.regex(getColumn(filterQuery.getColumn()), filterQuery.getValue() + "$");
+                case STARTS_WITH -> Filters.regex(getColumn(filterQuery.getColumn()), "^" + filterQuery.getValue());
             };
 
             if (currentOperator != filterQuery.getFilterOperator() && !currentOperatorFilters.isEmpty()) {

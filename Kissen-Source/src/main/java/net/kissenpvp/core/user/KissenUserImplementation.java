@@ -115,7 +115,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
         return getOnlineUser().stream().filter(user -> user.getNotNull("name").equals(name)).findFirst().orElseGet(() ->
         {
             try {
-                String[][] data = getUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "name", FilterType.EQUALS).and(Column.VALUE, name, FilterType.EQUALS).execute();
+                String[][] data = getUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "name", FilterType.EXACT_MATCH).and(Column.VALUE, name, FilterType.EXACT_MATCH).execute();
                 if (data.length != 0) {
                     return getUser(UUID.fromString(data[0][0].substring(getUserSaveID().length())));
                 }
@@ -214,7 +214,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      */
     private @Unmodifiable @NotNull Set<UserInfoNode> fetchUserProfiles() {
         Set<UserInfoNode> userInfos = new HashSet<>();
-        QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getUserSaveID(), FilterType.START).and(Column.KEY, "name", FilterType.EQUALS);
+        QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "name", FilterType.EXACT_MATCH);
         try {
             String[][] data = querySelect.execute();
             for (String[] user : data) {
@@ -311,9 +311,9 @@ public abstract class KissenUserImplementation implements UserImplementation {
      */
     public long rewriteTotalID(@NotNull UUID from, @NotNull UUID to) {
         return getUserMeta().update(new QueryUpdateDirective(Column.VALUE, to.toString()))
-                .where(Column.TOTAL_ID, getUserSaveID(), FilterType.START)
-                .and(Column.KEY, "total_id", FilterType.EQUALS)
-                .and(Column.VALUE, from.toString(), FilterType.EQUALS).execute();
+                .where(Column.TOTAL_ID, getUserSaveID(), FilterType.STARTS_WITH)
+                .and(Column.KEY, "total_id", FilterType.EXACT_MATCH)
+                .and(Column.VALUE, from.toString(), FilterType.EXACT_MATCH).execute();
 
     }
 
