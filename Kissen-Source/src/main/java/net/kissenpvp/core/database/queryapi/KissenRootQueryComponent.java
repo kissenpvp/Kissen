@@ -29,6 +29,11 @@ public class KissenRootQueryComponent<T extends QueryComponent<?>> implements Ro
 
     @Getter(AccessLevel.PROTECTED) @Setter(AccessLevel.PROTECTED) private KissenQueryComponent<T> queryComponent;
 
+    @Override
+    public @NotNull T where(@NotNull Column column, @NotNull String value) {
+        return where(column, value, FilterType.EXACT_MATCH);
+    }
+
     @Override public @NotNull T where(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType)
     {
         return getQueryComponent().initialise(column, value, filterType);

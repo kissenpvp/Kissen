@@ -35,6 +35,7 @@ import org.jetbrains.annotations.NotNull;
  *            chaining methods together.
  */
 public interface QueryComponent<T extends QueryComponent<?>> {
+
     /**
      * This method gets an array of {@link FilterQuery} objects that are associated with the
      * implementing class. This method should be overridden to return an appropriate array
@@ -43,6 +44,28 @@ public interface QueryComponent<T extends QueryComponent<?>> {
      * @return an array of FilterQuery objects.
      */
     @NotNull FilterQuery[] getFilterQueries();
+
+    /**
+     * Applies a new OR filter condition to the implementing class with a column and a value.
+     * By default, the {@link FilterType} is set as EXACT_MATCH. This method should be overridden
+     * to add the proper OR filter condition to the constructed query.
+     *
+     * @param column The column on which to apply the OR condition.
+     * @param value The value to compare against the column.
+     * @return The implementing class, to facilitate method chaining.
+     */
+    @NotNull T or(@NotNull Column column, @NotNull String value);
+
+    /**
+     * Applies a new AND filter condition to the implementing class with a column and a value.
+     * By default, the {@link FilterType} is set as EXACT_MATCH. This method should be overridden
+     * to add the proper AND filter condition to the constructed query.
+     *
+     * @param column The column on which to apply the AND condition.
+     * @param value The value to compare against the column.
+     * @return The implementing class, to facilitate method chaining.
+     */
+    @NotNull T and(@NotNull Column column, @NotNull String value);
 
     /**
      * This method adds a new OR filter condition to the implementing class. This method should
