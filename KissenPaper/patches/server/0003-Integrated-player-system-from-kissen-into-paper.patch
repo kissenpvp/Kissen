@@ -2493,7 +2493,7 @@ index 0000000000000000000000000000000000000000..671da825ee272f8ef7a02e43ca5620df
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b540c96052ab7bcef7dd9cc371a260cda07db0e0
+index 0000000000000000000000000000000000000000..5e24acfd0c4216deeac727a0c4a38d2956006419
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
 @@ -0,0 +1,250 @@
@@ -2671,7 +2671,7 @@ index 0000000000000000000000000000000000000000..b540c96052ab7bcef7dd9cc371a260cd
 +        try {
 +            Set<LinkedOperatorDataNode> result = new HashSet<>();
 +
-+            QuerySelect select = getLocalUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getLocalUserSaveID(), FilterType.START).and(Column.KEY, "operator", FilterType.EQUALS);
++            QuerySelect select = getLocalUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getLocalUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "operator");
 +            String[][] data = select.execute();
 +            for (String[] current : data) {
 +                UUID uuid = UUID.fromString(current[0].substring(getLocalUserSaveID().length()));
@@ -2749,7 +2749,7 @@ index 0000000000000000000000000000000000000000..b540c96052ab7bcef7dd9cc371a260cd
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..fa0adc270bf8a4449121a2b91dda692fa1e739ff
+index 0000000000000000000000000000000000000000..c0af11a1c46cee51910cd553c676b745c0bf4820
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
 @@ -0,0 +1,186 @@
@@ -2910,7 +2910,7 @@ index 0000000000000000000000000000000000000000..fa0adc270bf8a4449121a2b91dda692f
 +     */
 +    private @NotNull @Unmodifiable Set<UserInfo> fetchWhitelistedUsers() {
 +        try {
-+            QuerySelect querySelect = getLocalUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "whitelist", FilterType.EQUALS).and(Column.VALUE, "1", FilterType.EQUALS);
++            QuerySelect querySelect = getLocalUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "whitelist").and(Column.VALUE, "1");
 +
 +            Function<UUID, UserInfo> fetchUserProfile = uuid -> Bukkit.getKissen().getImplementation(UserImplementation.class).getCachedUserProfile(uuid).orElse(null);
 +            Function<String[], UserInfo> parse = (userData) -> fetchUserProfile.apply(UUID.fromString(userData[0].substring(getLocalUserSaveID().length())));
@@ -3103,10 +3103,10 @@ index 0000000000000000000000000000000000000000..c6e107e7bc79c4f66c23f423452ac974
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
-index ec268189b19b6fa5c4521f96ce211a531db35ec5..da0cb15bbf8cd561a008344ae8ddd466de6defe8 100644
+index 7573c12a77797146c51ef2dfe4b2a636df45e21a..29784060d8b0824488a7717f1b7ebf9a55c9375c 100644
 --- a/src/main/java/net/minecraft/server/Main.java
 +++ b/src/main/java/net/minecraft/server/Main.java
-@@ -193,15 +193,17 @@ public class Main {
+@@ -190,15 +190,17 @@ public class Main {
              org.spigotmc.SpigotConfig.disabledAdvancements = spigotConfiguration.getStringList("advancements.disabled"); // Paper - fix SPIGOT-5885, must be set early in init
              // Paper start - fix SPIGOT-5824
              File file;
@@ -3128,7 +3128,7 @@ index ec268189b19b6fa5c4521f96ce211a531db35ec5..da0cb15bbf8cd561a008344ae8ddd466
              String s = (String) Optional.ofNullable((String) optionset.valueOf("world")).orElse(dedicatedserversettings.getProperties().levelName);
              LevelStorageSource convertable = LevelStorageSource.createDefault(file.toPath());
 diff --git a/src/main/java/net/minecraft/server/Services.java b/src/main/java/net/minecraft/server/Services.java
-index a9b2c8cd4dcd3f884e4306bebee9334d3848fce5..c3510492a900bcf2782fa6af332223803922e4bf 100644
+index a5450eeeab5a6b0ab273810063806d11107d6b26..8c7b227a5a50d13181c2d80f788e23cd2dca1471 100644
 --- a/src/main/java/net/minecraft/server/Services.java
 +++ b/src/main/java/net/minecraft/server/Services.java
 @@ -24,10 +24,10 @@ public record Services(MinecraftSessionService sessionService, ServicesKeySet se
@@ -3158,20 +3158,20 @@ index 935dac757280731bfeb0a8f033cbe315ecac46da..932c83a9d41ddff73d38e87ac7d97fad
          }
  
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 08980763020a13ab49dc7d637625a4fba56da8c9..5e84b7f8b45625a6f68419d780b1e19a8bea4b70 100644
+index 8efbbd379244e3ed54d4aba199037cc20ccd096a..afcd1741bf83b3c78a163bcd5639fe73c8cf2dc5 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -1984,17 +1984,23 @@ public class ServerPlayer extends Player {
+@@ -2083,17 +2083,22 @@ public class ServerPlayer extends Player {
  
      public void sendSystemMessage(Component message, boolean overlay) {
          if (this.acceptsSystemMessages(overlay)) {
--            this.connection.send(new ClientboundSystemChatPacket(PaperAdventure.asAdventure(message), overlay), PacketSendListener.exceptionallySend(() -> { // Paper - Adventure
+-            this.connection.send(new ClientboundSystemChatPacket(message, overlay), PacketSendListener.exceptionallySend(() -> {
 -                if (this.acceptsSystemMessages(false)) {
 -                    boolean flag1 = true;
 -                    String s = message.getString(256);
 -                    MutableComponent ichatmutablecomponent = Component.literal(s).withStyle(ChatFormatting.YELLOW);
- 
--                    return new ClientboundSystemChatPacket(PaperAdventure.asAdventure(Component.translatable("multiplayer.message_not_delivered", ichatmutablecomponent).withStyle(ChatFormatting.RED)), false); // Paper - Adventure
+-
+-                    return new ClientboundSystemChatPacket(Component.translatable("multiplayer.message_not_delivered", ichatmutablecomponent).withStyle(ChatFormatting.RED), false);
 -                } else {
 -                    return null;
 -                }
@@ -3179,13 +3179,13 @@ index 08980763020a13ab49dc7d637625a4fba56da8c9..5e84b7f8b45625a6f68419d780b1e19a
 +            // KissenPaper start - add custom renderer
 +            net.kyori.adventure.text.Component component = PaperAdventure.asAdventure(message);
 +            Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.ChatImplementation.class).prepareMessage(Bukkit.getConsoleSender(), getBukkitEntity(), component).ifPresent(styled ->
-+            this.connection.send(new ClientboundSystemChatPacket(styled, overlay), PacketSendListener.exceptionallySend(() -> { // Paper - Adventure
++                this.connection.send(new ClientboundSystemChatPacket(styled, overlay), PacketSendListener.exceptionallySend(() -> {
 +                    if (this.acceptsSystemMessages(false)) {
 +                        boolean flag1 = true;
 +                        String s = message.getString(256);
 +                        MutableComponent ichatmutablecomponent = Component.literal(s).withStyle(ChatFormatting.YELLOW);
 +
-+                        return new ClientboundSystemChatPacket(PaperAdventure.asAdventure(Component.translatable("multiplayer.message_not_delivered", ichatmutablecomponent).withStyle(ChatFormatting.RED)), false); // Paper - Adventure
++                        return new ClientboundSystemChatPacket(PaperAdventure.asAdventure(Component.translatable("multiplayer.message_not_delivered", ichatmutablecomponent).withStyle(ChatFormatting.RED)), false);
 +                    } else {
 +                        return null;
 +                    }
@@ -3196,10 +3196,10 @@ index 08980763020a13ab49dc7d637625a4fba56da8c9..5e84b7f8b45625a6f68419d780b1e19a
      }
  
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 1c4f272219e68373eaae93fc5ea9af7d8f3fd6f9..4a86b6b944fd0a934779873ba61d22364b544482 100644
+index 89b3184be952fd0803520dd0f717f3acfc3cb496..fed23fdf90e6c271c545bd8bd0b9359247447547 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-@@ -44,6 +44,13 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+@@ -45,6 +45,13 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
  import org.bukkit.event.player.PlayerPreLoginEvent;
  // CraftBukkit end
  
@@ -3213,7 +3213,7 @@ index 1c4f272219e68373eaae93fc5ea9af7d8f3fd6f9..4a86b6b944fd0a934779873ba61d2236
  public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener, TickablePacketListener {
  
      private static final AtomicInteger UNIQUE_THREAD_ID = new AtomicInteger(0);
-@@ -335,6 +342,11 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -302,6 +309,11 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                              disconnect("This server requires you to connect with Velocity.");
                              return;
                          }
@@ -3225,7 +3225,7 @@ index 1c4f272219e68373eaae93fc5ea9af7d8f3fd6f9..4a86b6b944fd0a934779873ba61d2236
                          // Paper end
                          String playerName = gameprofile.getName();
                          java.net.InetAddress address = ((java.net.InetSocketAddress) ServerLoginPacketListenerImpl.this.connection.getRemoteAddress()).getAddress();
-@@ -380,6 +392,44 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -347,6 +359,44 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                          ServerLoginPacketListenerImpl.LOGGER.info("UUID of player {} is {}", gameprofile.getName(), gameprofile.getId());
                          ServerLoginPacketListenerImpl.this.startClientVerification(gameprofile);
          }
@@ -3271,10 +3271,10 @@ index 1c4f272219e68373eaae93fc5ea9af7d8f3fd6f9..4a86b6b944fd0a934779873ba61d2236
      // Spigot end
  
 diff --git a/src/main/java/net/minecraft/server/players/GameProfileCache.java b/src/main/java/net/minecraft/server/players/GameProfileCache.java
-index f4d903ed4342c3100c30deda291dfd6dd4e1ef40..b04ba26f9e04e31c5d4ba73436bf3492b62be9e6 100644
+index 13e05a9e42ba89d37c423d819da33f2f67fa9eac..2275237d87ba625994925e8f744bdfb9d3157120 100644
 --- a/src/main/java/net/minecraft/server/players/GameProfileCache.java
 +++ b/src/main/java/net/minecraft/server/players/GameProfileCache.java
-@@ -228,7 +228,7 @@ public class GameProfileCache {
+@@ -231,7 +231,7 @@ public class GameProfileCache {
          return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.ROOT);
      }
  
@@ -3283,7 +3283,7 @@ index f4d903ed4342c3100c30deda291dfd6dd4e1ef40..b04ba26f9e04e31c5d4ba73436bf3492
          ArrayList arraylist = Lists.newArrayList();
  
          try {
-@@ -399,7 +399,7 @@ public class GameProfileCache {
+@@ -402,7 +402,7 @@ public class GameProfileCache {
          }
      }
  
@@ -3293,10 +3293,10 @@ index f4d903ed4342c3100c30deda291dfd6dd4e1ef40..b04ba26f9e04e31c5d4ba73436bf3492
          private final GameProfile profile;
          final Date expirationDate;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 33abcf12b4426572b74ca4c813e4392c823494bc..bdf80b667bb22672fcae729b2eff963703fb678a 100644
+index a35638a92479b90afa89cf201fc45b49c9e767f3..919437dcb8e7cf00d208f7d216fe6e1b00422ded 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -167,8 +167,8 @@ public abstract class PlayerList {
+@@ -165,8 +165,8 @@ public abstract class PlayerList {
  
          this.bans = new UserBanList(PlayerList.USERBANLIST_FILE);
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
@@ -3307,7 +3307,7 @@ index 33abcf12b4426572b74ca4c813e4392c823494bc..bdf80b667bb22672fcae729b2eff9637
          // CraftBukkit start
          // this.stats = Maps.newHashMap();
          // this.advancements = Maps.newHashMap();
-@@ -342,6 +342,13 @@ public abstract class PlayerList {
+@@ -340,6 +340,13 @@ public abstract class PlayerList {
          // Ensure that player inventory is populated with its viewer
          player.containerMenu.transferTo(player.containerMenu, bukkitPlayer);
  
@@ -3878,10 +3878,10 @@ index 1c638a4b1f2c841928d8b2a7ae43e4ebb1f7eac7..31c40acd927245ad59d111e178a61d5f
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-index 9f843b89dc20b91bf7243facee8486d525e4a1b3..564334b973c37d51d06f55fbe85b8a4f8d859c64 100644
+index aa4dbf91cf6da329fdcacbde98bb870eb48e8f5c..9e56aa6cf6fd1338caf3557bf4fb90379582f666 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-@@ -1538,4 +1538,27 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1582,4 +1582,27 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          return this.getHandle().getScoreboardName();
      }
      // Paper end - entity scoreboard name
@@ -3910,10 +3910,10 @@ index 9f843b89dc20b91bf7243facee8486d525e4a1b3..564334b973c37d51d06f55fbe85b8a4f
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-index aefb9879b2edadfb4b21d80135d713b9d34c9941..377cc051d7c93c193ab7780b14ac80a2b60901db 100644
+index 8a1e765363aeb61078fd23980d3856dc680cb05e..276db418dfed9963301b050089f995dfc491537e 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-@@ -71,7 +71,7 @@ import org.bukkit.plugin.Plugin;
+@@ -72,7 +72,7 @@ import org.bukkit.plugin.Plugin;
  public class CraftHumanEntity extends CraftLivingEntity implements HumanEntity {
      private CraftInventoryPlayer inventory;
      private final CraftInventory enderChest;
@@ -3923,10 +3923,10 @@ index aefb9879b2edadfb4b21d80135d713b9d34c9941..377cc051d7c93c193ab7780b14ac80a2
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 3a792ddc31e76038b84e8f87088c4cd94c349138..5a0b5efcf25811a0f9618b9300ebd17bfaf61118 100644
+index fd84786f3e72875e79df46416f47f3403876cef3..3e12c9ba66cfd493f4172f302606cb2e16568e8b 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -176,6 +176,35 @@ import org.jetbrains.annotations.NotNull;
+@@ -177,6 +177,35 @@ import org.jetbrains.annotations.NotNull;
  
  import net.md_5.bungee.api.chat.BaseComponent; // Spigot
  
@@ -3962,9 +3962,9 @@ index 3a792ddc31e76038b84e8f87088c4cd94c349138..5a0b5efcf25811a0f9618b9300ebd17b
  @DelegateDeserialization(CraftOfflinePlayer.class)
  public class CraftPlayer extends CraftHumanEntity implements Player {
      private long firstPlayed = 0;
-@@ -199,6 +228,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
-     private long lastSaveTime;
-     // Paper end
+@@ -197,6 +226,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     private static final boolean DISABLE_CHANNEL_LIMIT = System.getProperty("paper.disableChannelLimit") != null; // Paper - add a flag to disable the channel limit
+     private long lastSaveTime; // Paper - getLastPlayed replacement API
  
 +    // KissenPaper start
 +    private KissenPaperOnlinePlayerClient kissenPaperPlayer;
@@ -3973,7 +3973,7 @@ index 3a792ddc31e76038b84e8f87088c4cd94c349138..5a0b5efcf25811a0f9618b9300ebd17b
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2428,7 +2461,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2466,7 +2499,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -3994,7 +3994,7 @@ index 3a792ddc31e76038b84e8f87088c4cd94c349138..5a0b5efcf25811a0f9618b9300ebd17b
      }
  
      @Override
-@@ -2776,7 +2821,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2814,7 +2859,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -4003,7 +4003,7 @@ index 3a792ddc31e76038b84e8f87088c4cd94c349138..5a0b5efcf25811a0f9618b9300ebd17b
      }
      // Paper end
      @Override
-@@ -2950,7 +2995,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2949,7 +2994,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
          if (getHandle().connection == null) return;
          final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
@@ -4019,7 +4019,7 @@ index 3a792ddc31e76038b84e8f87088c4cd94c349138..5a0b5efcf25811a0f9618b9300ebd17b
      }
  
      @Override
-@@ -3225,7 +3277,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3215,7 +3267,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          public void sendMessage(net.md_5.bungee.api.ChatMessageType position, UUID sender, BaseComponent... components) {
              if ( CraftPlayer.this.getHandle().connection == null ) return;
  
@@ -4036,7 +4036,7 @@ index 3a792ddc31e76038b84e8f87088c4cd94c349138..5a0b5efcf25811a0f9618b9300ebd17b
          }
  
          // Paper start
-@@ -3303,4 +3363,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3293,4 +3353,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end
@@ -4400,10 +4400,10 @@ index 3a792ddc31e76038b84e8f87088c4cd94c349138..5a0b5efcf25811a0f9618b9300ebd17b
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java b/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
-index c08006a010606fac5d290889a3ad9fdf9008ee72..ebd54b15481c3d15afff625b0661db8dce392584 100644
+index bc6151cfeb7ace4755414614723ee830081094af..867e1828a3dd45c962018b317446af46ae487658 100644
 --- a/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
 +++ b/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
-@@ -54,6 +54,10 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -51,6 +51,10 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
      private final PropertyMap properties = new PropertyMap();
      private final CraftPlayerTextures textures = new CraftPlayerTextures(this);
  
@@ -4414,7 +4414,7 @@ index c08006a010606fac5d290889a3ad9fdf9008ee72..ebd54b15481c3d15afff625b0661db8d
      public CraftPlayerProfile(UUID uniqueId, String name) {
          Preconditions.checkArgument((uniqueId != null) || !StringUtils.isBlank(name), "uniqueId is null or name is blank");
          this.uniqueId = (uniqueId == null) ? Util.NIL_UUID : uniqueId;
-@@ -352,4 +356,13 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -344,4 +348,13 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
      public boolean complete(final boolean textures, final boolean onlineMode) {
          throw new UnsupportedOperationException("Do not cast to com.destroystokyo.paper.profile.PlayerProfile");
      }

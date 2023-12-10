@@ -889,18 +889,10 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..72227c4175f588f2f9181ca4d5647d75
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index 20fa1024f9ad8f478a347be5c554b5e45b398a1c..2b43607a3c255348bf076cefb0a9e9b3a6c6a468 100644
+index a8d3451ccfcd21a9e80adc2feab8fc9c2926c753..225efafd0414d0bda639bf3021c4a1d13a964503 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
-@@ -7,6 +7,7 @@ import java.time.Instant;
- import java.util.Collection;
- import java.util.Date;
- import java.util.Map;
-+
- import org.bukkit.BanEntry;
- import org.bukkit.DyeColor;
- import org.bukkit.Effect;
-@@ -51,7 +52,7 @@ import org.jetbrains.annotations.Nullable;
+@@ -52,7 +52,7 @@ import org.jetbrains.annotations.Nullable;
  /**
   * Represents a player, connected or not
   */

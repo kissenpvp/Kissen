@@ -70,10 +70,10 @@ index 0000000000000000000000000000000000000000..e085d4c120a323b555970b7643b7280a
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 5e84b7f8b45625a6f68419d780b1e19a8bea4b70..563b1481856be2b18fe68bc6324a7da010b64995 100644
+index afcd1741bf83b3c78a163bcd5639fe73c8cf2dc5..6d8c982c7ca30c075c8bfd35cb183ddc853e23d1 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2061,6 +2061,7 @@ public class ServerPlayer extends Player {
+@@ -2159,6 +2159,7 @@ public class ServerPlayer extends Player {
      }
      public void updateOptionsNoEvents(ClientInformation clientOptions) {
          // Paper end
@@ -81,7 +81,7 @@ index 5e84b7f8b45625a6f68419d780b1e19a8bea4b70..563b1481856be2b18fe68bc6324a7da0
          this.language = clientOptions.language();
          this.adventure$locale = net.kyori.adventure.translation.Translator.parseLocale(this.language); // Paper
          this.requestedViewDistance = clientOptions.viewDistance();
-@@ -2662,4 +2663,12 @@ public class ServerPlayer extends Player {
+@@ -2760,4 +2761,12 @@ public class ServerPlayer extends Player {
          return (CraftPlayer) super.getBukkitEntity();
      }
      // CraftBukkit end
@@ -95,10 +95,10 @@ index 5e84b7f8b45625a6f68419d780b1e19a8bea4b70..563b1481856be2b18fe68bc6324a7da0
 +
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 5a0b5efcf25811a0f9618b9300ebd17bfaf61118..b02541d3ef17900724bb21784a4bcb5a90d862fa 100644
+index 3e12c9ba66cfd493f4172f302606cb2e16568e8b..3e0190761dab3b6ad4ac1f766546e7f2677b360b 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -3153,7 +3153,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3152,7 +3152,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      @Override
      public void openBook(final net.kyori.adventure.inventory.Book book) {

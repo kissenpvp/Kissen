@@ -130,10 +130,10 @@ index 0000000000000000000000000000000000000000..4446e728cd8c2a3869d0092000c347a4
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 8f31413c939cc2b0454ad3d9a1b618dbae449d00..d2e8813e6fa4c0cc2e249b5260b8535a657e601e 100644
+index 34f19ac897a30c0c4e3ab406013fcca1c8b7db93..37b67c5a3f786467f915d229d4fb854fb7802fb0 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -190,7 +190,7 @@ import org.bukkit.event.server.ServerLoadEvent;
+@@ -191,7 +191,7 @@ import org.bukkit.event.server.ServerLoadEvent;
  
  import co.aikar.timings.MinecraftTimings; // Paper
  
@@ -142,7 +142,7 @@ index 8f31413c939cc2b0454ad3d9a1b618dbae449d00..d2e8813e6fa4c0cc2e249b5260b8535a
  
      private static MinecraftServer SERVER; // Paper
      public static final Logger LOGGER = LogUtils.getLogger();
-@@ -971,6 +971,11 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1017,6 +1017,11 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
              this.getProfileCache().save(false); // Paper
          }
          // Spigot end
@@ -154,7 +154,7 @@ index 8f31413c939cc2b0454ad3d9a1b618dbae449d00..d2e8813e6fa4c0cc2e249b5260b8535a
          // Paper start - move final shutdown items here
          LOGGER.info("Flushing Chunk IO");
          // Paper end - move final shutdown items here
-@@ -1087,6 +1092,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1133,6 +1138,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                  throw new IllegalStateException("Failed to initialize server");
              }
  
@@ -162,10 +162,10 @@ index 8f31413c939cc2b0454ad3d9a1b618dbae449d00..d2e8813e6fa4c0cc2e249b5260b8535a
 +            net.kissenpvp.core.base.KissenCore.getInstance().start();
 +            // KissenPaper end
 +
-             this.nextTickTime = Util.getMillis();
+             this.nextTickTimeNanos = Util.getNanos();
              this.statusIcon = (ServerStatus.Favicon) this.loadStatusIcon().orElse(null); // CraftBukkit - decompile error
              this.status = this.buildServerStatus();
-@@ -1697,7 +1706,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1866,7 +1875,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
  
      @DontObfuscate
      public String getServerModName() {
@@ -175,7 +175,7 @@ index 8f31413c939cc2b0454ad3d9a1b618dbae449d00..d2e8813e6fa4c0cc2e249b5260b8535a
  
      public SystemReport fillSystemReport(SystemReport details) {
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 1c9742ad81f04052d2c3bc18c7636f45b2fc5160..ede2de85f0607701a2ac0443e6ef900269272139 100644
+index 58536aabf607015939a1326f80207c0a06eed8ff..ad490e648633817e7454bd62a4a95bb68e6c1927 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -192,6 +192,16 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
@@ -196,10 +196,10 @@ index 1c9742ad81f04052d2c3bc18c7636f45b2fc5160..ede2de85f0607701a2ac0443e6ef9002
              this.setLocalIp("127.0.0.1");
          } else {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 356107688a5d40d1c462b164f61af82f4dfd3926..c9fd81d76fd2d4d4b23bd4beb06c9a178c485765 100644
+index 782bb8ca67517dde5dba8f0a133eb8699353dd01..0db73805ec623d7b3f89cbaae482ae1eca5ab34d 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -554,7 +554,13 @@ public final class CraftServer implements Server {
+@@ -549,7 +549,13 @@ public final class CraftServer implements Server {
  
          for (Plugin plugin : plugins) {
              if ((!plugin.isEnabled()) && (plugin.getDescription().getLoad() == type)) {
