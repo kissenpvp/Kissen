@@ -45,7 +45,7 @@ public class KissenQueryComponent<T extends QueryComponent<?>> implements QueryC
 
     @Override
     public @NotNull T and(@NotNull Column column, @NotNull String value) {
-        return or(column, value, FilterType.EXACT_MATCH);
+        return and(column, value, FilterType.EXACT_MATCH);
     }
 
     @Override
