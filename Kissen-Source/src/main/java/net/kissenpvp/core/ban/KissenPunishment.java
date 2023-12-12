@@ -21,6 +21,8 @@ package net.kissenpvp.core.ban;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.ban.Punishment;
 import net.kissenpvp.core.api.database.DataImplementation;
+import net.kissenpvp.core.api.database.queryapi.Column;
+import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.message.Comment;
@@ -36,6 +38,7 @@ import net.kissenpvp.core.database.DataWriter;
 import net.kissenpvp.core.message.CommentNode;
 import net.kissenpvp.core.message.KissenComment;
 import net.kissenpvp.core.time.KissenTemporalObject;
+import net.kissenpvp.core.user.KissenUserImplementation;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
@@ -47,6 +50,7 @@ import java.text.DateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public abstract class KissenPunishment<T> extends KissenTemporalObject implements Punishment<T> {
 
@@ -157,7 +161,16 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public @Unmodifiable Set<UUID> getAffectedPlayers() {
-        return null; //TODO
+        KissenUserImplementation kissenUserImplementation = KissenCore.getInstance().getImplementation(
+                KissenUserImplementation.class);
+
+        String[][] affected = kissenUserImplementation.getUserMeta().select(Column.TOTAL_ID).where(Column.TOTAL_ID,
+                kissenUserImplementation.getUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "total_id").and(
+                Column.VALUE, getTotalID().toString()).execute();
+
+        return Arrays.stream(affected).flatMap(Arrays::stream).map(
+                data -> UUID.fromString(data.substring(kissenUserImplementation.getUserSaveID().length()))).collect(
+                Collectors.toSet());
     }
 
     @Override

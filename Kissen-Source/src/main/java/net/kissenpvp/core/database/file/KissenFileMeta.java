@@ -121,7 +121,8 @@ public class KissenFileMeta extends KissenBaseMeta implements Meta {
     private @NotNull @Unmodifiable List<String> getFilteredData(@NotNull List<String> data, @NotNull FilterQuery @NotNull ... filterQueries) {
         List<String> filtered = new ArrayList<>(data);
         for (FilterQuery filterQuery : filterQueries) {
-            //TODO implement or operator in file
+            //TODO implement and operator in file
+            filterQuery.getFilterOperator(); // <- this is how you get it
             filtered.removeAll(data.stream().filter(line ->
             {
                 String value = getColumnValue(filterQuery.getColumn(), line);

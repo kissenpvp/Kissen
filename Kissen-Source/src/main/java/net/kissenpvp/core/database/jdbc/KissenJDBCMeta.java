@@ -167,6 +167,19 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
         return atomicLong.get();
     }
 
+    private @NotNull String @NotNull [] transformUpdateColumns(@NotNull StringBuilder stringBuilder, @NotNull QueryUpdateDirective @NotNull... columns) {
+        String[] updateValues = new String[columns.length];
+        for (int i = 0; i < columns.length; i++) {
+            stringBuilder.append(getColumn(columns[i].column())).append("=").append(" ").append("?");
+            updateValues[i] = columns[i].value();
+            if(i <= columns.length - 1)
+            {
+                stringBuilder.append(", ");
+            }
+        }
+        return updateValues;
+    }
+
     private @NotNull String @NotNull [] @NotNull [] runSelectQuery(@NotNull String sql, @NotNull String @NotNull [] parameterValues, @NotNull Column... columns) throws BackendException {
         List<String[]> strings = new ArrayList<>();
         getPreparedStatement(sql, preparedStatement -> {
@@ -185,19 +198,6 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             }
         });
         return strings.toArray(new String[0][]);
-    }
-
-    private @NotNull String @NotNull [] transformUpdateColumns(@NotNull StringBuilder stringBuilder, @NotNull QueryUpdateDirective @NotNull... columns) {
-        String[] updateValues = new String[columns.length];
-        for (int i = 0; i < columns.length; i++) {
-            stringBuilder.append(getColumn(columns[i].column())).append("=").append(" ").append("?");
-            updateValues[i] = columns[i].value();
-            if(i <= columns.length - 1)
-            {
-                stringBuilder.append(", ");
-            }
-        }
-        return updateValues;
     }
 
     private @NotNull String transformSelectColumns(@NotNull Column @NotNull [] column) {

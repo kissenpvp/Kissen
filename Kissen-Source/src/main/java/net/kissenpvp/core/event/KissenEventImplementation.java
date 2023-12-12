@@ -39,7 +39,6 @@ public class KissenEventImplementation implements EventImplementation {
 
     @Override
     public boolean preStart() {
-        //TODO search for event
         return EventImplementation.super.preStart();
     }
 

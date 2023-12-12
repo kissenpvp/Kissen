@@ -19,8 +19,10 @@
 package net.kissenpvp.core.user.usersettings;
 
 import lombok.Getter;
+import lombok.SneakyThrows;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
+import net.kissenpvp.core.api.user.exception.UnauthorizedException;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.api.user.usersetttings.UserSetting;
 import net.kissenpvp.core.api.user.usersetttings.UserValue;
@@ -32,8 +34,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+@Getter
 public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements UserSetting<T> {
-    @Getter
     private final User user;
 
     public KissenUserBoundSettings(@NotNull PlayerSetting<T> playerSetting, @NotNull UUID uuid) {
@@ -42,15 +44,11 @@ public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements
     }
 
     @Override
-    public @NotNull T setValue(@NotNull T value) {
+    public @NotNull T setValue(@NotNull T value) throws UnauthorizedException {
         T oldValue = getValue();
 
-        /*if (getUserSetting().getPermission().map(currentPermission -> !getUser().hasPermission(currentPermission)).orElse(false)) {
-            throw new UnauthorizedException(getUserSetting().getPermission().get()); //TODO
-        }*/
-
         if (Objects.equals(getUserSetting().getDefaultValue(), value)) {
-            user.delete("setting_" + getUserSetting().getKey());
+            getUser().delete("setting_" + getUserSetting().getKey());
             return oldValue;
         }
 
@@ -63,28 +61,33 @@ public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements
         }
 
         UserValue<T> currentValue = currentPossibility.get();
-        if (currentValue.permission().length > 0) {
-            /*Optional<String> permission = Arrays.stream(currentValue.permission()).filter(currentPermission -> !getUser().getPlayerClient().hasPermission(currentPermission)).toList().stream().findFirst();
+        if (currentValue.permission().length > 0 && !value.equals(getUserSetting().getDefaultValue())) {
+            Optional<String> permission = Arrays.stream(currentValue.permission()).filter(
+                    currentPermission -> !getUser().getPlayerClient().hasPermission(
+                            currentPermission)).toList().stream().findFirst();
             if (permission.isPresent()) {
-                throw new UnauthorizedException(permission.get());
-            }*/
-            //TODO
+                throw new UnauthorizedException(UUID.fromString(getUser().getRawID()), permission.get());
+            }
         }
 
         getUserSetting().setValue(value);
-        user.set("setting_" + getUserSetting().getKey(), getUserSetting().serialize(value));
+        getUser().set("setting_" + getUserSetting().getKey(), getUserSetting().serialize(value));
         return oldValue;
     }
 
     @Override
     public @NotNull T getValue() {
         T defaultValue = getUserSetting().getDefaultValue();
-        Optional<String> value = user.get("setting_" + getUserSetting().getKey());
+        Optional<String> value = getUser().get("setting_" + getUserSetting().getKey());
         return value.map(val -> getUserSetting().deserialize(val)).orElse(defaultValue);
     }
 
     @Override
-    public void reset() {
-        setValue(getUserSetting().getDefaultValue());
+    @SneakyThrows /* will never happen */ public void reset() {
+        try {
+            setValue(getUserSetting().getDefaultValue());
+        } catch (UnauthorizedException unauthorizedException) {
+            throw new RuntimeException(unauthorizedException);
+        }
     }
 }

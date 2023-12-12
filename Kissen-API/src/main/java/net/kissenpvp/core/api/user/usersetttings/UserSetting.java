@@ -18,12 +18,13 @@
 
 package net.kissenpvp.core.api.user.usersetttings;
 
+import net.kissenpvp.core.api.user.exception.UnauthorizedException;
 import org.jetbrains.annotations.NotNull;
 
 public interface UserSetting<T>
 {
 
-    @NotNull T setValue(@NotNull T value);
+    @NotNull T setValue(@NotNull T value) throws UnauthorizedException;
 
     @NotNull T getValue();
 
