@@ -3,9 +3,86 @@ From: Groldi <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:30:52 +0200
 Subject: [PATCH] Integrated ban system from kissen into paper
 
-Signed-off-by: Ivo <chniucg@gmail.com>
-Signed-off-by: ivo <chniucg@gmail.com>
 
+diff --git a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
+index e4fd372a1d585887287253a02531cd192929377b..52451778400d11e70f254adaddd3480eb40d9fc1 100644
+--- a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
++++ b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
+@@ -175,9 +175,14 @@ public final class ChatProcessor {
+     }
+ 
+     private void processModern(final ChatRenderer renderer, final Set<Audience> viewers, final Component message, final Player player, final boolean cancelled) {
++        // KissenPaper start - integrate mute
++        net.kissenpvp.paper.api.ban.PaperBanImplementation paperBanImplementation = org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class);
++        java.util.Optional<net.kissenpvp.paper.api.ban.PaperPunishment> mute = paperBanImplementation.getLatestPunishment(player.getTotalID(), net.kissenpvp.core.api.ban.BanType.MUTE);
++        // KissenPaper end
++
+         final PlayerChatMessage.AdventureView signedMessage = this.message.adventureView();
+         final AsyncChatEvent ae = new AsyncChatEvent(this.async, player, viewers, renderer, message, this.paper$originalMessage, signedMessage);
+-        ae.setCancelled(cancelled); // propagate cancelled state
++        ae.setCancelled(cancelled || mute.isPresent()); // propagate cancelled state // KissenPaper - set true if muted
+         this.post(ae);
+         final boolean listenersOnSyncEvent = canYouHearMe(ChatEvent.getHandlerList());
+         if (listenersOnSyncEvent) {
+@@ -188,13 +193,22 @@ public final class ChatProcessor {
+                     se.setCancelled(ae.isCancelled()); // propagate cancelled state
+                     ChatProcessor.this.post(se);
+                     ChatProcessor.this.readModernModifications(se, renderer);
+-                    ChatProcessor.this.complete(se);
++                    // KissenPaper start - integrate mute
++                    if(allowedToSend(player, mute.orElse(null), se.isCancelled()))
++                    {
++                        ChatProcessor.this.complete(se);
++                    }
+                     return null;
+                 }
+             });
+         } else {
+             this.readModernModifications(ae, renderer);
+-            this.complete(ae);
++            // KissenPaper start - integrate mute
++            if(allowedToSend(player, mute.orElse(null), ae.isCancelled()))
++            {
++                this.complete(ae);
++            }
++            // KissenPaper end
+         }
+     }
+ 
+@@ -419,4 +433,33 @@ public final class ChatProcessor {
+     static boolean canYouHearMe(final HandlerList handlers) {
+         return handlers.getRegisteredListeners().length > 0;
+     }
++
++    // KissenPaper start
++    /**
++     * Determines whether a player is allowed to send a message based on specified conditions.
++     * <p>
++     * This method evaluates the provided parameters and decides whether the player is allowed to send a message.
++     * The decision depends on the values of the 'muted' and 'cancelled' parameters. If both parameters are true,
++     * indicating that the player is both muted and the action is cancelled, a message is sent to the player
++     * notifying them about being muted, and the method returns false to indicate that the player is not allowed
++     * to send the message. Otherwise, the method returns true, allowing the player to send the message.
++     *
++     * @param player The player who intends to send a message. Must not be null.
++     * @param mute  A boolean flag indicating whether the player is muted. If true, the player is considered muted.
++     * @param cancelled A boolean flag indicating whether the action is cancelled. If true, the action is considered cancelled.
++     * @return true if the player is allowed to send the message, false otherwise.
++     *
++     * @throws NullPointerException If the 'player' parameter is null.
++     */
++    private boolean allowedToSend(@org.jetbrains.annotations.NotNull Player player, @org.jetbrains.annotations.Nullable net.kissenpvp.paper.api.ban.PaperPunishment mute, boolean cancelled)
++    {
++        if(mute != null && cancelled)
++        {
++            //mute is not null
++            player.sendMessage(Component.translatable("server.ban.punishment.muted")); // TODO add some information maybe
++            return false;
++        }
++        return true;
++    }
++    // KissenPaper end
+ }
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBan.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBan.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e894ab130b5
@@ -45,10 +122,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3d94909d26417258f13eaea941e7ba4d0ca9d22f
+index 0000000000000000000000000000000000000000..f91e7b5be766f71b17ced8b1068d3125acbf12e7
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,543 @@
+@@ -0,0 +1,545 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -131,6 +208,8 @@ index 0000000000000000000000000000000000000000..3d94909d26417258f13eaea941e7ba4d
 +        kissenLocalizationImplementation.register("server.ban.invalid", new MessageFormat("The ban with ID {0} was not found."));
 +        kissenLocalizationImplementation.register("server.ban.punishment.invalid", new MessageFormat("The punishment with ID {0} was not found."));
 +        kissenLocalizationImplementation.register("server.ban.punishment.pardoned", new MessageFormat("The ban, bearing the ID {0}, has been revoked."));
++
++        kissenLocalizationImplementation.register("server.ban.punishment.muted", new MessageFormat("You have been muted."));
 +
 +        kissenLocalizationImplementation.register("server.ban.punishment.compact", new MessageFormat("[{7}] [{3}] {1} #{0}"));
 +
@@ -1516,10 +1595,10 @@ index 919437dcb8e7cf00d208f7d216fe6e1b00422ded..ddba390f50b6307908a47153833c0c3e
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 0db73805ec623d7b3f89cbaae482ae1eca5ab34d..01e347b993a0fd63be1600549c7899b62cdd8e6e 100644
+index e56781fc0ec27ebbb95872b65838532c907d7f50..d9907a50669cc9f4dc6bc70ed4ee21437c67ad62 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -2197,12 +2197,19 @@ public final class CraftServer implements Server {
+@@ -2198,12 +2198,19 @@ public final class CraftServer implements Server {
  
      @Override
      public <T extends BanList<?>> T getBanList(BanList.Type type) {
