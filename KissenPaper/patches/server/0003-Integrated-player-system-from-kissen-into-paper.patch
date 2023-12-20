@@ -3158,7 +3158,7 @@ index 935dac757280731bfeb0a8f033cbe315ecac46da..932c83a9d41ddff73d38e87ac7d97fad
          }
  
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 8efbbd379244e3ed54d4aba199037cc20ccd096a..afcd1741bf83b3c78a163bcd5639fe73c8cf2dc5 100644
+index d1f20a8a3ccea1f074624163eb96da023142a459..8f26aa8aa559c0ff61d601913b3f98f80bf3fadf 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -2083,17 +2083,22 @@ public class ServerPlayer extends Player {
@@ -3878,10 +3878,10 @@ index 1c638a4b1f2c841928d8b2a7ae43e4ebb1f7eac7..31c40acd927245ad59d111e178a61d5f
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-index aa4dbf91cf6da329fdcacbde98bb870eb48e8f5c..9e56aa6cf6fd1338caf3557bf4fb90379582f666 100644
+index 1727e932ac6b9ca09b5df96f9547ff125114e15a..dc3a82671f231cc1ce6ccd30ab017323af1137d5 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-@@ -1582,4 +1582,27 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1227,4 +1227,27 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          return this.getHandle().getScoreboardName();
      }
      // Paper end - entity scoreboard name
@@ -3910,10 +3910,10 @@ index aa4dbf91cf6da329fdcacbde98bb870eb48e8f5c..9e56aa6cf6fd1338caf3557bf4fb9037
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-index 8a1e765363aeb61078fd23980d3856dc680cb05e..276db418dfed9963301b050089f995dfc491537e 100644
+index c3dbcb317b7d366feb31f707ad1199c60169f07f..8b92f1f4969e28c67dae7a25e9cc778abb84124e 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-@@ -72,7 +72,7 @@ import org.bukkit.plugin.Plugin;
+@@ -71,7 +71,7 @@ import org.bukkit.plugin.Plugin;
  public class CraftHumanEntity extends CraftLivingEntity implements HumanEntity {
      private CraftInventoryPlayer inventory;
      private final CraftInventory enderChest;
@@ -3923,10 +3923,10 @@ index 8a1e765363aeb61078fd23980d3856dc680cb05e..276db418dfed9963301b050089f995df
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index fd84786f3e72875e79df46416f47f3403876cef3..3e12c9ba66cfd493f4172f302606cb2e16568e8b 100644
+index 3be5e4df190bff0087c8450b16e4e37b07169040..b0b8987f34e0ae6c1931b41bed8b8d64cc83543c 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -177,6 +177,35 @@ import org.jetbrains.annotations.NotNull;
+@@ -174,6 +174,35 @@ import org.jetbrains.annotations.NotNull;
  
  import net.md_5.bungee.api.chat.BaseComponent; // Spigot
  
@@ -3962,7 +3962,7 @@ index fd84786f3e72875e79df46416f47f3403876cef3..3e12c9ba66cfd493f4172f302606cb2e
  @DelegateDeserialization(CraftOfflinePlayer.class)
  public class CraftPlayer extends CraftHumanEntity implements Player {
      private long firstPlayed = 0;
-@@ -197,6 +226,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -194,6 +223,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      private static final boolean DISABLE_CHANNEL_LIMIT = System.getProperty("paper.disableChannelLimit") != null; // Paper - add a flag to disable the channel limit
      private long lastSaveTime; // Paper - getLastPlayed replacement API
  
@@ -3973,7 +3973,7 @@ index fd84786f3e72875e79df46416f47f3403876cef3..3e12c9ba66cfd493f4172f302606cb2e
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2466,7 +2499,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2476,7 +2509,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -3994,7 +3994,7 @@ index fd84786f3e72875e79df46416f47f3403876cef3..3e12c9ba66cfd493f4172f302606cb2e
      }
  
      @Override
-@@ -2814,7 +2859,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2824,7 +2869,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -4003,7 +4003,7 @@ index fd84786f3e72875e79df46416f47f3403876cef3..3e12c9ba66cfd493f4172f302606cb2e
      }
      // Paper end
      @Override
-@@ -2949,7 +2994,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2959,7 +3004,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
          if (getHandle().connection == null) return;
          final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
@@ -4019,7 +4019,7 @@ index fd84786f3e72875e79df46416f47f3403876cef3..3e12c9ba66cfd493f4172f302606cb2e
      }
  
      @Override
-@@ -3215,7 +3267,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3225,7 +3277,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          public void sendMessage(net.md_5.bungee.api.ChatMessageType position, UUID sender, BaseComponent... components) {
              if ( CraftPlayer.this.getHandle().connection == null ) return;
  
@@ -4036,7 +4036,7 @@ index fd84786f3e72875e79df46416f47f3403876cef3..3e12c9ba66cfd493f4172f302606cb2e
          }
  
          // Paper start
-@@ -3293,4 +3353,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3303,4 +3363,362 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end
@@ -4093,7 +4093,7 @@ index fd84786f3e72875e79df46416f47f3403876cef3..3e12c9ba66cfd493f4172f302606cb2e
 +
 +    @Override
 +    public void sendPacket(@NotNull Object object) throws ClassNotFoundException, ClassCastException {
-+        getHandle().connection.send((Packet<?>) object);
++        getHandle().connection.send((net.minecraft.network.protocol.Packet<?>) object);
 +    }
 +
 +    @Override

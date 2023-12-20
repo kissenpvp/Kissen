@@ -70,7 +70,7 @@ index 0000000000000000000000000000000000000000..e085d4c120a323b555970b7643b7280a
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index afcd1741bf83b3c78a163bcd5639fe73c8cf2dc5..6d8c982c7ca30c075c8bfd35cb183ddc853e23d1 100644
+index 8f26aa8aa559c0ff61d601913b3f98f80bf3fadf..a32745bdfc677e4b3928d43aec2a2e809b7ef26e 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -2159,6 +2159,7 @@ public class ServerPlayer extends Player {
@@ -95,10 +95,10 @@ index afcd1741bf83b3c78a163bcd5639fe73c8cf2dc5..6d8c982c7ca30c075c8bfd35cb183ddc
 +
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 3e12c9ba66cfd493f4172f302606cb2e16568e8b..3e0190761dab3b6ad4ac1f766546e7f2677b360b 100644
+index b0b8987f34e0ae6c1931b41bed8b8d64cc83543c..094fa0d92825e76477707fcaef7b1192eea0b6ec 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -3152,7 +3152,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3162,7 +3162,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      @Override
      public void openBook(final net.kyori.adventure.inventory.Book book) {

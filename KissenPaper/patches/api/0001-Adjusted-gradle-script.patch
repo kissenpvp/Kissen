@@ -5,17 +5,17 @@ Subject: [PATCH] Adjusted gradle script
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index e827ee211e3c65dc68ac5867fd8476639df63645..cefb880624f392fe26b79099099f3a79f85da7a9 100644
+index 3e3ea0e4e4ceb3283ad2b99957e3795d66a9a716..428d63f99f1ba6f3e608d849ab7daf65a0b95357 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
-@@ -52,6 +52,10 @@ dependencies {
-     implementation("org.ow2.asm:asm-commons:9.4")
+@@ -56,6 +56,10 @@ dependencies {
+     implementation("org.ow2.asm:asm-commons:9.5")
      // Paper end
  
 +    // KissenPaper start
 +    implementation(project(":kissen-api") )
 +    // KissenPaper end
 +
-     api("org.apache.maven:maven-resolver-provider:3.8.5")
-     compileOnly("org.apache.maven.resolver:maven-resolver-connector-basic:1.7.3")
-     compileOnly("org.apache.maven.resolver:maven-resolver-transport-http:1.7.3")
+     api("org.apache.maven:maven-resolver-provider:3.9.6") // Paper - make API dependency for Paper Plugins
+     compileOnly("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.18")
+     compileOnly("org.apache.maven.resolver:maven-resolver-transport-http:1.9.18")
