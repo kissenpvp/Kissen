@@ -7,10 +7,10 @@ Signed-off-by: Ivo <chniucg@gmail.com>
 
 diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7ed4b6de80f95451c782a8a2959f50458315f0ea
+index 0000000000000000000000000000000000000000..08dd6c589253d2b19d563641b3b7b8294a76ee67
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
-@@ -0,0 +1,323 @@
+@@ -0,0 +1,296 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -58,7 +58,6 @@ index 0000000000000000000000000000000000000000..7ed4b6de80f95451c782a8a2959f5045
 +import org.bukkit.command.Command;
 +import org.bukkit.command.CommandMap;
 +import org.bukkit.command.CommandSender;
-+import org.bukkit.craftbukkit.CraftServer;
 +import org.bukkit.entity.Player;
 +import org.bukkit.plugin.Plugin;
 +import org.jetbrains.annotations.NotNull;
@@ -215,6 +214,7 @@ index 0000000000000000000000000000000000000000..7ed4b6de80f95451c782a8a2959f5045
 +        if (command != null) {
 +            KissenPaperPluginCommand kissenPaperPluginCommand = buildCommand(plugin, command.value());
 +            kissenPaperPluginCommand.initCommand(command, new KissenPaperCommandExecutor(method, object));
++            kissenPaperPluginCommand.register(plugin.getName(), Bukkit.getServer().getCommandMap());
 +        }
 +
 +        TabCompleter completer = method.getAnnotation(TabCompleter.class);
@@ -236,8 +236,9 @@ index 0000000000000000000000000000000000000000..7ed4b6de80f95451c782a8a2959f5045
 +    private void injectObjectMethod(@NotNull Object object, @NotNull Method method) {
 +        final CommandData command = method.getAnnotation(CommandData.class);
 +        if (command != null) {
-+            KissenPaperCommand kissenPaperCommand = buildCommand(command.value());
-+            kissenPaperCommand.initCommand(command, new KissenPaperCommandExecutor(method, object));
++            KissenCommand kissenCommand = getCommand(command.value()).orElseGet(() -> buildCommand(command.value()));
++            kissenCommand.initCommand(command, new KissenPaperCommandExecutor(method, object));
++            kissenCommand.register("kissenpaper", Bukkit.getServer().getCommandMap());
 +        }
 +
 +        TabCompleter completer = method.getAnnotation(TabCompleter.class);
@@ -254,12 +255,7 @@ index 0000000000000000000000000000000000000000..7ed4b6de80f95451c782a8a2959f5045
 +     * @return The constructed KissenPaperPluginCommand object.
 +     */
 +    private @NotNull KissenPaperPluginCommand buildCommand(@NotNull Plugin plugin, @NotNull String name) {
-+        return (KissenPaperPluginCommand) buildCommand(name, new RootCommandFactory() {
-+            @Override
-+            public @NotNull KissenPaperAbstractCommand<?> constructCommand(@NotNull String name) {
-+                return new KissenPaperPluginCommand(plugin, name.split("\\.")[0], 0);
-+            }
-+        }, plugin.getName());
++        return (KissenPaperPluginCommand) buildCommand(name, (commandName) -> new KissenPaperPluginCommand(plugin, commandName.split("\\.")[0], 0));
 +    }
 +
 +    /**
@@ -269,12 +265,7 @@ index 0000000000000000000000000000000000000000..7ed4b6de80f95451c782a8a2959f5045
 +     * @return The constructed KissenPaperCommand object.
 +     */
 +    private @NotNull KissenPaperCommand buildCommand(@NotNull String name) {
-+        return (KissenPaperCommand) buildCommand(name, new RootCommandFactory() {
-+            @Override
-+            public @NotNull KissenPaperAbstractCommand<?> constructCommand(@NotNull String name) {
-+                return new KissenPaperCommand(name.split("\\.")[0], 0);
-+            }
-+        }, "kissenpaper");
++        return (KissenPaperCommand) buildCommand(name, (commandName) -> new KissenPaperCommand(commandName.split("\\.")[0], 0));
 +    }
 +
 +    /**
@@ -283,31 +274,13 @@ index 0000000000000000000000000000000000000000..7ed4b6de80f95451c782a8a2959f5045
 +     * @param name The name used to construct the command.
 +     * @return The constructed KissenPaperCommand object.
 +     */
-+    private @NotNull KissenCommand buildCommand(@NotNull String name, @NotNull KissenPaperCommandImplementation.RootCommandFactory rootCommandFactory, @NotNull String fallback) {
++    private @NotNull KissenCommand buildCommand(@NotNull String name, @NotNull KissenPaperCommandImplementation.RootCommandFactory rootCommandFactory) {
 +        String rootName = name.split("\\.")[0];
-+        KissenPaperAbstractCommand<?> command = (KissenPaperAbstractCommand<?>) getCommand(rootName).orElseGet(() -> buildRootCommand(rootCommandFactory, fallback, rootName));
++        KissenPaperAbstractCommand<?> command = (KissenPaperAbstractCommand<?>) getCommand(rootName).orElseGet(() -> rootCommandFactory.constructCommand(rootName));
 +        if (!name.equals(rootName)) {
 +            command = command.createRecursive(name);
 +        }
 +        return command;
-+    }
-+
-+    /**
-+     * Builds a root command based on the given parameters.
-+     *
-+     * @param rootCommandFactory The factory used to construct the root command.
-+     * @param fallback The fallback command name.
-+     * @param rootName The name of the root command.
-+     * @return The built root command.
-+     */
-+    @NotNull
-+    private KissenCommand buildRootCommand(@NotNull RootCommandFactory rootCommandFactory, @NotNull String fallback, String rootName) {
-+        CommandMap commandMap = getCommandMap();
-+        KissenCommand kissenCommand = rootCommandFactory.constructCommand(rootName);
-+        kissenCommand.register(commandMap);
-+        commandMap.register(fallback, kissenCommand);
-+        ((CraftServer) Bukkit.getServer()).syncCommands();
-+        return kissenCommand;
 +    }
 +
 +    /**
@@ -336,10 +309,10 @@ index 0000000000000000000000000000000000000000..7ed4b6de80f95451c782a8a2959f5045
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..de7e70ed63cb8ff0720a69fa696181d4624cfd26
+index 0000000000000000000000000000000000000000..701cdbaf7ec366d60796d1c290229bccacd26508
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
-@@ -0,0 +1,421 @@
+@@ -0,0 +1,438 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -376,7 +349,9 @@ index 0000000000000000000000000000000000000000..de7e70ed63cb8ff0720a69fa696181d4
 +import net.kissenpvp.paper.command.target.KissenPaperTargetValidator;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandException;
++import org.bukkit.command.CommandMap;
 +import org.bukkit.command.CommandSender;
++import org.bukkit.craftbukkit.CraftServer;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
 +
@@ -518,6 +493,11 @@ index 0000000000000000000000000000000000000000..de7e70ed63cb8ff0720a69fa696181d4
 +     * @throws NullPointerException If either the {@code commandInfo} or {@code commandExecutor} parameter is null.
 +     */
 +    public void initCommand(@NotNull CommandData commandData, @NotNull CommandExecutor<CommandSender> commandExecutor) {
++        if(isRegistered())
++        {
++            throw new UnsupportedOperationException("This command is already registered.");
++        }
++
 +        this.commandInfo = new CommandInfo(commandData);
 +        this.commandExecutor = commandExecutor;
 +
@@ -542,6 +522,16 @@ index 0000000000000000000000000000000000000000..de7e70ed63cb8ff0720a69fa696181d4
 +        if (commandExecutor instanceof KissenPaperCommandExecutor kissenPaperCommandExecutor) {
 +            kissenPaperCommandExecutor.setKissenPaperCommand(this);
 +        }
++    }
++
++    @Override public boolean register(@NotNull String fallback, @NotNull CommandMap commandMap)
++    {
++        if(register(commandMap) && commandMap.register(fallback, this))
++        {
++            ((CraftServer) Bukkit.getServer()).syncCommands();
++            return true;
++        }
++        return false;
 +    }
 +
 +    /**

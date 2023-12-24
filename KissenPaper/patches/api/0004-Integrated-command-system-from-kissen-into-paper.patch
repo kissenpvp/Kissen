@@ -6,10 +6,10 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..74befff8d0efa7e921a24af394790f4bbd31128f
+index 0000000000000000000000000000000000000000..8c63c7b5197502da098ed9573dab3ac0c5528f92
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
-@@ -0,0 +1,77 @@
+@@ -0,0 +1,80 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -34,6 +34,7 @@ index 0000000000000000000000000000000000000000..74befff8d0efa7e921a24af394790f4b
 +import net.kissenpvp.core.api.command.executor.CommandExecutor;
 +import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
 +import org.bukkit.command.Command;
++import org.bukkit.command.CommandMap;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
 +
@@ -86,6 +87,8 @@ index 0000000000000000000000000000000000000000..74befff8d0efa7e921a24af394790f4b
 +     * @throws NullPointerException if the completerExecutor is null.
 +     */
 +    public abstract void initCompleter(@NotNull TabCompleterExecutor<CommandSender> completerExecutor);
++
++    public abstract boolean register(@NotNull String fallback, @NotNull CommandMap commandMap);
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java b/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java
 new file mode 100644
