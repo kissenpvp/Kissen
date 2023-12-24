@@ -101,7 +101,6 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
 
     @Override
     public void setString(@NotNull String totalID, @NotNull String key, @Nullable String value) throws BackendException {
-
         if(value == null)
         {
             getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND %s = ?;", getTable(), getTotalIDColumn(), getKeyColumn()), (preparedStatement ->
@@ -113,6 +112,21 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             return;
         }
 
+        getPreparedStatement(String.format("UPDATE %s SET %s = ? WHERE %s = ? AND %s = ?;", getTable(), getValueColumn(), getTotalIDColumn(), getKeyColumn()), (preparedStatement ->
+        {
+            preparedStatement.setString(1, value);
+            preparedStatement.setString(2, totalID);
+            preparedStatement.setString(3, key);
+
+            if(preparedStatement.executeUpdate() == 0)
+            {
+                insert(totalID, key, value);
+            }
+        }));
+    }
+
+    private void insert(@NotNull String totalID, @NotNull String key, @NotNull String value)
+    {
         getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn()), (preparedStatement ->
         {
             preparedStatement.setString(1, totalID);
