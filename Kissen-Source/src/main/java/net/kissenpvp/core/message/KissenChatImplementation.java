@@ -36,7 +36,7 @@ public class KissenChatImplementation implements ChatImplementation
                 Component.text(" » ").color(ThemeProvider.general()));
         Component[] components1 = new Component[components.length + 1];
         components1[0] = prefix;
-        System.arraycopy(components, 0, components1, 1, components.length + 1 - 1);
+        System.arraycopy(components, 0, components1, 1, components.length);
         return Optional.of(styleComponent(serverEntity, components1));
     }
 
