@@ -3,7 +3,7 @@ From: Ivo <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:28:51 +0200
 Subject: [PATCH] Integrated localization from kissen into paper
 
-Signed-off-by: ivo <chniucg@gmail.com>
+Signed-off-by: Ivo Quiring <falk.quiring@gmail.com>
 
 diff --git a/src/main/java/net/kissenpvp/paper/message/localization/KissenPaperLocalizationImplementation.java b/src/main/java/net/kissenpvp/paper/message/localization/KissenPaperLocalizationImplementation.java
 new file mode 100644
@@ -70,17 +70,17 @@ index 0000000000000000000000000000000000000000..e085d4c120a323b555970b7643b7280a
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 8f26aa8aa559c0ff61d601913b3f98f80bf3fadf..a32745bdfc677e4b3928d43aec2a2e809b7ef26e 100644
+index 8f26aa8aa559c0ff61d601913b3f98f80bf3fadf..089c8270689c4f922eccaa97bb07b205bc88972c 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2159,6 +2159,7 @@ public class ServerPlayer extends Player {
-     }
-     public void updateOptionsNoEvents(ClientInformation clientOptions) {
-         // Paper end
-+        updateLocale(clientOptions.language()); // KissenPaper
-         this.language = clientOptions.language();
-         this.adventure$locale = net.kyori.adventure.translation.Translator.parseLocale(this.language); // Paper
-         this.requestedViewDistance = clientOptions.viewDistance();
+@@ -2152,6 +2152,7 @@ public class ServerPlayer extends Player {
+             PlayerLocaleChangeEvent event = new PlayerLocaleChangeEvent(this.getBukkitEntity(), clientOptions.language());
+             this.server.server.getPluginManager().callEvent(event);
+             this.server.server.getPluginManager().callEvent(new com.destroystokyo.paper.event.player.PlayerLocaleChangeEvent(this.getBukkitEntity(), this.language, clientOptions.language())); // Paper
++            updateLocale(clientOptions.language()); // KissenPaper
+         }
+         // CraftBukkit end
+         // Paper start - don't call options events on login
 @@ -2760,4 +2761,12 @@ public class ServerPlayer extends Player {
          return (CraftPlayer) super.getBukkitEntity();
      }
