@@ -19,10 +19,12 @@
 package net.kissenpvp.core.message;
 
 import net.kissenpvp.core.api.message.ChatImplementation;
+import net.kissenpvp.core.api.message.ThemeProvider;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 public class KissenChatImplementation implements ChatImplementation
@@ -30,7 +32,13 @@ public class KissenChatImplementation implements ChatImplementation
     @Override
     public @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity serverEntity, @NotNull Component @NotNull ... components)
     {
-        return Optional.of(styleComponent(serverEntity, components));
+        Component prefix = Component.text("Kissen").color(ThemeProvider.primary()).append(
+                Component.text("PvP").color(ThemeProvider.secondary())).append(
+                Component.text(" » ").color(ThemeProvider.general()));
+        Component[] components1 = new Component[components.length + 1];
+        components1[0] = prefix;
+        System.arraycopy(components, 0, components1, 1, components.length + 1 - 1);
+        return Optional.of(styleComponent(serverEntity, components1));
     }
 
     @Override
