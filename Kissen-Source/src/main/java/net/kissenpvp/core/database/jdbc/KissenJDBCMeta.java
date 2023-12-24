@@ -101,23 +101,25 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
 
     @Override
     public void setString(@NotNull String totalID, @NotNull String key, @Nullable String value) throws BackendException {
-        getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND %s = ?;", getTable(), getTotalIDColumn(), getKeyColumn()), (preparedStatement ->
-        {
-            preparedStatement.setString(1, totalID);
-            preparedStatement.setString(2, key);
-            preparedStatement.executeUpdate();
-        })); // I love sql and especially sqlite
 
-        if(value != null)
+        if(value == null)
         {
-            getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn()), (preparedStatement ->
+            getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND %s = ?;", getTable(), getTotalIDColumn(), getKeyColumn()), (preparedStatement ->
             {
                 preparedStatement.setString(1, totalID);
                 preparedStatement.setString(2, key);
-                preparedStatement.setString(3, value);
                 preparedStatement.executeUpdate();
             }));
+            return;
         }
+
+        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn()), (preparedStatement ->
+        {
+            preparedStatement.setString(1, totalID);
+            preparedStatement.setString(2, key);
+            preparedStatement.setString(3, value);
+            preparedStatement.executeUpdate();
+        }));
     }
 
     @Override

@@ -92,7 +92,8 @@ public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implem
         return dataContainer;
     }
 
-    private void insertData(Map<String, SavableMap> dataContainer, @NotNull String totalID, String key, String value) {
+    private void insertData(@NotNull Map<String, SavableMap> dataContainer, @NotNull String totalID, @NotNull String key, String value) {
+        System.out.println("<<< -- " + totalID);
         dataContainer.putIfAbsent(totalID, new KissenSavableMap(totalID, KissenObjectMongoMeta.this));
         SavableMap savableMap = dataContainer.get(totalID);
         if (key.startsWith("_")) {

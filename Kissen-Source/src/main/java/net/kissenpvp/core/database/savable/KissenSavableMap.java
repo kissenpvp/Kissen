@@ -33,11 +33,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 
+@Getter
 public class KissenSavableMap extends HashMap<String, String> implements SavableMap {
 
-    @Getter()
     private Map<String, ArrayList<String>> stringArrayListMap;
-    @Getter
     @Setter
     private String id;
 
@@ -51,8 +50,8 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
      *
      * @param savableMap to create a copy.
      */
-    public KissenSavableMap(KissenSavableMap savableMap) {
-        setData(savableMap, savableMap instanceof KissenSavable kissenSavable ? kissenSavable.getRawID() : savableMap.getId());
+    public KissenSavableMap(@NotNull KissenSavableMap savableMap) {
+        setData(savableMap, savableMap instanceof KissenSavable kissenSavable ? kissenSavable.getSavableID() : savableMap.getId());
     }
 
     /**
@@ -62,7 +61,7 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
      * @param id   The sender of the savable object.
      * @param meta The meta in which everything should be saved.
      */
-    public KissenSavableMap(String id, ObjectMeta meta) {
+    public KissenSavableMap(@NotNull String id, @NotNull ObjectMeta meta) {
         this(new HashMap<>(), id, meta);
     }
 
@@ -74,7 +73,7 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
      * @param id   The ID of the savable object.
      * @param meta The meta in which everything should be saved.
      */
-    public KissenSavableMap(Map<String, String> data, String id, ObjectMeta meta) {
+    public KissenSavableMap(@NotNull Map<String, String> data, @NotNull String id, @NotNull ObjectMeta meta) {
         setData(data, id);
     }
 
@@ -84,7 +83,7 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
      * @param data the new data.
      * @param id   the sender of the object.
      */
-    protected void setData(Map<String, String> data, String id) {
+    protected void setData(@NotNull Map<String, String> data, @NotNull String id) {
         this.clear();
         super.putAll(data);
 
@@ -132,7 +131,10 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
 
     @Override
     public void delete(@NotNull String key) {
-        set(key, null);
+        if(containsKey(key))
+        {
+            set(key, null);
+        }
     }
 
     @Override

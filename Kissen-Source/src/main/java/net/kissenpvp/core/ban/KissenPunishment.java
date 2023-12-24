@@ -26,6 +26,7 @@ import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.message.Comment;
+import net.kissenpvp.core.api.message.ThemeProvider;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.user.UserImplementation;
@@ -176,12 +177,24 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
     @Override
     public @NotNull Component getPunishmentText(@NotNull Locale locale) {
 
-        Component banMessage = getCause().map(reason -> Component.translatable("multiplayer.disconnect.banned.cause", reason)).orElse(Component.translatable("multiplayer.disconnect.banned"));
-        Optional<TranslatableComponent> optionalEnd = getEnd().map(end -> Component.translatable("multiplayer.disconnect.banned.expiration", DateFormat.getDateInstance(DateFormat.SHORT, locale).format(Date.from(end))));
-        if (optionalEnd.isPresent()) {
-            banMessage = banMessage.append(optionalEnd.get());
+        final net.kyori.adventure.text.ComponentBuilder<?, ?> banMessage = Component.empty().toBuilder();
+        switch (getBanType())
+        {
+            case BAN -> {
+                banMessage.append(getCause().map(reason -> Component.translatable("multiplayer.disconnect.banned.cause", reason)).orElse(Component.translatable("multiplayer.disconnect.banned")).toBuilder());
+                Optional<TranslatableComponent> optionalEnd = getEnd().map(end -> Component.translatable("multiplayer.disconnect.banned.expiration", DateFormat.getDateInstance(DateFormat.SHORT, locale).format(Date.from(end))));
+                optionalEnd.ifPresent(banMessage::append);
+            }
+            case MUTE -> {
+                banMessage.append(Component.translatable("chat.filtered"));
+                getCause().ifPresent(cause -> banMessage.appendNewline().append(cause.color(ThemeProvider.primary())));
+            }
+            case KICK ->
+            {
+                //TODO
+            }
         }
-        return banMessage;
+        return banMessage.asComponent();
     }
 
     /**

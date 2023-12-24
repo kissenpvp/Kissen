@@ -126,7 +126,6 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
         Map<String, SavableMap> dataContainer = new HashMap<>();
         for (String[] current : data) {
             String totalID = current[0], key = current[1], value = current[2];
-
             dataContainer.putIfAbsent(totalID, new KissenSavableMap(totalID, KissenObjectJDBCMeta.this));
             SavableMap savableMap = dataContainer.get(totalID);
             if (key.startsWith("_")) {

@@ -102,6 +102,11 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
     }
 
     @Override
+    public String getId() {
+        return getSavableID();
+    }
+
+    @Override
     public void setId(String id) {
     }
 
