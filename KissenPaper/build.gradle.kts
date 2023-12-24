@@ -116,7 +116,7 @@ tasks.register("printMinecraftVersion") {
     }
 }
 
-tasks.register("printPurpurVersion") {
+tasks.register("printKissenVersion") {
     doLast {
         println(project.version)
     }
