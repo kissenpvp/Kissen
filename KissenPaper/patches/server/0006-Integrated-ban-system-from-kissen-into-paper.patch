@@ -3,9 +3,10 @@ From: Groldi <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:30:52 +0200
 Subject: [PATCH] Integrated ban system from kissen into paper
 
+Signed-off-by: Ivo Quiring <falk.quiring@gmail.com>
 
 diff --git a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
-index e4fd372a1d585887287253a02531cd192929377b..52451778400d11e70f254adaddd3480eb40d9fc1 100644
+index e4fd372a1d585887287253a02531cd192929377b..1d1567bd485d4fa076f2c0b311701a40bd1ed221 100644
 --- a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
 +++ b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
 @@ -175,9 +175,14 @@ public final class ChatProcessor {
@@ -76,7 +77,7 @@ index e4fd372a1d585887287253a02531cd192929377b..52451778400d11e70f254adaddd3480e
 +        if(mute != null && cancelled)
 +        {
 +            //mute is not null
-+            player.sendMessage(Component.translatable("server.ban.punishment.muted")); // TODO add some information maybe
++            player.sendMessage(mute.getPunishmentText(player.getCurrentLocale()));
 +            return false;
 +        }
 +        return true;
@@ -122,10 +123,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f91e7b5be766f71b17ced8b1068d3125acbf12e7
+index 0000000000000000000000000000000000000000..97b0224ff15c60aeb446f53b7bfc92bfa4393cd7
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,545 @@
+@@ -0,0 +1,537 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -196,7 +197,6 @@ index 0000000000000000000000000000000000000000..f91e7b5be766f71b17ced8b1068d3125
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
-+@SuppressWarnings("rawtypes")
 +public class KissenPaperBanImplementation extends KissenBanImplementation<PaperBan, PaperPunishment> implements PaperBanImplementation, KissenImplementation {
 +
 +    @Override
@@ -208,8 +208,6 @@ index 0000000000000000000000000000000000000000..f91e7b5be766f71b17ced8b1068d3125
 +        kissenLocalizationImplementation.register("server.ban.invalid", new MessageFormat("The ban with ID {0} was not found."));
 +        kissenLocalizationImplementation.register("server.ban.punishment.invalid", new MessageFormat("The punishment with ID {0} was not found."));
 +        kissenLocalizationImplementation.register("server.ban.punishment.pardoned", new MessageFormat("The ban, bearing the ID {0}, has been revoked."));
-+
-+        kissenLocalizationImplementation.register("server.ban.punishment.muted", new MessageFormat("You have been muted."));
 +
 +        kissenLocalizationImplementation.register("server.ban.punishment.compact", new MessageFormat("[{7}] [{3}] {1} #{0}"));
 +
@@ -366,11 +364,6 @@ index 0000000000000000000000000000000000000000..f91e7b5be766f71b17ced8b1068d3125
 +     */
 +    private @NotNull Stream<PaperBan> queryBanStream(@NotNull ObjectMeta meta) throws BackendException {
 +        return meta.getData(new KissenPaperBan()).values().stream().map(banProcessor());
-+    }
-+
-+    public PaperPunishment createBan(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode) throws BackendException {
-+        set(totalID, kissenPunishmentNode, getMeta(Context.LOCAL));
-+        return translatePunishment(totalID, kissenPunishmentNode, getMeta(Context.LOCAL));
 +    }
 +
 +    /**
@@ -1006,19 +999,22 @@ index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a7213009734e00df7a76fa1bf774d904312f4c1e
+index 0000000000000000000000000000000000000000..c6604ada96625eeaeb6ca7ba5aa884a8eeb82f0a
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
-@@ -0,0 +1,329 @@
+@@ -0,0 +1,340 @@
 +package net.kissenpvp.paper.ban.command;
 +
 +import net.kissenpvp.core.api.ban.BanType;
++import net.kissenpvp.core.api.ban.Punishment;
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.core.api.command.annotations.CommandData;
 +import net.kissenpvp.core.api.command.annotations.Optional;
++import net.kissenpvp.core.api.command.annotations.TabCompleter;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.message.ThemeProvider;
 +import net.kissenpvp.core.api.time.AccurateDuration;
++import net.kissenpvp.core.api.time.TemporalObject;
 +import net.kissenpvp.core.api.util.PageBuilder;
 +import net.kissenpvp.core.util.KissenPageBuilder;
 +import net.kissenpvp.paper.api.ban.PaperBan;
@@ -1044,6 +1040,8 @@ index 0000000000000000000000000000000000000000..a7213009734e00df7a76fa1bf774d904
 +import java.time.format.FormatStyle;
 +import java.util.Comparator;
 +import java.util.List;
++import java.util.Set;
++import java.util.stream.Collectors;
 +
 +public class KissenPaperBanCommand {
 +
@@ -1107,6 +1105,12 @@ index 0000000000000000000000000000000000000000..a7213009734e00df7a76fa1bf774d904
 +    public void unban(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperBan) {
 +        paperBan.setEnd(Instant.now());
 +        payload.getSender().sendMessage(Component.translatable("server.ban.punishment.pardoned", Component.text(paperBan.getID())));
++    }
++
++    @TabCompleter(command = "unban")
++    public @NotNull Set<String> tabUnban() {
++        return Bukkit.getKissen().getImplementation(PaperBanImplementation.class).getPunishmentSet().stream().filter(
++                TemporalObject::isValid).map(Punishment::getID).collect(Collectors.toSet());
 +    }
 +
 +    @CommandData(value = "history")

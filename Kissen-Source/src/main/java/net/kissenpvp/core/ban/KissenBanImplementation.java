@@ -42,6 +42,8 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.reflect.Type;
 import java.text.MessageFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -237,7 +239,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
         StorageImplementation storageImplementation = KissenCore.getInstance().getImplementation(StorageImplementation.class);
 
         String key = TOTAL_ID_KEY.format(new Object[] {totalID});
-        Map<String, Object> cache = storageImplementation.getStorage(STORAGE_KEY);
+        Map<String, Object> cache = storageImplementation.getStorage(STORAGE_KEY, Duration.ofHours(1));
         if(!cache.containsKey(key))
         {
             cache.put(key, meta.getRecordList("punishment", totalID.toString(), KissenPunishmentNode.class).stream().map(obj -> translatePunishment(totalID, obj, meta)).collect(Collectors.toSet()));
