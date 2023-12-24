@@ -1433,10 +1433,10 @@ index 0000000000000000000000000000000000000000..301adc5b7fd02b66e120454188b394be
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java b/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..bc40900b5f59cdf9a86ad8f542892af00abde3b3
+index 0000000000000000000000000000000000000000..ec46fbb62961e8d14f1b622049e524572f85edc2
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/parser/OfflinePlayerParser.java
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,68 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1468,6 +1468,7 @@ index 0000000000000000000000000000000000000000..bc40900b5f59cdf9a86ad8f542892af0
 +import org.jetbrains.annotations.NotNull;
 +
 +import java.util.Collection;
++import java.util.Objects;
 +import java.util.UUID;
 +import java.util.stream.Collectors;
 +
@@ -1478,7 +1479,7 @@ index 0000000000000000000000000000000000000000..bc40900b5f59cdf9a86ad8f542892af0
 +public class OfflinePlayerParser implements PaperArgumentParser<OfflinePlayer> {
 +    @Override
 +    public @NotNull String serialize(@NotNull OfflinePlayer object) {
-+        return object.getName();
++        return Objects.requireNonNull(object.getName());
 +    }
 +
 +    @Override
@@ -1486,7 +1487,7 @@ index 0000000000000000000000000000000000000000..bc40900b5f59cdf9a86ad8f542892af0
 +        OfflinePlayer player;
 +        try
 +        {
-+            if (input.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")) {
++            if (input.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}")) {
 +                player = Bukkit.getOfflinePlayer(UUID.fromString(input));
 +            } else {
 +                player = Bukkit.getOfflinePlayer(input);
@@ -1506,7 +1507,7 @@ index 0000000000000000000000000000000000000000..bc40900b5f59cdf9a86ad8f542892af0
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/parser/PlayerParser.java b/src/main/java/net/kissenpvp/paper/command/parser/PlayerParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f6c93ab02a825fbf1f82e8bbb152223099845310
+index 0000000000000000000000000000000000000000..bec525498f76bf2238337ef5fe1f6c7b2dfa48c7
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/parser/PlayerParser.java
 @@ -0,0 +1,63 @@
@@ -1551,7 +1552,7 @@ index 0000000000000000000000000000000000000000..f6c93ab02a825fbf1f82e8bbb1522230
 +    @Override
 +    public @NotNull Player deserialize(@NotNull String input) {
 +        Player player;
-+        if (input.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"))
++        if (input.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
 +        {
 +            player = Bukkit.getPlayer(UUID.fromString(input));
 +        }
