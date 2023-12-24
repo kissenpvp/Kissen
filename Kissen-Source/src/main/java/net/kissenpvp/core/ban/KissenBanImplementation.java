@@ -22,6 +22,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import net.kissenpvp.core.api.ban.*;
 import net.kissenpvp.core.api.database.DataImplementation;
+import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
@@ -55,6 +56,8 @@ import java.util.stream.Stream;
  */
 public abstract class KissenBanImplementation<B extends Ban, P extends Punishment<?>> implements BanImplementation<B, P> {
 
+    private static final String STORAGE_KEY = "ban_storage";
+    private static final MessageFormat TOTAL_ID_KEY = new MessageFormat("ban_{0}");
     private final Set<B> cachedBans;
 
     /**
@@ -231,7 +234,16 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @throws BackendException If an error occurs while accessing the backend.
      */
     protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID, @NotNull Meta meta) throws BackendException {
-        return meta.getRecordList("punishment", totalID.toString(), KissenPunishmentNode.class).stream().map(obj -> translatePunishment(totalID, obj, meta)).collect(Collectors.toSet());
+        StorageImplementation storageImplementation = KissenCore.getInstance().getImplementation(StorageImplementation.class);
+
+        String key = TOTAL_ID_KEY.format(new Object[] {totalID});
+        Map<String, Object> cache = storageImplementation.getStorage(STORAGE_KEY);
+        if(!cache.containsKey(key))
+        {
+            cache.put(key, meta.getRecordList("punishment", totalID.toString(), KissenPunishmentNode.class).stream().map(obj -> translatePunishment(totalID, obj, meta)).collect(Collectors.toSet()));
+        }
+
+        return (Set<P>) cache.get(key);
     }
 
     /**
@@ -271,6 +283,9 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
         List<KissenPunishmentNode> punishmentRecordList = new ArrayList<>(meta.getRecordList("punishment", totalID.toString(), KissenPunishmentNode.class));
         punishmentRecordList.removeIf(node -> node.id().equals(kissenPunishmentNode.id()));
         punishmentRecordList.add(kissenPunishmentNode);
+
+        KissenCore.getInstance().getImplementation(StorageImplementation.class).getStorage(STORAGE_KEY).remove(TOTAL_ID_KEY.format(new Object[] {totalID}));
+
         meta.setRecordList("punishment", totalID.toString(), punishmentRecordList);
     }
 
