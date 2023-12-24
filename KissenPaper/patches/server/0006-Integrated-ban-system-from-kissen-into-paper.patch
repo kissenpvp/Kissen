@@ -999,7 +999,7 @@ index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..c6604ada96625eeaeb6ca7ba5aa884a8eeb82f0a
+index 0000000000000000000000000000000000000000..474d7cedeb0e69efbc65c15af6ea20bd1c171f50
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 @@ -0,0 +1,340 @@
@@ -1138,7 +1138,7 @@ index 0000000000000000000000000000000000000000..c6604ada96625eeaeb6ca7ba5aa884a8
 +        payload.getSender().sendMessage(builder);
 +    }
 +
-+    @CommandData(value = "baninfo", aliases = {"punishmentinfo", "bi", "pi"})
++    @CommandData(value = "baninfo", aliases = {"punishmentinfo"})
 +    public void banInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperPunishment) {
 +        payload.getSender().sendMessage(punishmentInfo(payload, paperPunishment));
 +    }
