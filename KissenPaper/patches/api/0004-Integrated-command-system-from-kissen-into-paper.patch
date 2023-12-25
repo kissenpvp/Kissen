@@ -6,10 +6,10 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8c63c7b5197502da098ed9573dab3ac0c5528f92
+index 0000000000000000000000000000000000000000..39ba8eba71f584e717ec2ccbf3967be9958790a8
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
-@@ -0,0 +1,80 @@
+@@ -0,0 +1,78 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -87,8 +87,6 @@ index 0000000000000000000000000000000000000000..8c63c7b5197502da098ed9573dab3ac0
 +     * @throws NullPointerException if the completerExecutor is null.
 +     */
 +    public abstract void initCompleter(@NotNull TabCompleterExecutor<CommandSender> completerExecutor);
-+
-+    public abstract boolean register(@NotNull String fallback, @NotNull CommandMap commandMap);
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java b/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java
 new file mode 100644
