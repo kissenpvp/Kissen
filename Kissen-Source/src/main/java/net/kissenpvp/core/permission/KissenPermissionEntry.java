@@ -122,7 +122,8 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
     @Override
     public boolean hasPermission(@NotNull String permission) {
         List<Permission> permissions = new ArrayList<>(
-                getPermissionList().stream().map(internalPermission -> matcher(permission, internalPermission)).toList());
+                getPermissionList().stream().map(internalPermission -> matcher(permission, internalPermission)).filter(
+                        Objects::nonNull).toList());
         if (permissions.isEmpty()) {
             return false;
         }
