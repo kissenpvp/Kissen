@@ -142,11 +142,33 @@ public class KissenPermission extends KissenTemporalObject implements Permission
         throw new EventCancelledException();
     }
 
+    @Override
+    public boolean isValid()
+    {
+        return getValue() && super.isValid();
+    }
+
     public @NotNull KissenPermissionNode getKissenPermissionNode() {
         return kissenPermissionNode;
     }
 
     public @Nullable DataWriter getDataWriter() {
         return dataWriter;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        KissenPermission that = (KissenPermission) o;
+        return Objects.equals(getKissenPermissionNode().name(),
+                that.getKissenPermissionNode().name()) && Objects.equals(permissionEntry, that.permissionEntry);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(getKissenPermissionNode().name(), permissionEntry);
     }
 }

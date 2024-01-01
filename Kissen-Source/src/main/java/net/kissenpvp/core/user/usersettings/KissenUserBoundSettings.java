@@ -20,6 +20,7 @@ package net.kissenpvp.core.user.usersettings;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
+import net.kissenpvp.core.api.permission.PermissionEntry;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.exception.UnauthorizedException;
@@ -48,7 +49,7 @@ public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements
         T oldValue = getValue();
 
         if (Objects.equals(getUserSetting().getDefaultValue(), value)) {
-            getUser().delete("setting_" + getUserSetting().getKey());
+            reset();
             return oldValue;
         }
 
@@ -63,7 +64,7 @@ public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements
         UserValue<T> currentValue = currentPossibility.get();
         if (currentValue.permission().length > 0 && !value.equals(getUserSetting().getDefaultValue())) {
             Optional<String> permission = Arrays.stream(currentValue.permission()).filter(
-                    currentPermission -> !getUser().getPlayerClient().hasPermission(
+                    currentPermission -> !((PermissionEntry<?>) getUser().getPlayerClient()).hasPermission(
                             currentPermission)).toList().stream().findFirst();
             if (permission.isPresent()) {
                 throw new UnauthorizedException(UUID.fromString(getUser().getRawID()), permission.get());
@@ -82,12 +83,7 @@ public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements
         return value.map(val -> getUserSetting().deserialize(val)).orElse(defaultValue);
     }
 
-    @Override
-    @SneakyThrows /* will never happen */ public void reset() {
-        try {
-            setValue(getUserSetting().getDefaultValue());
-        } catch (UnauthorizedException unauthorizedException) {
-            throw new RuntimeException(unauthorizedException);
-        }
+    @Override public void reset() {
+        getUser().delete("setting_" + getUserSetting().getKey());
     }
 }

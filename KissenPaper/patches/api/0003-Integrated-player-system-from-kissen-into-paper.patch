@@ -284,10 +284,10 @@ index 0000000000000000000000000000000000000000..50ef7670a47c36d23990644ecb7e9eb8
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..da7846f5c260fd8727a1b5db10f1a0a6d277e460
+index 0000000000000000000000000000000000000000..aae8f17a074641fbfdd546a314fb98816e29c244
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
-@@ -0,0 +1,61 @@
+@@ -0,0 +1,60 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -313,7 +313,6 @@ index 0000000000000000000000000000000000000000..da7846f5c260fd8727a1b5db10f1a0a6
 +import net.kissenpvp.core.api.user.suffix.Suffix;
 +import net.kissenpvp.paper.api.ban.PaperPunishment;
 +import net.kissenpvp.paper.api.base.Context;
-+import net.kissenpvp.paper.api.permission.PaperGroubablePermissionEntry;
 +import net.kissenpvp.paper.api.permission.PaperPermissible;
 +import net.kissenpvp.paper.api.permission.PaperPermission;
 +import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
@@ -326,7 +325,7 @@ index 0000000000000000000000000000000000000000..da7846f5c260fd8727a1b5db10f1a0a6
 +import java.util.Set;
 +
 +
-+public interface PaperPlayerClient extends PlayerClient<PaperPermission, PaperPlayerRank, PaperPunishment>, PaperGroubablePermissionEntry {
++public interface PaperPlayerClient extends PlayerClient<PaperPermission, PaperPlayerRank, PaperPunishment> {
 +
 +    @NotNull @Unmodifiable Set<@NotNull PaperOnlinePlayerClient> getOnlineAltAccounts();
 +
@@ -351,10 +350,10 @@ index 0000000000000000000000000000000000000000..da7846f5c260fd8727a1b5db10f1a0a6
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperGroubablePermissionEntry.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperGroubablePermissionEntry.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f7ceb27777d42d0e20d6719d7feea1149697a2fc
+index 0000000000000000000000000000000000000000..232c540501b8b8663fa94d549240569a72064ab7
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperGroubablePermissionEntry.java
-@@ -0,0 +1,35 @@
+@@ -0,0 +1,38 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -381,10 +380,13 @@ index 0000000000000000000000000000000000000000..f7ceb27777d42d0e20d6719d7feea114
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
 +
++import java.util.Optional;
 +import java.util.Set;
 +
 +public interface PaperGroubablePermissionEntry extends GroupablePermissionEntry<PaperPermission>, PaperPermissionEntry {
 +    @NotNull @Unmodifiable Set<PaperPermission> getOwnPermissions(@NotNull Context context);
++
++    @NotNull Optional<PaperPermission> getOwnPermission(@NotNull String permission, @NotNull Context context);
 +
 +    @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups(@NotNull Context context);
 +
@@ -504,7 +506,7 @@ index 0000000000000000000000000000000000000000..2ac394b60d4cccb4c59b2c5625e53709
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7d8b9283503b5d9b249c1dff17b74051ed2e0317
+index 0000000000000000000000000000000000000000..1d7588bf403396af35f834d456672d2f7b040501
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java
 @@ -0,0 +1,32 @@
@@ -538,14 +540,14 @@ index 0000000000000000000000000000000000000000..7d8b9283503b5d9b249c1dff17b74051
 +
 +    boolean removeMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry, @NotNull Context context);
 +
-+    @NotNull PermissionGroup<PaperPermission> getCoreGroup(@NotNull Context context);
++    @NotNull PermissionGroup<PaperPermission> getContext(@NotNull Context context);
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f4f043f0c52102c29e24ded8243a82817879181d
+index 0000000000000000000000000000000000000000..b4fd64e21c9e8abf2d1b885e3625a98ada5b147b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionImplementation.java
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,36 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -567,36 +569,24 @@ index 0000000000000000000000000000000000000000..f4f043f0c52102c29e24ded8243a8281
 +package net.kissenpvp.paper.api.permission;
 +
 +import net.kissenpvp.core.api.base.Implementation;
-+import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.event.EventCancelledException;
 +import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.util.Map;
++import java.util.Optional;
 +import java.util.Set;
 +
 +public interface PaperPermissionImplementation extends Implementation {
 +
-+    @NotNull @Unmodifiable Set<PaperPermissionGroup> getPermissionGroupSet();
++    @NotNull @Unmodifiable Set<PaperPermissionGroup> getGroups();
 +
-+    @NotNull @Unmodifiable Set<PaperPrivatePermissionGroup> getPrivatePermissionGroupSet();
++    @NotNull Optional<PaperPermissionGroup> getGroup(@NotNull String group);
 +
-+    @Nullable PaperPermissionGroup getPermissionGroup(@NotNull String group);
-+
-+    @Nullable PaperPrivatePermissionGroup getPrivatePermissionGroup(@NotNull String group);
-+
-+    @NotNull PaperPrivatePermissionGroup getPrivatePermissionGroupNotNull(@NotNull String group) throws EventCancelledException, BackendException;
-+
-+    @NotNull PaperPermissionGroup getPermissionGroupNotNull(@NotNull String group) throws EventCancelledException;
-+
-+    @NotNull PaperPermissionGroup createPermissionGroup(@NotNull String group, @Nullable Map<String, String> data) throws EventCancelledException;
-+
-+    @NotNull PaperPrivatePermissionGroup createPrivatePermissionGroup(@NotNull String group, @Nullable Map<String, String> data) throws EventCancelledException, BackendException;
++    @NotNull PaperPermissionGroup getGroupNotNull(@NotNull String group) throws EventCancelledException;
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPrivatePermissionGroup.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPrivatePermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..44b1f87bd2ad41f846eb4e5ef7a0e4f4142c0d2b
+index 0000000000000000000000000000000000000000..ad67991a91634590018919781cbcf9219b4a6cdd
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPrivatePermissionGroup.java
 @@ -0,0 +1,28 @@
@@ -621,11 +611,11 @@ index 0000000000000000000000000000000000000000..44b1f87bd2ad41f846eb4e5ef7a0e4f4
 +package net.kissenpvp.paper.api.permission;
 +
 +import net.kissenpvp.core.api.permission.PermissionGroup;
-+import org.jetbrains.annotations.Nullable;
++import org.jetbrains.annotations.NotNull;
 +
 +public interface PaperPrivatePermissionGroup extends PermissionGroup<PaperPermission>
 +{
-+    @Nullable PaperPermissionGroup getPublicGroup();
++    @NotNull PaperPermissionGroup getPublicGroup();
 +
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPublicPermissionGroup.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPublicPermissionGroup.java
@@ -787,7 +777,7 @@ index 0000000000000000000000000000000000000000..f89bc619e02de3fd4c4bb000df66a11c
 +
 +public interface PaperRankImplementation extends RankImplementation<PaperRank> { }
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index bce07d84cafca677bb6fad78c21b82097f06430c..a24d26f541679b4b3cd2c1fe8aaf2695f901dedf 100644
+index bce07d84cafca677bb6fad78c21b82097f06430c..d1dbadd5c894a5e746655a6feac71a22d57461bd 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
 +++ b/src/main/java/org/bukkit/OfflinePlayer.java
 @@ -4,6 +4,7 @@ import java.time.Duration;
@@ -803,7 +793,7 @@ index bce07d84cafca677bb6fad78c21b82097f06430c..a24d26f541679b4b3cd2c1fe8aaf2695
   * player needing to be online.
   */
 -public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
-+public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient { // KissenPaper
++public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient, net.kissenpvp.paper.api.permission.PaperGroubablePermissionEntry { // KissenPaper
  
      /**
       * Checks if this player is currently online
@@ -889,7 +879,7 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..72227c4175f588f2f9181ca4d5647d75
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index a8d3451ccfcd21a9e80adc2feab8fc9c2926c753..225efafd0414d0bda639bf3021c4a1d13a964503 100644
+index ec937534f049ba25fb359c3e022ebe52ead6abef..cb2f0eec1c90c2e1afe4a212f597c0e3508c8462 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
 @@ -52,7 +52,7 @@ import org.jetbrains.annotations.Nullable;

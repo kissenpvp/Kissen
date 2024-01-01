@@ -85,7 +85,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
     public @NotNull String getBanOperator() {
 
         String data = kissenPunishmentNode.operator();
-        if(data.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"))
+        if(data.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
         {
             return KissenCore.getInstance().getImplementation(UserImplementation.class).getCachedUserProfile(UUID.fromString(data)).map(UserInfo::getName).orElse(data);
         }
@@ -220,5 +220,11 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
         long timeStamp = System.currentTimeMillis();
         UUID senderUUID = sender instanceof PlayerClient<?, ?, ?> playerClient ? playerClient.getUniqueId() : null;
         return new CommentNode(id, comment, senderUUID, timeStamp);
+    }
+
+    @Override
+    public boolean isValid()
+    {
+        return !getBanType().equals(BanType.KICK) && super.isValid();
     }
 }

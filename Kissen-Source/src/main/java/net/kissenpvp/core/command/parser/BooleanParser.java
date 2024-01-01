@@ -20,6 +20,7 @@ package net.kissenpvp.core.command.parser;
 
 import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
+import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,6 +35,10 @@ public class BooleanParser<S extends ServerEntity> implements ArgumentParser<Boo
 
     @Override
     public @NotNull Boolean deserialize(@NotNull String input) {
+        if(!input.equalsIgnoreCase("true") && !input.equalsIgnoreCase("false"))
+        {
+            throw new ArgumentMissingException();
+        }
         return Boolean.parseBoolean(input);
     }
 

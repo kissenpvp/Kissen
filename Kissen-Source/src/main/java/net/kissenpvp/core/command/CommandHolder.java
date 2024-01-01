@@ -23,10 +23,8 @@ import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
 
 public interface CommandHolder<S extends ServerEntity, C extends CommandHolder<S, C>> extends Iterable<CommandHolder<?, ?>> {
 
@@ -46,11 +44,11 @@ public interface CommandHolder<S extends ServerEntity, C extends CommandHolder<S
 
     @NotNull Optional<C> getChildCommand(@NotNull String name);
 
-    CommandInfo getCommandInfo();
+    @NotNull Optional<CommandInfo> getCommandInfo();
 
     default boolean equals(@NotNull String name) {
-        return getName().equalsIgnoreCase(name) || Arrays.stream(getCommandInfo().getAliases())
-                .anyMatch(alias -> alias.equalsIgnoreCase(name));
+        return getName().equalsIgnoreCase(name) || getCommandInfo().map(
+                info -> Arrays.stream(info.getAliases()).anyMatch(alias -> alias.equalsIgnoreCase(name))).orElse(false);
     }
 
     @NotNull

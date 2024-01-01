@@ -59,13 +59,8 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
     @Override
     public @NotNull T setPermission(@NotNull String permission, boolean value) throws EventCancelledException {
         Optional<T> currentPermission = getPermission(permission);
-        if (currentPermission.isPresent()) {
-            if (currentPermission.get().getValue() != value) {
-                currentPermission.get().setValue(value);
-            }
-            return currentPermission.get();
-        }
-        return setPermission(new KissenPermissionNode(permission, this, value, new TemporalMeasureNode()));
+        return currentPermission.map(current -> setPermission(current, value)).orElseGet(
+                () -> setPermission(new KissenPermissionNode(permission, this, value, new TemporalMeasureNode())));
     }
 
     @Override
@@ -126,9 +121,8 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
 
     @Override
     public boolean hasPermission(@NotNull String permission) {
-        List<Permission> permissions = new ArrayList<>(getPermissionList().stream().filter(Permission::isValid)
-                .map(internalPermission -> matcher(permission, internalPermission)).filter(Objects::nonNull)
-                .toList());
+        List<Permission> permissions = new ArrayList<>(
+                getPermissionList().stream().map(internalPermission -> matcher(permission, internalPermission)).toList());
         if (permissions.isEmpty()) {
             return false;
         }
@@ -138,10 +132,25 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
 
     @Override
     public @NotNull SavableList putList(@NotNull String key, @Nullable List<String> value) {
+        SavableList result = super.putList(key, value);
         if (key.equals("permission_list")) {
             permissionUpdate();
         }
-        return super.putList(key, value);
+        return result;
+    }
+
+    protected @NotNull T setPermission(@NotNull T permission, boolean value) throws EventCancelledException
+    {
+        if (!permission.getOwner().equals(this))
+        {
+            throw new IllegalArgumentException("The specified permission owner does not match this object.");
+        }
+
+        if (permission.getValue() != value)
+        {
+            permission.setValue(value);
+        }
+        return permission;
     }
 
     /**
@@ -174,7 +183,8 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
      * internal permission, or null if it doesn't.
      * @throws NullPointerException if either the permission or internalPermission parameter is null.
      */
-    public @Nullable T matcher(@NotNull String permission, @NotNull T internalPermission) {
+    public @Nullable T matcher(@NotNull String permission, @NotNull T internalPermission)
+    {
         int testedIndex = 0, givenIndex = 0, testedWildcardIndex = -1, givenWildcardIndex = -1;
 
         while (givenIndex < permission.length()) {
@@ -209,8 +219,7 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
             testedIndex++;
         }
 
-        return (testedIndex == internalPermission.getName()
-                .length() && givenIndex == permission.length()) ? internalPermission : null;
+        return testedIndex == internalPermission.getName().length() && givenIndex == permission.length() ? internalPermission : null;
     }
 
     /**

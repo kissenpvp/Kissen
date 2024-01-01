@@ -321,10 +321,10 @@ index 0000000000000000000000000000000000000000..5fdffe91d30c9092cb85fba3837fccef
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b78428702005e926709ae9a8543d2a90dfaf7e39
+index 0000000000000000000000000000000000000000..c961eef9b7dbb54e539e534347b91d7630dab461
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
-@@ -0,0 +1,346 @@
+@@ -0,0 +1,361 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -346,11 +346,13 @@ index 0000000000000000000000000000000000000000..b78428702005e926709ae9a8543d2a90
 +package net.kissenpvp.paper.command.command;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.CommandTarget;
 +import net.kissenpvp.core.api.command.annotations.CommandData;
 +import net.kissenpvp.core.api.command.executor.CommandExecutor;
 +import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
 +import net.kissenpvp.core.command.CommandHolder;
 +import net.kissenpvp.core.command.CommandInfo;
++import net.kissenpvp.core.command.argument.Argument;
 +import net.kissenpvp.paper.api.command.KissenCommand;
 +import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
 +import net.kissenpvp.paper.command.command.system.KissenPaperChildCommand;
@@ -360,11 +362,11 @@ index 0000000000000000000000000000000000000000..b78428702005e926709ae9a8543d2a90
 +import org.bukkit.command.Command;
 +import org.bukkit.command.CommandException;
 +import org.bukkit.command.CommandSender;
-+import org.jetbrains.annotations.Contract;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
 +
 +import java.util.*;
++import java.util.concurrent.atomic.AtomicReference;
 +import java.util.stream.Collectors;
 +
 +/**
@@ -421,8 +423,9 @@ index 0000000000000000000000000000000000000000..b78428702005e926709ae9a8543d2a90
 +    }
 +
 +    @Override
-+    public @NotNull CommandInfo getCommandInfo() {
-+        return commandInfo;
++    public @NotNull Optional<CommandInfo> getCommandInfo()
++    {
++        return Optional.ofNullable(commandInfo);
 +    }
 +
 +    @Override
@@ -458,20 +461,26 @@ index 0000000000000000000000000000000000000000..b78428702005e926709ae9a8543d2a90
 +    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
 +        List<String> result = new ArrayList<>();
 +
-+        if (!validate(sender)) {
-+            return result;
-+        }
++            if (!validate(sender))
++            {
++                return result;
++            }
 +
-+        if ((result = isChildCommand(sender, alias, args)).isEmpty())
++            result.addAll(isChildCommand(sender, alias, args).orElseGet(() ->
++            {
++                CommandPayload<CommandSender> commandPayload = new KissenPaperCommandPayload(alias, sender, getTargetValidator().parseSender(sender), args, this);
++                return getTabCompletions(commandPayload);
++            }));
++
++        AtomicReference<String> reference = new AtomicReference<>("");
++        try
 +        {
-+            CommandPayload<CommandSender> commandPayload = new KissenPaperCommandPayload(alias, sender, getTargetValidator().parseSender(sender), args, this);
-+            result.addAll(getTabCompletions(commandPayload));
-+        }
-+
-+        return result;
++            reference.set(args[args.length - 1]);
++        } catch (ArrayIndexOutOfBoundsException ignored) {}
++        return new ArrayList<>(result).stream().filter(current -> current.startsWith(reference.get())).toList();
 +    }
 +
-+    private @NotNull List<String> isChildCommand(@NotNull CommandSender commandSender, @NotNull String alias, @NotNull String @NotNull [] arguments)
++    private @NotNull Optional<List<String>> isChildCommand(@NotNull CommandSender commandSender, @NotNull String alias, @NotNull String @NotNull [] arguments)
 +    {
 +        for (var iterator = new Object()
 +        {
@@ -487,18 +496,17 @@ index 0000000000000000000000000000000000000000..b78428702005e926709ae9a8543d2a90
 +            if (commandHolder.isPresent())
 +            {
 +                return commandHolder.map(child -> child.tabComplete(commandSender, alias,
-+                        Arrays.copyOfRange(arguments, iterator.getIndex() + 1, arguments.length))).orElse(
-+                        new ArrayList<>());
++                        Arrays.copyOfRange(arguments, iterator.getIndex() + 1, arguments.length)));
 +            }
 +        }
-+        return new ArrayList<>();
++        return Optional.empty();
 +    }
 +
-+    @Contract(pure = true)
 +    private @NotNull List<String> getTabCompletions(@NotNull CommandPayload<CommandSender> commandPayload)
 +    {
 +        List<String> suggestions = new ArrayList<>(
-+                tabExecutor != null ? tabExecutor.execute(commandPayload) : getAutoTabCompletion(commandPayload));
++                (tabExecutor != null ? tabExecutor.execute(commandPayload) : getAutoTabCompletion(
++                        commandPayload)).stream().filter(Objects::nonNull).toList());
 +        suggestions.sort(String.CASE_INSENSITIVE_ORDER);
 +        return suggestions;
 +    }
@@ -506,18 +514,24 @@ index 0000000000000000000000000000000000000000..b78428702005e926709ae9a8543d2a90
 +    private @NotNull Set<String> getAutoTabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
 +    {
 +        int index = commandPayload.getArgumentCount();
-+        Set<String> data = getChildCommandList().stream().filter(child ->
-+                child.getPosition() == index).map(Command::getName).collect(Collectors.toSet());
++        Set<String> data = getChildCommandList().stream().filter(
++                child -> child.getPosition() == index + getPosition()).map(Command::getName).collect(
++                Collectors.toSet());
 +        if (getCommandExecutor() instanceof KissenPaperCommandExecutor kissenPaperCommandExecutor && kissenPaperCommandExecutor.getEvaluator().arguments().size() > index)
 +        {
-+            data.addAll(kissenPaperCommandExecutor.getEvaluator().arguments().get(index).argumentParser().tabCompletion(commandPayload));
++            Argument<?, CommandSender> argument = kissenPaperCommandExecutor.getEvaluator().arguments().get(index);
++            if (argument.argumentParser() != null)
++            {
++                data.addAll(argument.argumentParser().tabCompletion(commandPayload));
++
++            }
 +        }
 +        return data;
 +    }
 +
 +    @Override
 +    public @NotNull String getFullName() {
-+        return getCommandInfo().getName();
++        return getCommandInfo().map(CommandInfo::getName).orElse(getName());
 +    }
 +
 +    /**
@@ -638,7 +652,8 @@ index 0000000000000000000000000000000000000000..b78428702005e926709ae9a8543d2a90
 +     * @throws NullPointerException If the provided {@code commandSender} parameter is null.
 +     */
 +    public boolean validate(@NotNull CommandSender commandSender) {
-+        return getTargetValidator().validate(getCommandInfo().getTarget(), commandSender);
++        return getTargetValidator().validate(getCommandInfo().map(CommandInfo::getTarget).orElse(CommandTarget.ALL),
++                commandSender);
 +    }
 +
 +    /**
@@ -673,7 +688,7 @@ index 0000000000000000000000000000000000000000..b78428702005e926709ae9a8543d2a90
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandPayload.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandPayload.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0daa25503ddeac80abd6c5f808194faf0eddde70
+index 0000000000000000000000000000000000000000..3e44027f36dc12d706dfd5880f250ec5b65b5422
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandPayload.java
 @@ -0,0 +1,105 @@
@@ -703,6 +718,7 @@ index 0000000000000000000000000000000000000000..0daa25503ddeac80abd6c5f808194faf
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.permission.PermissionEntry;
 +import net.kissenpvp.core.command.CommandHolder;
++import net.kissenpvp.core.command.CommandInfo;
 +import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
@@ -769,10 +785,9 @@ index 0000000000000000000000000000000000000000..0daa25503ddeac80abd6c5f808194faf
 +    @Override
 +    public boolean validate(@NotNull ServerEntity serverEntity) {
 +
-+        if (getCommandHolder().getCommandInfo()
-+                .isPermissionRequired() && serverEntity instanceof PermissionEntry<?> permissionEntry) {
++        if (getCommandHolder().getCommandInfo().map(CommandInfo::isPermissionRequired).orElse(true) && serverEntity instanceof PermissionEntry<?> permissionEntry) {
 +
-+            if (!permissionEntry.hasPermission(getCommandHolder().getCommandInfo().getPermission())) {
++            if (!permissionEntry.hasPermission(getCommandHolder().getCommandInfo().map(CommandInfo::getPermission).orElse("kissen.command" + getLabel()))) {
 +                return false;
 +            }
 +        }

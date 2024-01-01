@@ -18,6 +18,8 @@
 
 package net.kissenpvp.core.database.jdbc;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
@@ -28,7 +30,9 @@ import net.kissenpvp.core.database.savable.KissenSavableMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -129,7 +133,7 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
             dataContainer.putIfAbsent(totalID, new KissenSavableMap(totalID, KissenObjectJDBCMeta.this));
             SavableMap savableMap = dataContainer.get(totalID);
             if (key.startsWith("_")) {
-                savableMap.putListValue(key.substring(1), value);
+                savableMap.putList(key.substring(1), new Gson().fromJson(value, new TypeToken<List<String>>() {}.getType()));
             } else {
                 savableMap.put(key, value);
             }

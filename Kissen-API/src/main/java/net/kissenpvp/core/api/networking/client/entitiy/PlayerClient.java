@@ -40,7 +40,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B extends Punishment<?>> extends ServerEntity, GroupablePermissionEntry<P> {
+public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B extends Punishment<?>> extends ServerEntity {
 
     /**
      * Returns the UUID of the player this object is pointing to.

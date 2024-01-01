@@ -51,7 +51,7 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
      * @param savableMap to create a copy.
      */
     public KissenSavableMap(@NotNull KissenSavableMap savableMap) {
-        setData(savableMap, savableMap instanceof KissenSavable kissenSavable ? kissenSavable.getSavableID() : savableMap.getId());
+        setData(savableMap, savableMap instanceof KissenSavable kissenSavable ? kissenSavable.getDatabaseID() : savableMap.getId());
     }
 
     /**
@@ -263,6 +263,6 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
     }
 
     public @NotNull ObjectMeta getMeta() {
-        return KissenCore.getInstance().getPublicMeta();
+        return KissenCore.getInstance().getPublicMeta(); //todo choosable
     }
 }

@@ -21,6 +21,7 @@ package net.kissenpvp.core.api.permission;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.Optional;
 import java.util.Set;
 
 public interface GroupablePermissionEntry<T extends Permission> extends PermissionEntry<T> {
@@ -33,6 +34,8 @@ public interface GroupablePermissionEntry<T extends Permission> extends Permissi
      * @return a set which contains all permissions from this specific object.
      */
     @NotNull @Unmodifiable Set<T> getOwnPermissions();
+
+    @NotNull Optional<T> getOwnPermission(@NotNull String permission);
 
     /**
      * Clears all groups this entry is assigned to.

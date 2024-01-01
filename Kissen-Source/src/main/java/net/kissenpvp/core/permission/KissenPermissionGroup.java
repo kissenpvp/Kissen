@@ -19,11 +19,9 @@
 package net.kissenpvp.core.permission;
 
 import net.kissenpvp.core.api.event.EventImplementation;
-import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
-import net.kissenpvp.core.api.permission.Permission;
-import net.kissenpvp.core.api.permission.PermissionGroup;
-import net.kissenpvp.core.api.permission.PermissionGroupConflictException;
+import net.kissenpvp.core.api.permission.*;
 import net.kissenpvp.core.api.permission.event.GroupMemberAddEvent;
+import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 import net.kissenpvp.core.permission.event.KissenGroupMemberAddEvent;
@@ -34,7 +32,6 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public abstract class KissenPermissionGroup<T extends Permission> extends KissenGroupablePermissionEntry<T> implements PermissionGroup<T>
 {
@@ -58,7 +55,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
     {
         if (groupablePermissionEntry instanceof PermissionGroup<?>)
         {
-            if (internalGroupCollector(new HashSet<>()).contains(groupablePermissionEntry.getPermissionID()))
+            if (getPermissionID().equals(groupablePermissionEntry.getPermissionID()) || internalGroupCollector(new HashSet<>()).contains(groupablePermissionEntry.getPermissionID()))
             {
                 throw new PermissionGroupConflictException();
             }
@@ -72,12 +69,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
         GroupMemberAddEvent groupMemberAddEvent = new KissenGroupMemberAddEvent(this, groupablePermissionEntry);
         if(KissenCore.getInstance().getImplementation(EventImplementation.class).call(groupMemberAddEvent))
         {
-            if (!getListNotNull("group_member").contains(groupablePermissionEntry.getPermissionID()))
-            {
-                return getListNotNull("group_member").add(groupablePermissionEntry.getPermissionID());
-            }
-
-            return setListValue("group_member", groupablePermissionEntry.getPermissionID()).contains(groupablePermissionEntry.getPermissionID());
+            return getListNotNull("group_member").add(groupMemberAddEvent.getPermissionEntry().getPermissionID());
         }
         return false;
     }
@@ -109,16 +101,30 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
 
     @Override public @NotNull @Unmodifiable Set<UUID> getAffectedPermissionPlayer()
     {
-        return getMember().stream().filter(member ->
+        Set<UUID> uuids = new HashSet<>();
+        PermissionImplementation permissionImplementation = KissenCore.getInstance().getImplementation(
+                PermissionImplementation.class);
+        for (String member : getMember())
         {
-            try
+            if (member.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
             {
-                UUID uuid = UUID.fromString(member);
-                return true;
+                uuids.add(UUID.fromString(member));
+                continue;
             }
-            catch (IllegalArgumentException ignored) { }
-            return false;
-        }).map(UUID::fromString).collect(Collectors.toUnmodifiableSet());
+
+            uuids.addAll(permissionImplementation.getPermissionGroupSavable(member).map(
+                    PermissionEntry::getAffectedPermissionPlayer).orElse(new HashSet<>()));
+        }
+        return uuids;
+    }
+
+    @Override
+    public void permissionUpdate()
+    {
+        super.permissionUpdate();
+        getAffectedPermissionPlayer().forEach(
+                uuid -> KissenCore.getInstance().getImplementation(UserImplementation.class).getOnlineUser(
+                        uuid).ifPresent(user -> ((PermissionEntry<?>) user).permissionUpdate()));
     }
 
     @Override public SerializableSavableHandler getSerializableSavableHandler()

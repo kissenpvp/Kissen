@@ -91,6 +91,14 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
     }
 
     @Override
+    public boolean postStart()
+    {
+        register("server.general.id", new MessageFormat("ID"));
+        register("server.general.show.more", new MessageFormat("Show more..."));
+        return LocalizationImplementation.super.postStart();
+    }
+
+    @Override
     public void setupComplete() {
         try {
             loadFiles(getData("$system"));

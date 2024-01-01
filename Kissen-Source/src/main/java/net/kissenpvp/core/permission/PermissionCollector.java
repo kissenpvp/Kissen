@@ -24,9 +24,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
-public interface InternalGroupablePermissionEntry<T extends Permission> extends GroupablePermissionEntry<T>
+public interface PermissionCollector<T extends Permission> extends GroupablePermissionEntry<T>
 {
-    @NotNull Set<T> internalPermissionCollector(@NotNull Set<String> blacklistedGroups, @NotNull Set<String> blacklistedPermissions);
+    @NotNull Set<T> permissionCollector();
 
     @NotNull Set<String> internalGroupCollector(@NotNull Set<String> blacklistedGroups);
 }
