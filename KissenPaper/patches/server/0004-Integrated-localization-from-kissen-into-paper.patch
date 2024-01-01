@@ -70,10 +70,10 @@ index 0000000000000000000000000000000000000000..e085d4c120a323b555970b7643b7280a
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 8f26aa8aa559c0ff61d601913b3f98f80bf3fadf..089c8270689c4f922eccaa97bb07b205bc88972c 100644
+index 0f3758071754eef2c9bd8a464a20b210bcd8149f..65141c9fc045a4da684b3232ecdfab903e5aefa8 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2152,6 +2152,7 @@ public class ServerPlayer extends Player {
+@@ -2153,6 +2153,7 @@ public class ServerPlayer extends Player {
              PlayerLocaleChangeEvent event = new PlayerLocaleChangeEvent(this.getBukkitEntity(), clientOptions.language());
              this.server.server.getPluginManager().callEvent(event);
              this.server.server.getPluginManager().callEvent(new com.destroystokyo.paper.event.player.PlayerLocaleChangeEvent(this.getBukkitEntity(), this.language, clientOptions.language())); // Paper
@@ -81,7 +81,7 @@ index 8f26aa8aa559c0ff61d601913b3f98f80bf3fadf..089c8270689c4f922eccaa97bb07b205
          }
          // CraftBukkit end
          // Paper start - don't call options events on login
-@@ -2760,4 +2761,12 @@ public class ServerPlayer extends Player {
+@@ -2762,4 +2763,12 @@ public class ServerPlayer extends Player {
          return (CraftPlayer) super.getBukkitEntity();
      }
      // CraftBukkit end
@@ -95,10 +95,10 @@ index 8f26aa8aa559c0ff61d601913b3f98f80bf3fadf..089c8270689c4f922eccaa97bb07b205
 +
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index b0b8987f34e0ae6c1931b41bed8b8d64cc83543c..094fa0d92825e76477707fcaef7b1192eea0b6ec 100644
+index 09de30ff0cc003da3acd860310e7835fd10a4b81..793b009e43d21178b8d576f519b27057ac820972 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -3162,7 +3162,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3226,7 +3226,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      @Override
      public void openBook(final net.kyori.adventure.inventory.Book book) {
