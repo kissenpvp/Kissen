@@ -3,8 +3,39 @@ From: Ivo <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:28:51 +0200
 Subject: [PATCH] Integrated localization from kissen into paper
 
-Signed-off-by: Ivo Quiring <falk.quiring@gmail.com>
 
+diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+index 7782933e7eeca7e30aa903b03a19625e90d00dc3..ecf9159f6ea00fe6ab888fef65cc71f52c62cff9 100644
+--- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
++++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+@@ -20,12 +20,14 @@ package net.kissenpvp.paper.base;
+ 
+ import net.kissenpvp.core.api.base.Implementation;
+ import net.kissenpvp.core.api.database.meta.ObjectMeta;
++import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
+ import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
+ import net.kissenpvp.core.api.user.UserImplementation;
+ import net.kissenpvp.core.base.KissenCore;
+ import net.kissenpvp.core.permission.PermissionImplementation;
+ import net.kissenpvp.paper.api.base.PaperKissen;
+ import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
++import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
+ import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
+ import net.kissenpvp.paper.user.KissenPaperUserImplementation;
+ import org.bukkit.Bukkit;
+@@ -51,11 +53,10 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+     protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader)
+     {
+         loader.put(UserImplementation.class, new KissenPaperUserImplementation());
+-
+         KissenPaperPermissionImplementation permissionImplementation = new KissenPaperPermissionImplementation();
+         loader.put(PermissionImplementation.class, permissionImplementation);
+         loader.put(PaperPermissionImplementation.class, permissionImplementation);
+-
++        loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());
+         super.loadImplementations(loader);
+     }
+ 
 diff --git a/src/main/java/net/kissenpvp/paper/message/localization/KissenPaperLocalizationImplementation.java b/src/main/java/net/kissenpvp/paper/message/localization/KissenPaperLocalizationImplementation.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..e085d4c120a323b555970b7643b7280a95f2cc71

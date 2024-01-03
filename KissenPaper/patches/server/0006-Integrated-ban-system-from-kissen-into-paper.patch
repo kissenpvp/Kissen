@@ -999,7 +999,7 @@ index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b79c09abed10f377ff4519a154a9b7bf41b86deb
+index 0000000000000000000000000000000000000000..0c337b35200c20d18351119a6947440674e526e3
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 @@ -0,0 +1,340 @@
@@ -1180,17 +1180,17 @@ index 0000000000000000000000000000000000000000..b79c09abed10f377ff4519a154a9b7bf
 +        TranslatableComponent banInfo = Component.translatable("server.command.general.key.value");
 +
 +        Builder builder = Component.text().appendNewline().append(header);
-+        builder.appendNewline().append(banInfo.args(id, constructCopyable(paperPunishment.getID())));
-+        builder.appendNewline().append(banInfo.args(by, Component.text(paperPunishment.getBanOperator())));
++        builder.appendNewline().append(banInfo.arguments(id, constructCopyable(paperPunishment.getID())));
++        builder.appendNewline().append(banInfo.arguments(by, Component.text(paperPunishment.getBanOperator())));
 +        paperPunishment.getCause().ifPresent(cause ->
-+                builder.appendNewline().append(banInfo.args(Component.translatable("server.ban.punishment.cause").color(ThemeProvider.general()), cause)));
++                builder.appendNewline().append(banInfo.arguments(Component.translatable("server.ban.punishment.cause").color(ThemeProvider.general()), cause)));
 +
 +        DateTimeFormatter formatter = payload.getSender().getFormatter(FormatStyle.SHORT);
-+        builder.appendNewline().append(banInfo.args(start, Component.text(formatter.format(paperPunishment.getStart()))));
-+        builder.appendNewline().append(banInfo.args(predictedEnd, normalizeDate(formatter, paperPunishment.getPredictedEnd().orElse(null))));
++        builder.appendNewline().append(banInfo.arguments(start, Component.text(formatter.format(paperPunishment.getStart()))));
++        builder.appendNewline().append(banInfo.arguments(predictedEnd, normalizeDate(formatter, paperPunishment.getPredictedEnd().orElse(null))));
 +        if(!paperPunishment.getEnd().equals(paperPunishment.getPredictedEnd()))
 +        {
-+            builder.appendNewline().append(banInfo.args(end, normalizeDate(formatter, paperPunishment.getEnd().orElse(null))));
++            builder.appendNewline().append(banInfo.arguments(end, normalizeDate(formatter, paperPunishment.getEnd().orElse(null))));
 +        }
 +
 +        builder.appendNewline().append(footer);
@@ -1460,6 +1460,38 @@ index 55167ae5fef79f24545df34479443dbb74399a57..5d3e45f35d6de0479938d85e13c1ae57
 +        return true;
      }
  }
+diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+index fa04995b10bac05deeea451730a80493486c6b50..89bb64e42aa0fc4b5a8e6f4546528906a2dd356b 100644
+--- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
++++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+@@ -18,6 +18,7 @@
+ 
+ package net.kissenpvp.paper.base;
+ 
++import net.kissenpvp.core.api.ban.BanImplementation;
+ import net.kissenpvp.core.api.base.Implementation;
+ import net.kissenpvp.core.api.database.meta.ObjectMeta;
+ import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
+@@ -25,9 +26,11 @@ import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
+ import net.kissenpvp.core.api.user.UserImplementation;
+ import net.kissenpvp.core.base.KissenCore;
+ import net.kissenpvp.core.permission.PermissionImplementation;
++import net.kissenpvp.paper.api.ban.PaperBanImplementation;
+ import net.kissenpvp.paper.api.base.PaperKissen;
+ import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
+ import net.kissenpvp.paper.api.command.PaperCommandImplementation;
++import net.kissenpvp.paper.ban.KissenPaperBanImplementation;
+ import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
+ import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
+ import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
+@@ -60,6 +63,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+         loader.put(PaperPermissionImplementation.class, permissionImplementation);
+         loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());
+         loader.put(PaperCommandImplementation.class, new KissenPaperCommandImplementation());
++        loader.put(BanImplementation.class, new KissenPaperBanImplementation());
+         super.loadImplementations(loader);
+     }
+ 
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
 index 24dc0f73925de7b7353c9db5c2d3dc0f4d4fa67d..7b2db25cb128604c6ac3a4a9499c2f4e3a24aaa9 100644
 --- a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
@@ -1507,7 +1539,7 @@ index 24dc0f73925de7b7353c9db5c2d3dc0f4d4fa67d..7b2db25cb128604c6ac3a4a9499c2f4e
          return warnCount;
      }
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index fed23fdf90e6c271c545bd8bd0b9359247447547..dba69bb0ec09e8d710e673d699c99044c376934e 100644
+index 4601c9dfc43d9f0b875c1df39db96c08e2a046c1..670f5e833f75df60d301620ff3c37a994379f71c 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -389,6 +389,13 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
@@ -1565,7 +1597,7 @@ index fed23fdf90e6c271c545bd8bd0b9359247447547..dba69bb0ec09e8d710e673d699c99044
      }
      // Spigot end
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 919437dcb8e7cf00d208f7d216fe6e1b00422ded..ddba390f50b6307908a47153833c0c3eefa7393a 100644
+index b85198a78cacd4c4d553542be7bdfd9e58a38bfa..0e8117ad5fcd09c5daa6f2bc864bf8d295834ce0 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -163,7 +163,7 @@ public abstract class PlayerList {
@@ -1645,7 +1677,7 @@ index 919437dcb8e7cf00d208f7d216fe6e1b00422ded..ddba390f50b6307908a47153833c0c3e
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 8bab4b7332496d1c364bd51021e42aea70cb8806..8a2126563d1fcabb136c07db8a8d6fe1dd438e11 100644
+index 9331e10482047c03ed803bd78b6718580fe250f2..5af4bf2d24fdac517511240044c3bdb73c774b6c 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -2207,12 +2207,19 @@ public final class CraftServer implements Server {

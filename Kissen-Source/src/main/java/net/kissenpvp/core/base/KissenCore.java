@@ -24,15 +24,34 @@ import net.kissenpvp.core.api.base.ImplementationAbsentException;
 import net.kissenpvp.core.api.base.Kissen;
 import net.kissenpvp.core.api.base.loader.Ignore;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
-import net.kissenpvp.core.api.config.Option;
+import net.kissenpvp.core.api.config.ConfigurationImplementation;
+import net.kissenpvp.core.api.database.DataImplementation;
+import net.kissenpvp.core.api.database.StorageImplementation;
+import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.event.EventImplementation;
+import net.kissenpvp.core.api.message.ChatImplementation;
+import net.kissenpvp.core.api.message.MessageImplementation;
+import net.kissenpvp.core.api.networking.APIRequestImplementation;
+import net.kissenpvp.core.api.reflection.ReflectionImplementation;
 import net.kissenpvp.core.api.reflection.ReflectionPackage;
+import net.kissenpvp.core.api.task.TaskImplementation;
+import net.kissenpvp.core.api.time.TimeImplementation;
+import net.kissenpvp.core.api.util.PageImplementation;
 import net.kissenpvp.core.config.KissenConfigurationImplementation;
+import net.kissenpvp.core.database.KissenDataImplementation;
 import net.kissenpvp.core.database.KissenDatabaseImplementation;
+import net.kissenpvp.core.database.savable.KissenStorageImplementation;
+import net.kissenpvp.core.event.KissenEventImplementation;
+import net.kissenpvp.core.message.KissenChatImplementation;
+import net.kissenpvp.core.message.KissenMessageImplementation;
+import net.kissenpvp.core.networking.KissenAPIRequestImplementation;
 import net.kissenpvp.core.permission.event.KissenPermissionGroupCreateEvent;
 import net.kissenpvp.core.reflection.KissenReflectionClass;
-import net.kissenpvp.core.reflection.KissenReflectionPackage;
+import net.kissenpvp.core.reflection.KissenReflectionImplementation;
+import net.kissenpvp.core.task.KissenTaskImplementation;
+import net.kissenpvp.core.time.KissenTimeImplementation;
+import net.kissenpvp.core.util.KissenPageImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
@@ -75,20 +94,32 @@ public abstract class KissenCore implements Kissen {
         KissenCore.instance = this;
 
         implementation = new HashMap<>();
-        Set<Class<?>> reflectionClasses = loadClasses(
-                new KissenReflectionPackage("net.kissenpvp.core", KissenCore.class),
-                new KissenReflectionPackage("net.kissenpvp.core.api", Kissen.class),
-                new KissenReflectionPackage("net.kissenpvp", clazz));
-        injectImplementations(reflectionClasses);
+        loadImplementations(implementation);
 
         getLogger().debug("The following implementations have been loaded: ");
         implementation.forEach((key, value) -> getLogger().debug("- {}", key.getName()));
 
-        startImplementations(reflectionClasses);
+        startImplementations();
 
         time = System.currentTimeMillis() - time;
         getLogger().info("The kissen system took {}ms to start.", time);
         getImplementation(EventImplementation.class).call(new KissenPermissionGroupCreateEvent("", null));
+    }
+
+    protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader)
+    {
+        loader.put(APIRequestImplementation.class, new KissenAPIRequestImplementation());
+        loader.put(ChatImplementation.class, new KissenChatImplementation());
+        loader.put(ConfigurationImplementation.class, new KissenConfigurationImplementation());
+        loader.put(DataImplementation.class, new KissenDataImplementation());
+        loader.put(DatabaseImplementation.class, new KissenDatabaseImplementation());
+        loader.put(EventImplementation.class, new KissenEventImplementation());
+        loader.put(PageImplementation.class, new KissenPageImplementation());
+        loader.put(TimeImplementation.class, new KissenTimeImplementation());
+        loader.put(ReflectionImplementation.class, new KissenReflectionImplementation());
+        loader.put(StorageImplementation.class, new KissenStorageImplementation());
+        loader.put(MessageImplementation.class, new KissenMessageImplementation());
+        loader.put(TaskImplementation.class, new KissenTaskImplementation());
     }
 
     /**
@@ -123,14 +154,11 @@ public abstract class KissenCore implements Kissen {
         });
     }
 
-    private void startImplementations(@NotNull Set<Class<?>> classes) throws IOException {
+    private void startImplementations() throws IOException {
         getLogger().debug("Scan for class scanner entries.");
 
         File file = new File("kissen.properties");
-        getImplementation(KissenConfigurationImplementation.class).loadInternalConfiguration(file,
-                classes.stream().filter(clazz -> Option.class.isAssignableFrom(clazz) && !Modifier.isInterface(
-                        clazz.getModifiers()) && !Modifier.isAbstract(clazz.getModifiers())).map(
-                        clazz -> ((Class<? extends Option<?>>) clazz)).collect(Collectors.toSet()));
+        getImplementation(KissenConfigurationImplementation.class).loadInternalConfiguration(file);
         getLogger().info("Configuration loaded from '{}'. Any missing values have been written to the file.",
                 file.getAbsolutePath());
 

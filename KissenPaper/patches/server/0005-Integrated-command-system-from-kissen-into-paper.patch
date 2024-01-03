@@ -4,6 +4,27 @@ Date: Sun, 24 Sep 2023 13:30:00 +0200
 Subject: [PATCH] Integrated command system from kissen into paper
 
 
+diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+index ecf9159f6ea00fe6ab888fef65cc71f52c62cff9..fa04995b10bac05deeea451730a80493486c6b50 100644
+--- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
++++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+@@ -27,6 +27,8 @@ import net.kissenpvp.core.base.KissenCore;
+ import net.kissenpvp.core.permission.PermissionImplementation;
+ import net.kissenpvp.paper.api.base.PaperKissen;
+ import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
++import net.kissenpvp.paper.api.command.PaperCommandImplementation;
++import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
+ import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
+ import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
+ import net.kissenpvp.paper.user.KissenPaperUserImplementation;
+@@ -57,6 +59,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+         loader.put(PermissionImplementation.class, permissionImplementation);
+         loader.put(PaperPermissionImplementation.class, permissionImplementation);
+         loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());
++        loader.put(PaperCommandImplementation.class, new KissenPaperCommandImplementation());
+         super.loadImplementations(loader);
+     }
+ 
 diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..5fdffe91d30c9092cb85fba3837fccefca0b2688
@@ -1602,7 +1623,7 @@ index 55f3f5396dac2b0bb0cc37b537547e9245042100..eff8afd147fee57a2507cc1278774f11
              if (event.message() != null) {
                  commandlistenerwrapper.sendFailure(io.papermc.paper.adventure.PaperAdventure.asVanilla(event.message()), false);
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index e56781fc0ec27ebbb95872b65838532c907d7f50..8bab4b7332496d1c364bd51021e42aea70cb8806 100644
+index 34a2a20bf3da87bcafe71140a0d9002894f1b293..9331e10482047c03ed803bd78b6718580fe250f2 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -994,18 +994,27 @@ public final class CraftServer implements Server {

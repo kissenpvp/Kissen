@@ -57,6 +57,37 @@ index 0000000000000000000000000000000000000000..55167ae5fef79f24545df34479443dbb
 +        return null;
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+index cf608a90d188c853d72326b7763995f9fa72a3e4..7782933e7eeca7e30aa903b03a19625e90d00dc3 100644
+--- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
++++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+@@ -21,8 +21,13 @@ package net.kissenpvp.paper.base;
+ import net.kissenpvp.core.api.base.Implementation;
+ import net.kissenpvp.core.api.database.meta.ObjectMeta;
+ import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
++import net.kissenpvp.core.api.user.UserImplementation;
+ import net.kissenpvp.core.base.KissenCore;
++import net.kissenpvp.core.permission.PermissionImplementation;
+ import net.kissenpvp.paper.api.base.PaperKissen;
++import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
++import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
++import net.kissenpvp.paper.user.KissenPaperUserImplementation;
+ import org.bukkit.Bukkit;
+ import org.jetbrains.annotations.NotNull;
+ import org.slf4j.Logger;
+@@ -45,6 +50,12 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+     @Override
+     protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader)
+     {
++        loader.put(UserImplementation.class, new KissenPaperUserImplementation());
++
++        KissenPaperPermissionImplementation permissionImplementation = new KissenPaperPermissionImplementation();
++        loader.put(PermissionImplementation.class, permissionImplementation);
++        loader.put(PaperPermissionImplementation.class, permissionImplementation);
++
+         super.loadImplementations(loader);
+     }
+ 
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..24dc0f73925de7b7353c9db5c2d3dc0f4d4fa67d
@@ -594,10 +625,10 @@ index 0000000000000000000000000000000000000000..7a22a03f4c65ff2c5cb8d8362802c26f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..5c80072efcb49d40f2d08b93d3a45c3615aa7b2c
+index 0000000000000000000000000000000000000000..5811624838c5edebd1a1f8a6593fa08772490209
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
-@@ -0,0 +1,156 @@
+@@ -0,0 +1,163 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -661,8 +692,15 @@ index 0000000000000000000000000000000000000000..5c80072efcb49d40f2d08b93d3a45c36
 +        localize.register("server.permission.set.failed", new MessageFormat(prefix + " has already set {1} to {2}."));
 +        localize.register("server.permission.group.failed", new MessageFormat(prefix + " is already in this state within the relation to group {1}."));
 +        localize.register("server.permission.group.success", new MessageFormat(prefix + " has been set to the state."));
-+        localize.register("server.permission.unset.success", new MessageFormat(prefix + "s permission {1} was successfully unset."));
-+        localize.register("server.permission.unset.failed", new MessageFormat(prefix + " does not have the permission {1}."));
++        localize.register("server.permission.unset.success", new MessageFormat("The permission {1} from the permission entry {0} was successfully unset."));
++        localize.register("server.permission.entity.failed", new MessageFormat(prefix + " does not have the permission {1}."));
++
++        localize.register("server.permission.info.compact", new MessageFormat("[{0}] [{1}] {2}"));
++
++        localize.register("server.permission.owner", new MessageFormat("Owner"));
++        localize.register("server.permission.info.clear", new MessageFormat(prefix + " has no permissions."));
++
++
 +
 +        return PaperPermissionImplementation.super.start();
 +    }
@@ -803,27 +841,38 @@ index 0000000000000000000000000000000000000000..cd1fcaf854c79050d661b2b04dc14050
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java b/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..18921b374a211c0184c5853a34743abcfa96cccc
+index 0000000000000000000000000000000000000000..e4ea34ff0194477c82be70fa6344cf175316ee1d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java
-@@ -0,0 +1,120 @@
+@@ -0,0 +1,222 @@
 +package net.kissenpvp.paper.permission;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.core.api.command.annotations.CommandData;
 +import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
++import net.kissenpvp.core.api.message.ThemeProvider;
++import net.kissenpvp.core.api.util.PageBuilder;
++import net.kissenpvp.core.api.util.PageImplementation;
 +import net.kissenpvp.paper.api.permission.PaperGroubablePermissionEntry;
 +import net.kissenpvp.paper.api.permission.PaperPermission;
 +import net.kissenpvp.paper.api.permission.PaperPermissionEntry;
 +import net.kissenpvp.paper.api.permission.PaperPermissionGroup;
 +import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.TextComponent;
++import net.kyori.adventure.text.TranslatableComponent;
++import net.kyori.adventure.text.format.TextColor;
++import org.bukkit.Bukkit;
 +import org.bukkit.OfflinePlayer;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
 +
++import java.util.Comparator;
++import java.util.List;
 +import java.util.Optional;
-+import java.util.function.Consumer;
++import java.util.Set;
 +import java.util.function.Function;
++import java.util.function.Supplier;
++import java.util.stream.Stream;
 +
 +public class PermissionCommand
 +{
@@ -834,70 +883,162 @@ index 0000000000000000000000000000000000000000..18921b374a211c0184c5853a34743abc
 +    }
 +
 +    @CommandData(value = "permission.user", permission = "*", runAsync = true)
-+    public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull PermissionParser.PermissionArgument permission, @NotNull Optional<PermissionAction> value)
++    public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull Optional<PermissionParser.PermissionArgument> permission, @NotNull Optional<PermissionAction> value)
 +    {
-+        executeAction(commandPayload.getSender(), offlinePlayer, permission.permission(), value);
++        String stringPermission = permission.map(PermissionParser.PermissionArgument::permission).orElse("");
++        commandPayload.getSender().sendMessage(executeAction(offlinePlayer, stringPermission, value));
 +    }
 +
 +    @CommandData(value = "permission.user.group.add", permission = "*", runAsync = true)
 +    public void permissionGroupAdd(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull PaperPermissionGroup permissionGroup)
 +    {
-+        setGroup(commandPayload.getSender(), true, offlinePlayer, permissionGroup);
++        commandPayload.getSender().sendMessage(setGroup(true, offlinePlayer, permissionGroup));
 +    }
 +
 +    @CommandData(value = "permission.user.group.remove", permission = "*", runAsync = true)
 +    public void permissionGroupRemove(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull PaperPermissionGroup permissionGroup)
 +    {
-+        setGroup(commandPayload.getSender(), false, offlinePlayer, permissionGroup);
++        commandPayload.getSender().sendMessage(setGroup(false, offlinePlayer, permissionGroup));
 +    }
 +
 +    @CommandData(value = "permission.group.group.add", permission = "*", runAsync = true)
 +    public void permissionGroupAdd(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PaperPermissionGroup permissionGroup)
 +    {
-+        setGroup(commandPayload.getSender(), true, group, permissionGroup);
++        commandPayload.getSender().sendMessage(setGroup(true, group, permissionGroup));
 +    }
 +
 +    @CommandData(value = "permission.group.group.remove", permission = "*", runAsync = true)
 +    public void permissionGroupRemove(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PaperPermissionGroup permissionGroup)
 +    {
-+        setGroup(commandPayload.getSender(), false, group, permissionGroup);
++        commandPayload.getSender().sendMessage(setGroup(false, group, permissionGroup));
 +    }
 +
 +    @CommandData(value = "permission.group", permission = "*", runAsync = true)
-+    public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup paperPermissionGroup, @NotNull PermissionParser.PermissionArgument permission, @NotNull Optional<PermissionAction> value)
++    public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup paperPermissionGroup, @NotNull Optional<PermissionParser.PermissionArgument> permission, @NotNull Optional<PermissionAction> value)
 +    {
-+        executeAction(commandPayload.getSender(), paperPermissionGroup, permission.permission(), value);
++        String stringPermission = permission.map(PermissionParser.PermissionArgument::permission).orElse("");
++        commandPayload.getSender().sendMessage(executeAction(paperPermissionGroup, stringPermission, value));
 +    }
 +
-+    private void setGroup(@NotNull CommandSender sender, boolean add, @NotNull PaperGroubablePermissionEntry permissionEntry, @NotNull PaperPermissionGroup permissionGroup)
++    @CommandData(value = "permissioninfo", aliases = {"peri"})
++    public void permissionInfo() {throw new ArgumentMissingException();}
++
++    @CommandData("permissioninfo.user")
++    public void permissionInfoUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull Optional<Integer> page)
++    {
++        commandPayload.getSender().sendMessage(buildInfoComponent(offlinePlayer, page.orElse(1)));
++    }
++
++    @CommandData("permissioninfo.user.permission")
++    public void permissionInfoUserPermission(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull String permission)
++    {
++        commandPayload.getSender().sendMessage(buildInfoComponent(offlinePlayer, permission));
++    }
++
++    @CommandData("permissioninfo.group")
++    public void permissionInfoGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup permissionGroup, @NotNull Optional<Integer> page)
++    {
++        commandPayload.getSender().sendMessage(buildInfoComponent(permissionGroup, page.orElse(1)));
++    }
++
++    @CommandData("permissioninfo.group.permission")
++    public void permissionInfoGroupPermission(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup permissionGroup, @NotNull String permission)
++    {
++        commandPayload.getSender().sendMessage(buildInfoComponent(permissionGroup, permission));
++    }
++
++    private @NotNull Component buildInfoComponent(@NotNull PaperGroubablePermissionEntry permissionEntry, @NotNull String permission)
++    {
++        return permissionEntry.getPermission(permission).map(paperPermission ->
++        {
++
++            Component header = Component.translatable("server.command.general.header", permissionEntry.displayName());
++            Component footer = Component.translatable("server.command.general.footer", permissionEntry.displayName());
++            TranslatableComponent keyValue = Component.translatable("server.command.general.key.value");
++
++            Component id = Component.translatable("server.general.id").color(ThemeProvider.general());
++            Component owner = Component.translatable("server.permission.owner").color(ThemeProvider.general());
++
++            TextComponent.Builder builder = Component.text().appendNewline().append(header);
++            builder.appendNewline().append(keyValue.arguments(id, Component.text(paperPermission.getName())));
++            builder.appendNewline().append(keyValue.arguments(owner, paperPermission.getOwner().displayName()));
++            builder.appendNewline().append(footer);
++            return builder.asComponent();
++        }).orElseGet(() -> Component.translatable("server.permission.entity.failed", permissionEntry.displayName(), Component.text(permission)));
++    }
++
++    private @NotNull Component buildInfoComponent(@NotNull PaperGroubablePermissionEntry permissionEntry, int page)
++    {
++        Set<PaperPermission> permissionSet = permissionEntry.getPermissionList();
++        if(permissionSet.isEmpty())
++        {
++            return Component.translatable("server.permission.info.clear", permissionEntry.displayName());
++        }
++        PageBuilder<PaperPermission> pageBuilder = getPagedPermissions(permissionEntry, permissionSet);
++
++        int current = page;
++        if(page > pageBuilder.getLastPage())
++        {
++            current = pageBuilder.getLastPage();
++        }
++        else if (page < 1)
++        {
++            current = 1;
++        }
++
++        Component currentPageComponent = Component.text(current);
++        Component lastPageComponent = Component.text(pageBuilder.getLastPage());
++
++        Component header = Component.translatable("server.command.general.header.paged", permissionEntry.displayName(), currentPageComponent, lastPageComponent);
++        Component footer = Component.translatable("server.command.general.footer.paged", permissionEntry.displayName(), currentPageComponent, lastPageComponent);
++
++        TextComponent.Builder builder = Component.text().appendNewline().append(header);
++        pageBuilder.getEntries(current).forEach(per ->
++        {
++            TextColor statusColor = per.getValue() ? ThemeProvider.enabled() : ThemeProvider.disabled();
++            Component[] args = {Component.text(per.getValue() ? "✔" : "❌").color(statusColor), per.getOwner().displayName().color(ThemeProvider.secondary()), Component.text(per.getName()).color(ThemeProvider.general())};
++            builder.appendNewline().append(Component.translatable("server.permission.info.compact", args));
++        });
++        builder.appendNewline().append(footer);
++        return builder.asComponent();
++    }
++
++    private @NotNull PageBuilder<PaperPermission> getPagedPermissions(@NotNull PaperGroubablePermissionEntry permissionEntry, @NotNull Set<PaperPermission> permissionSet)
++    {
++        Stream<PaperPermission> stream = permissionSet.stream();
++        Comparator<PaperPermission> comparator = (a, b) -> CharSequence.compare(a.getOwner().getPermissionID(), b.getOwner().getPermissionID());
++        List<PaperPermission> sortedPermissions = stream.sorted(comparator).toList();
++        return Bukkit.getKissen().getImplementation(PageImplementation.class).createPageBuilder(sortedPermissions);
++    }
++
++    private @NotNull Component setGroup(boolean add, @NotNull PaperGroubablePermissionEntry permissionEntry, @NotNull PaperPermissionGroup permissionGroup)
 +    {
 +        if(!(add ? permissionGroup.addMember(permissionEntry) : permissionGroup.removeMember(permissionEntry)))
 +        {
-+            sender.sendMessage(Component.translatable("server.permission.group.failed", permissionEntry.displayName(), permissionGroup.displayName()));
-+            return;
++            return Component.translatable("server.permission.group.failed", permissionEntry.displayName(), permissionGroup.displayName());
 +        }
-+        sender.sendMessage(Component.translatable("server.permission.group.success", permissionEntry.displayName()));
++        return Component.translatable("server.permission.group.success", permissionEntry.displayName());
 +    }
 +
-+    private void executeAction(@NotNull CommandSender sender, @NotNull PaperGroubablePermissionEntry permissionEntry, @NotNull String permission, @NotNull Optional<PermissionAction> value)
++    private @NotNull Component executeAction(@NotNull PaperGroubablePermissionEntry permissionEntry, @NotNull String permission, @NotNull Optional<PermissionAction> value)
 +    {
-+        Runnable setPermission = () -> setPermission(sender, permissionEntry, permission, value.map(permissionAction -> Boolean.parseBoolean(permissionAction.name())));
-+        Consumer<PermissionAction> unset = (a) -> unsetPermission(sender, permissionEntry, permission);
-+        value.filter(action -> action.equals(PermissionAction.UNSET)).ifPresentOrElse(unset, setPermission);
++        Function<PermissionAction, Boolean> mapper = permissionAction -> Boolean.parseBoolean(permissionAction.name());
++        Supplier<Component> set = () -> setPermission(permissionEntry, permission, value.map(mapper));
++        Function<PermissionAction, Component> unset = (a) -> unsetPermission(permissionEntry, permission);
++        return value.filter(action -> action.equals(PermissionAction.UNSET)).map(unset).orElseGet(set);
 +    }
 +
-+    private void unsetPermission(@NotNull CommandSender sender, @NotNull PaperPermissionEntry permissionEntry, @NotNull String permission)
++    private @NotNull Component unsetPermission(@NotNull PaperPermissionEntry permissionEntry, @NotNull String permission)
 +    {
 +        Component[] args = {permissionEntry.displayName(), Component.text(permission)};
 +        if(!permissionEntry.unsetPermission(permission))
 +        {
-+            sender.sendMessage(Component.translatable("server.permission.unset.failed", args));
-+            return;
++            return Component.translatable("server.permission.unset.failed", args);
 +        }
-+        sender.sendMessage(Component.translatable("server.permission.unset.success", args));
++        return Component.translatable("server.permission.unset.success", args);
 +    }
 +
-+    private void setPermission(@NotNull CommandSender sender, @NotNull PaperGroubablePermissionEntry permissionEntry, @NotNull String permission, @NotNull Optional<Boolean> value)
++    private @NotNull Component setPermission(@NotNull PaperGroubablePermissionEntry permissionEntry, @NotNull String permission, @NotNull Optional<Boolean> value)
 +    {
 +        boolean newValue = value.orElseGet(() -> permissionEntry.getOwnPermission(permission).map(paperPermission -> !paperPermission.getValue()).orElse(true));
 +        Component[] args = {permissionEntry.displayName(), Component.text(permission), Component.text(newValue)};
@@ -905,8 +1046,7 @@ index 0000000000000000000000000000000000000000..18921b374a211c0184c5853a34743abc
 +        Component failed = Component.translatable("server.permission.set.failed", args);
 +
 +        Function<PaperPermission, Component> mapper = paperPermission -> component;
-+        Component message = setPermission(permissionEntry, permission, newValue).map(mapper).orElse(failed);
-+        sender.sendMessage(message);
++        return setPermission(permissionEntry, permission, newValue).map(mapper).orElse(failed);
 +    }
 +
 +    private @NotNull Optional<PaperPermission> setPermission(@NotNull PaperGroubablePermissionEntry permissionEntry, @NotNull String permission, boolean value)
@@ -1513,10 +1653,10 @@ index 0000000000000000000000000000000000000000..47a6ac2970d4713bcee00a30a6b8f707
 +
 diff --git a/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java b/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f1c968088303b6a8d3012a77c59364ab4b81078c
+index 0000000000000000000000000000000000000000..27a53bc8605ca4cf77ab058b9153ff0222ee9aa7
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,193 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1553,6 +1693,8 @@ index 0000000000000000000000000000000000000000..f1c968088303b6a8d3012a77c59364ab
 +
 +import java.util.HashSet;
 +import java.util.Set;
++import java.util.function.BiConsumer;
++import java.util.function.Function;
 +import java.util.logging.Level;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
@@ -1674,14 +1816,15 @@ index 0000000000000000000000000000000000000000..f1c968088303b6a8d3012a77c59364ab
 +    @Override
 +    public @NotNull @Unmodifiable Set<PaperPermission> getPermissionList() {
 +
-+        Set<KissenPaperAttachmentPermission> kissenPaperAttachmentPermissions = new HashSet<>();
-+        for (PermissionAttachment permissionAttachment : attachments) {
-+            permissionAttachment.getPermissions()
-+                    .forEach((key, value) -> kissenPaperAttachmentPermissions.add(new KissenPaperAttachmentPermission(permissionAttachment, key, value, KissenPaperPermissible.this, true)));
++        Set<KissenPaperAttachmentPermission> permissions = new HashSet<>();
++        for (PermissionAttachment attachment : attachments)
++        {
++            BiConsumer<String, Boolean> transform = (key, value) -> permissions.add(
++                    new KissenPaperAttachmentPermission(attachment, key, value, KissenPaperPermissible.this, true));
++            attachment.getPermissions().forEach(transform);
 +        }
 +
-+        return Stream.concat(super.getPermissionList()
-+                .stream(), kissenPaperAttachmentPermissions.stream()).collect(Collectors.toSet());
++        return Stream.concat(super.getPermissionList().stream(), permissions.stream()).collect(Collectors.toSet());
 +    }
 +
 +    /**

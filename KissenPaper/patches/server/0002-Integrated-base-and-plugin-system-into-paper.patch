@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated base and plugin system into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-index 846bdcccf1031e41c4da29da885aa4d438507631..d0bb3702dbe8901fba04c4f39542cbee3389814d 100644
+index 04efba1517e2bde8ecced31ab2eb669b2e84a28c..6293e86189a4fc6459dd4ded7ed1ee534166ea9c 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 @@ -146,7 +146,13 @@ class PaperPluginInstanceManager {
@@ -48,10 +48,10 @@ index cb9b13522a976b82bcb71cef486f11f4172e3e99..862625f912d8e8d980f06f58f7bef353
              provided.getSLF4JLogger().error("Error initializing plugin '%s' in folder '%s' (Is it up to date?)".formatted(provider.getFileName(), provider.getParentSource()), ex);
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..4446e728cd8c2a3869d0092000c347a44ca8bd39
+index 0000000000000000000000000000000000000000..cf608a90d188c853d72326b7763995f9fa72a3e4
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -0,0 +1,77 @@
+@@ -0,0 +1,85 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -72,6 +72,7 @@ index 0000000000000000000000000000000000000000..4446e728cd8c2a3869d0092000c347a4
 +
 +package net.kissenpvp.paper.base;
 +
++import net.kissenpvp.core.api.base.Implementation;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
 +import net.kissenpvp.core.base.KissenCore;
@@ -80,6 +81,7 @@ index 0000000000000000000000000000000000000000..4446e728cd8c2a3869d0092000c347a4
 +import org.jetbrains.annotations.NotNull;
 +import org.slf4j.Logger;
 +
++import java.util.Map;
 +import java.util.UUID;
 +
 +// KissenPaper
@@ -92,6 +94,12 @@ index 0000000000000000000000000000000000000000..4446e728cd8c2a3869d0092000c347a4
 +     */
 +    public KissenPaperCore(@NotNull Logger logger) {
 +        super(logger);
++    }
++
++    @Override
++    protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader)
++    {
++        super.loadImplementations(loader);
 +    }
 +
 +    @Override
@@ -196,7 +204,7 @@ index 58536aabf607015939a1326f80207c0a06eed8ff..ad490e648633817e7454bd62a4a95bb6
              this.setLocalIp("127.0.0.1");
          } else {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index e011cfcdda2e0a609d4158b0454bdf046b04c9d9..e56781fc0ec27ebbb95872b65838532c907d7f50 100644
+index 142d2c48239d4ebe3896218536656d116cd24d7c..34a2a20bf3da87bcafe71140a0d9002894f1b293 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -545,7 +545,13 @@ public final class CraftServer implements Server {

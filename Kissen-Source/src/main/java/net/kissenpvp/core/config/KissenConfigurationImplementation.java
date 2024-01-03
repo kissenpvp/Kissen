@@ -19,13 +19,22 @@
 package net.kissenpvp.core.config;
 
 import lombok.Getter;
+import net.kissenpvp.core.api.base.ServerName;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.config.InvalidValueException;
 import net.kissenpvp.core.api.config.Option;
 import net.kissenpvp.core.api.config.UnregisteredException;
+import net.kissenpvp.core.api.message.settings.DefaultLanguage;
 import net.kissenpvp.core.api.reflection.ReflectionImplementation;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.database.settings.DatabaseDNS;
+import net.kissenpvp.core.database.settings.KeepSQLiteFile;
+import net.kissenpvp.core.message.localization.settings.HighlightVariables;
+import net.kissenpvp.core.message.localization.settings.InsertMissingTranslation;
+import net.kissenpvp.core.message.settings.*;
+import net.kissenpvp.core.message.settings.prefix.*;
+import net.kissenpvp.core.networking.socket.ssl.settings.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -47,7 +56,28 @@ public class KissenConfigurationImplementation implements ConfigurationImplement
 
     public KissenConfigurationImplementation() {
         kissenPluginSetMap = new HashMap<>();
-        this.internalOptions = new HashSet<>();
+        internalOptions = new HashSet<>();
+        internalOptions.add(new ClientCertificateLocation());
+        internalOptions.add(new ClientCertificatePassword());
+        internalOptions.add(new DatabaseDNS());
+        internalOptions.add(new DefaultColor());
+        internalOptions.add(new DefaultDisabledColor());
+        internalOptions.add(new DefaultEnabledColor());
+        internalOptions.add(new DefaultLanguage());
+        internalOptions.add(new DefaultPrimaryColor());
+        internalOptions.add(new DefaultSecondaryColor());
+        internalOptions.add(new EnableSSLEncryption());
+        internalOptions.add(new HighlightVariables());
+        internalOptions.add(new InsertMissingTranslation());
+        internalOptions.add(new KeepSQLiteFile());
+        internalOptions.add(new PrefixError());
+        internalOptions.add(new PrefixEvent());
+        internalOptions.add(new PrefixNormal());
+        internalOptions.add(new PrefixSupport());
+        internalOptions.add(new PrefixTeam());
+        internalOptions.add(new ServerCertificateLocation());
+        internalOptions.add(new ServerCertificatePassword());
+        internalOptions.add(new ServerName());
     }
 
     @Override
@@ -59,7 +89,7 @@ public class KissenConfigurationImplementation implements ConfigurationImplement
                 .orElseThrow(UnregisteredException::new);
     }
 
-    public void registerOption(Class<? extends Option<?>> option) {
+    public void registerOption(@NotNull Class<? extends Option<?>> option) {
         internalOptions.add((Option<?>) KissenCore.getInstance()
                 .getImplementation(ReflectionImplementation.class)
                 .loadClass(option)
@@ -78,18 +108,18 @@ public class KissenConfigurationImplementation implements ConfigurationImplement
         kissenPluginSetMap.get(kissenPlugin).add(optionInstance);
     }
 
-    public void loadInternalConfiguration(@NotNull File file, @NotNull Set<Class<? extends Option<?>>> internalOptionSet) throws IOException {
+    public void loadInternalConfiguration(@NotNull File file) throws IOException {
         if (!file.exists()) {
             if (!file.createNewFile()) {
                 throw new IOException("Could not create config file!");
             }
         }
-        KissenConfigurationImplementation kissenConfigurationImplementation = KissenCore.getInstance()
-                .getImplementation(KissenConfigurationImplementation.class);
-        internalOptionSet.forEach(kissenConfigurationImplementation::registerOption);
-        write(file, internalOptions.stream()
-                .sorted((o1, o2) -> CharSequence.compare(o1.getGroup(), o2.getGroup()))
-                .toList());
+
+        Class<KissenConfigurationImplementation> clazz = KissenConfigurationImplementation.class;
+        KissenCore instance = KissenCore.getInstance();
+
+        KissenConfigurationImplementation kissenConfigurationImplementation = instance.getImplementation(clazz);
+        write(file, internalOptions.stream().sorted((o1, o2) -> CharSequence.compare(o1.getGroup(), o2.getGroup())).toList());
     }
 
     public void loadPlugin(@NotNull KissenPlugin plugin) {
