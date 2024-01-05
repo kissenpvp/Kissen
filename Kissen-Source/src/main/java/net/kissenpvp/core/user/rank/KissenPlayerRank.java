@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.user.rank;
 
+import com.jogamp.opengl.FBObject;
 import lombok.Getter;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.user.rank.PlayerRank;
@@ -57,8 +58,10 @@ public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject imple
     }
 
     @Override
-    public @NotNull Optional<T> getSource() {
-        return (Optional<T>) KissenCore.getInstance().getImplementation(RankImplementation.class).getRank(kissenPlayerRankNode.rankID());
+    public @NotNull T getSource()
+    {
+        RankImplementation<T> rankImplementation = KissenCore.getInstance().getImplementation(RankImplementation.class);
+        return rankImplementation.getRank(kissenPlayerRankNode.rankID()).orElseThrow(NullPointerException::new);
     }
 
     @Override
@@ -70,6 +73,18 @@ public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject imple
 
         rewriteEnd(end);
         dataWriter.update(kissenPlayerRankNode);
+    }
+
+    @Override
+    public boolean isValid()
+    {
+        try
+        {
+            getSource();
+            return super.isValid();
+        }
+        catch (NullPointerException ignored) {}
+        return false;
     }
 
     @Override

@@ -50,6 +50,7 @@ import net.kissenpvp.core.user.suffix.SuffixNode;
 import net.kissenpvp.core.user.usersettings.KissenUserBoundSettings;
 import net.kissenpvp.core.time.TemporalMeasureNode;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -184,7 +185,12 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
 
     @Override
     public @NotNull Component styledRankName() {
-        return getRank().getSource().map(rank -> Component.empty().append(rank.getPrefix().map(prefix -> prefix.append(Component.space())).orElse(Component.empty())).append(displayName()).append(rank.getSuffix().map(suffix -> Component.space().append(suffix)).orElse(Component.empty()))).orElse(Component.empty().append(displayName()));
+        TextComponent.Builder builder = Component.text();
+        Rank rank = getRank().getSource();
+        rank.getPrefix().ifPresent(prefix -> builder.append(prefix).appendSpace());
+        builder.append(displayName());
+        getSelectedSuffix().ifPresent(suffix -> builder.appendSpace().append(suffix.getContent()));
+        return builder.asComponent();
     }
 
     @Override
@@ -314,7 +320,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
             return Optional.empty();
         }
         for (int i = rankList.size() - 1; i > -1; i--) {
-            if (rankList.get(i).getSource().isPresent() && rankList.get(i).isValid()) {
+            if (rankList.get(i).isValid()) {
                 index = i;
                 break;
             }
