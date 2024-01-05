@@ -3205,10 +3205,10 @@ index 0000000000000000000000000000000000000000..91c2b03b62c15525b63a597974b2134a
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperFallBackRank.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperFallBackRank.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..aff8832d798ef05cb627b1414d9ba04dc8eb4c3b
+index 0000000000000000000000000000000000000000..b16bca5af55d0a4b487637e52801a9c9aa8713e1
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperFallBackRank.java
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,40 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -3236,7 +3236,6 @@ index 0000000000000000000000000000000000000000..aff8832d798ef05cb627b1414d9ba04d
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.util.Optional;
 +import java.util.Set;
 +import java.util.stream.Collectors;
 +
@@ -3245,14 +3244,14 @@ index 0000000000000000000000000000000000000000..aff8832d798ef05cb627b1414d9ba04d
 +    public @NotNull @Unmodifiable Set<PaperPlayerClient> getPlayers() {
 +        return Bukkit.getOnlinePlayers().stream().filter(playerClient ->
 +        {
-+            Optional<PaperRank> paperRankOptional = playerClient.getRank().getSource();
-+            return paperRankOptional.isPresent() && paperRankOptional.get().equals(this);
++            PaperRank paperRank = playerClient.getRank().getSource();
++            return paperRank.equals(this);
 +        }).collect(Collectors.toUnmodifiableSet());
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperPlayerFallBackRank.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperPlayerFallBackRank.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..964ee85ac174bf0badf6bb3444be4879cd0efdbf
+index 0000000000000000000000000000000000000000..fd705fc8b5b827e7e6b341bff03228c001694f4c
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperPlayerFallBackRank.java
 @@ -0,0 +1,34 @@
@@ -3285,9 +3284,9 @@ index 0000000000000000000000000000000000000000..964ee85ac174bf0badf6bb3444be4879
 +
 +public class KissenPaperPlayerFallBackRank extends KissenPlayerFallBackRank<PaperRank> implements PaperPlayerRank
 +{
-+    @Override public @NotNull Optional<PaperRank> getSource()
++    @Override public @NotNull PaperRank getSource()
 +    {
-+        return Optional.of(new KissenPaperFallBackRank());
++        return new KissenPaperFallBackRank();
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperPlayerRank.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperPlayerRank.java

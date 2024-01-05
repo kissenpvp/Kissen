@@ -36,5 +36,5 @@ public interface PlayerRank<RANK extends Rank> extends TemporalObject {
      */
     @NotNull String getID();
 
-    @NotNull Optional<RANK> getSource();
+    @NotNull RANK getSource();
 }
