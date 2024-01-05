@@ -47,6 +47,7 @@ public abstract class UserColorSetting implements PlayerSetting<NamedTextColor> 
                         new UserValue<>(NamedTextColor.DARK_AQUA),
                         new UserValue<>(NamedTextColor.DARK_RED),
                         new UserValue<>(NamedTextColor.DARK_PURPLE),
+                        new UserValue<>(NamedTextColor.DARK_GREEN),
                         new UserValue<>(NamedTextColor.GOLD),
                         new UserValue<>(NamedTextColor.BLUE),
                         new UserValue<>(NamedTextColor.GREEN),

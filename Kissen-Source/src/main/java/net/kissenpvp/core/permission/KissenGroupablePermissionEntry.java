@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 public abstract class KissenGroupablePermissionEntry<T extends Permission> extends KissenPermissionEntry<T> implements PermissionCollector<T>
 {
 
-    private Set<T> cachedPermissions;
+    private volatile Set<T> cachedPermissions;
 
     @Override
     public @NotNull T setPermission(@NotNull String permission, boolean value) throws EventCancelledException
@@ -69,7 +69,6 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
     @Override
     public synchronized @NotNull @Unmodifiable Set<T> getPermissionList() {
         if (cachedPermissions == null) {
-            KissenCore.getInstance().getLogger().info("Calculating permission from entry: {}.", getPermissionID());
             cachedPermissions = calculatePermissions();
         }
         return Collections.unmodifiableSet(cachedPermissions);
@@ -118,10 +117,15 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
 
     @Override
     public void permissionUpdate() {
-        cachedPermissions = null;
+        clearCache();
     }
 
 
+    public void clearCache()
+    {
+        cachedPermissions = null;
+        KissenCore.getInstance().getLogger().debug("{}s cache has been cleared.", getPermissionID());
+    }
 
     private @NotNull Stream<T> getPermissionStream()
     {

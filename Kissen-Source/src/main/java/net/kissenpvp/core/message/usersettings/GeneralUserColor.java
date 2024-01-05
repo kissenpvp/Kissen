@@ -29,7 +29,7 @@ public class GeneralUserColor extends UserColorSetting
 {
     @Override public @NotNull String getKey()
     {
-        return "defaultcolor";
+        return "generalcolor";
     }
 
     @Override

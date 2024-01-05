@@ -22,6 +22,8 @@ import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.CompletableFuture;
+
 public abstract class KissenQuerySelect extends KissenQueryComponent<QuerySelect> implements QuerySelect {
     private final Column[] columns;
 
@@ -39,7 +41,7 @@ public abstract class KissenQuerySelect extends KissenQueryComponent<QuerySelect
         public KissenRootQuerySelect(@NotNull Column... columns) {
             this.setQueryComponent(new KissenQuerySelect(columns) {
                 @Override
-                public String[][] execute() {
+                public @NotNull CompletableFuture<String[][]> execute() {
                     return KissenRootQuerySelect.this.execute();
                 }
             });

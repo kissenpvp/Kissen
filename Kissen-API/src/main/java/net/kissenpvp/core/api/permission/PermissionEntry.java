@@ -19,6 +19,7 @@
 package net.kissenpvp.core.api.permission;
 
 import net.kissenpvp.core.api.event.EventCancelledException;
+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,7 +55,9 @@ public interface PermissionEntry<T extends Permission> {
 
     @NotNull Optional<T> getPermission(@NotNull String permission);
 
-    @NotNull @Unmodifiable Set<UUID> getAffectedPermissionPlayer();
+    @NotNull @Unmodifiable Set<UUID> getAffectedUsers();
+
+    @NotNull @Unmodifiable Set<GroupablePermissionEntry<T>> getConnectedEntries();
 
     boolean hasPermission(@NotNull String permission);
 

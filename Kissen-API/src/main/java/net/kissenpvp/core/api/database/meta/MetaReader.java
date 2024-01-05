@@ -24,11 +24,11 @@ import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * The MetaReader interface represents a reader for retrieving meta values from a database.
@@ -77,7 +77,7 @@ public interface MetaReader extends Serializable {
      * @return The value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<String> getString(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<String> getString(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved string value associated with the specified {@code key}.
@@ -103,7 +103,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see MetaWriter#setString(String, String, String)
      */
-    @NotNull Optional<String> getString(@NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<String> getString(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved long value associated with the specified {@code totalID} and {@code key}.
@@ -130,7 +130,7 @@ public interface MetaReader extends Serializable {
      * @return The long value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<Long> getLong(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Long> getLong(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved long value associated with the specified {@code key}.
@@ -156,7 +156,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getLong(String, String)
      */
-    @NotNull Optional<Long> getLong(@NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Long> getLong(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved double value associated with the specified {@code totalID} and {@code key}.
@@ -183,7 +183,7 @@ public interface MetaReader extends Serializable {
      * @return The double value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<Double> getDouble(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Double> getDouble(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved double value associated with the specified {@code key}.
@@ -209,7 +209,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getDouble(String, String)
      */
-    @NotNull Optional<Double> getDouble(@NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Double> getDouble(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved float value associated with the specified {@code totalID} and {@code key}.
@@ -236,7 +236,7 @@ public interface MetaReader extends Serializable {
      * @return The float value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<Float> getFloat(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Float> getFloat(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved float value associated with the specified {@code key}.
@@ -262,7 +262,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getFloat(String, String)
      */
-    @NotNull Optional<Float> getFloat(@NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Float> getFloat(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved integer value associated with the specified {@code totalID} and {@code key}.
@@ -290,7 +290,7 @@ public interface MetaReader extends Serializable {
      * found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<Integer> getInt(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Integer> getInt(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved integer value associated with the specified {@code key}.
@@ -317,7 +317,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getInt(String, String)
      */
-    @NotNull Optional<Integer> getInt(@NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Integer> getInt(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved short value associated with the specified {@code totalID} and {@code key}.
@@ -344,7 +344,7 @@ public interface MetaReader extends Serializable {
      * @return The short value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<Short> getShort(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Short> getShort(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved short value associated with the specified {@code key}.
@@ -370,7 +370,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getShort(String, String)
      */
-    @NotNull Optional<Short> getShort(@NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Short> getShort(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved byte value associated with the specified {@code totalID} and {@code key}.
@@ -397,7 +397,7 @@ public interface MetaReader extends Serializable {
      * @return The byte value that was found if present, or an empty {@link Optional} if no value was found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<Byte> getByte(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Byte> getByte(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved byte value associated with the specified {@code key}.
@@ -423,7 +423,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getByte(String, String)
      */
-    @NotNull Optional<Byte> getByte(@NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Byte> getByte(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved boolean value associated with the specified {@code totalID} and {@code key}.
@@ -451,7 +451,7 @@ public interface MetaReader extends Serializable {
      * found.
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
      */
-    @NotNull Optional<Boolean> getBoolean(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Boolean> getBoolean(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved boolean value associated with the specified {@code key}.
@@ -478,7 +478,7 @@ public interface MetaReader extends Serializable {
      * @throws NullPointerException if {@code key} is {@code null}.
      * @see #getBoolean(String, String)
      */
-    @NotNull Optional<Boolean> getBoolean(@NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<Boolean> getBoolean(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved meta list from the table and returns it.
@@ -505,7 +505,7 @@ public interface MetaReader extends Serializable {
      * @see MetaWriter#setStringList(String, List)
      * @see #getStringList(String)
      */
-    @NotNull @Unmodifiable List<String> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<List<String>> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
      * Retrieves a previously saved meta list from the table and returns it.
@@ -531,7 +531,7 @@ public interface MetaReader extends Serializable {
      * @see MetaWriter#setStringList(String, List)
      * @see #getStringList(String, String)
      */
-    @NotNull @Unmodifiable List<String> getStringList(@NotNull String key) throws BackendException;
+    @NotNull CompletableFuture<List<String>> getStringList(@NotNull String key) throws BackendException;
 
     /**
      * Retrieves a list of records of the specified type associated with the meta in the table.
@@ -572,7 +572,7 @@ public interface MetaReader extends Serializable {
      * @see #getRecord(String, Class)
      * @see DataImplementation#toJson(Record)
      */
-    <T extends Record> @NotNull @Unmodifiable List<T> getRecordList(@NotNull String totalID, @NotNull String key,
+    <T extends Record> @NotNull CompletableFuture<List<T>> getRecordList(@NotNull String totalID, @NotNull String key,
                                                                     @NotNull Class<T> record) throws BackendException;
 
     /**
@@ -617,7 +617,7 @@ public interface MetaReader extends Serializable {
      * @see #getRecord(String, Class)
      * @see DataImplementation#toJson(Record)
      */
-    <T extends Record> @NotNull @Unmodifiable List<T> getRecordList(@NotNull String key, @NotNull Class<T> record) throws BackendException;
+    <T extends Record> @NotNull CompletableFuture<List<T>> getRecordList(@NotNull String key, @NotNull Class<T> record) throws BackendException;
 
     /**
      * Retrieves a record of type {@link Record} from the meta associated with the specified {@code totalID} and
@@ -662,7 +662,7 @@ public interface MetaReader extends Serializable {
      * @see #getRecord(String, Class)
      * @see DataImplementation#toJson(Record)
      */
-    <T extends Record> @NotNull Optional<T> getRecord(@NotNull String totalID, @NotNull String key,
+    <T extends Record> @NotNull CompletableFuture<T> getRecord(@NotNull String totalID, @NotNull String key,
                                                                 @NotNull Class<T> record) throws BackendException;
 
     /**
@@ -707,7 +707,7 @@ public interface MetaReader extends Serializable {
      * @see #getRecord(String, String, Class)
      * @see DataImplementation#toJson(Record)
      */
-    <T extends Record> @NotNull Optional<T> getRecord(@NotNull String key, @NotNull Class<T> record) throws BackendException;
+    <T extends Record> @NotNull CompletableFuture<T> getRecord(@NotNull String key, @NotNull Class<T> record) throws BackendException;
 
     @NotNull QueryUpdate.RootQueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective);
 

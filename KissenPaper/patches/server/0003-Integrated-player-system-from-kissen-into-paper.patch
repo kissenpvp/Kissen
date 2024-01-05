@@ -625,10 +625,10 @@ index 0000000000000000000000000000000000000000..7a22a03f4c65ff2c5cb8d8362802c26f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..5811624838c5edebd1a1f8a6593fa08772490209
+index 0000000000000000000000000000000000000000..f4afd748de5026d372240b1108d2c1a1fe96d7b0
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
-@@ -0,0 +1,163 @@
+@@ -0,0 +1,164 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -709,16 +709,17 @@ index 0000000000000000000000000000000000000000..5811624838c5edebd1a1f8a6593fa087
 +    public boolean postStart()
 +    {
 +        ObjectMeta publicMeta = Bukkit.getKissen().getPublicMeta();
-+        Collection<SavableMap> data = publicMeta.getData(new KissenPaperPublicPermissionGroup()).values();
-+
-+        for(SavableMap map : data)
++        publicMeta.getData(new KissenPaperPublicPermissionGroup()).thenAcceptAsync(maps ->
 +        {
-+            KissenPaperPublicPermissionGroup kissenPaperPublicPermissionGroup = new KissenPaperPublicPermissionGroup();
-+            kissenPaperPublicPermissionGroup.setup(map.getNotNull("id"), map);
-+            kissenPaperPublicPermissionGroup.getPrivatePermissionGroup(); // cache private group
-+            cachedGroups.add(new KissenPaperPermissionGroup(kissenPaperPublicPermissionGroup));
-+        }
-+        Bukkit.getKissen().getLogger().info("Successfully loaded {} permission group(s) from the database.", data.size());
++            for(SavableMap map : maps.values())
++            {
++                KissenPaperPublicPermissionGroup kissenPaperPublicPermissionGroup = new KissenPaperPublicPermissionGroup();
++                kissenPaperPublicPermissionGroup.setup(map.getNotNull("id"), map);
++                kissenPaperPublicPermissionGroup.getPrivatePermissionGroup(); // cache private group
++                cachedGroups.add(new KissenPaperPermissionGroup(kissenPaperPublicPermissionGroup));
++            }
++            Bukkit.getKissen().getLogger().info("Successfully loaded {} permission group(s) from the database.", cachedGroups.size());
++        });
 +
 +        return PaperPermissionImplementation.super.postStart();
 +    }
@@ -794,10 +795,10 @@ index 0000000000000000000000000000000000000000..5811624838c5edebd1a1f8a6593fa087
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/PaperPermissionGroupParser.java b/src/main/java/net/kissenpvp/paper/permission/PaperPermissionGroupParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..cd1fcaf854c79050d661b2b04dc1405023a27d50
+index 0000000000000000000000000000000000000000..ebfef6383ddb6dc7717e29ce6d6cb7f76b2c9093
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/PaperPermissionGroupParser.java
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,40 @@
 +package net.kissenpvp.paper.permission;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -805,7 +806,6 @@ index 0000000000000000000000000000000000000000..cd1fcaf854c79050d661b2b04dc14050
 +import net.kissenpvp.paper.api.command.PaperArgumentParser;
 +import net.kissenpvp.paper.api.permission.PaperPermissionGroup;
 +import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
-+import net.kissenpvp.paper.api.permission.PaperPrivatePermissionGroup;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
@@ -841,10 +841,10 @@ index 0000000000000000000000000000000000000000..cd1fcaf854c79050d661b2b04dc14050
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java b/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..e4ea34ff0194477c82be70fa6344cf175316ee1d
+index 0000000000000000000000000000000000000000..ff521a213f17e817ecc97e7faf6e284375c2c015
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java
-@@ -0,0 +1,222 @@
+@@ -0,0 +1,220 @@
 +package net.kissenpvp.paper.permission;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -883,10 +883,9 @@ index 0000000000000000000000000000000000000000..e4ea34ff0194477c82be70fa6344cf17
 +    }
 +
 +    @CommandData(value = "permission.user", permission = "*", runAsync = true)
-+    public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull Optional<PermissionParser.PermissionArgument> permission, @NotNull Optional<PermissionAction> value)
++    public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull PermissionParser.PermissionArgument permission, @NotNull Optional<PermissionAction> value)
 +    {
-+        String stringPermission = permission.map(PermissionParser.PermissionArgument::permission).orElse("");
-+        commandPayload.getSender().sendMessage(executeAction(offlinePlayer, stringPermission, value));
++        commandPayload.getSender().sendMessage(executeAction(offlinePlayer, permission.permission(), value));
 +    }
 +
 +    @CommandData(value = "permission.user.group.add", permission = "*", runAsync = true)
@@ -914,10 +913,9 @@ index 0000000000000000000000000000000000000000..e4ea34ff0194477c82be70fa6344cf17
 +    }
 +
 +    @CommandData(value = "permission.group", permission = "*", runAsync = true)
-+    public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup paperPermissionGroup, @NotNull Optional<PermissionParser.PermissionArgument> permission, @NotNull Optional<PermissionAction> value)
++    public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup paperPermissionGroup, @NotNull PermissionParser.PermissionArgument permission, @NotNull Optional<PermissionAction> value)
 +    {
-+        String stringPermission = permission.map(PermissionParser.PermissionArgument::permission).orElse("");
-+        commandPayload.getSender().sendMessage(executeAction(paperPermissionGroup, stringPermission, value));
++        commandPayload.getSender().sendMessage(executeAction(paperPermissionGroup, permission.permission(), value));
 +    }
 +
 +    @CommandData(value = "permissioninfo", aliases = {"peri"})
@@ -1033,7 +1031,7 @@ index 0000000000000000000000000000000000000000..e4ea34ff0194477c82be70fa6344cf17
 +        Component[] args = {permissionEntry.displayName(), Component.text(permission)};
 +        if(!permissionEntry.unsetPermission(permission))
 +        {
-+            return Component.translatable("server.permission.unset.failed", args);
++            return Component.translatable("server.permission.entity.failed", args);
 +        }
 +        return Component.translatable("server.permission.unset.success", args);
 +    }
@@ -1069,20 +1067,21 @@ index 0000000000000000000000000000000000000000..e4ea34ff0194477c82be70fa6344cf17
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/PermissionParser.java b/src/main/java/net/kissenpvp/paper/permission/PermissionParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..65d1a149e9cf36e8a611b68cbacefa1fcc45eefb
+index 0000000000000000000000000000000000000000..54e615898eec3d914fd22aec9aca6cd99ae6fbfa
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/PermissionParser.java
-@@ -0,0 +1,59 @@
+@@ -0,0 +1,60 @@
 +package net.kissenpvp.paper.permission;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.paper.api.command.PaperArgumentParser;
 +import org.bukkit.Bukkit;
-+import org.bukkit.command.Command;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
 +
-+import java.util.*;
++import java.util.Collection;
++import java.util.HashSet;
++import java.util.Set;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
@@ -1173,13 +1172,12 @@ index 0000000000000000000000000000000000000000..318e2520843c49567887703a254e03a8
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperAbstractPermissionGroup.java b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperAbstractPermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..5e50e3b6f76f42677cdb2b75c94f42538f7d1d1a
+index 0000000000000000000000000000000000000000..017f75ffc167ce7406e64a825bbd32be31c8a341
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperAbstractPermissionGroup.java
-@@ -0,0 +1,47 @@
+@@ -0,0 +1,45 @@
 +package net.kissenpvp.paper.permission.group;
 +
-+import net.kissenpvp.core.api.permission.PermissionEntry;
 +import net.kissenpvp.core.api.permission.PermissionGroup;
 +import net.kissenpvp.core.database.DataWriter;
 +import net.kissenpvp.core.permission.KissenPermissionGroup;
@@ -1193,7 +1191,6 @@ index 0000000000000000000000000000000000000000..5e50e3b6f76f42677cdb2b75c94f4253
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.util.Objects;
 +import java.util.Set;
 +import java.util.stream.Collectors;
 +
@@ -1226,10 +1223,10 @@ index 0000000000000000000000000000000000000000..5e50e3b6f76f42677cdb2b75c94f4253
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b9361316a4263234d58b1d99922d856c96afc789
+index 0000000000000000000000000000000000000000..62c0559da94cad37669cc2c55b73510c5d0082ac
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java
-@@ -0,0 +1,304 @@
+@@ -0,0 +1,313 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1255,10 +1252,12 @@ index 0000000000000000000000000000000000000000..b9361316a4263234d58b1d99922d856c
 +import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
 +import net.kissenpvp.core.api.permission.PermissionGroup;
 +import net.kissenpvp.core.base.KissenCore;
-+import net.kissenpvp.core.permission.PermissionCollector;
 +import net.kissenpvp.core.permission.KissenPermissionSet;
++import net.kissenpvp.core.permission.PermissionCollector;
 +import net.kissenpvp.paper.api.base.Context;
-+import net.kissenpvp.paper.api.permission.*;
++import net.kissenpvp.paper.api.permission.PaperPermission;
++import net.kissenpvp.paper.api.permission.PaperPermissionGroup;
++import net.kissenpvp.paper.api.permission.PaperPublicPermissionGroup;
 +import net.kissenpvp.paper.permission.KissenPaperAttachmentPermission;
 +import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
 +import net.kyori.adventure.text.Component;
@@ -1360,10 +1359,18 @@ index 0000000000000000000000000000000000000000..b9361316a4263234d58b1d99922d856c
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<UUID> getAffectedPermissionPlayer() {
-+        return Stream.concat(getContext(Context.LOCAL).getAffectedPermissionPlayer()
-+                .stream(), getContext(Context.GLOBAL).getAffectedPermissionPlayer().stream())
++    public @NotNull @Unmodifiable Set<UUID> getAffectedUsers()
++    {
++        return Stream.concat(getContext(Context.LOCAL).getAffectedUsers().stream(),
++                        getContext(Context.GLOBAL).getAffectedUsers().stream())
 +            .collect(Collectors.toUnmodifiableSet());
++    }
++
++    @Override
++    public @NotNull @Unmodifiable Set<GroupablePermissionEntry<PaperPermission>> getConnectedEntries()
++    {
++        return Stream.concat(getContext(Context.LOCAL).getConnectedEntries().stream(),
++                getContext(Context.GLOBAL).getConnectedEntries().stream()).collect(Collectors.toSet());
 +    }
 +
 +    @Override
@@ -1487,8 +1494,7 @@ index 0000000000000000000000000000000000000000..b9361316a4263234d58b1d99922d856c
 +    @Override
 +    public @NotNull Set<PaperPermission> permissionCollector() {
 +        Set<PaperPermission> permissions = new KissenPermissionSet<>();
-+        permissions.addAll(((PermissionCollector<PaperPermission>) getContext(
-+                Context.GLOBAL)).permissionCollector());
++        permissions.addAll(((PermissionCollector<PaperPermission>) getContext(Context.GLOBAL)).permissionCollector());
 +        return permissions;
 +    }
 +
@@ -1653,10 +1659,10 @@ index 0000000000000000000000000000000000000000..47a6ac2970d4713bcee00a30a6b8f707
 +
 diff --git a/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java b/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..27a53bc8605ca4cf77ab058b9153ff0222ee9aa7
+index 0000000000000000000000000000000000000000..8d1cabb6175da6bb6b05acd5f7be8e2e34e27987
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPermissible.java
-@@ -0,0 +1,193 @@
+@@ -0,0 +1,192 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1694,7 +1700,6 @@ index 0000000000000000000000000000000000000000..27a53bc8605ca4cf77ab058b9153ff02
 +import java.util.HashSet;
 +import java.util.Set;
 +import java.util.function.BiConsumer;
-+import java.util.function.Function;
 +import java.util.logging.Level;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
@@ -1852,10 +1857,10 @@ index 0000000000000000000000000000000000000000..27a53bc8605ca4cf77ab058b9153ff02
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPlayerPermissible.java b/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPlayerPermissible.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b680fbf6cfc1f9f7da57dbe37362088da52fd408
+index 0000000000000000000000000000000000000000..ab057f031800707b1c5c4273047f913fb520120a
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/permissible/KissenPaperPlayerPermissible.java
-@@ -0,0 +1,86 @@
+@@ -0,0 +1,92 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1916,8 +1921,14 @@ index 0000000000000000000000000000000000000000..b680fbf6cfc1f9f7da57dbe37362088d
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<UUID> getAffectedPermissionPlayer() {
++    public @NotNull @Unmodifiable Set<UUID> getAffectedUsers() {
 +        return Collections.singleton(getPlayer().getUniqueId());
++    }
++
++    @Override
++    public @NotNull @Unmodifiable Set<GroupablePermissionEntry<PaperPermission>> getConnectedEntries()
++    {
++        return getPlayer().isConnected() ? Collections.singleton((GroupablePermissionEntry<PaperPermission>) parent) : Collections.EMPTY_SET;
 +    }
 +
 +    @Override
@@ -2066,10 +2077,10 @@ index 0000000000000000000000000000000000000000..1dc4273c190d512036b4257a6370d112
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..4002c399a0dbed6b8d007f925d1566bcad3af8d0
+index 0000000000000000000000000000000000000000..d31cddcca8056588ad062607e3fab5a79def4d0f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
-@@ -0,0 +1,307 @@
+@@ -0,0 +1,301 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2102,9 +2113,9 @@ index 0000000000000000000000000000000000000000..4002c399a0dbed6b8d007f925d1566bc
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.base.KissenCore;
 +import net.kissenpvp.core.database.DataWriter;
++import net.kissenpvp.core.permission.KissenPermissionNode;
 +import net.kissenpvp.core.permission.KissenPermissionSet;
 +import net.kissenpvp.core.permission.PermissionCollector;
-+import net.kissenpvp.core.permission.KissenPermissionNode;
 +import net.kissenpvp.core.user.KissenPublicUser;
 +import net.kissenpvp.core.user.KissenUser;
 +import net.kissenpvp.paper.api.base.Context;
@@ -2366,23 +2377,17 @@ index 0000000000000000000000000000000000000000..4002c399a0dbed6b8d007f925d1566bc
 +        @Override
 +        public void permissionUpdate()
 +        {
-+            //execute publicperm
 +            Bukkit.getKissen().getImplementation(UserImplementation.class).getOnlineUser(UUID.fromString(getRawID())).ifPresent((player ->
 +                    ((PermissionCollector<PaperPermission>) player).permissionUpdate()));
-+        }
-+
-+        public void clearCache()
-+        {
-+            super.permissionUpdate();
 +        }
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0e55279320e158cb99830041f56a37e668eaf170
+index 0000000000000000000000000000000000000000..41d28104fa7a6c2c9f79f33202b23ddff88e41b8
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
-@@ -0,0 +1,134 @@
+@@ -0,0 +1,152 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2408,30 +2413,43 @@ index 0000000000000000000000000000000000000000..0e55279320e158cb99830041f56a37e6
 +import net.kissenpvp.core.api.database.savable.SavableMap;
 +import net.kissenpvp.core.api.networking.client.entitiy.UnknownPlayerException;
 +import net.kissenpvp.core.api.user.User;
++import net.kissenpvp.core.base.KissenImplementation;
 +import net.kissenpvp.core.user.KissenUserImplementation;
 +import net.kissenpvp.paper.api.base.Context;
++import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
++import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
 +import org.bukkit.Bukkit;
 +import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.util.Set;
++import java.text.MessageFormat;
 +import java.util.UUID;
++import java.util.concurrent.CompletableFuture;
 +import java.util.function.Supplier;
-+import java.util.stream.Collectors;
-+import java.util.stream.Stream;
 +
 +/**
 + * The class 'KissenPaperUserImplementation' is an extension of the 'KissenUserImplementation' in the KissenPaper system.
 + * This class is responsible for interacting with or manipulating the paper-related functionality of a Kissen user.
 + * The class holds an instance of KissenPaperProfileCache which it uses to cache profiles for efficient read operations.
 + */
-+public class KissenPaperUserImplementation extends KissenUserImplementation {
++public class KissenPaperUserImplementation extends KissenUserImplementation implements KissenImplementation
++{
 +
 +    private static KissenPaperProfileCache kissenPaperProfileCache;
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<SavableMap> getUserData() throws BackendException {
-+        return Stream.concat(getUserMeta().getData(new KissenPaperPublicUser(null, null)).values().stream(), getUserMeta().getData(new KissenPaperPublicUser.KissenPaperPrivateUser(null, null)).values().stream()).collect(Collectors.toUnmodifiableSet());
++    public void setupComplete()
++    {
++        KissenPaperCommandImplementation commandImplementation = Bukkit.getKissen().getImplementation(
++                KissenPaperCommandImplementation.class);
++        commandImplementation.registerCommand(new UserSettingCommand());
++        commandImplementation.registerHandler(new UserSettingCommand());
++
++        KissenPaperLocalizationImplementation localize = Bukkit.getKissen().getImplementation(KissenPaperLocalizationImplementation.class);
++        localize.register("server.user.setting.changed", new MessageFormat("The setting {0} has been set to {1}."));
++        localize.register("server.user.setting.value.invalid", new MessageFormat("The value {1} is not allowed in setting {1}."));
++        localize.register("server.user.setting.not.found", new MessageFormat("The setting {0} does not exists."));
++        localize.register("server.user.setting.reset", new MessageFormat("The setting {0} has been reset to its default value {1}."));
++
 +    }
 +
 +    @Override
@@ -2439,11 +2457,16 @@ index 0000000000000000000000000000000000000000..0e55279320e158cb99830041f56a37e6
 +
 +        Supplier<User> createUser = () -> kissenPaperProfileCache.getUserRepository().getUser(uuid).join().orElseThrow(() -> new UnknownPlayerException(String.valueOf(uuid)));
 +        Supplier<User> loadUser = () -> {
-+            try {
-+                return new KissenPaperPublicUser(getUserMeta().getData(getUserSaveID() + uuid).orElseGet(createUser));
-+            } catch (BackendException backendException) {
-+                throw new RuntimeException("It seems like the backend is unreachable. It's advised to shutdown the server to prevent further damage or loss to the servers data.", backendException);
-+            }
++
++            CompletableFuture<SavableMap> future = getUserMeta().getData(getUserSaveID() + uuid);
++            return new KissenPaperPublicUser(future.handle((user, ex) ->
++            {
++                if (user != null)
++                {
++                    return user;
++                }
++                return createUser.get();
++            }).join());
 +        };
 +        return getOnlineUser(uuid).orElseGet(loadUser);
 +    }
@@ -2472,7 +2495,7 @@ index 0000000000000000000000000000000000000000..0e55279320e158cb99830041f56a37e6
 +        return switch (context)
 +        {
 +            case GLOBAL -> getUserSaveID();
-+            case LOCAL -> Bukkit.getServer().getName() + "privateuser";
++            case LOCAL -> "privateuser";
 +        };
 +    }
 +
@@ -2651,10 +2674,10 @@ index 0000000000000000000000000000000000000000..671da825ee272f8ef7a02e43ca5620df
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..62844b1a2281b7460d1f71a7c7d32523bef13f68
+index 0000000000000000000000000000000000000000..695e41b598838481405863b148c8b04813179107
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
-@@ -0,0 +1,250 @@
+@@ -0,0 +1,251 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.google.gson.JsonObject;
@@ -2666,7 +2689,6 @@ index 0000000000000000000000000000000000000000..62844b1a2281b7460d1f71a7c7d32523
 +import net.kissenpvp.core.api.database.queryapi.FilterType;
 +import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 +import net.kissenpvp.core.api.user.UserImplementation;
-+import net.kissenpvp.core.api.user.UserInfo;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.minecraft.server.players.ServerOpList;
 +import net.minecraft.server.players.ServerOpListEntry;
@@ -2675,14 +2697,9 @@ index 0000000000000000000000000000000000000000..62844b1a2281b7460d1f71a7c7d32523
 +import org.jetbrains.annotations.Contract;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
-+import org.jetbrains.annotations.Unmodifiable;
 +
 +import java.io.File;
-+import java.util.Collection;
-+import java.util.HashSet;
-+import java.util.Objects;
-+import java.util.Set;
-+import java.util.UUID;
++import java.util.*;
 +import java.util.concurrent.Executors;
 +import java.util.stream.Collectors;
 +
@@ -2699,7 +2716,7 @@ index 0000000000000000000000000000000000000000..62844b1a2281b7460d1f71a7c7d32523
 + */
 +public class KissenUserOperatorList extends ServerOpList {
 +
-+    private final Set<LinkedOperatorDataNode> linkedOperatorDataNodes;
++    private final Set<LinkedOperatorDataNode> cached;
 +
 +    /**
 +     * This is a class that extends the functionality of StoredUserList. It provides functionality to manage a list
@@ -2715,14 +2732,14 @@ index 0000000000000000000000000000000000000000..62844b1a2281b7460d1f71a7c7d32523
 +    public KissenUserOperatorList() {
 +        //noinspection DataFlowIssue
 +        super(null); // not file based
-+        this.linkedOperatorDataNodes = new HashSet<>();
++        this.cached = new HashSet<>();
 +    }
 +
 +    @Override
 +    public void add(@NotNull ServerOpListEntry entry) {
 +        KissenOperatorDataNode operatorDataNode = new KissenOperatorDataNode(entry.getLevel(), entry.getBypassesPlayerLimit());
-+        getLinkedOperatorDataNodes().removeIf(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().equals(entry.getUser()));
-+        getLinkedOperatorDataNodes().add(new LinkedOperatorDataNode(Objects.requireNonNull(entry.getUser()), operatorDataNode));
++        getCached().removeIf(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().equals(entry.getUser()));
++        getCached().add(new LinkedOperatorDataNode(Objects.requireNonNull(entry.getUser()), operatorDataNode));
 +
 +        Executors.newSingleThreadExecutor().submit(() -> {
 +            try {
@@ -2736,12 +2753,14 @@ index 0000000000000000000000000000000000000000..62844b1a2281b7460d1f71a7c7d32523
 +    @Nullable
 +    @Override
 +    public ServerOpListEntry get(@NotNull GameProfile key) {
-+        return getLinkedOperatorDataNodes().stream().filter(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().equals(key)).findFirst().map(LinkedOperatorDataNode::getServerOpListEntry).orElse(null);
++        return getCached().stream().filter(
++                linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().equals(key)).findFirst().map(
++                LinkedOperatorDataNode::getServerOpListEntry).orElse(null);
 +    }
 +
 +    @Override
 +    public void remove(@NotNull GameProfile key) {
-+        getLinkedOperatorDataNodes().removeIf(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().equals(key));
++        getCached().removeIf(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().equals(key));
 +        Executors.newSingleThreadExecutor().submit(() -> {
 +            try {
 +                getLocalUserMeta().delete(getLocalUserSaveID() + Objects.requireNonNull(key.getId()), "operator");
@@ -2758,22 +2777,24 @@ index 0000000000000000000000000000000000000000..62844b1a2281b7460d1f71a7c7d32523
 +
 +    @Override
 +    public String @NotNull [] getUserList() {
-+        return fetchOperators().stream().map(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().getName()).distinct().toArray(String[]::new);
++        return getCached().stream().map(
++                linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().getName()).distinct().toArray(
++                String[]::new);
 +    }
 +
 +    @Override
 +    public boolean isEmpty() {
-+        return getLinkedOperatorDataNodes().isEmpty();
++        return getCached().isEmpty();
 +    }
 +
 +    @Override
 +    protected boolean contains(@NotNull GameProfile k0) {
-+        return getLinkedOperatorDataNodes().stream().anyMatch(gameProfile -> gameProfile.gameProfile().equals(k0));
++        return getCached().stream().anyMatch(gameProfile -> gameProfile.gameProfile().equals(k0));
 +    }
 +
 +    @Override
 +    public @NotNull Collection<ServerOpListEntry> getEntries() {
-+        return getLinkedOperatorDataNodes().stream().map(LinkedOperatorDataNode::getServerOpListEntry).collect(Collectors.toSet());
++        return getCached().stream().map(LinkedOperatorDataNode::getServerOpListEntry).collect(Collectors.toSet());
 +    }
 +
 +    @Override
@@ -2793,8 +2814,7 @@ index 0000000000000000000000000000000000000000..62844b1a2281b7460d1f71a7c7d32523
 +
 +    @Override
 +    public void load() {
-+        getLinkedOperatorDataNodes().clear();
-+        getLinkedOperatorDataNodes().addAll(fetchOperators());
++        fetchOperators();
 +    }
 +
 +    @Override
@@ -2822,26 +2842,29 @@ index 0000000000000000000000000000000000000000..62844b1a2281b7460d1f71a7c7d32523
 +     * <p>
 +     * The method guarantees to return a set of LinkedOperatorDataNode or throw an exception in case of an error.
 +     *
-+     * @return Set of LinkedOperatorDataNode containing operator data info and user profile
 +     * @throws RuntimeException if any error occurs while fetching and processing records from the database
 +     */
-+    private @NotNull @Unmodifiable Set<LinkedOperatorDataNode> fetchOperators() {
-+        try {
-+            Set<LinkedOperatorDataNode> result = new HashSet<>();
++    private void fetchOperators()
++    {
++        cached.clear();
 +
-+            QuerySelect select = getLocalUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getLocalUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "operator");
-+            String[][] data = select.execute();
-+            for (String[] current : data) {
++        QuerySelect select = getLocalUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID,
++                getLocalUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "operator");
++        select.execute().thenAccept(data ->
++        {
++            UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
++            DataImplementation dataImplementation = Bukkit.getKissen().getImplementation(DataImplementation.class);
++
++            Arrays.stream(data).forEach(current ->
++            {
 +                UUID uuid = UUID.fromString(current[0].substring(getLocalUserSaveID().length()));
-+                UserInfo userInfo = Bukkit.getKissen().getImplementation(UserImplementation.class).getUserProfiles().stream().filter(currentUserInfo -> currentUserInfo.getUUID().equals(uuid)).findFirst().orElseThrow(() -> new RuntimeException(String.format("Unknown user profile %s.", uuid)));
-+                KissenOperatorDataNode kissenOperatorDataNode = Bukkit.getKissen().getImplementation(DataImplementation.class).fromJson(current[1], KissenOperatorDataNode.class);
-+
-+                result.add(new LinkedOperatorDataNode(new GameProfile(userInfo.getUUID(), userInfo.getName()), kissenOperatorDataNode));
-+            }
-+            return result;
-+        } catch (BackendException backendException) {
-+            throw new RuntimeException("Something went wrong when loading all operator having users.", backendException);
-+        }
++                userImplementation.getCachedUserProfile(uuid).map(userInfo ->
++                {
++                    KissenOperatorDataNode node = dataImplementation.fromJson(current[1], KissenOperatorDataNode.class);
++                    return new LinkedOperatorDataNode(new GameProfile(userInfo.getUUID(), userInfo.getName()), node);
++                }).ifPresent(cached::add);
++            });
++        });
 +    }
 +
 +    /**
@@ -2871,8 +2894,9 @@ index 0000000000000000000000000000000000000000..62844b1a2281b7460d1f71a7c7d32523
 +     * @return A Set containing all LinkedOperatorDataNodes.
 +     * This returned set is not null.
 +     */
-+    protected @NotNull Set<LinkedOperatorDataNode> getLinkedOperatorDataNodes() {
-+        return linkedOperatorDataNodes;
++    protected @NotNull Set<LinkedOperatorDataNode> getCached()
++    {
++        return cached;
 +    }
 +
 +    /**
@@ -2907,18 +2931,17 @@ index 0000000000000000000000000000000000000000..62844b1a2281b7460d1f71a7c7d32523
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..c0af11a1c46cee51910cd553c676b745c0bf4820
+index 0000000000000000000000000000000000000000..6d8ebd6fd429aa977a8ca61101938a1bd44dd89c
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
-@@ -0,0 +1,186 @@
+@@ -0,0 +1,157 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.google.gson.JsonObject;
 +import com.mojang.authlib.GameProfile;
-+import net.kissenpvp.core.api.database.meta.BackendException;
++import net.kissenpvp.core.api.database.meta.Meta;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.database.queryapi.Column;
-+import net.kissenpvp.core.api.database.queryapi.FilterType;
 +import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.UserInfo;
@@ -2930,21 +2953,14 @@ index 0000000000000000000000000000000000000000..c0af11a1c46cee51910cd553c676b745
 +import org.bukkit.Bukkit;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
-+import org.jetbrains.annotations.Unmodifiable;
 +
 +import java.io.File;
 +import java.io.IOException;
-+import java.util.Arrays;
-+import java.util.Collection;
-+import java.util.HashSet;
-+import java.util.Objects;
-+import java.util.Set;
-+import java.util.UUID;
-+import java.util.concurrent.Executors;
-+import java.util.function.Function;
++import java.util.*;
 +import java.util.function.Predicate;
 +import java.util.function.Supplier;
 +import java.util.stream.Collectors;
++import java.util.stream.Stream;
 +
 +
 +public class KissenUserWhiteList extends UserWhiteList {
@@ -2998,16 +3014,10 @@ index 0000000000000000000000000000000000000000..c0af11a1c46cee51910cd553c676b745
 +        Supplier<UserInfo> createNew = () -> new UserInfoNode(entry.getUser().getId(), entry.getUser().getName()).getUserInfo();
 +        Predicate<UserInfo> userInfoPredicate = profile -> Objects.equals(entry.getUser().getId(), profile.getUUID());
 +
-+        getWhitelisted().removeIf(userInfo -> userInfo.getUUID().equals(entry.getUser().getId()));
-+        getWhitelisted().add(userImplementation.getUserProfiles().stream().filter(userInfoPredicate).findFirst().orElseGet(createNew));
++        whitelisted.removeIf(userInfo -> userInfo.getUUID().equals(entry.getUser().getId()));
++        whitelisted.add(userImplementation.getUserProfiles().stream().filter(userInfoPredicate).findFirst().orElseGet(createNew));
 +
-+        Executors.newSingleThreadExecutor().submit(() -> {
-+            try {
-+                getLocalUserMeta().setString(getLocalUserSaveID() + Objects.requireNonNull(entry.getUser()).getId(), "whitelist", "1");
-+            } catch (BackendException backendException) {
-+                throw new RuntimeException(String.format("An error occurred when adding user %s to the whitelist.", entry.getUser().getName()), backendException);
-+            }
-+        });
++        getLocalUserMeta().setString(getLocalUserSaveID() + Objects.requireNonNull(entry.getUser()).getId(), "whitelist", "1");
 +    }
 +
 +    @Override
@@ -3017,15 +3027,8 @@ index 0000000000000000000000000000000000000000..c0af11a1c46cee51910cd553c676b745
 +            return;
 +        }
 +
-+        getWhitelisted().removeIf(userInfo -> Objects.equals(profile.getId(), userInfo.getUUID()));
-+
-+        Executors.newSingleThreadExecutor().submit(() -> {
-+            try {
-+                getLocalUserMeta().delete(getLocalUserSaveID() + profile.getId(), "whitelist");
-+            } catch (BackendException backendException) {
-+                throw new RuntimeException(String.format("An error occurred when deleting the whitelist value from user %s.", profile.getName()), backendException);
-+            }
-+        });
++        whitelisted.removeIf(userInfo -> Objects.equals(profile.getId(), userInfo.getUUID()));
++        getLocalUserMeta().delete(getLocalUserSaveID() + profile.getId(), "whitelist");
 +    }
 +
 +    @Override
@@ -3035,8 +3038,7 @@ index 0000000000000000000000000000000000000000..c0af11a1c46cee51910cd553c676b745
 +
 +    @Override
 +    public void load() throws IOException {
-+        getWhitelisted().clear();
-+        getWhitelisted().addAll(fetchWhitelistedUsers());
++        fetchWhitelistedUsers();
 +    }
 +
 +    @Override
@@ -3055,28 +3057,21 @@ index 0000000000000000000000000000000000000000..c0af11a1c46cee51910cd553c676b745
 +    }
 +
 +    protected @NotNull Set<UserInfo> getWhitelisted() {
-+        return whitelisted;
++        return Collections.unmodifiableSet(whitelisted);
 +    }
 +
-+    /**
-+     * Fetches all whitelisted users from the database.
-+     * Each user is identified by their UUID.
-+     * If a backend exception is thrown while fetching, it is encapsulated in a RuntimeException.
-+     *
-+     * @return A set of whitelisted {@link UserInfo} objects. The returned value is unmodifiable to prevent any unwanted modifications.
-+     * @throws RuntimeException if there's a backend issue when fetching users
-+     */
-+    private @NotNull @Unmodifiable Set<UserInfo> fetchWhitelistedUsers() {
-+        try {
-+            QuerySelect querySelect = getLocalUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "whitelist").and(Column.VALUE, "1");
++    private void fetchWhitelistedUsers()
++    {
++        whitelisted.clear();
++        Meta meta = getLocalUserMeta();
 +
-+            Function<UUID, UserInfo> fetchUserProfile = uuid -> Bukkit.getKissen().getImplementation(UserImplementation.class).getCachedUserProfile(uuid).orElse(null);
-+            Function<String[], UserInfo> parse = (userData) -> fetchUserProfile.apply(UUID.fromString(userData[0].substring(getLocalUserSaveID().length())));
-+
-+            return Arrays.stream(querySelect.execute()).map(parse).filter(Objects::nonNull).collect(Collectors.toSet());
-+        } catch (BackendException backendException) {
-+            throw new RuntimeException("Something went wrong when fetching all whitelisted users from the database.", backendException);
-+        }
++        QuerySelect querySelect = meta.select(Column.TOTAL_ID).where(Column.KEY, "whitelist").and(Column.VALUE, "1");
++        querySelect.execute().thenAcceptAsync(data ->
++        {
++            UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
++            Stream<UUID> userStream = Arrays.stream(data[0]).map(UUID::fromString);
++            userStream.forEach(uuid -> userImplementation.getCachedUserProfile(uuid).ifPresent(whitelisted::add));
++        });
 +    }
 +
 +    /**
@@ -3095,6 +3090,117 @@ index 0000000000000000000000000000000000000000..c0af11a1c46cee51910cd553c676b745
 +     */
 +    private @NotNull String getLocalUserSaveID() {
 +        return Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUserSaveID(Context.LOCAL);
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java b/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..91c2b03b62c15525b63a597974b2134a5cf201a7
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java
+@@ -0,0 +1,105 @@
++package net.kissenpvp.paper.user;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.annotations.CommandData;
++import net.kissenpvp.core.api.command.annotations.TabCompleter;
++import net.kissenpvp.core.api.user.UserImplementation;
++import net.kissenpvp.core.api.user.exception.UnauthorizedException;
++import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
++import net.kissenpvp.core.api.user.usersetttings.UserValue;
++import net.kissenpvp.core.user.usersettings.IllegalSettingException;
++import net.kissenpvp.core.user.usersettings.KissenUserBoundSettings;
++import net.kissenpvp.paper.api.command.PaperCommandExceptionHandler;
++import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
++import net.kyori.adventure.text.Component;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Arrays;
++import java.util.Collection;
++import java.util.Collections;
++import java.util.UUID;
++import java.util.function.Predicate;
++import java.util.stream.Collectors;
++import java.util.stream.Stream;
++
++public class UserSettingCommand implements PaperCommandExceptionHandler<IllegalSettingException>
++{
++    @Override
++    public boolean handle(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull IllegalSettingException throwable)
++    {
++        Component setting = Component.text(throwable.getSettingsKey());
++        commandPayload.getSender().sendMessage(Component.translatable("server.user.setting.not.found", setting));
++        return true;
++    }
++
++    @CommandData(value = "setting", aliases = "settings")
++    public void settingCommand(@NotNull CommandPayload<CommandSender> sender, @NotNull String setting, @NotNull String value) throws UnauthorizedException
++    {
++        sender.getSender().sendMessage(setSetting(sender, deserialize(setting), value));
++    }
++
++    private <T> @NotNull Component setSetting(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PlayerSetting<T> settingsKey, @NotNull String value) throws UnauthorizedException
++    {
++        try
++        {
++            boolean reset = value.equalsIgnoreCase("reset");
++            PaperPlayerClient player = (PaperPlayerClient) commandPayload.getSender();
++            UUID uuid = player.getUniqueId();
++            KissenUserBoundSettings<T> kissenUserBoundSettings = new KissenUserBoundSettings<>(settingsKey, uuid);
++
++            T newValue = reset ? settingsKey.getDefaultValue() : settingsKey.deserialize(value);
++            kissenUserBoundSettings.setValue(newValue);
++
++            String langKey = reset ? "server.user.setting.reset" : "server.user.setting.changed";
++            Component setting = Component.text(settingsKey.getKey());
++            Component changedTo = Component.text(kissenUserBoundSettings.getUserSetting().serialize(newValue));
++            return Component.translatable(langKey, setting, changedTo);
++        }
++        catch (ClassCastException | IllegalArgumentException exception)
++        {
++            return Component.translatable("server.user.setting.value.invalid", settingsKey.getKey(),
++                    Component.text(value));
++        }
++    }
++
++    @TabCompleter(command = "setting")
++    public @NotNull Collection<String> settingCommand(@NotNull CommandPayload<CommandSender> payload)
++    {
++        try
++        {
++            if (payload.getArguments().length < 2)
++            {
++                return tabCompletion(payload);
++            }
++
++            PlayerSetting<?> playerSetting = deserialize(payload.getArguments()[0]);
++            Stream<? extends @NotNull UserValue<?>> stream = Arrays.stream(playerSetting.getPossibleValues());
++            Stream<String> possibilities = stream.map(value -> castUnknownValue(value, playerSetting));
++            return Stream.concat(Stream.of("reset"), possibilities).collect(Collectors.toSet());
++        }
++        catch (IllegalSettingException ignored) {}
++        return Collections.EMPTY_SET;
++    }
++
++    public @NotNull PlayerSetting<?> deserialize(@NotNull String input)
++    {
++        UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
++        Stream<PlayerSetting<?>> settings = userImplementation.getUserSettings().stream();
++        Predicate<PlayerSetting<?>> predicate = userSetting -> userSetting.getKey().equals(input);
++        return settings.filter(predicate).findFirst().orElseThrow(() -> new IllegalSettingException(input));
++    }
++
++    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
++    {
++        UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
++        Stream<PlayerSetting<?>> settings = userImplementation.getUserSettings().stream();
++        return settings.map(PlayerSetting::getKey).collect(Collectors.toSet());
++    }
++
++    private <T> @NotNull String castUnknownValue(Object value, @NotNull PlayerSetting<T> playerSetting)
++    {
++        return playerSetting.serialize(((UserValue<T>) value).value());
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperFallBackRank.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperFallBackRank.java
@@ -3354,7 +3460,7 @@ index be05a52be037042c6158100e2ce880b8ed415d53..0f3758071754eef2c9bd8a464a20b210
      }
  
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 8ce2fd887d9c2cf86fa4ec0332b70681f1572911..4601c9dfc43d9f0b875c1df39db96c08e2a046c1 100644
+index 8ce2fd887d9c2cf86fa4ec0332b70681f1572911..fa53db3e5ba305212878bc04334f628f2f9ca88b 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -45,6 +45,13 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
@@ -3371,19 +3477,24 @@ index 8ce2fd887d9c2cf86fa4ec0332b70681f1572911..4601c9dfc43d9f0b875c1df39db96c08
  public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener, TickablePacketListener {
  
      private static final AtomicInteger UNIQUE_THREAD_ID = new AtomicInteger(0);
-@@ -302,6 +309,11 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -302,6 +309,16 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                              disconnect("This server requires you to connect with Velocity.");
                              return;
                          }
 +
 +                        // KissenPaper start
-+                        if (!loginUser(gameprofile)) return;
++                        KissenPaperPublicUser kissenPaperPublicUser = new KissenPaperPublicUser(gameprofile.getId(), gameprofile.getName());
++                        if (!loginUser(kissenPaperPublicUser, gameprofile))
++                        {
++                            kissenPaperPublicUser.logout();
++                            return;
++                        }
 +                        // KissenPaper end
 +
                          // Paper end
                          String playerName = gameprofile.getName();
                          java.net.InetAddress address = ((java.net.InetSocketAddress) ServerLoginPacketListenerImpl.this.connection.getRemoteAddress()).getAddress();
-@@ -347,6 +359,44 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -347,6 +364,47 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                          ServerLoginPacketListenerImpl.LOGGER.info("UUID of player {} is {}", gameprofile.getName(), gameprofile.getId());
                          ServerLoginPacketListenerImpl.this.startClientVerification(gameprofile);
          }
@@ -3408,16 +3519,19 @@ index 8ce2fd887d9c2cf86fa4ec0332b70681f1572911..4601c9dfc43d9f0b875c1df39db96c08
 +         * @see net.kissenpvp.paper.api.ban.PaperPunishment
 +         * @see GameProfile
 +         */
-+        private boolean loginUser(GameProfile gameProfile) {
++        private boolean loginUser(@org.jetbrains.annotations.NotNull KissenPaperPublicUser kissenPaperPublicUser, @org.jetbrains.annotations.NotNull GameProfile gameProfile) {
 +            try {
-+                KissenPaperPublicUser kissenPaperPublicUser = new KissenPaperPublicUser(gameProfile.getId(), gameProfile.getName());
 +                if(!Bukkit.getKissen().getImplementation(KissenUserImplementation.class).loadUser(kissenPaperPublicUser))
 +                {
 +                    disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
 +                    return false;
 +                }
 +
-+                kissenPaperPublicUser.getPrivateUserEntry(); // load private user
++                if(Bukkit.hasWhitelist() && !MinecraftServer.getServer().getPlayerList().isWhiteListed(gameProfile))
++                {
++                    disconnect(Component.translatable("multiplayer.disconnect.not_whitelisted"));
++                    return false;
++                }
 +            } catch (BackendException backendException) {
 +                disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
 +                return false;
@@ -3480,7 +3594,7 @@ index e98a455b6bca9d094d0da323bddd7b3f2c07bb23..b85198a78cacd4c4d553542be7bdfd9e
          this.cserver.getPluginManager().callEvent(playerJoinEvent);
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..6a3c49abfec3e2a46993a8d301d2866255473c1b 100644
+index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..8d26d3416f8fde9b70fa4e0bd9469cc0c51f1d3d 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -9,6 +9,8 @@ import java.util.LinkedHashMap;
@@ -3557,7 +3671,7 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..6a3c49abfec3e2a46993a8d301d28662
      protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
          this.server = server;
          this.profile = profile;
-@@ -567,4 +612,397 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -567,4 +612,403 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
              manager.save();
          }
      }
@@ -3885,8 +3999,14 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..6a3c49abfec3e2a46993a8d301d28662
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<UUID> getAffectedPermissionPlayer() {
-+        return getKissenPaperPlayerClient().getPermissionContext().getAffectedPermissionPlayer();
++    public @NotNull @Unmodifiable Set<UUID> getAffectedUsers() {
++        return java.util.Collections.EMPTY_SET;
++    }
++
++    @Override
++    public @NotNull @Unmodifiable Set<net.kissenpvp.core.api.permission.GroupablePermissionEntry<PaperPermission>> getConnectedEntries()
++    {
++        return java.util.Collections.EMPTY_SET;
 +    }
 +
 +    @Override
@@ -4091,7 +4211,7 @@ index c3dbcb317b7d366feb31f707ad1199c60169f07f..8b92f1f4969e28c67dae7a25e9cc778a
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 2ec8b8f65661001716d1cb34dcc21cda7286e5d7..09de30ff0cc003da3acd860310e7835fd10a4b81 100644
+index 2ec8b8f65661001716d1cb34dcc21cda7286e5d7..0bc8b66d6d9967ae3307af78915da1a0e00b0a3d 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -174,6 +174,35 @@ import org.jetbrains.annotations.NotNull;
@@ -4204,7 +4324,7 @@ index 2ec8b8f65661001716d1cb34dcc21cda7286e5d7..09de30ff0cc003da3acd860310e7835f
          }
  
          // Paper start
-@@ -3367,4 +3427,374 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3367,4 +3427,380 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end
@@ -4507,8 +4627,14 @@ index 2ec8b8f65661001716d1cb34dcc21cda7286e5d7..09de30ff0cc003da3acd860310e7835f
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<UUID> getAffectedPermissionPlayer() {
-+        return getKissenPaperOnlinePlayerClient().getPermissionContext().getAffectedPermissionPlayer();
++    public @NotNull @Unmodifiable Set<UUID> getAffectedUsers() {
++        return java.util.Collections.singleton(getUniqueId());
++    }
++
++    @Override
++    public @NotNull @Unmodifiable Set<net.kissenpvp.core.api.permission.GroupablePermissionEntry<PaperPermission>> getConnectedEntries()
++    {
++        return java.util.Collections.singleton(this);
 +    }
 +
 +    @Override

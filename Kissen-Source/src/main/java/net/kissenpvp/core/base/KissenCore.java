@@ -28,6 +28,7 @@ import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
+import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.message.ChatImplementation;
@@ -65,6 +66,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -88,22 +90,29 @@ public abstract class KissenCore implements Kissen {
      * @param clazz The Class object representing the main class of the KissenPlugin. Must not be null.
      * @throws Exception If there is an error during the initialization process or when invoking implementations.
      */
-    public void initialize(@NotNull Class<?> clazz) throws Exception {
-        //Load plugin implementations
-        long time = System.currentTimeMillis();
-        KissenCore.instance = this;
+    public void initialize(@NotNull Class<?> clazz)
+    {
+        try
+        {
+            //Load plugin implementations
+            long time = System.currentTimeMillis();
+            KissenCore.instance = this;
 
-        implementation = new HashMap<>();
-        loadImplementations(implementation);
+            implementation = new HashMap<>();
+            loadImplementations(implementation);
 
-        getLogger().debug("The following implementations have been loaded: ");
-        implementation.forEach((key, value) -> getLogger().debug("- {}", key.getName()));
+            getLogger().debug("The following implementations have been loaded: ");
+            implementation.forEach((key, value) -> getLogger().debug("- {}", key.getName()));
 
-        startImplementations();
-
-        time = System.currentTimeMillis() - time;
-        getLogger().info("The kissen system took {}ms to start.", time);
-        getImplementation(EventImplementation.class).call(new KissenPermissionGroupCreateEvent("", null));
+            startImplementations();
+            time = System.currentTimeMillis() - time;
+            getLogger().info("The kissen system took {}ms to start.", time);
+            getImplementation(EventImplementation.class).call(new KissenPermissionGroupCreateEvent("", null));
+        }
+        catch (IOException exception)
+        {
+            throw new BackendException(exception);
+        }
     }
 
     protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader)

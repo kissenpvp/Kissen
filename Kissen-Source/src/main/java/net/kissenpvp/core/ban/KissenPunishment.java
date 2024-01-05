@@ -23,6 +23,7 @@ import net.kissenpvp.core.api.ban.Punishment;
 import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.message.Comment;
@@ -51,6 +52,7 @@ import java.text.DateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class KissenPunishment<T> extends KissenTemporalObject implements Punishment<T> {
@@ -162,16 +164,18 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public @Unmodifiable Set<UUID> getAffectedPlayers() {
-        KissenUserImplementation kissenUserImplementation = KissenCore.getInstance().getImplementation(
-                KissenUserImplementation.class);
+        Class<KissenUserImplementation> clazz = KissenUserImplementation.class;
+        KissenUserImplementation userSystem = KissenCore.getInstance().getImplementation(clazz);
 
-        String[][] affected = kissenUserImplementation.getUserMeta().select(Column.TOTAL_ID).where(Column.TOTAL_ID,
-                kissenUserImplementation.getUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "total_id").and(
-                Column.VALUE, getTotalID().toString()).execute();
+        String saveID = userSystem.getUserSaveID();
+        Function<String, UUID> toUUID = data -> UUID.fromString(data.substring(userSystem.getUserSaveID().length()));
 
-        return Arrays.stream(affected).flatMap(Arrays::stream).map(
-                data -> UUID.fromString(data.substring(kissenUserImplementation.getUserSaveID().length()))).collect(
-                Collectors.toSet());
+        // total_id = userSystem.getUserSaveID and key = total_ID and value = getTotalID
+        QuerySelect query = userSystem.getUserMeta().select(Column.TOTAL_ID).where(Column.TOTAL_ID, saveID,
+                FilterType.STARTS_WITH).and(Column.KEY, "total_id").and(Column.VALUE, getTotalID().toString());
+
+        return query.execute().thenApply(
+                result -> Arrays.stream(result).flatMap(Arrays::stream).map(toUUID).collect(Collectors.toSet())).join();
     }
 
     @Override

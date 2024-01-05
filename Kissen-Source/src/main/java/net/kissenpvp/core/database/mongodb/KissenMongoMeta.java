@@ -35,11 +35,11 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 
 public abstract class KissenMongoMeta extends KissenBaseMeta {
@@ -59,47 +59,40 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
     }
 
     @Override
-    public void setStringList(@NotNull String totalID, @NotNull String key, @Nullable List<String> value) {
-        insert(totalID, key, value);
-    }
-
-    @Override
-    protected @NotNull String[][] execute(@NotNull QuerySelect querySelect) throws BackendException {
-
-        FindIterable<Document> documents = getCollection().find(
-                Filters.and(decodeFilterQueries(querySelect.getFilterQueries())));
-        List<String[]> data = new ArrayList<>();
-        for (Document element : documents) {
-            String[] result = new String[querySelect.getColumns().length];
-            for (int i = 0; i < result.length; i++) {
-                String column = getColumn(querySelect.getColumns()[i]);
-                try {
+    protected @NotNull CompletableFuture<String[][]> execute(@NotNull QuerySelect querySelect) throws BackendException
+    {
+        return CompletableFuture.supplyAsync(() ->
+        {
+            FindIterable<Document> documents = getCollection().find(
+                    Filters.and(decodeFilterQueries(querySelect.getFilterQueries())));
+            List<String[]> data = new ArrayList<>();
+            for (Document element : documents)
+            {
+                String[] result = new String[querySelect.getColumns().length];
+                for (int i = 0; i < result.length; i++)
+                {
+                    String column = getColumn(querySelect.getColumns()[i]);
                     result[i] = element.getString(column);
-                } catch (ClassCastException classCastException) {
-                    result[i] = element.getList(column, String.class).toString();
                 }
+                data.add(result);
             }
-            data.add(result);
-        }
 
-        KissenCore.getInstance()
-                .getLogger()
-                .info("Fetch columns {} filtered with {}.", Arrays.toString(Arrays.stream(querySelect.getColumns())
-                        .map(Enum::name)
-                        .toArray()), Arrays.toString(Arrays.stream(querySelect.getFilterQueries())
-                        .map(filterQuery -> String.format("%s = %s [%s]", filterQuery.getColumn()
-                                .name(), filterQuery.getValue(), filterQuery.getFilterType().name()))
-                        .toArray()));
+            KissenCore.getInstance().getLogger().debug("Fetch columns {} filtered with {}.",
+                    Arrays.toString(Arrays.stream(querySelect.getColumns()).map(Enum::name).toArray()), Arrays.toString(
+                            Arrays.stream(querySelect.getFilterQueries()).map(
+                                    filterQuery -> String.format("%s = %s [%s]", filterQuery.getColumn().name(),
+                                            filterQuery.getValue(), filterQuery.getFilterType().name())).toArray()));
 
-        return data.toArray(new String[0][]);
+            return data.toArray(new String[0][]);
+        });
     }
 
     @Override
-    protected long execute(@NotNull QueryUpdate queryUpdate) throws BackendException {
-
-        return getCollection().updateMany(Filters.and(decodeFilterQueries(queryUpdate.getFilterQueries())),
-                Updates.combine(
-                        decodeUpdateDirectives(queryUpdate.getColumns()))).getModifiedCount();
+    protected @NotNull CompletableFuture<Long> execute(@NotNull QueryUpdate queryUpdate) throws BackendException
+    {
+        return CompletableFuture.supplyAsync(
+                () -> getCollection().updateMany(Filters.and(decodeFilterQueries(queryUpdate.getFilterQueries())),
+                        Updates.combine(decodeUpdateDirectives(queryUpdate.getColumns()))).getModifiedCount());
     }
 
     @NotNull
@@ -149,18 +142,6 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
 
     protected abstract @NotNull MongoCollection<Document> getCollection();
 
-    @Override
-    public @NotNull @Unmodifiable List<String> getStringList(@NotNull String totalID, @NotNull String key) {
-        List<String> strings = new ArrayList<>();
-        FindIterable<Document> documents = getCollection().find(Filters.and(Filters.eq(getTotalIDColumn(), totalID), Filters.eq(getKeyColumn(), key)));
-        for (Document element : documents) {
-            strings.addAll(element.getList(getValueColumn(), String.class));
-            break;
-        }
-        KissenCore.getInstance().getLogger().info("Fetch list with id {} and key {}.", totalID, key);
-        return strings;
-    }
-
     private void insert(@NotNull String totalID, @NotNull String key, @Nullable Object value) {
 
         if (value == null) {
@@ -177,7 +158,7 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
                 new Document("$set", document), new UpdateOptions().upsert(true));
 
 
-        KissenCore.getInstance().getLogger().info("Set {} to {} from id {}.", key, value, totalID);
+        KissenCore.getInstance().getLogger().debug("Set {} to {} from id {}.", key, value, totalID);
     }
 
     private void wipe(@NotNull String totalID, @NotNull String key) {

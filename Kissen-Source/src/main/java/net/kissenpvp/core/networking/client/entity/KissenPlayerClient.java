@@ -25,6 +25,7 @@ import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.savable.list.SavableRecordList;
 import net.kissenpvp.core.api.message.Theme;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
@@ -55,6 +56,8 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -79,15 +82,23 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     public @NotNull R grantRank(@NotNull Rank rank, @Nullable AccurateDuration accurateDuration) {
         String id = KissenCore.getInstance().getImplementation(DataImplementation.class).generateID();
         KissenPlayerRankNode kissenPlayerRankNode = new KissenPlayerRankNode(id, rank.getName(), new TemporalMeasureNode(accurateDuration));
-        R playerRank = translateRank(kissenPlayerRankNode, record -> {
-        });
+        R playerRank = translateRank(kissenPlayerRankNode, record ->
+        {});
         setRank(playerRank);
         return playerRank;
     }
 
     @Override
     public @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException {
-        return Arrays.stream(getUser().getMeta().select(Column.TOTAL_ID).where(Column.KEY, "total_id", FilterType.EXACT_MATCH).and(Column.VALUE, getTotalID().toString(), FilterType.EXACT_MATCH).execute()).map(data -> data[0].substring(getUser().getSaveID().length())).map(UUID::fromString).filter(uuid -> !getUniqueId().equals(uuid)).collect(Collectors.toSet());
+
+        //key = total_id AND value = getTotalID
+        QuerySelect query = getUser().getMeta().select(Column.TOTAL_ID).where(Column.KEY, "total_id", FilterType.EXACT_MATCH).and(Column.VALUE, getTotalID().toString(), FilterType.EXACT_MATCH);
+
+        Function<String[], UUID> toUUID = data -> UUID.fromString(data[0].substring(getUser().getSaveID().length()));
+        Predicate<UUID> byUser = uuid -> !getUniqueId().equals(uuid);
+
+        CompletableFuture<String[][]> alts = query.execute();
+        return alts.thenApply(result -> Arrays.stream(result).map(toUUID).filter(byUser).collect(Collectors.toSet())).join();
     }
 
     @Override

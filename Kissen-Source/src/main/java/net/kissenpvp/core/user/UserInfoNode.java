@@ -60,6 +60,6 @@ public record UserInfoNode(@NotNull UUID uuid, @NotNull String name) {
     @Contract(pure = true)
     @Override
     public @NotNull String toString() {
-        return "UserInfoNode{uuid=" + uuid + ", name='" + name + '\'' + '}';
+        return "{uuid=" + uuid + ", name='" + name + '\'' + '}';
     }
 }

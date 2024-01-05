@@ -29,9 +29,7 @@ import net.kissenpvp.core.permission.event.KissenGroupMemberRemoveEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public abstract class KissenPermissionGroup<T extends Permission> extends KissenGroupablePermissionEntry<T> implements PermissionGroup<T>
 {
@@ -99,7 +97,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
         return false;
     }
 
-    @Override public @NotNull @Unmodifiable Set<UUID> getAffectedPermissionPlayer()
+    @Override public @NotNull @Unmodifiable Set<UUID> getAffectedUsers()
     {
         Set<UUID> uuids = new HashSet<>();
         PermissionImplementation permissionImplementation = KissenCore.getInstance().getImplementation(
@@ -113,19 +111,50 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
             }
 
             uuids.addAll(permissionImplementation.getPermissionGroupSavable(member).map(
-                    PermissionEntry::getAffectedPermissionPlayer).orElse(new HashSet<>()));
+                    PermissionEntry::getAffectedUsers).orElse(new HashSet<>()));
         }
         return uuids;
+    }
+
+    @Override public @NotNull @Unmodifiable Set<GroupablePermissionEntry<T>> getConnectedEntries()
+    {
+        Set<GroupablePermissionEntry<T>> groups = new HashSet<>();
+        Class<PermissionImplementation> clazz = PermissionImplementation.class;
+        PermissionImplementation permissionImplementation = KissenCore.getInstance().getImplementation(clazz);
+        UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
+
+        for (String member : getMember())
+        {
+            if (member.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
+            {
+                userImplementation.getOnlineUser(UUID.fromString(member)).ifPresent(user -> groups.add(
+                        (GroupablePermissionEntry<T>) user));
+                continue;
+            }
+
+            permissionImplementation.getPermissionGroupSavable(member).ifPresent(
+                    group -> groups.add((PermissionGroup<T>) group));
+            groups.addAll(permissionImplementation.getPermissionGroupSavable(member).map(
+                    entry -> ((KissenPermissionGroup<T>) entry).getConnectedEntries()).orElse(new HashSet<>()));
+        }
+        return Collections.unmodifiableSet(groups);
     }
 
     @Override
     public void permissionUpdate()
     {
         super.permissionUpdate();
-        getAffectedPermissionPlayer().forEach(
-                uuid -> KissenCore.getInstance().getImplementation(UserImplementation.class).getOnlineUser(
-                        uuid).ifPresent(user -> ((PermissionEntry<?>) user).permissionUpdate()));
+        for(GroupablePermissionEntry<T> entry : getConnectedEntries())
+        {
+            if(!(entry instanceof PermissionGroup<T>))
+            {
+                entry.permissionUpdate();
+                continue;
+            }
+            ((KissenGroupablePermissionEntry<T>) entry).clearCache();
+        }
     }
+
 
     @Override public SerializableSavableHandler getSerializableSavableHandler()
     {

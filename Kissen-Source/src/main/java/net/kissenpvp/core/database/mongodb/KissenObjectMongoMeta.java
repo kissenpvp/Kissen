@@ -18,6 +18,8 @@
 
 package net.kissenpvp.core.database.mongodb;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.mongodb.client.model.*;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
@@ -27,13 +29,16 @@ import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.database.jdbc.KissenObjectJDBCMeta;
 import net.kissenpvp.core.database.savable.KissenSavableMap;
 import org.bson.Document;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implements ObjectMeta {
@@ -49,7 +54,7 @@ public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implem
                 .map(buildUpdateQuery(id))
                 .toList());
 
-        KissenCore.getInstance().getLogger().info("Insert map {} with id {}.", data, id);
+        KissenCore.getInstance().getLogger().debug("Insert map {} with id {}.", data, id);
     }
 
     
@@ -67,40 +72,49 @@ public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implem
     }
 
     @Override
-    public @NotNull Optional<SavableMap> getData(@NotNull String totalId) throws BackendException {
-        return Optional.ofNullable(processQuery(totalId, select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId, FilterType.EXACT_MATCH)).get(totalId));
+    public @NotNull CompletableFuture<SavableMap> getData(@NotNull String totalId) throws BackendException
+    {
+        return processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId,
+                FilterType.EXACT_MATCH)).thenApply(map -> map.get(totalId));
     }
 
     @Override
-    public @Unmodifiable @NotNull <T extends Savable> Map<@NotNull String, @NotNull SavableMap> getData(@NotNull T savable) throws BackendException {
+    public @Unmodifiable @NotNull <T extends Savable> CompletableFuture<@Unmodifiable Map<@NotNull String, @NotNull SavableMap>> getData(@NotNull T savable) throws BackendException
+    {
         return processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, savable.getSaveID(), FilterType.STARTS_WITH));
     }
 
-    private @NotNull Map<String, SavableMap> processQuery(@NotNull QuerySelect querySelect) throws BackendException {
-        Map<String, SavableMap> dataContainer = new HashMap<>();
-        for (String[] current : execute(querySelect)) {
-            insertData(dataContainer, current[0], current[1], current[2]);
-        }
-        return dataContainer;
+    private @NotNull CompletableFuture<Map<String, SavableMap>> processQuery(@NotNull QuerySelect querySelect) throws BackendException
+    {
+
+        return querySelect.execute().thenApply(this::processQuery);
     }
 
-    private @NotNull Map<String, SavableMap> processQuery(@NotNull String totalID, @NotNull QuerySelect querySelect) throws BackendException {
-        Map<String, SavableMap> dataContainer = new HashMap<>();
-        for (String[] current : execute(querySelect)) {
-            insertData(dataContainer, totalID, current[0], current[1]);
-        }
-        return dataContainer;
+    private @NotNull CompletableFuture<@Unmodifiable Map<String, SavableMap>> processQuery(@NotNull String totalID, @NotNull QuerySelect querySelect) throws BackendException
+    {
+        return querySelect.execute().thenApply(this::processQuery);
     }
 
-    private void insertData(@NotNull Map<String, SavableMap> dataContainer, @NotNull String totalID, @NotNull String key, String value) {
-        dataContainer.putIfAbsent(totalID, new KissenSavableMap(totalID, KissenObjectMongoMeta.this));
-        SavableMap savableMap = dataContainer.get(totalID);
-        if (key.startsWith("_")) {
-            savableMap.putList(key.substring(1), Arrays.asList(value.substring(1, value.length() - 1).split(", ")));
-        } else {
-            savableMap.put(key, value);
+    private @NotNull Map<String, SavableMap> processQuery(@NotNull String @NotNull [] @NotNull [] data) throws BackendException
+    {
+        Map<String, SavableMap> dataContainer = new HashMap<>();
+        Type type = new TypeToken<List<String>>() {}.getType();
+        for (String[] current : data)
+        {
+            String totalID = current[0], key = current[1], value = current[2];
+            dataContainer.putIfAbsent(totalID, new KissenSavableMap(totalID, KissenObjectMongoMeta.this));
+            SavableMap savableMap = dataContainer.get(totalID);
+            if (key.startsWith("_"))
+            {
+                savableMap.putList(key.substring(1), new Gson().fromJson(value, type));
+            }
+            else
+            {
+                savableMap.put(key, value);
+            }
+            dataContainer.remove(totalID);
+            dataContainer.put(totalID, savableMap);
         }
-        dataContainer.remove(totalID);
-        dataContainer.put(totalID, savableMap);
+        return dataContainer;
     }
 }

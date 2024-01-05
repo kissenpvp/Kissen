@@ -18,6 +18,8 @@
 
 package net.kissenpvp.core.database;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.kissenpvp.core.api.database.DataImplementation;
@@ -32,10 +34,10 @@ import net.kissenpvp.core.database.queryapi.KissenQuerySelect;
 import net.kissenpvp.core.database.queryapi.KissenQueryUpdate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor
 @Getter
@@ -46,7 +48,7 @@ public abstract class KissenBaseMeta implements Meta {
 
     @Override
     public boolean metaContains(@NotNull String totalID, @NotNull String key) throws BackendException {
-        return getString(totalID, key).isPresent();
+        return !getString(totalID, key).isCompletedExceptionally();
     }
 
     @Override
@@ -130,6 +132,12 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
+    public void setStringList(@NotNull String totalID, @NotNull String key, @Nullable List<String> value) throws BackendException
+    {
+        setString(totalID, key, new Gson().toJson(value));
+    }
+
+    @Override
     public void setRecordList(@NotNull String totalID, @NotNull String key, @NotNull List<? extends Record> value) throws BackendException {
         setStringList(totalID, key, value.stream().map(record -> KissenCore.getInstance().getImplementation(DataImplementation.class).toJson(record))
                 .toList());
@@ -161,98 +169,112 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull Optional<String> getString(@NotNull String totalID, @NotNull String key) throws BackendException {
-        for (String[] data : execute(getDefaultQuery(totalID, key))) {
-            return Optional.ofNullable(data[0]);
-        }
-        return Optional.empty();
+    public @NotNull CompletableFuture<String> getString(@NotNull String totalID, @NotNull String key) throws BackendException
+    {
+        return getDefaultQuery(totalID, key).execute().thenApply(data -> data[0][0]);
     }
 
     @Override
-    public @NotNull Optional<String> getString(@NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<String> getString(@NotNull String key) throws BackendException
+    {
         return getString(UNDEFINED, key);
     }
 
     @Override
-    public @NotNull Optional<Long> getLong(@NotNull String totalID, @NotNull String key) throws BackendException {
-        return getString(totalID, key).map(Long::parseLong);
+    public @NotNull CompletableFuture<Long> getLong(@NotNull String totalID, @NotNull String key) throws BackendException
+    {
+        return getString(totalID, key).thenApply(Long::parseLong);
     }
 
     @Override
-    public @NotNull Optional<Long> getLong(@NotNull String key) throws BackendException {
-        return getString(key).map(Long::parseLong);
+    public @NotNull CompletableFuture<Long> getLong(@NotNull String key) throws BackendException
+    {
+        return getString(key).thenApply(Long::parseLong);
     }
 
     @Override
-    public @NotNull Optional<Double> getDouble(@NotNull String totalID, @NotNull String key) throws BackendException {
-        return getString(totalID, key).map(Double::parseDouble);
+    public @NotNull CompletableFuture<Double> getDouble(@NotNull String totalID, @NotNull String key) throws BackendException
+    {
+        return getString(totalID, key).thenApply(Double::parseDouble);
     }
 
     @Override
-    public @NotNull Optional<Double> getDouble(@NotNull String key) throws BackendException {
-        return getString(key).map(Double::parseDouble);
+    public @NotNull CompletableFuture<Double> getDouble(@NotNull String key) throws BackendException
+    {
+        return getString(key).thenApply(Double::parseDouble);
     }
 
     @Override
-    public @NotNull Optional<Float> getFloat(@NotNull String totalID, @NotNull String key) throws BackendException {
-        return getString(totalID, key).map(Float::parseFloat);
+    public @NotNull CompletableFuture<Float> getFloat(@NotNull String totalID, @NotNull String key) throws BackendException
+    {
+        return getString(totalID, key).thenApply(Float::parseFloat);
     }
 
     @Override
-    public @NotNull Optional<Float> getFloat(@NotNull String key) throws BackendException {
-        return getString(key).map(Float::parseFloat);
+    public @NotNull CompletableFuture<Float> getFloat(@NotNull String key) throws BackendException
+    {
+        return getString(key).thenApply(Float::parseFloat);
     }
 
     @Override
-    public @NotNull Optional<Integer> getInt(@NotNull String totalID, @NotNull String key) throws BackendException {
-        return getString(totalID, key).map(Integer::parseInt);
+    public @NotNull CompletableFuture<Integer> getInt(@NotNull String totalID, @NotNull String key) throws BackendException
+    {
+        return getString(totalID, key).thenApply(Integer::parseInt);
     }
 
     @Override
-    public @NotNull Optional<Integer> getInt(@NotNull String key) throws BackendException {
-        return getString(key).map(Integer::parseInt);
+    public @NotNull CompletableFuture<Integer> getInt(@NotNull String key) throws BackendException
+    {
+        return getString(key).thenApply(Integer::parseInt);
     }
 
     @Override
-    public @NotNull Optional<Short> getShort(@NotNull String totalID, @NotNull String key) throws BackendException {
-        return getString(totalID, key).map(Short::parseShort);
+    public @NotNull CompletableFuture<Short> getShort(@NotNull String totalID, @NotNull String key) throws BackendException
+    {
+        return getString(totalID, key).thenApply(Short::parseShort);
     }
 
     @Override
-    public @NotNull Optional<Short> getShort(@NotNull String key) throws BackendException {
-        return getString(key).map(Short::parseShort);
+    public @NotNull CompletableFuture<Short> getShort(@NotNull String key) throws BackendException
+    {
+        return getString(key).thenApply(Short::parseShort);
     }
 
     @Override
-    public @NotNull Optional<Byte> getByte(@NotNull String totalID, @NotNull String key) throws BackendException {
-        return getString(totalID, key).map(Byte::parseByte);
+    public @NotNull CompletableFuture<Byte> getByte(@NotNull String totalID, @NotNull String key) throws BackendException
+    {
+        return getString(totalID, key).thenApply(Byte::parseByte);
     }
 
     @Override
-    public @NotNull Optional<Byte> getByte(@NotNull String key) throws BackendException {
-        return getString(key).map(Byte::parseByte);
+    public @NotNull CompletableFuture<Byte> getByte(@NotNull String key) throws BackendException
+    {
+        return getString(key).thenApply(Byte::parseByte);
     }
 
     @Override
-    public @NotNull Optional<Boolean> getBoolean(@NotNull String totalID, @NotNull String key) throws BackendException {
-        return getString(totalID, key).map(Boolean::parseBoolean);
+    public @NotNull CompletableFuture<Boolean> getBoolean(@NotNull String totalID, @NotNull String key) throws BackendException
+    {
+        return getString(totalID, key).thenApply(Boolean::parseBoolean);
     }
 
     @Override
-    public @NotNull Optional<Boolean> getBoolean(@NotNull String key) throws BackendException {
-        return getString(key).map(Boolean::parseBoolean);
+    public @NotNull CompletableFuture<Boolean> getBoolean(@NotNull String key) throws BackendException
+    {
+        return getString(key).thenApply(Boolean::parseBoolean);
     }
 
     @Override
-    public @NotNull <T extends Record> Optional<T> getRecord(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record) throws BackendException {
-        for (String[] data : execute(getDefaultQuery(totalID, key))) {
-            return Optional.of(KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(data[0], record));
-        }
-        return Optional.empty();
+    public @NotNull <T extends Record> CompletableFuture<T> getRecord(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record) throws BackendException
+    {
+        return getDefaultQuery(totalID, key).execute().thenApply(
+                data -> KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(data[0][0],
+                        record));
     }
 
     @Override
-    public @NotNull <T extends Record> Optional<T> getRecord(@NotNull String key, @NotNull Class<T> record) throws BackendException {
+    public @NotNull <T extends Record> CompletableFuture<T> getRecord(@NotNull String key, @NotNull Class<T> record) throws BackendException
+    {
         return getRecord(UNDEFINED, key, record);
     }
 
@@ -260,7 +282,8 @@ public abstract class KissenBaseMeta implements Meta {
     public @NotNull QuerySelect.RootQuerySelect select(@NotNull Column... columns) {
         return new KissenQuerySelect.KissenRootQuerySelect(columns) {
             @Override
-            public String[][] execute() {
+            public @NotNull CompletableFuture<String[][]> execute()
+            {
                 return KissenBaseMeta.this.execute(getQuery());
             }
         };
@@ -270,7 +293,8 @@ public abstract class KissenBaseMeta implements Meta {
     public @NotNull QueryUpdate.RootQueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective) {
         return new KissenQueryUpdate.KissenRootQueryUpdate(queryUpdateDirective)
         {
-            @Override public long execute()
+            @Override
+            public @NotNull CompletableFuture<Long> execute()
             {
                 return KissenBaseMeta.this.execute(getQuery());
             }
@@ -278,18 +302,36 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull @Unmodifiable <T extends Record> List<T> getRecordList(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record) throws BackendException {
-        return getStringList(totalID, key).stream().map(data -> KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(data, record)).toList();
+    public @NotNull <T extends Record> CompletableFuture<List<T>> getRecordList(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record) throws BackendException
+    {
+        return getStringList(totalID, key).thenApply(list -> list.stream().map(
+                data -> KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(data,
+                        record)).toList());
     }
 
     @Override
-    public @NotNull @Unmodifiable <T extends Record> List<T> getRecordList(@NotNull String key, @NotNull Class<T> record) throws BackendException {
+    public @NotNull <T extends Record> CompletableFuture<List<T>> getRecordList(@NotNull String key, @NotNull Class<T> record) throws BackendException
+    {
         return getRecordList(UNDEFINED, key, record);
     }
 
     @Override
-    public @NotNull @Unmodifiable List<String> getStringList(@NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<List<String>> getStringList(@NotNull String key) throws BackendException
+    {
         return getStringList(UNDEFINED, key);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<List<String>> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException
+    {
+        return select(Column.VALUE).where(Column.TOTAL_ID, totalID).and(Column.KEY, key).execute().thenApply(result ->
+        {
+            if (result.length == 0)
+            {
+                return new ArrayList<>();
+            }
+            return new Gson().fromJson(result[0][0], new TypeToken<List<String>>() {}.getType());
+        });
     }
 
     protected @NotNull String getColumn(@NotNull Column column) {
@@ -304,7 +346,7 @@ public abstract class KissenBaseMeta implements Meta {
         return select(Column.VALUE).where(Column.TOTAL_ID, totalID).and(Column.KEY, key);
     }
 
-    protected abstract String[][] execute(@NotNull QuerySelect querySelect);
+    protected abstract CompletableFuture<String[][]> execute(@NotNull QuerySelect querySelect);
 
-    protected abstract long execute(@NotNull QueryUpdate queryUpdate);
+    protected abstract CompletableFuture<Long> execute(@NotNull QueryUpdate queryUpdate);
 }

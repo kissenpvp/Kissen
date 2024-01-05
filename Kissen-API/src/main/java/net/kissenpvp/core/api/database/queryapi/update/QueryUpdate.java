@@ -22,6 +22,8 @@ import net.kissenpvp.core.api.database.queryapi.QueryComponent;
 import net.kissenpvp.core.api.database.queryapi.RootQueryComponent;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * The {@code QueryUpdate} interface provides a contract for creating and executing
  * update queries. It extends the {@link QueryComponent} interface, with {@code QueryUpdate}
@@ -44,7 +46,7 @@ public interface QueryUpdate extends QueryComponent<QueryUpdate> {
      * @return A long value indicating the execution result. The interpretation of this
      * result may depend on the specific database technology in use.
      */
-    long execute();
+    @NotNull CompletableFuture<Long> execute();
 
     /**
      * The {@code RootQueryUpdate} interface provides a contract for the root of an update query.
@@ -61,6 +63,6 @@ public interface QueryUpdate extends QueryComponent<QueryUpdate> {
          * @return A long value indicating the execution result. The interpretation of this
          * result may depend on the specific database technology in use.
          */
-        long execute();
+        @NotNull CompletableFuture<Long> execute();
     }
 }

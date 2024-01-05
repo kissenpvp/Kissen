@@ -137,6 +137,109 @@ index 0000000000000000000000000000000000000000..cf608a90d188c853d72326b7763995f9
 +        return KissenCore.getInstance().getPublicMeta(); //TODO
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java b/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java
+deleted file mode 100644
+index 120aaad68d1f7a3a94f05ead14e48a9a78a4f731..0000000000000000000000000000000000000000
+--- a/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java
++++ /dev/null
+@@ -1,97 +0,0 @@
+-package net.kissenpvp.paper.user;
+-
+-import net.kissenpvp.core.api.command.CommandPayload;
+-import net.kissenpvp.core.api.command.annotations.CommandData;
+-import net.kissenpvp.core.api.command.annotations.TabCompleter;
+-import net.kissenpvp.core.api.user.UserImplementation;
+-import net.kissenpvp.core.api.user.exception.UnauthorizedException;
+-import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
+-import net.kissenpvp.core.api.user.usersetttings.UserValue;
+-import net.kissenpvp.core.user.usersettings.IllegalSettingException;
+-import net.kissenpvp.core.user.usersettings.KissenUserBoundSettings;
+-import net.kissenpvp.paper.api.command.PaperCommandExceptionHandler;
+-import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
+-import net.kyori.adventure.text.Component;
+-import org.bukkit.Bukkit;
+-import org.bukkit.command.CommandSender;
+-import org.jetbrains.annotations.NotNull;
+-
+-import java.util.Arrays;
+-import java.util.Collection;
+-import java.util.Collections;
+-import java.util.UUID;
+-import java.util.function.Predicate;
+-import java.util.stream.Collectors;
+-import java.util.stream.Stream;
+-
+-public class UserSettingCommand implements PaperCommandExceptionHandler<IllegalSettingException>
+-{
+-
+-    @CommandData("setting")
+-    public void settingCommand(@NotNull CommandPayload<CommandSender> sender, @NotNull String setting, @NotNull String value) throws UnauthorizedException
+-    {
+-        sender.getSender().sendMessage(handleUnknownType(sender, deserialize(setting), value));
+-    }
+-
+-    @TabCompleter(command = "setting")
+-    public @NotNull Collection<String> settingCommand(@NotNull CommandPayload<CommandSender> payload)
+-    {
+-        try
+-        {
+-            if(payload.getArguments().length < 2)
+-            {
+-                return tabCompletion(payload);
+-            }
+-
+-            PlayerSetting<?> playerSetting = deserialize(payload.getArguments()[0]);
+-            Stream<? extends @NotNull UserValue<?>> stream = Arrays.stream(playerSetting.getPossibleValues());
+-            return stream.map(value -> castUnknownValue(value, playerSetting)).collect(Collectors.toSet());
+-        } catch (IllegalSettingException ignored) {}
+-        return Collections.EMPTY_SET;
+-    }
+-
+-    private <T> @NotNull String castUnknownValue(Object value, @NotNull PlayerSetting<T> playerSetting) {
+-        return playerSetting.serialize(((UserValue<T>) value).value());
+-    }
+-
+-    private <T> @NotNull Component handleUnknownType(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PlayerSetting<T> settingsKey, @NotNull String value) throws UnauthorizedException
+-    {
+-        try
+-        {
+-            PaperPlayerClient player = (PaperPlayerClient) commandPayload.getSender();
+-            UUID uuid = player.getUniqueId();
+-            KissenUserBoundSettings<T> kissenUserBoundSettings = new KissenUserBoundSettings<>(settingsKey, uuid);
+-
+-            T newValue = value.equalsIgnoreCase("reset") ? settingsKey.getDefaultValue() : settingsKey.deserialize(value);
+-            kissenUserBoundSettings.setValue(newValue);
+-
+-            return Component.text("Ist geändert");
+-        }
+-        catch (ClassCastException | IllegalArgumentException exception)
+-        {
+-            return Component.text("der wert ist aber net erlaubt du naseweiß");
+-        }
+-    }
+-
+-    public @NotNull PlayerSetting<?> deserialize(@NotNull String input)
+-    {
+-        UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
+-        Stream<PlayerSetting<?>> settings = userImplementation.getUserSettings().stream();
+-        Predicate<PlayerSetting<?>> predicate = userSetting -> userSetting.getKey().equals(input);
+-        return settings.filter(predicate).findFirst().orElseThrow(IllegalSettingException::new);
+-    }
+-
+-    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
+-    {
+-        UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
+-        Stream<PlayerSetting<?>> settings = userImplementation.getUserSettings().stream();
+-        return settings.map(PlayerSetting::getKey).collect(Collectors.toSet());
+-    }
+-
+-    @Override
+-    public boolean handle(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull IllegalSettingException throwable)
+-    {
+-        commandPayload.getSender().sendMessage("Die wurd jetzt net gefunden");
+-        return true;
+-    }
+-}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
 index 34f19ac897a30c0c4e3ab406013fcca1c8b7db93..37b67c5a3f786467f915d229d4fb854fb7802fb0 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
@@ -183,30 +286,48 @@ index 34f19ac897a30c0c4e3ab406013fcca1c8b7db93..37b67c5a3f786467f915d229d4fb854f
  
      public SystemReport fillSystemReport(SystemReport details) {
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 58536aabf607015939a1326f80207c0a06eed8ff..ad490e648633817e7454bd62a4a95bb68e6c1927 100644
+index 58536aabf607015939a1326f80207c0a06eed8ff..df90e982feb6feff701f5e86642532588543b82a 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -192,6 +192,16 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
-         DedicatedServer.LOGGER.info("Loading properties");
-         DedicatedServerProperties dedicatedserverproperties = this.settings.getProperties();
+@@ -179,6 +179,14 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+             DedicatedServer.LOGGER.warn("To start the server with more ram, launch it as \"java -Xmx1024M -Xms1024M -jar minecraft_server.jar\"");
+         }
  
-+        // KissenPaper start
++        // KissenPaper start - start system
 +        net.kissenpvp.paper.base.KissenPaperCore kissenPaperCore = new net.kissenpvp.paper.base.KissenPaperCore(LogUtils.getLogger());
 +        org.bukkit.Bukkit.setKissen(kissenPaperCore);
-+        try {
-+            kissenPaperCore.initialize(net.kissenpvp.paper.base.KissenPaperCore.class);
-+        } catch (Exception exception) {
-+            throw new RuntimeException(String.format("The system could not load the 'kissen' system due to a '%s' exception.", exception.getClass().getSimpleName()), exception);
-+        }
++        //system start is asynchronous
++        java.util.concurrent.CompletableFuture<Void> systemStart = java.util.concurrent.CompletableFuture.runAsync(
++                () -> kissenPaperCore.initialize(net.kissenpvp.paper.base.KissenPaperCore.class));
 +        // KissenPaper stop
 +
-         if (this.isSingleplayer()) {
-             this.setLocalIp("127.0.0.1");
-         } else {
+         // Paper start - detect running as root
+         if (io.papermc.paper.util.ServerEnvironment.userIsRootOrAdmin()) {
+             DedicatedServer.LOGGER.warn("****************************");
+@@ -268,6 +276,10 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+             return false;
+         }
+ 
++        // KissenPaper start - wait for system start
++        systemStart.join();
++        // KissenPaper end
++
+         // CraftBukkit start
+         // this.setPlayerList(new DedicatedPlayerList(this, this.registries(), this.playerDataStorage)); // Spigot - moved up
+         this.server.loadPlugins();
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 142d2c48239d4ebe3896218536656d116cd24d7c..34a2a20bf3da87bcafe71140a0d9002894f1b293 100644
+index 142d2c48239d4ebe3896218536656d116cd24d7c..839b43a68642d4db7a2672b28f29d4ba317ef429 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -264,7 +264,7 @@ import javax.annotation.Nullable; // Paper
+ import javax.annotation.Nonnull; // Paper
+ 
+ public final class CraftServer implements Server {
+-    private final String serverName = "Paper"; // Paper
++    private final String serverName = "KissenPaper"; // Paper
+     private final String serverVersion;
+     private final String bukkitVersion = Versioning.getBukkitVersion();
+     private final Logger logger = Logger.getLogger("Minecraft");
 @@ -545,7 +545,13 @@ public final class CraftServer implements Server {
  
          for (Plugin plugin : plugins) {

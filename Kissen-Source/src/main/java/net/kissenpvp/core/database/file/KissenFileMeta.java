@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -73,49 +74,54 @@ public class KissenFileMeta extends KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull @Unmodifiable List<String> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException {
-        return getString(totalID, key).map(string -> string.substring(1, string.length() - 1)).map(string -> Arrays.asList(string.split(", "))).orElse(new ArrayList<>());
+    public @NotNull CompletableFuture<List<String>> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException {
+        return getString(totalID, key).thenApply(string -> Arrays.asList(string.substring(1, string.length() - 1).split(", ")));
     }
 
     @Override
-    public @NotNull String[][] execute(@NotNull QuerySelect querySelect) throws BackendException {
-        List<String[]> selected = new ArrayList<>();
-        for (String line : new ArrayList<>(getFilteredData(getFileData(), querySelect.getFilterQueries()))) {
-            String[] result = new String[querySelect.getColumns().length];
-            for (int i = 0; i < result.length; i++) {
-                result[i] = getColumnValue(querySelect.getColumns()[i], line);
-            }
-            selected.add(result);
-        }
-
-        return selected.toArray(new String[0][]);
-    }
-
-    @Override
-    public long execute(@NotNull QueryUpdate queryUpdate) throws BackendException {
-
-        List<String> data = new ArrayList<>(getFileData());
-        List<String> filtered = new ArrayList<>(getFilteredData(data, queryUpdate.getFilterQueries()));
-
-        int count = 0;
-        for (QueryUpdateDirective queryUpdateDirective : queryUpdate.getColumns()) {
-            for (String current : filtered) {
-                if (data.remove(current)) {
-                    count++;
+    public @NotNull CompletableFuture<String[][]> execute(@NotNull QuerySelect querySelect) throws BackendException {
+        return CompletableFuture.supplyAsync(() ->
+        {
+            List<String[]> selected = new ArrayList<>();
+            for (String line : new ArrayList<>(getFilteredData(getFileData(), querySelect.getFilterQueries()))) {
+                String[] result = new String[querySelect.getColumns().length];
+                for (int i = 0; i < result.length; i++) {
+                    result[i] = getColumnValue(querySelect.getColumns()[i], line);
                 }
-                data.add(switch (queryUpdateDirective.column()) {
-                    case TOTAL_ID ->
-                            queryUpdateDirective.value() + "." + current.split("\\.")[1].split(":")[0] + ":" + current.split(":")[1];
-                    case KEY ->
-                            current.split("\\.")[0] + "." + queryUpdateDirective.value() + ": " + current.split(":")[1];
-                    case VALUE ->
-                            current.split("\\.")[0] + "." + current.split("\\.")[1].split(":")[0] + ":" + queryUpdateDirective.value();
-                });
+                selected.add(result);
             }
-        }
 
-        writeFileContent(data);
-        return count;
+            return selected.toArray(new String[0][]);
+        });
+    }
+
+    @Override
+    public @NotNull CompletableFuture<Long> execute(@NotNull QueryUpdate queryUpdate) throws BackendException {
+        return CompletableFuture.supplyAsync(() ->
+        {
+            List<String> data = new ArrayList<>(getFileData());
+            List<String> filtered = new ArrayList<>(getFilteredData(data, queryUpdate.getFilterQueries()));
+
+            long count = 0;
+            for (QueryUpdateDirective queryUpdateDirective : queryUpdate.getColumns()) {
+                for (String current : filtered) {
+                    if (data.remove(current)) {
+                        count++;
+                    }
+                    data.add(switch (queryUpdateDirective.column()) {
+                        case TOTAL_ID ->
+                                queryUpdateDirective.value() + "." + current.split("\\.")[1].split(":")[0] + ":" + current.split(":")[1];
+                        case KEY ->
+                                current.split("\\.")[0] + "." + queryUpdateDirective.value() + ": " + current.split(":")[1];
+                        case VALUE ->
+                                current.split("\\.")[0] + "." + current.split("\\.")[1].split(":")[0] + ":" + queryUpdateDirective.value();
+                    });
+                }
+            }
+
+            writeFileContent(data);
+            return count;
+        });
     }
 
     private @NotNull @Unmodifiable List<String> getFilteredData(@NotNull List<String> data, @NotNull FilterQuery @NotNull ... filterQueries) {

@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * The ObjectMeta interface represents a system component responsible for managing objects and associated data in a
@@ -86,7 +87,7 @@ public interface ObjectMeta extends Meta {
      * @return an optional SavableMap object containing the data associated with the object, or an empty optional if
      * no data is found.
      */
-    @NotNull Optional<SavableMap> getData(@NotNull String totalId) throws BackendException;
+    @NotNull CompletableFuture<SavableMap> getData(@NotNull String totalId) throws BackendException;
 
     /**
      * Retrieves the data associated with the specified Savable object.
@@ -106,5 +107,5 @@ public interface ObjectMeta extends Meta {
      * If no data is found for the specified Savable object, an empty map is returned.
      * @see Savable
      */
-    <T extends Savable> @Unmodifiable @NotNull Map<@NotNull String, @NotNull SavableMap> getData(@NotNull T savable) throws BackendException;
+    <T extends Savable> @NotNull CompletableFuture<@Unmodifiable Map<@NotNull String, @NotNull SavableMap>> getData(@NotNull T savable) throws BackendException;
 }

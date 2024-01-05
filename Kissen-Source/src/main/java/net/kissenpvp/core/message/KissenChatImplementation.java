@@ -24,6 +24,7 @@ import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 public class KissenChatImplementation implements ChatImplementation
@@ -31,13 +32,18 @@ public class KissenChatImplementation implements ChatImplementation
     @Override
     public @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity serverEntity, @NotNull Component @NotNull ... components)
     {
-        Component prefix = Component.text("Kissen").color(ThemeProvider.primary()).append(
-                Component.text("PvP").color(ThemeProvider.secondary())).append(
-                Component.text(" » ").color(ThemeProvider.general()));
-        Component[] components1 = new Component[components.length + 1];
-        components1[0] = prefix;
-        System.arraycopy(components, 0, components1, 1, components.length);
-        return Optional.of(styleComponent(serverEntity, components1));
+        //TODO experimental
+        if(components.length < 2 && Arrays.stream(components).noneMatch(component -> component.contains(Component.newline())))
+        {
+            Component prefix = Component.text("Kissen").color(ThemeProvider.primary()).append(
+                    Component.text("PvP").color(ThemeProvider.secondary())).append(
+                    Component.text(" » ").color(ThemeProvider.general()));
+            Component[] components1 = new Component[components.length + 1];
+            components1[0] = prefix;
+            System.arraycopy(components, 0, components1, 1, components.length);
+            return Optional.of(styleComponent(serverEntity, components1));
+        }
+        return Optional.of(styleComponent(serverEntity, components));
     }
 
     @Override

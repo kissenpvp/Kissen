@@ -121,7 +121,7 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
      * Checks the host address from every player who joined and connects accounts which got the same address.
      */
     public void findAltAccounts() throws BackendException {
-        String name = getNotNull("name");
+        /*String name = getNotNull("name");
         UUID totalID = UUID.fromString(get("total_id").orElse(getRawID()));
 
         Map<String, Object> hosts =
@@ -131,7 +131,8 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
         Map<String, SavableMap> data = getMeta().getData(this);
         hosts.forEach((key, value) -> handleHost(totalID, host, data, key, value));
 
-        printAltStatus(name, totalID, data);
+        printAltStatus(name, totalID, data);*/
+        //TODO finds hosts
     }
 
     private void printAltStatus(String name, UUID totalID, Map<String, SavableMap> data) {

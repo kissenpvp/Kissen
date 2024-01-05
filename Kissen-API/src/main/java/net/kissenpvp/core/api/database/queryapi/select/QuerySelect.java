@@ -23,6 +23,8 @@ import net.kissenpvp.core.api.database.queryapi.QueryComponent;
 import net.kissenpvp.core.api.database.queryapi.RootQueryComponent;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * The {@code QuerySelect} interface provides a contract for creating and executing
  * select queries. It extends the {@link QueryComponent} interface, with {@code QuerySelect}
@@ -47,7 +49,7 @@ public interface QuerySelect extends QueryComponent<QuerySelect> {
      *
      * @return A 2D array of {@link String}, where each inner array represents rows of the result.
      */
-    @NotNull String[][] execute();
+    @NotNull CompletableFuture<String[][]> execute();
 
     /**
      * The {@code RootQuerySelect} interface provides a contract for the root of a select query.
@@ -63,7 +65,7 @@ public interface QuerySelect extends QueryComponent<QuerySelect> {
          *
          * @return A 2D array of {@link String}, where each inner array represents rows of the result.
          */
-        @NotNull String[][] execute();
+        @NotNull CompletableFuture<String[][]> execute();
     }
 
 }

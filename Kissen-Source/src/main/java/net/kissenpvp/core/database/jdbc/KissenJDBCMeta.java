@@ -32,13 +32,13 @@ import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
 import net.kissenpvp.core.database.KissenBaseMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -79,27 +79,6 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     }
 
     @Override
-    public @NotNull @Unmodifiable List<String> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException {
-
-        AtomicReference<List<String>> listAtomicReference = new AtomicReference<>(new ArrayList<>());
-        getPreparedStatement(String.format("SELECT %s FROM %s WHERE %s = ? AND %s = ?;", getValueColumn(), getTable(), getTotalIDColumn(), getKeyColumn()), (preparedStatement ->
-        {
-            preparedStatement.setString(1, totalID);
-            preparedStatement.setString(2, key);
-            try(ResultSet resultSet = preparedStatement.executeQuery())
-            {
-                if (resultSet.next()) {
-                    String json = resultSet.getString(getValueColumn());
-                    Type listType = new TypeToken<List<String>>() {
-                    }.getType();
-                    listAtomicReference.set(new Gson().fromJson(json, listType));
-                }
-            }
-        }));
-        return listAtomicReference.get();
-    }
-
-    @Override
     public void setString(@NotNull String totalID, @NotNull String key, @Nullable String value) throws BackendException {
         if(value == null)
         {
@@ -137,37 +116,42 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     }
 
     @Override
-    public void setStringList(@NotNull String totalID, @NotNull String key, @Nullable List<String> value) throws BackendException {
-        setString(totalID, key, new Gson().toJson(value));
-    }
+    protected @NotNull CompletableFuture<String[][]> execute(@NotNull QuerySelect querySelect) throws BackendException
+    {
 
-    @Override
-    protected @NotNull String[][] execute(@NotNull QuerySelect querySelect) throws BackendException {
-
-        StringBuilder sql = new StringBuilder("SELECT").append(" ");
-        sql.append(transformSelectColumns(querySelect.getColumns())).append(" ");
-        sql.append("FROM").append(" ").append(getTable());
-        String[] values = new String[0];
-        if (querySelect.getFilterQueries().length != 0)
+        return CompletableFuture.supplyAsync(() ->
         {
-            sql.append(" ").append("WHERE").append(" ");
-            values = transformFilters(sql, querySelect.getFilterQueries());
-        }
-        sql.append(";");
-        return runSelectQuery(sql.toString(), values, querySelect.getColumns());
+            StringBuilder sql = new StringBuilder("SELECT").append(" ");
+            sql.append(transformSelectColumns(querySelect.getColumns())).append(" ");
+            sql.append("FROM").append(" ").append(getTable());
+            String[] values = new String[0];
+            if (querySelect.getFilterQueries().length != 0)
+            {
+                sql.append(" ").append("WHERE").append(" ");
+                values = transformFilters(sql, querySelect.getFilterQueries());
+            }
+            sql.append(";");
+            return runSelectQuery(sql.toString(), values, querySelect.getColumns());
+        });
+
     }
 
     @Override
-    protected long execute(@NotNull QueryUpdate queryUpdate) throws BackendException {
-        StringBuilder sql = new StringBuilder("UPDATE").append(" ").append(getTable()).append(" ").append("SET").append(" ");
-        String[] updateValues = transformUpdateColumns(sql, queryUpdate.getColumns());
-        String[] whereValues = transformFilters(sql, queryUpdate.getFilterQueries());
+    protected @NotNull CompletableFuture<Long> execute(@NotNull QueryUpdate queryUpdate) throws BackendException
+    {
+        return CompletableFuture.supplyAsync(() ->
+        {
+            StringBuilder sql = new StringBuilder("UPDATE").append(" ").append(getTable()).append(" ").append(
+                    "SET").append(" ");
+            String[] updateValues = transformUpdateColumns(sql, queryUpdate.getColumns());
+            String[] whereValues = transformFilters(sql, queryUpdate.getFilterQueries());
 
-        String[] total = new String[updateValues.length + whereValues.length];
-        System.arraycopy(updateValues, 0, total, 0, updateValues.length);
-        System.arraycopy(whereValues, 0, total, updateValues.length, whereValues.length);
+            String[] total = new String[updateValues.length + whereValues.length];
+            System.arraycopy(updateValues, 0, total, 0, updateValues.length);
+            System.arraycopy(whereValues, 0, total, updateValues.length, whereValues.length);
 
-        return runUpdateQuery(sql.toString(), total);
+            return runUpdateQuery(sql.toString(), total);
+        });
     }
 
     public abstract void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor);

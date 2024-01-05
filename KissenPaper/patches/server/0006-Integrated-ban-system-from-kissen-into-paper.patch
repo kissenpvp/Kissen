@@ -122,10 +122,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a3fbcda852edc2db16e614047938d851edcbdd52
+index 0000000000000000000000000000000000000000..132fa79cdb1f27465fe006600dcd178965571ade
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,538 @@
+@@ -0,0 +1,506 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -271,15 +271,7 @@ index 0000000000000000000000000000000000000000..a3fbcda852edc2db16e614047938d851
 +
 +    @Override
 +    protected @NotNull PaperPunishment translatePunishment(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @NotNull Meta meta) {
-+        return new KissenPaperPunishment(totalID, kissenPunishmentNode, record -> {
-+            try {
-+                set(totalID, (KissenPunishmentNode) record, meta);
-+            } catch (BackendException backendException) {
-+                Bukkit.getKissen()
-+                        .getLogger()
-+                        .error("The punishment '{}' from total id '{}' could not be updated due to a backend exception. It is advised to shut down the server to prevent further damage to the servers data.", ((KissenPunishmentNode) record).id(), totalID, backendException);
-+            }
-+        });
++        return new KissenPaperPunishment(totalID, kissenPunishmentNode, record -> set(totalID, (KissenPunishmentNode) record, meta));
 +    }
 +
 +    @Override
@@ -363,7 +355,8 @@ index 0000000000000000000000000000000000000000..a3fbcda852edc2db16e614047938d851
 +     *                          will be thrown. It signifies an issue with the backend operation.
 +     */
 +    private @NotNull Stream<PaperBan> queryBanStream(@NotNull ObjectMeta meta) throws BackendException {
-+        return meta.getData(new KissenPaperBan()).values().stream().map(banProcessor());
++        return meta.getData(new KissenPaperBan()).thenApply(Map::values).thenApply(Collection::stream).thenApply(
++                s -> s.map(banProcessor())).join();
 +    }
 +
 +    /**
@@ -373,27 +366,14 @@ index 0000000000000000000000000000000000000000..a3fbcda852edc2db16e614047938d851
 +     */
 +    @Contract(pure = true)
 +    private @NotNull Function<SavableMap, PaperBan> banProcessor() {
-+        return savableMap -> {
-+            try {
-+                return createBan(Integer.parseInt(savableMap.getNotNull("id")), savableMap);
-+            } catch (BackendException | NumberFormatException exception) {
-+                Bukkit.getKissen()
-+                        .getLogger()
-+                        .error("Error parsing ban entry with id {}.", savableMap.getNotNull("id"), exception);
-+            }
-+            return null;
-+        };
++        return savableMap -> createBan(Integer.parseInt(savableMap.getNotNull("id")), savableMap);
 +    }
 +
 +    // Bukkit
 +
 +    @Override
 +    public @NotNull <E extends BanEntry<? super PlayerProfile>> Set<E> getEntries() {
-+        try {
-+            return getPunishmentSet().stream().map(punishment -> (E) punishment).collect(Collectors.toSet());
-+        } catch (BackendException backendException) {
-+            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
-+        }
++        return getPunishmentSet().stream().map(punishment -> (E) punishment).collect(Collectors.toSet());
 +    }
 +
 +    @Override
@@ -403,30 +383,18 @@ index 0000000000000000000000000000000000000000..a3fbcda852edc2db16e614047938d851
 +
 +    @Override
 +    public @Nullable BanEntry<PlayerProfile> getBanEntry(@NotNull PlayerProfile target) {
-+        try {
-+            return getLatestPunishment(Objects.requireNonNull(target.getId())).orElse(null);
-+        } catch (BackendException backendException) {
-+            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
-+        }
++        return getLatestPunishment(Objects.requireNonNull(target.getId())).orElse(null);
 +    }
 +
 +    @Override
 +    public @NotNull Set<BanEntry> getBanEntries() {
-+        try {
-+            return getPunishmentSet().stream().map(punishment -> (BanEntry<?>) punishment).collect(Collectors.toSet());
-+        } catch (BackendException backendException) {
-+            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
-+        }
++        return getPunishmentSet().stream().map(punishment -> (BanEntry<?>) punishment).collect(Collectors.toSet());
 +    }
 +
 +    @SuppressWarnings("deprecation")
 +    @Override
 +    public <E extends BanEntry<? super PlayerProfile>> @Nullable E getBanEntry(org.bukkit.profile.@NotNull PlayerProfile target) {
-+        try {
-+            return (E) getLatestPunishment(Objects.requireNonNull(target.getUniqueId())).orElse(null);
-+        } catch (BackendException backendException) {
-+            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
-+        }
++        return (E) getLatestPunishment(Objects.requireNonNull(target.getUniqueId())).orElse(null);
 +    }
 +
 +    @Override
@@ -1539,13 +1507,14 @@ index 24dc0f73925de7b7353c9db5c2d3dc0f4d4fa67d..7b2db25cb128604c6ac3a4a9499c2f4e
          return warnCount;
      }
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 4601c9dfc43d9f0b875c1df39db96c08e2a046c1..670f5e833f75df60d301620ff3c37a994379f71c 100644
+index fa53db3e5ba305212878bc04334f628f2f9ca88b..c5dfc0338d22690d3d945fa74cf0fb478a9d69f2 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-@@ -389,6 +389,13 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -398,12 +398,53 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+                     disconnect(Component.translatable("multiplayer.disconnect.not_whitelisted"));
                      return false;
                  }
- 
++
 +                net.kissenpvp.paper.api.ban.PaperBanImplementation banImplementation = org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class);
 +                net.kissenpvp.paper.api.ban.PaperPunishment paperPunishment = banImplementation.getLatestPunishment(kissenPaperPublicUser.get("total_id").map(java.util.UUID::fromString).orElse(gameProfile.getId()), net.kissenpvp.core.api.ban.BanType.BAN).orElse(null);
 +                if (paperPunishment != null) {
@@ -1553,10 +1522,9 @@ index 4601c9dfc43d9f0b875c1df39db96c08e2a046c1..670f5e833f75df60d301620ff3c37a99
 +                    return false;
 +                }
 +
-                 kissenPaperPublicUser.getPrivateUserEntry(); // load private user
              } catch (BackendException backendException) {
                  disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
-@@ -396,6 +403,39 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+                 return false;
              }
              return true;
          }
@@ -1677,7 +1645,7 @@ index b85198a78cacd4c4d553542be7bdfd9e58a38bfa..0e8117ad5fcd09c5daa6f2bc864bf8d2
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 9331e10482047c03ed803bd78b6718580fe250f2..5af4bf2d24fdac517511240044c3bdb73c774b6c 100644
+index 0237f75845feb6ca02f0fb59c61a3898dd26d29a..c970ceb24c1f7cdebcac7a77e82a51f568915b9a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -2207,12 +2207,19 @@ public final class CraftServer implements Server {

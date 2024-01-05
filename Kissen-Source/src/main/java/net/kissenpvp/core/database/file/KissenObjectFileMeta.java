@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class KissenObjectFileMeta extends KissenFileMeta implements ObjectMeta {
 
@@ -42,12 +43,12 @@ public class KissenObjectFileMeta extends KissenFileMeta implements ObjectMeta {
     }
 
     @Override
-    public @NotNull Optional<SavableMap> getData(@NotNull String totalId) throws BackendException {
-        return Optional.empty();
+    public @NotNull CompletableFuture<SavableMap> getData(@NotNull String totalId) throws BackendException {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException());
     }
 
     @Override
-    public @Unmodifiable @NotNull <T extends Savable> Map<@NotNull String, @NotNull SavableMap> getData(@NotNull T savable) throws BackendException {
-        return null;
+    public @Unmodifiable @NotNull <T extends Savable> CompletableFuture<Map<@NotNull String, @NotNull SavableMap>> getData(@NotNull T savable) throws BackendException {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException());
     }
 }

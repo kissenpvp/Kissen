@@ -22,7 +22,6 @@ import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
-import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.database.savable.list.SavableList;
 import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.networking.socket.DataPackage;
@@ -35,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -64,23 +64,38 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
 
     @Override
     public void setup(@NotNull String id, @Nullable Map<@NotNull String, @NotNull String> meta) throws SavableInitializeException, BackendException {
-        super.setId(id);
 
-        if (meta == null) {
-            meta = getMeta().getData(this.getDatabaseID())
-                    .map(SavableMap::serializeSavable)
-                    .orElse(new KissenSavableMap(this.getDatabaseID(), getMeta()));
-
+        try
+        {
+            super.setId(id);
+            internalSetup(id, meta != null ? meta : getMeta().getData(this.getDatabaseID()).handle((savableMap, throwable) ->
+            {
+                if (savableMap == null)
+                {
+                    return new KissenSavableMap(this.getDatabaseID(), getMeta());
+                }
+                return savableMap.serializeSavable();
+            }).get());
         }
+        catch (InterruptedException | ExecutionException backendException)
+        {
+            throw new BackendException(backendException);
+        }
+    }
 
-        if (this.getKeys().length > 0) {
-            if (!Stream.of(this.getKeys()).allMatch(meta::containsKey)) {
+    private void internalSetup(@NotNull String id, @NotNull Map<@NotNull String, @NotNull String> meta) throws InterruptedException, ExecutionException
+    {
+        if (this.getKeys().length > 0)
+        {
+            if (!Stream.of(this.getKeys()).allMatch(meta::containsKey))
+            {
                 throw new SavableInitializeException();
             }
         }
 
         boolean justCreated = false;
-        if (!meta.containsKey("id")) {
+        if (!meta.containsKey("id"))
+        {
             Map<String, String> newMeta = new HashMap<>(meta);
             newMeta.put("id", this.getRawID());
             getMeta().add(this.getDatabaseID(), newMeta);
@@ -90,7 +105,8 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
         super.setId(meta.get("id")); //correct capitalization.
         setData(meta, getRawID());
 
-        if (justCreated) {
+        if (justCreated)
+        {
             //TODO
             //sendData(KissenCore.getInstance().getImplementation(NetworkImplementation.class).createPackage("create_savable", getSerializableSavableHandler(), getRawID(), new HashMap<>(meta)));
         }

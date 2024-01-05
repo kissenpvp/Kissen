@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Represents a Kissen metaclass for object-based data storage.
@@ -115,18 +116,22 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
     }
 
     @Override
-    public @NotNull Optional<SavableMap> getData(@NotNull String totalId)  {
-        String[][] data = select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId, FilterType.EXACT_MATCH).execute();
-        return Optional.ofNullable(processQuery(data).get(totalId));
+    public @NotNull CompletableFuture<SavableMap> getData(@NotNull String totalId)
+    {
+        return select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId,
+                FilterType.EXACT_MATCH).execute().thenApply(data -> processQuery(data).get(totalId));
     }
 
     @Override
-    public @Unmodifiable @NotNull <T extends Savable> Map<@NotNull String, @NotNull SavableMap> getData(@NotNull T savable) {
-        String[][] data = select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, savable.getSaveID(), FilterType.STARTS_WITH).execute();
-        return Map.copyOf(processQuery(data));
+    public @NotNull <T extends Savable> CompletableFuture<@Unmodifiable Map<@NotNull String, @NotNull SavableMap>> getData(@NotNull T savable)
+    {
+
+        return select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, savable.getSaveID(),
+                FilterType.STARTS_WITH).execute().thenApply(this::processQuery);
     }
 
-    private @NotNull Map<String, SavableMap> processQuery(@NotNull String[] @NotNull [] data) throws BackendException {
+    private @NotNull Map<String, SavableMap> processQuery(@NotNull String @NotNull [] @NotNull [] data) throws BackendException
+    {
         Map<String, SavableMap> dataContainer = new HashMap<>();
         for (String[] current : data) {
             String totalID = current[0], key = current[1], value = current[2];

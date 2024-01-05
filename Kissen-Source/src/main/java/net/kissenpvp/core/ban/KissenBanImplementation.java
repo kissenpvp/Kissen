@@ -36,6 +36,7 @@ import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -43,10 +44,10 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.lang.reflect.Type;
 import java.text.MessageFormat;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * This class is an abstract implementation of the BanImplementation interface.
@@ -245,7 +246,10 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
         Map<String, Object> cache = storageImplementation.getStorage(STORAGE_KEY, Duration.ofHours(1));
         if(!cache.containsKey(key))
         {
-            cache.put(key, meta.getRecordList("punishment", totalID.toString(), KissenPunishmentNode.class).stream().map(obj -> translatePunishment(totalID, obj, meta)).collect(Collectors.toSet()));
+            Function<List<KissenPunishmentNode>, Set<P>> f = transform(totalID, meta);
+            CompletableFuture<List<KissenPunishmentNode>> future = meta.getRecordList("punishment", totalID.toString(),
+                    KissenPunishmentNode.class);
+            cache.put(key, future.thenApply(transform(totalID, meta)).join());
         }
 
         return (Set<P>) cache.get(key);
@@ -261,17 +265,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull Meta meta) throws BackendException {
         final Type type = new TypeToken<List<String>>(){}.getType();
         QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, "punishment", FilterType.EXACT_MATCH);
-        return Stream.of(querySelect.execute()).flatMap(result ->
-        {
-            UUID totalID = UUID.fromString(result[0]);
-            List<String> kissenPunishmentNodes = new Gson().fromJson(result[1], type);
-
-            return kissenPunishmentNodes.stream().map(node ->
-            {
-                KissenPunishmentNode punishment = KissenCore.getInstance().getImplementation(DataImplementation.class).fromJson(node, KissenPunishmentNode.class);
-                return translatePunishment(totalID, punishment, meta);
-            });
-        }).collect(Collectors.toSet());
+        return querySelect.execute().thenApply(transform(type, meta)).join();
     }
 
 
@@ -285,7 +279,8 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @throws BackendException if there is an error accessing the backend
      */
     protected void set(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @NotNull Meta meta) throws BackendException {
-        List<KissenPunishmentNode> punishmentRecordList = new ArrayList<>(meta.getRecordList("punishment", totalID.toString(), KissenPunishmentNode.class));
+        List<KissenPunishmentNode> punishmentRecordList = meta.getRecordList("punishment", totalID.toString(),
+                KissenPunishmentNode.class).thenApply(ArrayList::new).join();
         punishmentRecordList.removeIf(node -> node.id().equals(kissenPunishmentNode.id()));
         punishmentRecordList.add(kissenPunishmentNode);
 
@@ -386,4 +381,27 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @return the translated punishment
      */
     protected abstract @NotNull P translatePunishment(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @NotNull Meta meta);
+
+    @Contract(pure = true, value = "_, _ -> new")
+    private @NotNull Function<String[][], Set<P>> transform(@NotNull Type type, @NotNull Meta meta)
+    {
+        return (data -> Arrays.stream(data).flatMap(result ->
+        {
+            UUID totalID = UUID.fromString(result[0]);
+            List<String> kissenPunishmentNodes = new Gson().fromJson(result[1], type);
+
+            return kissenPunishmentNodes.stream().map(node ->
+            {
+                KissenPunishmentNode punishment = KissenCore.getInstance().getImplementation(
+                        DataImplementation.class).fromJson(node, KissenPunishmentNode.class);
+                return translatePunishment(totalID, punishment, meta);
+            });
+        }).collect(Collectors.toSet()));
+    }
+
+    @Contract(pure = true, value = "_, _ -> new")
+    private @NotNull Function<List<KissenPunishmentNode>, Set<P>> transform(@NotNull UUID totalID, @NotNull Meta meta)
+    {
+        return obj -> obj.stream().map(node -> translatePunishment(totalID, node, meta)).collect(Collectors.toSet());
+    }
 }

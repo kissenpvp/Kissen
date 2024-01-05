@@ -41,6 +41,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -94,8 +95,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
             throw new IllegalStateException("Cannot start user tick!", taskException);
         }
 
-        cachedProfiles.clear();
-        cachedProfiles.addAll(fetchUserProfiles());
+        fetchUserProfiles();
 
         return UserImplementation.super.postStart();
     }
@@ -115,13 +115,13 @@ public abstract class KissenUserImplementation implements UserImplementation {
         return getOnlineUser().stream().filter(user -> user.getNotNull("name").equals(name)).findFirst().orElseGet(() ->
         {
             try {
-                String[][] data = getUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "name", FilterType.EXACT_MATCH).and(Column.VALUE, name, FilterType.EXACT_MATCH).execute();
-                if (data.length != 0) {
-                    return getUser(UUID.fromString(data[0][0].substring(getUserSaveID().length())));
-                }
-                throw new UnknownPlayerException(name);
-            } catch (BackendException backendException) {
-                throw new RuntimeException(backendException);
+                return getUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "name", FilterType.EXACT_MATCH).and(
+                        Column.VALUE, name, FilterType.EXACT_MATCH).execute().thenApply(
+                        data -> getUser(UUID.fromString(data[0][0].substring(getUserSaveID().length())))).join();
+            }
+            catch (ArrayIndexOutOfBoundsException | BackendException backendException)
+            {
+                throw new BackendException(backendException);
             }
         });
     }
@@ -171,19 +171,6 @@ public abstract class KissenUserImplementation implements UserImplementation {
         return Collections.unmodifiableSet(userPlayerSettings);
     }
 
-    /**
-     * Retrieves a user's data.
-     * <p>
-     * This method is responsible for fetching and returning a user's data. The data is stored in a collection of SavableMap objects,
-     * where each SavableMap represents a set of user's data that can be stored and retrieved.
-     * <p>
-     * By marking this collection with the @Unmodifiable annotation, it signifies that the returned collection is unmodifiable,
-     * meaning that any attempt to alter its state (add, remove, etc.) will throw an UnsupportedOperationException.
-     *
-     * @return A set of SavableMap objects representing the user's data. The returned set is unmodifiable.
-     * @throws BackendException If an error occurs while trying to fetch the user's data from the backend data source.
-     */
-    public @NotNull @Unmodifiable abstract Set<SavableMap> getUserData() throws BackendException;
 
     /**
      * Provides a default user save ID.
@@ -212,22 +199,19 @@ public abstract class KissenUserImplementation implements UserImplementation {
      *
      * @throws IllegalStateException if an error occurs while fetching the user profiles from the backend data source
      */
-    private @Unmodifiable @NotNull Set<UserInfoNode> fetchUserProfiles() {
-        Set<UserInfoNode> userInfos = new HashSet<>();
+    private void fetchUserProfiles() {
+        cachedProfiles.clear();
         QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "name", FilterType.EXACT_MATCH);
-        try {
-            String[][] data = querySelect.execute();
-            for (String[] user : data) {
+        querySelect.execute().thenAcceptAsync(data ->
+        {
+            for (String[] user : data)
+            {
                 UUID uuid = UUID.fromString(user[0].substring(getUserSaveID().length()));
                 String name = user[1];
-
-                userInfos.add(new UserInfoNode(uuid, name));
+                cachedProfiles.add(new UserInfoNode(uuid, name));
             }
-        } catch (BackendException backendException) {
-            throw new IllegalStateException("The userinfo couldn't be cached. Something must be wrong with the sql connection. The system shuts down to prevent further damages to the systems database.", backendException);
-        }
-        KissenCore.getInstance().getLogger().info("Successfully loaded {} user profile(s) from the database.", userInfos.size());
-        return Collections.unmodifiableSet(userInfos);
+            KissenCore.getInstance().getLogger().info("Successfully loaded {} user profile(s) from the database.", cachedProfiles.size());
+        });
     }
 
     /**
@@ -298,18 +282,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
         return false;
     }
 
-    /**
-     * Update a user's TOTAL_ID value.
-     * <p>
-     * This method allows you to change the TOTAL_ID of a user. It creates and executes an update command,
-     * where the TARGET_ID is replaced with a new one in the metadata.
-     *
-     * @param from a UUID representing the original TOTAL_ID (TARGET_ID) of the user to change
-     * @param to   a UUID representing the new TOTAL_ID of the user
-     * @return the number of rows affected by the update
-     * @throws Exception if an error occurs during the execution of the update
-     */
-    public long rewriteTotalID(@NotNull UUID from, @NotNull UUID to) {
+    public @NotNull CompletableFuture<Long> rewriteTotalID(@NotNull UUID from, @NotNull UUID to) {
         return getUserMeta().update(new QueryUpdateDirective(Column.VALUE, to.toString()))
                 .where(Column.TOTAL_ID, getUserSaveID(), FilterType.STARTS_WITH)
                 .and(Column.KEY, "total_id", FilterType.EXACT_MATCH)
