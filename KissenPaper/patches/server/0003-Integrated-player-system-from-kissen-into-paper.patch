@@ -2384,7 +2384,7 @@ index 0000000000000000000000000000000000000000..d31cddcca8056588ad062607e3fab5a7
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..41d28104fa7a6c2c9f79f33202b23ddff88e41b8
+index 0000000000000000000000000000000000000000..877406ab70a0dddfc3d5aab60fc886a87e7b50ed
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 @@ -0,0 +1,152 @@
@@ -2446,7 +2446,7 @@ index 0000000000000000000000000000000000000000..41d28104fa7a6c2c9f79f33202b23ddf
 +
 +        KissenPaperLocalizationImplementation localize = Bukkit.getKissen().getImplementation(KissenPaperLocalizationImplementation.class);
 +        localize.register("server.user.setting.changed", new MessageFormat("The setting {0} has been set to {1}."));
-+        localize.register("server.user.setting.value.invalid", new MessageFormat("The value {1} is not allowed in setting {1}."));
++        localize.register("server.user.setting.value.invalid", new MessageFormat("The value {0} is not allowed in setting {1}."));
 +        localize.register("server.user.setting.not.found", new MessageFormat("The setting {0} does not exists."));
 +        localize.register("server.user.setting.reset", new MessageFormat("The setting {0} has been reset to its default value {1}."));
 +
@@ -3094,10 +3094,10 @@ index 0000000000000000000000000000000000000000..6d8ebd6fd429aa977a8ca61101938a1b
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java b/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..91c2b03b62c15525b63a597974b2134a5cf201a7
+index 0000000000000000000000000000000000000000..47ed5f8f8398b83c4979f3f4068ac36164b2d20d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java
-@@ -0,0 +1,105 @@
+@@ -0,0 +1,104 @@
 +package net.kissenpvp.paper.user;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -3142,6 +3142,7 @@ index 0000000000000000000000000000000000000000..91c2b03b62c15525b63a597974b2134a
 +
 +    private <T> @NotNull Component setSetting(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PlayerSetting<T> settingsKey, @NotNull String value) throws UnauthorizedException
 +    {
++        Component setting = Component.text(settingsKey.getKey());
 +        try
 +        {
 +            boolean reset = value.equalsIgnoreCase("reset");
@@ -3153,14 +3154,12 @@ index 0000000000000000000000000000000000000000..91c2b03b62c15525b63a597974b2134a
 +            kissenUserBoundSettings.setValue(newValue);
 +
 +            String langKey = reset ? "server.user.setting.reset" : "server.user.setting.changed";
-+            Component setting = Component.text(settingsKey.getKey());
 +            Component changedTo = Component.text(kissenUserBoundSettings.getUserSetting().serialize(newValue));
 +            return Component.translatable(langKey, setting, changedTo);
 +        }
 +        catch (ClassCastException | IllegalArgumentException exception)
 +        {
-+            return Component.translatable("server.user.setting.value.invalid", settingsKey.getKey(),
-+                    Component.text(value));
++            return Component.translatable("server.user.setting.value.invalid", setting, Component.text(value));
 +        }
 +    }
 +

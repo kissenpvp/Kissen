@@ -5,7 +5,7 @@ Subject: [PATCH] Adjusted gradle script
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 3e3ea0e4e4ceb3283ad2b99957e3795d66a9a716..428d63f99f1ba6f3e608d849ab7daf65a0b95357 100644
+index bf01892c248b988531d21d9fb0f74d0adf2205ac..e07b98e24a773e71fda054a73f0df0c0efd08838 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -56,6 +56,10 @@ dependencies {
@@ -13,7 +13,7 @@ index 3e3ea0e4e4ceb3283ad2b99957e3795d66a9a716..428d63f99f1ba6f3e608d849ab7daf65
      // Paper end
  
 +    // KissenPaper start
-+    implementation(project(":kissen-api") )
++    api(project(":kissen-api"))
 +    // KissenPaper end
 +
      api("org.apache.maven:maven-resolver-provider:3.9.6") // Paper - make API dependency for Paper Plugins
