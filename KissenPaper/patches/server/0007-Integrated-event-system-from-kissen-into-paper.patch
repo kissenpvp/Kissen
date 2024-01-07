@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Sun, 7 Jan 2024 15:21:14 +0100
+Subject: [PATCH] Integrated event system from kissen into paper
+
+
+diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java b/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
+index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..82b606d382bab48ec7aea0ace6e6238a449f3ac3 100644
+--- a/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
++++ b/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
+@@ -42,6 +42,10 @@ class PaperEventManager {
+             throw new IllegalStateException(event.getEventName() + " may only be triggered synchronously.");
+         }
+ 
++        // KissenPaper start - integrate internal event system
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.event.KissenEventImplementation.class).call(event);
++        // KissenPaper end
++
+         HandlerList handlers = event.getHandlers();
+         RegisteredListener[] listeners = handlers.getRegisteredListeners();
+ 

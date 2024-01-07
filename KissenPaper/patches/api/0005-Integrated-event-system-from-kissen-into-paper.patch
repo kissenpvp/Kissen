@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Sun, 7 Jan 2024 15:22:01 +0100
+Subject: [PATCH] Integrated event system from kissen into paper
+
+
+diff --git a/src/main/java/org/bukkit/event/Event.java b/src/main/java/org/bukkit/event/Event.java
+index 8ec56cd6b8e0f5c5dd8c7c88b4671e18dcf109d0..921ee1df0a48f62110bd8bc763259a831a5fad9f 100644
+--- a/src/main/java/org/bukkit/event/Event.java
++++ b/src/main/java/org/bukkit/event/Event.java
+@@ -1,5 +1,6 @@
+ package org.bukkit.event;
+ 
++import net.kissenpvp.core.api.event.EventClass;
+ import org.bukkit.plugin.Plugin;
+ import org.bukkit.plugin.PluginManager;
+ import org.jetbrains.annotations.NotNull;
+@@ -12,7 +13,8 @@ import org.jetbrains.annotations.NotNull;
+  * @see PluginManager#callEvent(Event)
+  * @see PluginManager#registerEvents(Listener,Plugin)
+  */
+-public abstract class Event {
++public abstract class Event implements EventClass
++{
+     private String name;
+     private final boolean async;
+ 

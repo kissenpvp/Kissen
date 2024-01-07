@@ -48,9 +48,9 @@ public class KissenEventImplementation implements EventImplementation {
     }
 
     @Override
-    public void registerEvent(EventListener<?> eventListener) {
+    public void registerEvent(@NotNull EventListener<?> eventListener) {
         eventListenerSet.add(eventListener);
-        KissenCore.getInstance().getLogger().debug("Register internal async listener '{}'.", eventListener.getClass().getSimpleName());
+        KissenCore.getInstance().getLogger().debug("Register internal listener '{}'.", eventListener.getClass().getSimpleName());
     }
 
     @Override
