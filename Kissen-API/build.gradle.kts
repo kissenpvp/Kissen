@@ -9,6 +9,18 @@ dependencies {
     compileOnly("net.kyori:adventure-text-minimessage:4.14.0")
 }
 
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "net.kissenpvp"
+            artifactId = "kissen-api"
+            version = "1.0.0-SNAPSHOT"
+
+            from(components["java"])
+        }
+    }
+}
+
 tasks.test {
     useJUnitPlatform()
 }

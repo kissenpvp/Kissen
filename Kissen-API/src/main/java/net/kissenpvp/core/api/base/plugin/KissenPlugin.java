@@ -54,20 +54,6 @@ public interface KissenPlugin extends Implementation {
     @NotNull String getName();
 
     /**
-     * Returns the full name of the plugin, including its name and version.
-     * <p>
-     * The name of the plugin is returned by the {@link #getName()} method, and the version is specified in the plugin's
-     * {@code plugin.yml} file or the modules meta. The full name is returned as a string with the format "[Name] v[Version]".
-     * <p>
-     * The returned string is guaranteed to be non-null and non-empty.
-     *
-     * @return the full name of the plugin, including its name and version.
-     */
-    @NotNull String getFullName();
-
-    @NotNull String getPackage();
-
-    /**
      * Returns the folder containing the plugin assets, such as configuration files, language files.
      * This folder is located in the plugin's directory and should be created by the plugin during its initialization phase.
      * <p>

@@ -343,25 +343,15 @@ index 142d2c48239d4ebe3896218536656d116cd24d7c..839b43a68642d4db7a2672b28f29d4ba
          }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
-index d96399e9bf1a58db5a4a22e58abb99e7660e0694..8a9614959e399ff8b43a8819f62f351b6bec78e9 100644
+index d96399e9bf1a58db5a4a22e58abb99e7660e0694..15bdda17fa0bdec6c068733ba25570e7bd41e428 100644
 --- a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
 +++ b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
-@@ -143,4 +143,26 @@ public class MinecraftInternalPlugin extends PluginBase {
+@@ -143,4 +143,16 @@ public class MinecraftInternalPlugin extends PluginBase {
      public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
          throw new UnsupportedOperationException("Not supported.");
      }
 +
 +    // KissenPaper start
-+    @Override
-+    public @org.jetbrains.annotations.NotNull String getFullName() {
-+        return getName();
-+    }
-+
-+    @Override
-+    public @org.jetbrains.annotations.NotNull String getPackage() {
-+        throw new UnsupportedOperationException("Not supported.");
-+    }
-+
 +    @Override
 +    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
 +        return org.bukkit.Bukkit.getKissen();
@@ -374,25 +364,15 @@ index d96399e9bf1a58db5a4a22e58abb99e7660e0694..8a9614959e399ff8b43a8819f62f351b
 +    // KissenPaper end
  }
 diff --git a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
-index 1d14f530ef888102e47eeeaf0d1a6076e51871c4..b83c491de7f79f29716686805b6f10341667b89b 100644
+index 1d14f530ef888102e47eeeaf0d1a6076e51871c4..655210f266a39118960b75d3606a12975587ebf9 100644
 --- a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
 +++ b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
-@@ -143,4 +143,26 @@ public class PaperTestPlugin extends PluginBase {
+@@ -143,4 +143,16 @@ public class PaperTestPlugin extends PluginBase {
      public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
          throw new UnsupportedOperationException("Not supported.");
      }
 +
 +    // KissenPaper start
-+    @Override
-+    public @org.jetbrains.annotations.NotNull String getFullName() {
-+        return getName();
-+    }
-+
-+    @Override
-+    public @org.jetbrains.annotations.NotNull String getPackage() {
-+        throw new UnsupportedOperationException("Not supported.");
-+    }
-+
 +    @Override
 +    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
 +        return org.bukkit.Bukkit.getKissen();

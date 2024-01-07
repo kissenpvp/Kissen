@@ -129,25 +129,15 @@ index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..73a253f24ef83ec7b07f022c9f935c0c
 +    // KissenPaper end
  }
 diff --git a/src/test/java/org/bukkit/plugin/TestPlugin.java b/src/test/java/org/bukkit/plugin/TestPlugin.java
-index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..6cda89b7c191c3cd3656a6ef58770d163dc4cb3b 100644
+index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..bccca0582db73d9551acd8b64ecd6c83889f8bec 100644
 --- a/src/test/java/org/bukkit/plugin/TestPlugin.java
 +++ b/src/test/java/org/bukkit/plugin/TestPlugin.java
-@@ -133,4 +133,26 @@ public class TestPlugin extends PluginBase {
+@@ -133,4 +133,16 @@ public class TestPlugin extends PluginBase {
      public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
          throw new UnsupportedOperationException("Not supported.");
      }
 +
 +    // KissenPaper start
-+    @Override
-+    public @org.jetbrains.annotations.NotNull String getFullName() {
-+        return getName();
-+    }
-+
-+    @Override
-+    public @org.jetbrains.annotations.NotNull String getPackage() {
-+        throw new UnsupportedOperationException("Not supported.");
-+    }
-+
 +    @Override
 +    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
 +        return org.bukkit.Bukkit.getKissen();

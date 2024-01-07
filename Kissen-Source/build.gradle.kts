@@ -19,6 +19,18 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "net.kissenpvp"
+            artifactId = "kissen-source"
+            version = "1.0.0-SNAPSHOT"
+
+            from(components["java"])
+        }
+    }
+}
+
 tasks.test {
     useJUnitPlatform()
 }

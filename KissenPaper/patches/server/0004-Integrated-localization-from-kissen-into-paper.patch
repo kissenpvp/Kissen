@@ -126,10 +126,10 @@ index 0f3758071754eef2c9bd8a464a20b210bcd8149f..65141c9fc045a4da684b3232ecdfab90
 +
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 09de30ff0cc003da3acd860310e7835fd10a4b81..793b009e43d21178b8d576f519b27057ac820972 100644
+index 0611ce87b063b58362d1abc35bacf9713867560c..28392f39064791f0b859dfbe752351bdf8055698 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -3226,7 +3226,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3232,7 +3232,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      @Override
      public void openBook(final net.kyori.adventure.inventory.Book book) {
