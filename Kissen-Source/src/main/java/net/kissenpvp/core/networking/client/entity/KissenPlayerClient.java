@@ -51,6 +51,7 @@ import net.kissenpvp.core.user.usersettings.KissenUserBoundSettings;
 import net.kissenpvp.core.time.TemporalMeasureNode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -187,8 +188,12 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     public @NotNull Component styledRankName() {
         TextComponent.Builder builder = Component.text();
         Rank rank = getRank().getSource();
-        rank.getPrefix().ifPresent(prefix -> builder.append(prefix).appendSpace());
-        builder.append(displayName());
+        TextColor nameColor = rank.getPrefix().map(prefix ->
+        {
+            builder.append(prefix).appendSpace();
+            return prefix.color();
+        }).orElse(null);
+        builder.append(displayName().color(nameColor));
         getSelectedSuffix().ifPresent(suffix -> builder.appendSpace().append(suffix.getContent()));
         return builder.asComponent();
     }
