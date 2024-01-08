@@ -1,6 +1,6 @@
 package net.kissenpvp.core.command.confirmation;
 
-import io.netty.util.internal.ConcurrentSet;
+import lombok.SneakyThrows;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 public abstract class KissenConfirmationImplementation implements KissenImplementation
 {
     private final Set<Confirmation> confirmations;
+    private volatile Thread cleanThread;
 
     public KissenConfirmationImplementation()
     {
@@ -31,11 +32,6 @@ public abstract class KissenConfirmationImplementation implements KissenImplemen
     @Override
     public boolean postStart()
     {
-        Thread cleanThread = new Thread(this::cleanUp);
-        cleanThread.setName("clean-up-1");
-        cleanThread.setPriority(Thread.MIN_PRIORITY);
-        cleanThread.start();
-
         KissenLocalizationImplementation localize = KissenCore.getInstance().getImplementation(
                 KissenLocalizationImplementation.class);
         localize.register("server.command.confirm.required", new MessageFormat(
@@ -98,18 +94,37 @@ public abstract class KissenConfirmationImplementation implements KissenImplemen
 
         ConfirmationNode confirm = new ConfirmationNode(time, runnable, onCancel, onTime);
         PlayerConfirmationNode playerConfirm = new PlayerConfirmationNode(player.getUniqueId(), confirm);
-        return confirmations.add(playerConfirm);
+        if (confirmations.add(playerConfirm))
+        {
+            runThread();
+            return true;
+        }
+        return false;
+    }
+
+    private void runThread()
+    {
+        if (cleanThread == null)
+        {
+            cleanThread = new Thread(this::cleanUp);
+            cleanThread.setName("clean-up-1");
+            cleanThread.setPriority(Thread.MIN_PRIORITY);
+            cleanThread.start();
+        }
     }
 
     private void cleanUp()
     {
         while (isServerRunning())
         {
-            if (!confirmations.isEmpty())
+            if (confirmations.isEmpty())
             {
-                Stream<Confirmation> confirmationStream = Collections.unmodifiableSet(confirmations).stream();
-                confirmations.removeAll(confirmationStream.filter(cleanFilter()).collect(Collectors.toSet()));
+                cleanThread.interrupt();
+                cleanThread = null;
+                return;
             }
+            Stream<Confirmation> confirmationStream = Collections.unmodifiableSet(confirmations).stream();
+            confirmations.removeAll(confirmationStream.filter(cleanFilter()).collect(Collectors.toSet()));
         }
     }
 
