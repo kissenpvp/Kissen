@@ -95,6 +95,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
     {
         register("server.general.id", new MessageFormat("ID"));
         register("server.general.show.more", new MessageFormat("Show more..."));
+        register("server.general.duration", new MessageFormat("{0} years, {1} days, {2} hours, {3} minutes and {4} seconds"));
         return LocalizationImplementation.super.postStart();
     }
 

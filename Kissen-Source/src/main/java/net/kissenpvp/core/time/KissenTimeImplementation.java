@@ -10,7 +10,28 @@ public class KissenTimeImplementation implements TimeImplementation {
 
     @Override
     public @NotNull AccurateDuration parse(@NotNull String iso) throws DateTimeParseException {
-        return new KissenAccurateDuration(iso);
+        long time = 0;
+        int current = 0;
+        for (int i = 0; i < iso.toLowerCase().toCharArray().length; i++)
+        {
+            char currentChar = iso.toCharArray()[i];
+            if(!String.valueOf(currentChar).matches("[0-9]+"))
+            {
+                long numbers = Integer.parseInt(iso.substring(current, i));
+                time += switch (currentChar)
+                {
+                    case 'y' -> numbers * 1000 * 60 * 60 * 24 * 365;
+                    case 'w' -> numbers * 1000 * 60 * 60 * 24 * 7;
+                    case 'd' -> numbers * 1000 * 60 * 60 * 24;
+                    case 'h' -> numbers * 1000 * 60 * 60;
+                    case 'm' -> numbers * 1000 * 60;
+                    case 's' -> numbers * 1000;
+                    default -> 0;
+                };
+                current = i + 1;
+            }
+        }
+        return new KissenAccurateDuration(time);
     }
 
     @Override

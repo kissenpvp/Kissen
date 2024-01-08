@@ -21,6 +21,7 @@ package net.kissenpvp.core.api.command;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -53,4 +54,20 @@ public interface CommandPayload<S extends ServerEntity> {
     <T> @NotNull T[] getArgument(int from, int to, @NotNull Class<T> type) throws ArrayIndexOutOfBoundsException;
 
     boolean validate(@NotNull ServerEntity serverEntity);
+
+    boolean confirmRequest(@NotNull Runnable runnable);
+
+    boolean confirmRequest(@NotNull Runnable runnable, @NotNull Runnable cancel);
+
+    boolean confirmRequest(@NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut);
+
+    boolean confirmRequest(@NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut, boolean sendMessage);
+
+    boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable);
+
+    boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable, @NotNull Runnable cancel);
+
+    boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut);
+
+    boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut, boolean sendMessage);
 }
