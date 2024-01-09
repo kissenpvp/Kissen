@@ -188,12 +188,8 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     public @NotNull Component styledRankName() {
         TextComponent.Builder builder = Component.text();
         Rank rank = getRank().getSource();
-        TextColor nameColor = rank.getPrefix().map(prefix ->
-        {
-            builder.append(prefix).appendSpace();
-            return prefix.color();
-        }).orElse(null);
-        builder.append(displayName().color(nameColor));
+        rank.getPrefix().ifPresent(prefix -> builder.append(prefix).appendSpace());
+        builder.append(displayName().color(getLastColor(rank.getPrefix().orElse(Component.empty())).orElse(null)));
         getSelectedSuffix().ifPresent(suffix -> builder.appendSpace().append(suffix.getContent()));
         return builder.asComponent();
     }
@@ -341,7 +337,17 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return isConnected() ? System.currentTimeMillis() : Long.parseLong(user.get("last_played").orElse("-1"));
     }
 
-    private @NotNull Optional<Suffix> overrideSuffix(@NotNull String name, SavableRecordList<SuffixNode> savableRecordList, SuffixNode suffixNode) {
+    private @NotNull Optional<TextColor> getLastColor(@NotNull Component component)
+    {
+        TextColor color = component.color();
+        if (!component.children().isEmpty())
+        {
+            color = component.children().get(component.children().size() - 1).color();
+        }
+        return Optional.ofNullable(color);
+    }
+
+    private @NotNull Optional<Suffix> overrideSuffix(@NotNull String name, @NotNull SavableRecordList<SuffixNode> savableRecordList, SuffixNode suffixNode) {
         Optional<Suffix> suffix = savableRecordList.toRecordList().stream().filter(currentSuffix -> currentSuffix.name().equals(name)).findFirst().map(KissenSuffix::new);
 
         switch (savableRecordList.replaceRecord((current -> current.equals(suffixNode)), suffixNode)) {

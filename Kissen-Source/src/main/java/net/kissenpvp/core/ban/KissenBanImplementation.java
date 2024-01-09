@@ -74,6 +74,8 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     @Override
     public boolean start() {
         KissenLocalizationImplementation kissenLocalizationImplementation = KissenCore.getInstance().getImplementation(KissenLocalizationImplementation.class);
+        kissenLocalizationImplementation.register("server.ban.player.not.allowed", new MessageFormat("You are not allowed to punish the player {0}."));
+
         kissenLocalizationImplementation.register("server.ban.player.banned", new MessageFormat("Player {0} has been banned from this network."));
         kissenLocalizationImplementation.register("server.ban.player.banned.cause", new MessageFormat("Player {0} has been banned from this network with the cause: \"{1}\"."));
 

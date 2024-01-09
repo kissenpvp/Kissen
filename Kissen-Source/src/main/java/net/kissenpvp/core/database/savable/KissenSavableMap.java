@@ -265,4 +265,10 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
     public @NotNull ObjectMeta getMeta() {
         return KissenCore.getInstance().getPublicMeta(); //todo choosable
     }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getStringArrayListMap(), getId());
+    }
 }
