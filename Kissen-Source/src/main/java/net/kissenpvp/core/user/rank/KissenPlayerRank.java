@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.user.rank;
 
-import com.jogamp.opengl.FBObject;
 import lombok.Getter;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.user.rank.PlayerRank;
@@ -32,7 +31,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 
 
 public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject implements PlayerRank<T> {

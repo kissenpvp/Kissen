@@ -27,10 +27,12 @@ import net.kissenpvp.core.database.savable.KissenSavable;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.Optional;
 
 
@@ -78,13 +80,13 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
     }
 
     @Override
-    public @NotNull NamedTextColor getChatColor() {
-        return NamedTextColor.NAMES.valueOr(getNotNull("chat_color"), NamedTextColor.WHITE);
+    public @NotNull TextColor getChatColor() {
+        return Objects.requireNonNull(TextColor.fromHexString(getNotNull("chat_color")));
     }
 
     @Override
-    public void setChatColor(@NotNull NamedTextColor chatColor) {
-        set("chat_color", chatColor.toString());
+    public void setChatColor(@NotNull TextColor chatColor) {
+        set("chat_color", chatColor.asHexString());
     }
 
     @Override
@@ -111,7 +113,7 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
 
     @Override
     public int softDelete() throws BackendException {
-        ((KissenRankImplementation<?>) KissenCore.getInstance().getImplementation(RankImplementation.class)).removeRank(this);
+        KissenCore.getInstance().getImplementation(KissenRankImplementation.class).removeRank(this);
         return super.softDelete();
     }
 

@@ -21,6 +21,7 @@ package net.kissenpvp.core.user.rank;
 import net.kissenpvp.core.api.user.rank.Rank;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,12 +55,12 @@ public class KissenFallBackRank implements Rank
         throw new UnsupportedOperationException();
     }
 
-    @Override public @NotNull NamedTextColor getChatColor()
+    @Override public @NotNull TextColor getChatColor()
     {
         return NamedTextColor.GRAY;
     }
 
-    @Override public void setChatColor(@NotNull NamedTextColor chatColor)
+    @Override public void setChatColor(@NotNull TextColor chatColor)
     {
         throw new UnsupportedOperationException();
     }

@@ -19,27 +19,42 @@
 package net.kissenpvp.core.user.rank;
 
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.savable.Savable;
+import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.user.rank.Rank;
 import net.kissenpvp.core.api.user.rank.RankImplementation;
 import net.kissenpvp.core.base.KissenCore;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-
+/**
+ * An abstract implementation of the RankImplementation interface for managing ranks in the Kissen framework.
+ * This class provides a base structure for handling and caching ranks, with specific implementations required
+ * for the concrete types of ranks used in the system.
+ *
+ * @param <T> The generic type parameter representing the specific type of ranks managed by this implementation.
+ */
 public abstract class KissenRankImplementation<T extends Rank> implements RankImplementation<T> {
-    private final Set<T> cachedRankIdSet;
+    protected final Set<T> cachedRankIdSet;
 
+    /**
+     * Constructs a KissenRankImplementation object, initializing the internal set for caching ranks.
+     */
     public KissenRankImplementation() {
         this.cachedRankIdSet = new HashSet<>();
     }
 
     @Override
     public boolean postStart() {
-        cachedRankIdSet.addAll(fetchRanks());
+        fetchRanks();
         return RankImplementation.super.postStart();
     }
 
@@ -62,13 +77,13 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
     }
 
     @Override
-    public @NotNull T createRank(@NotNull String name, int priority, @NotNull String chatColor, @NotNull String prefix, @Nullable String suffix) {
+    public @NotNull T createRank(@NotNull String name, int priority, @NotNull TextColor chatColor, @NotNull Component prefix, @Nullable Component suffix) {
         final Map<String, String> data = new HashMap<>();
         data.put("priority", String.valueOf(priority));
-        data.put("chat_color", chatColor);
-        data.put("prefix", prefix);
+        data.put("chat_color", chatColor.asHexString());
+        data.put("prefix", JSONComponentSerializer.json().serialize(prefix));
         if (suffix != null) {
-            data.put("suffix", suffix);
+            data.put("suffix", JSONComponentSerializer.json().serialize(suffix));
         }
         return createRank(name, data);
     }
@@ -92,13 +107,55 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
      *
      * @param kissenRank the rank to remove from the cached ranks.
      */
-    public void removeRank(KissenRank kissenRank) {
+    public void removeRank(@NotNull KissenRank kissenRank) {
         cachedRankIdSet.removeIf(rank -> rank.getName().equals(kissenRank.getName()));
     }
 
-    protected abstract @Unmodifiable @NotNull Set<T> fetchRanks();
+    /**
+     * Asynchronously fetches ranks from the database using the associated metadata.
+     * Populates the internal cache with the retrieved ranks.
+     */
+    protected void fetchRanks()
+    {
+        getMeta().getData(getSavableType()).thenAccept((data) ->
+        {
+            for(SavableMap savableMap : data.values())
+            {
+                cachedRankIdSet.add(setup(savableMap.getNotNull("id"), savableMap));
+            }
+            KissenCore.getInstance().getLogger().info("Successfully loaded {} rank(s) from the database.", cachedRankIdSet.size());
+        });
+    }
 
+    /**
+     * Sets up and initializes a rank object based on the provided name and data.
+     * This method delegates to the concrete implementation of Savable, obtained via getSavableType().
+     *
+     * @param name The name associated with the rank.
+     * @param data A Map containing key-value pairs of data associated with the rank.
+     * @return An initialized rank object of type T.
+     */
+    protected @NotNull T setup(@NotNull String name, @NotNull Map<String, String> data)
+    {
+        Savable savable = getSavableType();
+        savable.setup(name, data);
+        return (T) savable;
+    }
+
+
+    /**
+     * Retrieves the concrete implementation of the Savable interface associated with the ranks.
+     * This method must be implemented by subclasses to provide the specific Savable type.
+     *
+     * @return An instance of Savable representing the type associated with the ranks.
+     */
+    protected abstract @NotNull Savable getSavableType();
+
+    /**
+     * Retrieves a fallback rank in case of errors or when a specific rank is not found.
+     * This method must be implemented by subclasses to provide a default or fallback rank.
+     *
+     * @return A default or fallback rank object of type T.
+     */
     protected abstract @NotNull T getFallbackRank();
-
-    protected abstract @NotNull T setup(String name, Map<String, String> data);
 }

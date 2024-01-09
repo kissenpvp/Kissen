@@ -19,6 +19,8 @@
 package net.kissenpvp.core.api.user.rank;
 
 import net.kissenpvp.core.api.base.Implementation;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,7 +37,7 @@ public interface RankImplementation<T extends Rank> extends Implementation
 
     @NotNull T createRank(@NotNull String name, @NotNull Map<String, String> data);
 
-    @NotNull T createRank(@NotNull String name, int priority, @NotNull String chatColor, @NotNull String prefix, @Nullable String suffix);
+    @NotNull T createRank(@NotNull String name, int priority, @NotNull TextColor chatColor, @NotNull Component prefix, @Nullable Component suffix);
 
     @NotNull T getDefaultRank();
 }

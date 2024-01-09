@@ -19,8 +19,9 @@
 package net.kissenpvp.core.api.user.rank;
 
 import net.kissenpvp.core.api.database.meta.BackendException;
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,19 +33,19 @@ public interface Rank {
 
     int getPriority();
 
-    void setPriority(int priority);
+    void setPriority(int priority) throws EventCancelledException;
 
     @NotNull Optional<Component> getPrefix();
 
-    void setPrefix(@Nullable Component prefix);
+    void setPrefix(@Nullable Component prefix) throws EventCancelledException;
 
-    @NotNull NamedTextColor getChatColor();
+    @NotNull TextColor getChatColor();
 
-    void setChatColor(@NotNull NamedTextColor chatColor);
+    void setChatColor(@NotNull TextColor chatColor) throws EventCancelledException;
 
     @NotNull Optional<Component> getSuffix();
 
-    void setSuffix(@Nullable Component suffix);
+    void setSuffix(@Nullable Component suffix) throws EventCancelledException;
 
     int delete() throws BackendException;
 }

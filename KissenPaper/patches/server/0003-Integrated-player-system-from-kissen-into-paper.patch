@@ -58,29 +58,31 @@ index 0000000000000000000000000000000000000000..55167ae5fef79f24545df34479443dbb
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index cf608a90d188c853d72326b7763995f9fa72a3e4..7782933e7eeca7e30aa903b03a19625e90d00dc3 100644
+index cf608a90d188c853d72326b7763995f9fa72a3e4..9f054b22f0f1a8f82402f8544ed14c67d6222159 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -21,8 +21,13 @@ package net.kissenpvp.paper.base;
+@@ -21,8 +21,15 @@ package net.kissenpvp.paper.base;
  import net.kissenpvp.core.api.base.Implementation;
  import net.kissenpvp.core.api.database.meta.ObjectMeta;
  import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
 +import net.kissenpvp.core.api.user.UserImplementation;
++import net.kissenpvp.core.api.user.rank.RankImplementation;
  import net.kissenpvp.core.base.KissenCore;
 +import net.kissenpvp.core.permission.PermissionImplementation;
  import net.kissenpvp.paper.api.base.PaperKissen;
 +import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
 +import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
 +import net.kissenpvp.paper.user.KissenPaperUserImplementation;
++import net.kissenpvp.paper.user.rank.KissenPaperRankImplementation;
  import org.bukkit.Bukkit;
  import org.jetbrains.annotations.NotNull;
  import org.slf4j.Logger;
-@@ -45,6 +50,12 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+@@ -45,6 +52,12 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
      @Override
      protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader)
      {
 +        loader.put(UserImplementation.class, new KissenPaperUserImplementation());
-+
++        loader.put(RankImplementation.class, new KissenPaperRankImplementation());
 +        KissenPaperPermissionImplementation permissionImplementation = new KissenPaperPermissionImplementation();
 +        loader.put(PermissionImplementation.class, permissionImplementation);
 +        loader.put(PaperPermissionImplementation.class, permissionImplementation);
@@ -625,7 +627,7 @@ index 0000000000000000000000000000000000000000..7a22a03f4c65ff2c5cb8d8362802c26f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f4afd748de5026d372240b1108d2c1a1fe96d7b0
+index 0000000000000000000000000000000000000000..4a99737311bfa497edfcec80c701f7710cb81612
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
 @@ -0,0 +1,164 @@
@@ -709,7 +711,7 @@ index 0000000000000000000000000000000000000000..f4afd748de5026d372240b1108d2c1a1
 +    public boolean postStart()
 +    {
 +        ObjectMeta publicMeta = Bukkit.getKissen().getPublicMeta();
-+        publicMeta.getData(new KissenPaperPublicPermissionGroup()).thenAcceptAsync(maps ->
++        publicMeta.getData(new KissenPaperPublicPermissionGroup()).thenAccept(maps ->
 +        {
 +            for(SavableMap map : maps.values())
 +            {
@@ -841,10 +843,10 @@ index 0000000000000000000000000000000000000000..ebfef6383ddb6dc7717e29ce6d6cb7f7
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java b/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ff521a213f17e817ecc97e7faf6e284375c2c015
+index 0000000000000000000000000000000000000000..c1c3fec517bf0256524df83f29406888bb9e5172
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java
-@@ -0,0 +1,220 @@
+@@ -0,0 +1,222 @@
 +package net.kissenpvp.paper.permission;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -885,7 +887,8 @@ index 0000000000000000000000000000000000000000..ff521a213f17e817ecc97e7faf6e2843
 +    @CommandData(value = "permission.user", permission = "*", runAsync = true)
 +    public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull PermissionParser.PermissionArgument permission, @NotNull Optional<PermissionAction> value)
 +    {
-+        commandPayload.getSender().sendMessage(executeAction(offlinePlayer, permission.permission(), value));
++        commandPayload.confirmRequest(() -> commandPayload.getSender().sendMessage(
++                executeAction(offlinePlayer, permission.permission(), value)));
 +    }
 +
 +    @CommandData(value = "permission.user.group.add", permission = "*", runAsync = true)
@@ -915,7 +918,8 @@ index 0000000000000000000000000000000000000000..ff521a213f17e817ecc97e7faf6e2843
 +    @CommandData(value = "permission.group", permission = "*", runAsync = true)
 +    public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup paperPermissionGroup, @NotNull PermissionParser.PermissionArgument permission, @NotNull Optional<PermissionAction> value)
 +    {
-+        commandPayload.getSender().sendMessage(executeAction(paperPermissionGroup, permission.permission(), value));
++        commandPayload.confirmRequest(() -> commandPayload.getSender().sendMessage(
++                executeAction(paperPermissionGroup, permission.permission(), value)));
 +    }
 +
 +    @CommandData(value = "permissioninfo", aliases = {"peri"})
@@ -2077,10 +2081,10 @@ index 0000000000000000000000000000000000000000..1dc4273c190d512036b4257a6370d112
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d31cddcca8056588ad062607e3fab5a79def4d0f
+index 0000000000000000000000000000000000000000..3aa1c85585b94525c738fc113e795185bb5f2923
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
-@@ -0,0 +1,301 @@
+@@ -0,0 +1,323 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2106,6 +2110,7 @@ index 0000000000000000000000000000000000000000..d31cddcca8056588ad062607e3fab5a7
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
++import net.kissenpvp.core.api.event.EventImplementation;
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 +import net.kissenpvp.core.api.networking.socket.DataPackage;
 +import net.kissenpvp.core.api.permission.PermissionGroup;
@@ -2122,11 +2127,13 @@ index 0000000000000000000000000000000000000000..d31cddcca8056588ad062607e3fab5a7
 +import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
 +import net.kissenpvp.paper.api.permission.PaperPermission;
 +import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
++import net.kissenpvp.paper.api.user.event.VisualChangeEvent;
 +import net.kissenpvp.paper.permission.KissenPaperPermission;
 +import net.minecraft.server.MinecraftServer;
 +import net.minecraft.server.level.ServerPlayer;
 +import org.bukkit.Bukkit;
 +import org.bukkit.craftbukkit.entity.CraftPlayer;
++import org.bukkit.entity.Player;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
@@ -2212,7 +2219,6 @@ index 0000000000000000000000000000000000000000..d31cddcca8056588ad062607e3fab5a7
 +    @Override
 +    public void login() {
 +        super.login();
-+        //getStorage().put("visual_hash", kissenPaperPlayerClient.visualHash()); //TODO
 +        getStorage().put("time_joined", System.currentTimeMillis());
 +        ((KissenUser<?>) getPrivateUserEntry()).login();
 +        getStorage().put("tick", true);
@@ -2226,7 +2232,8 @@ index 0000000000000000000000000000000000000000..d31cddcca8056588ad062607e3fab5a7
 +
 +    @Override
 +    public void tick() {
-+        //TODO check for visuals maybe
++        checkVisuals();
++
 +        ((KissenUser<PaperPermission>) getPrivateUserEntry()).tick();
 +        super.tick();
 +    }
@@ -2283,6 +2290,25 @@ index 0000000000000000000000000000000000000000..d31cddcca8056588ad062607e3fab5a7
 +            ServerPlayer serverPlayer = ((CraftPlayer) paperPlayerClient).getHandle();
 +            MinecraftServer.getServer().getPlayerList().sendPlayerPermissionLevel(serverPlayer);
 +        }
++    }
++
++    private void checkVisuals()
++    {
++        String visualHash = getVisualHash();
++        if(!Objects.equals(getStorage().get("visual_hash"), visualHash))
++        {
++            getStorage().put("visual_hash", visualHash);
++            Player player = Objects.requireNonNull(Bukkit.getPlayer(UUID.fromString(getRawID())));
++            VisualChangeEvent visualChangeEvent = new VisualChangeEvent(player);
++            Bukkit.getKissen().getImplementation(EventImplementation.class).call(visualChangeEvent);
++        }
++    }
++
++    private @NotNull String getVisualHash()
++    {
++        PlayerClient<?, ?, ?> playerClient = getPlayerClient();
++        String suffix = playerClient.getSelectedSuffix().map(component -> component.getContent().toString()).orElse("");
++        return playerClient.getRank().getID() + suffix;
 +    }
 +
 +    /**
@@ -2384,10 +2410,10 @@ index 0000000000000000000000000000000000000000..d31cddcca8056588ad062607e3fab5a7
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..877406ab70a0dddfc3d5aab60fc886a87e7b50ed
+index 0000000000000000000000000000000000000000..32b893ede8d5413c0b5f1414326e46a5b5e56747
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
-@@ -0,0 +1,152 @@
+@@ -0,0 +1,177 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2408,22 +2434,30 @@ index 0000000000000000000000000000000000000000..877406ab70a0dddfc3d5aab60fc886a8
 +
 +package net.kissenpvp.paper.user;
 +
++import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
 +import net.kissenpvp.core.api.networking.client.entitiy.UnknownPlayerException;
++import net.kissenpvp.core.api.permission.Permission;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.base.KissenImplementation;
++import net.kissenpvp.core.command.KissenCommandImplementation;
++import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
++import net.kissenpvp.core.message.usersettings.*;
++import net.kissenpvp.core.user.KissenUser;
 +import net.kissenpvp.core.user.KissenUserImplementation;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
-+import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
 +import org.bukkit.Bukkit;
++import org.bukkit.craftbukkit.scheduler.MinecraftInternalPlugin;
 +import org.jetbrains.annotations.NotNull;
 +
 +import java.text.MessageFormat;
 +import java.util.UUID;
 +import java.util.concurrent.CompletableFuture;
++import java.util.concurrent.TimeUnit;
++import java.util.function.Consumer;
 +import java.util.function.Supplier;
 +
 +/**
@@ -2436,20 +2470,37 @@ index 0000000000000000000000000000000000000000..877406ab70a0dddfc3d5aab60fc886a8
 +
 +    private static KissenPaperProfileCache kissenPaperProfileCache;
 +
++
 +    @Override
-+    public void setupComplete()
++    public boolean start()
 +    {
-+        KissenPaperCommandImplementation commandImplementation = Bukkit.getKissen().getImplementation(
-+                KissenPaperCommandImplementation.class);
-+        commandImplementation.registerCommand(new UserSettingCommand());
++        Class<KissenCommandImplementation> clazz = KissenCommandImplementation.class;
++        KissenCommandImplementation commandImplementation = Bukkit.getKissen().getImplementation(clazz);
 +        commandImplementation.registerHandler(new UserSettingCommand());
 +
-+        KissenPaperLocalizationImplementation localize = Bukkit.getKissen().getImplementation(KissenPaperLocalizationImplementation.class);
++        KissenLocalizationImplementation localize = Bukkit.getKissen().getImplementation(KissenLocalizationImplementation.class);
 +        localize.register("server.user.setting.changed", new MessageFormat("The setting {0} has been set to {1}."));
 +        localize.register("server.user.setting.value.invalid", new MessageFormat("The value {0} is not allowed in setting {1}."));
 +        localize.register("server.user.setting.not.found", new MessageFormat("The setting {0} does not exists."));
 +        localize.register("server.user.setting.reset", new MessageFormat("The setting {0} has been reset to its default value {1}."));
++        return super.start();
++    }
 +
++    @Override
++    public void setupComplete()
++    {
++        Class<KissenPaperCommandImplementation> clazz = KissenPaperCommandImplementation.class;
++        KissenPaperCommandImplementation commandImplementation = Bukkit.getKissen().getImplementation(clazz);
++        commandImplementation.registerCommand(new UserSettingCommand());
++
++        registerUserSetting(new PrimaryUserColor());
++        registerUserSetting(new SecondaryUserColor());
++        registerUserSetting(new GeneralUserColor());
++        registerUserSetting(new EnabledUserColor());
++        registerUserSetting(new DisabledUserColor());
++
++        Consumer<ScheduledTask> runnable = (task) -> getOnlineUser().stream().filter(userEntry -> userEntry.getStorage().containsKey("tick")).forEach(user -> ((KissenUser<? extends Permission>) user).tick());
++        Bukkit.getAsyncScheduler().runAtFixedRate(new MinecraftInternalPlugin(), runnable, 0, 1, TimeUnit.SECONDS);
 +    }
 +
 +    @Override
@@ -3250,10 +3301,10 @@ index 0000000000000000000000000000000000000000..b16bca5af55d0a4b487637e52801a9c9
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperPlayerFallBackRank.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperPlayerFallBackRank.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..fd705fc8b5b827e7e6b341bff03228c001694f4c
+index 0000000000000000000000000000000000000000..ae0177561b38a8a5ad90084cc97a8e7b4ea3819d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperPlayerFallBackRank.java
-@@ -0,0 +1,34 @@
+@@ -0,0 +1,32 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -3278,8 +3329,6 @@ index 0000000000000000000000000000000000000000..fd705fc8b5b827e7e6b341bff03228c0
 +import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
 +import net.kissenpvp.paper.api.user.rank.PaperRank;
 +import org.jetbrains.annotations.NotNull;
-+
-+import java.util.Optional;
 +
 +public class KissenPaperPlayerFallBackRank extends KissenPlayerFallBackRank<PaperRank> implements PaperPlayerRank
 +{
@@ -3329,10 +3378,10 @@ index 0000000000000000000000000000000000000000..854aae7c2516fc405c2a1bebe205904d
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRank.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRank.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..c6e107e7bc79c4f66c23f423452ac974105d9713
+index 0000000000000000000000000000000000000000..5fb36d5f5c0bb1bb26378dafcfa5b255438e5e59
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRank.java
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,105 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -3353,15 +3402,445 @@ index 0000000000000000000000000000000000000000..c6e107e7bc79c4f66c23f423452ac974
 +
 +package net.kissenpvp.paper.user.rank;
 +
++import net.kissenpvp.core.api.event.EventCancelledException;
++import net.kissenpvp.core.api.event.EventImplementation;
 +import net.kissenpvp.core.api.networking.socket.DataPackage;
-+import net.kissenpvp.core.api.user.rank.Rank;
 +import net.kissenpvp.core.user.rank.KissenRank;
++import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
++import net.kissenpvp.paper.api.user.rank.PaperRank;
++import net.kissenpvp.paper.user.rank.event.KissenPaperRankSetChatColorEvent;
++import net.kissenpvp.paper.user.rank.event.KissenPaperRankSetPrefixEvent;
++import net.kissenpvp.paper.user.rank.event.KissenPaperRankSetPriorityEvent;
++import net.kissenpvp.paper.user.rank.event.KissenPaperRankSetSuffixEvent;
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.format.TextColor;
++import org.bukkit.Bukkit;
 +import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++import org.jetbrains.annotations.Unmodifiable;
 +
-+public class KissenPaperRank extends KissenRank implements Rank {
++import java.util.Set;
++import java.util.stream.Collectors;
++
++public class KissenPaperRank extends KissenRank implements PaperRank
++{
 +    @Override
 +    public void sendData(@NotNull DataPackage dataPackage) {
 +        //TODO async network and so on
++    }
++
++    @Override
++    public @NotNull @Unmodifiable Set<PaperPlayerClient> getPlayers() {
++        return Bukkit.getOnlinePlayers().stream().filter(playerClient ->
++        {
++            PaperRank paperRank = playerClient.getRank().getSource();
++            return paperRank.equals(this);
++        }).collect(Collectors.toUnmodifiableSet());
++    }
++
++
++    @Override
++    public void setPriority(int priority)
++    {
++        KissenPaperRankSetPriorityEvent event = new KissenPaperRankSetPriorityEvent(this, getPriority(), priority);
++        EventImplementation eventImplementation = Bukkit.getKissen().getImplementation(EventImplementation.class);
++        if(!eventImplementation.call(event))
++        {
++            throw new EventCancelledException();
++        }
++        super.setPriority(priority);
++    }
++
++    @Override
++    public void setPrefix(@Nullable Component prefix)
++    {
++        KissenPaperRankSetPrefixEvent event = new KissenPaperRankSetPrefixEvent(this, getPrefix().orElse(null), prefix);
++        EventImplementation eventImplementation = Bukkit.getKissen().getImplementation(EventImplementation.class);
++        if(!eventImplementation.call(event))
++        {
++            throw new EventCancelledException();
++        }
++        super.setPrefix(prefix);
++    }
++
++    @Override
++    public void setChatColor(@NotNull TextColor chatColor)
++    {
++        KissenPaperRankSetChatColorEvent event = new KissenPaperRankSetChatColorEvent(this, getChatColor(), chatColor);
++        EventImplementation eventImplementation = Bukkit.getKissen().getImplementation(EventImplementation.class);
++        if(!eventImplementation.call(event))
++        {
++            throw new EventCancelledException();
++        }
++        super.setChatColor(chatColor);
++    }
++
++    @Override
++    public void setSuffix(@Nullable Component suffix)
++    {
++        KissenPaperRankSetSuffixEvent event = new KissenPaperRankSetSuffixEvent(this, getSuffix().orElse(null), suffix);
++        EventImplementation eventImplementation = Bukkit.getKissen().getImplementation(EventImplementation.class);
++        if(!eventImplementation.call(event))
++        {
++            throw new EventCancelledException();
++        }
++        super.setSuffix(suffix);
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRankImplementation.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRankImplementation.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..12a5d087414bd5040a7030ea5002a0c288a53e36
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRankImplementation.java
+@@ -0,0 +1,59 @@
++package net.kissenpvp.paper.user.rank;
++
++import net.kissenpvp.core.api.database.savable.Savable;
++import net.kissenpvp.core.base.KissenImplementation;
++import net.kissenpvp.core.command.KissenCommandImplementation;
++import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
++import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
++import net.kissenpvp.core.user.rank.KissenRankImplementation;
++import net.kissenpvp.paper.api.user.rank.PaperRank;
++import org.bukkit.Bukkit;
++import org.jetbrains.annotations.NotNull;
++
++import java.text.MessageFormat;
++
++
++public class KissenPaperRankImplementation extends KissenRankImplementation<PaperRank> implements KissenImplementation
++{
++
++    @Override
++    public boolean start()
++    {
++        KissenLocalizationImplementation localize = Bukkit.getKissen().getImplementation(KissenLocalizationImplementation.class);
++        localize.register("server.rank.edit.prefix.set", new MessageFormat("The prefix from rank {0} has been set to {1}.."));
++        localize.register("server.rank.edit.suffix.set", new MessageFormat("The suffix from rank {0} has been set to {1}.."));
++        localize.register("server.rank.edit.chatcolor.set", new MessageFormat("The chatcolor from rank {0} has been set to {1}."));
++        localize.register("server.rank.edit.priority.set", new MessageFormat("The priority from rank {0} has been set to {1}."));
++
++        localize.register("server.rank.player.granted", new MessageFormat("The player {0} now has the rank {1} granted."));
++        localize.register("server.rank.player.revoked", new MessageFormat("The rank {1} from player {0} has been revoked."));
++        localize.register("server.rank.player.not.found", new MessageFormat("The player {0} does not have a rank with the id {1}."));
++
++        localize.register("server.rank.created", new MessageFormat("The rank {0} has been created with the priority {1} and the chat color {2}."));
++        localize.register("server.rank.deleted", new MessageFormat("The rank {0} has been deleted."));
++
++        Class<KissenCommandImplementation> clazz = KissenCommandImplementation.class;
++        KissenCommandImplementation commandImplementation = Bukkit.getKissen().getImplementation(clazz);
++        commandImplementation.registerParser(PaperRank.class, new PaperRankParser());
++        return super.start();
++    }
++
++    @Override
++    public void setupComplete()
++    {
++        KissenPaperCommandImplementation commandImplementation = Bukkit.getKissen().getImplementation(KissenPaperCommandImplementation.class);
++        commandImplementation.registerCommand(new RankCommand());
++    }
++
++    @Override
++    protected @NotNull Savable getSavableType()
++    {
++        return new KissenPaperRank();
++    }
++
++    @Override
++    protected @NotNull PaperRank getFallbackRank()
++    {
++        return new KissenPaperFallBackRank();
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/rank/PaperRankParser.java b/src/main/java/net/kissenpvp/paper/user/rank/PaperRankParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6b9fa4f17f34a6dcb5c753097238e506c45d0d0a
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/rank/PaperRankParser.java
+@@ -0,0 +1,36 @@
++package net.kissenpvp.paper.user.rank;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.paper.api.command.PaperArgumentParser;
++import net.kissenpvp.paper.api.user.rank.PaperRank;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Collection;
++import java.util.stream.Collectors;
++
++public class PaperRankParser implements PaperArgumentParser<PaperRank>
++{
++    @Override
++    public @NotNull String serialize(@NotNull PaperRank object)
++    {
++        return object.getName();
++    }
++
++    @Override
++    public @NotNull PaperRank deserialize(@NotNull String input)
++    {
++        Class<KissenPaperRankImplementation> clazz = KissenPaperRankImplementation.class;
++        KissenPaperRankImplementation rankImplementation = Bukkit.getKissen().getImplementation(clazz);
++        return rankImplementation.getRank(input).orElseThrow(NullPointerException::new);
++    }
++
++    @Override
++    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
++    {
++        Class<KissenPaperRankImplementation> clazz = KissenPaperRankImplementation.class;
++        KissenPaperRankImplementation rankImplementation = Bukkit.getKissen().getImplementation(clazz);
++        return rankImplementation.getRankSet().stream().map(PaperRank::getName).collect(Collectors.toSet());
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ee6d1b23b8a031568d71cd760dff91338390a6f6
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
+@@ -0,0 +1,158 @@
++package net.kissenpvp.paper.user.rank;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.annotations.CommandData;
++import net.kissenpvp.core.api.command.annotations.TabCompleter;
++import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
++import net.kissenpvp.core.api.time.AccurateDuration;
++import net.kissenpvp.core.api.time.TemporalObject;
++import net.kissenpvp.core.api.user.rank.PlayerRank;
++import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
++import net.kissenpvp.paper.api.user.rank.PaperRank;
++import net.kissenpvp.paper.command.parser.OfflinePlayerParser;
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.format.NamedTextColor;
++import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
++import org.bukkit.Bukkit;
++import org.bukkit.OfflinePlayer;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++
++import java.time.Instant;
++import java.util.Collection;
++import java.util.HashMap;
++import java.util.Map;
++import java.util.Optional;
++import java.util.function.Function;
++import java.util.function.Supplier;
++import java.util.stream.Collectors;
++
++public class RankCommand
++{
++
++    @CommandData("rank")
++    public void rank() {
++        throw new ArgumentMissingException();
++    }
++
++    @CommandData(value = "rank.grant", runAsync = true)
++    public void rankGrant(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull PaperRank paperRank, @NotNull Optional<AccurateDuration> accurateDuration)
++    {
++        Function<AccurateDuration, PaperPlayerRank> grant = duration -> offlinePlayer.grantRank(paperRank, duration);
++        Supplier<PaperPlayerRank> orElse = () -> offlinePlayer.grantRank(paperRank);
++        commandPayload.getSender().sendMessage(rankGrant(offlinePlayer, accurateDuration.map(grant).orElseGet(orElse)));
++    }
++
++    @CommandData(value = "rank.revoke", runAsync = true)
++    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull String id)
++    {
++        commandPayload.getSender().sendMessage(rankRevoke(offlinePlayer, id));
++    }
++
++    @CommandData(value = "rankedit", aliases = "re")
++    public void rankEdit()
++    {
++        throw new ArgumentMissingException();
++    }
++
++    @CommandData(value = "rankedit.prefix", runAsync = true)
++    public void rankPrefix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull String[] prefix)
++    {
++        String mounted = String.join(" ", prefix).replace('&', '§');
++        Component prefixComponent = LegacyComponentSerializer.legacySection().deserialize(mounted);
++        paperRank.setPrefix(prefixComponent);
++
++        Component[] args = {Component.text(paperRank.getName()), prefixComponent};
++        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.prefix.set", args));
++    }
++
++    @CommandData(value = "rankedit.suffix", runAsync = true)
++    public void rankSuffix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull String[] suffix)
++    {
++        String mounted = String.join(" ", suffix).replace('&', '§');
++        Component suffixComponent = LegacyComponentSerializer.legacyAmpersand().deserialize(mounted);
++        paperRank.setSuffix(suffixComponent);
++
++        Component[] args = {Component.text(paperRank.getName()), suffixComponent};
++        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.suffix.set", args));
++    }
++
++    @CommandData(value = "rankedit.priority", runAsync = true)
++    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, int priority)
++    {
++        paperRank.setPriority(priority);
++
++        Component[] args = {Component.text(paperRank.getName()), Component.text(priority)};
++        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.priority.set", args));
++    }
++
++    @CommandData(value = "rankedit.chatcolor", runAsync = true)
++    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull NamedTextColor namedTextColor)
++    {
++        paperRank.setChatColor(namedTextColor);
++        Component[] args = {Component.text(paperRank.getName()), Component.text(namedTextColor.toString())};
++        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.chatcolor.set", args));
++    }
++
++    @CommandData(value = "rankcreate", aliases = "createrank", runAsync = true)
++    public void rankCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull String name, int priority, @NotNull NamedTextColor namedTextColor)
++    {
++        Class<KissenPaperRankImplementation> clazz = KissenPaperRankImplementation.class;
++        KissenPaperRankImplementation rankImplementation = Bukkit.getKissen().getImplementation(clazz);
++        Map<String, String> data = new HashMap<>();
++        data.put("priority", String.valueOf(priority));
++        data.put("chat_color", namedTextColor.asHexString());
++
++        PaperRank paperRank = rankImplementation.createRank(name, data);
++        Component[] args = {Component.text(paperRank.getName()),
++                            Component.text(priority),
++                            Component.text(namedTextColor.toString())};
++        commandPayload.getSender().sendMessage(Component.translatable("server.rank.created", args));
++    }
++
++    @CommandData(value = "rankdelete", aliases = "deleterank", runAsync = true)
++    public void rankDelete(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank)
++    {
++        paperRank.delete();
++        commandPayload.getSender().sendMessage(
++                Component.translatable("server.rank.deleted", Component.text(paperRank.getName())));
++    }
++
++    private @NotNull Component rankGrant(@NotNull OfflinePlayer offlinePlayer, @NotNull PaperPlayerRank paperPlayerRank)
++    {
++        Component rankName = Component.text(paperPlayerRank.getSource().getName());
++        return Component.translatable("server.rank.granted", offlinePlayer.displayName(), rankName);
++    }
++
++    public @NotNull Component rankRevoke(@NotNull OfflinePlayer offlinePlayer, @NotNull String id)
++    {
++        Component[] args = {offlinePlayer.displayName(), Component.text(id)};
++
++        if (offlinePlayer.getRankHistory().stream().anyMatch(current ->
++        {
++            if (current.getID().equals(id) && current.isValid())
++            {
++                current.setEnd(Instant.now());
++                return true;
++            }
++            return false;
++        }))
++        {
++            return Component.translatable("server.rank.player.revoked", args);
++        }
++        return Component.translatable("server.rank.player.not.found", args);
++    }
++
++    @TabCompleter(command = "rank.revoke")
++    public @NotNull Collection<String> rankRevokeTab(@NotNull CommandPayload<CommandSender> commandPayload)
++    {
++        OfflinePlayerParser offlinePlayerParser = new OfflinePlayerParser();
++        if (commandPayload.getArguments().length < 2)
++        {
++            return offlinePlayerParser.tabCompletion(commandPayload);
++        }
++        OfflinePlayer offlinePlayer = offlinePlayerParser.deserialize(commandPayload.getArguments()[0]);
++        return offlinePlayer.getRankHistory().stream().filter(TemporalObject::isValid).map(PlayerRank::getID).collect(
++                Collectors.toSet());
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetChatColorEvent.java b/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetChatColorEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..52aedab9c4f0828cca92b4f3ff6ba187085be160
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetChatColorEvent.java
+@@ -0,0 +1,15 @@
++package net.kissenpvp.paper.user.rank.event;
++
++import net.kissenpvp.core.api.user.rank.event.RankSetChatColorEvent;
++import net.kissenpvp.core.user.rank.event.KissenRankSetEvent;
++import net.kissenpvp.paper.api.user.rank.PaperRank;
++import net.kyori.adventure.text.format.TextColor;
++import org.jetbrains.annotations.NotNull;
++
++public class KissenPaperRankSetChatColorEvent extends KissenRankSetEvent<PaperRank, TextColor> implements RankSetChatColorEvent<PaperRank>
++{
++    public KissenPaperRankSetChatColorEvent(@NotNull PaperRank rank, @NotNull TextColor old, @NotNull TextColor updated)
++    {
++        super(rank, old, updated);
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetPrefixEvent.java b/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetPrefixEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..7f644e5a133b5f85807f7ee2ec2fb6a0d71d3d75
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetPrefixEvent.java
+@@ -0,0 +1,16 @@
++package net.kissenpvp.paper.user.rank.event;
++
++import net.kissenpvp.core.api.user.rank.event.RankSetPrefixEvent;
++import net.kissenpvp.core.user.rank.event.KissenRankSetEvent;
++import net.kissenpvp.paper.api.user.rank.PaperRank;
++import net.kyori.adventure.text.Component;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++public class KissenPaperRankSetPrefixEvent extends KissenRankSetEvent<PaperRank, Component> implements RankSetPrefixEvent<PaperRank>
++{
++    public KissenPaperRankSetPrefixEvent(@NotNull PaperRank rank, @Nullable Component old, @Nullable Component updated)
++    {
++        super(rank, old, updated);
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetPriorityEvent.java b/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetPriorityEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..b8935be5d3201d3d88e5cc51a5990a33a21ad37b
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetPriorityEvent.java
+@@ -0,0 +1,14 @@
++package net.kissenpvp.paper.user.rank.event;
++
++import net.kissenpvp.core.api.user.rank.event.RankSetPriorityEvent;
++import net.kissenpvp.core.user.rank.event.KissenRankSetEvent;
++import net.kissenpvp.paper.api.user.rank.PaperRank;
++import org.jetbrains.annotations.NotNull;
++
++public class KissenPaperRankSetPriorityEvent extends KissenRankSetEvent<PaperRank, Integer> implements RankSetPriorityEvent<PaperRank>
++{
++    public KissenPaperRankSetPriorityEvent(@NotNull PaperRank rank, @NotNull Integer old, @NotNull Integer updated)
++    {
++        super(rank, old, updated);
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetSuffixEvent.java b/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetSuffixEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..1fa9a490165d87b19312001931bb3dd5881ed833
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetSuffixEvent.java
+@@ -0,0 +1,16 @@
++package net.kissenpvp.paper.user.rank.event;
++
++import net.kissenpvp.core.api.user.rank.event.RankSetPrefixEvent;
++import net.kissenpvp.core.user.rank.event.KissenRankSetEvent;
++import net.kissenpvp.paper.api.user.rank.PaperRank;
++import net.kyori.adventure.text.Component;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++public class KissenPaperRankSetSuffixEvent extends KissenRankSetEvent<PaperRank, Component> implements RankSetPrefixEvent<PaperRank>
++{
++    public KissenPaperRankSetSuffixEvent(@NotNull PaperRank rank, @Nullable Component old, @Nullable Component updated)
++    {
++        super(rank, old, updated);
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java

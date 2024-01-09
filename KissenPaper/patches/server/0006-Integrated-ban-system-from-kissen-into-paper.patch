@@ -122,10 +122,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..132fa79cdb1f27465fe006600dcd178965571ade
+index 0000000000000000000000000000000000000000..f7b8b9a1f27e889c6ae4b50ab022ab3c59159332
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,506 @@
+@@ -0,0 +1,507 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -196,6 +196,7 @@ index 0000000000000000000000000000000000000000..132fa79cdb1f27465fe006600dcd1789
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
++@SuppressWarnings("rawtypes")
 +public class KissenPaperBanImplementation extends KissenBanImplementation<PaperBan, PaperPunishment> implements PaperBanImplementation, KissenImplementation {
 +
 +    @Override
@@ -1456,7 +1457,7 @@ index 55167ae5fef79f24545df34479443dbb74399a57..5d3e45f35d6de0479938d85e13c1ae57
      }
  }
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index 3ec2d970acd9e910ce9d6d2fbb59ca5976574dd3..06e8b70ec1dd37cdc43666a1a23f5521842c7e78 100644
+index 82ba2cc094305de4fd5e11521b15ee5ae37229e0..f323a72deb613820d6806f38702cad7b63e2a8d7 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 @@ -18,6 +18,7 @@
@@ -1467,11 +1468,7 @@ index 3ec2d970acd9e910ce9d6d2fbb59ca5976574dd3..06e8b70ec1dd37cdc43666a1a23f5521
  import net.kissenpvp.core.api.base.Implementation;
  import net.kissenpvp.core.api.database.meta.ObjectMeta;
  import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
-@@ -26,9 +27,11 @@ import net.kissenpvp.core.api.user.UserImplementation;
- import net.kissenpvp.core.base.KissenCore;
- import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
- import net.kissenpvp.core.permission.PermissionImplementation;
-+import net.kissenpvp.paper.api.ban.PaperBanImplementation;
+@@ -30,6 +31,7 @@ import net.kissenpvp.core.permission.PermissionImplementation;
  import net.kissenpvp.paper.api.base.PaperKissen;
  import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
  import net.kissenpvp.paper.api.command.PaperCommandImplementation;
@@ -1479,7 +1476,7 @@ index 3ec2d970acd9e910ce9d6d2fbb59ca5976574dd3..06e8b70ec1dd37cdc43666a1a23f5521
  import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
  import net.kissenpvp.paper.command.confirmation.KissenPaperConfirmationImplementation;
  import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
-@@ -62,6 +65,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+@@ -65,6 +67,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
          loader.put(PaperPermissionImplementation.class, permissionImplementation);
          loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());
          loader.put(PaperCommandImplementation.class, new KissenPaperCommandImplementation());

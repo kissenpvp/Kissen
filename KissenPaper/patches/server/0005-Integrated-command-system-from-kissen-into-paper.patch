@@ -5,12 +5,12 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index ecf9159f6ea00fe6ab888fef65cc71f52c62cff9..3ec2d970acd9e910ce9d6d2fbb59ca5976574dd3 100644
+index 0ce3e0f0a8d66ad4c021df0ced59dea33612e65f..82ba2cc094305de4fd5e11521b15ee5ae37229e0 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -24,9 +24,13 @@ import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
- import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
+@@ -25,9 +25,13 @@ import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
  import net.kissenpvp.core.api.user.UserImplementation;
+ import net.kissenpvp.core.api.user.rank.RankImplementation;
  import net.kissenpvp.core.base.KissenCore;
 +import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
  import net.kissenpvp.core.permission.PermissionImplementation;
@@ -22,7 +22,7 @@ index ecf9159f6ea00fe6ab888fef65cc71f52c62cff9..3ec2d970acd9e910ce9d6d2fbb59ca59
  import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
  import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
  import net.kissenpvp.paper.user.KissenPaperUserImplementation;
-@@ -57,6 +61,8 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+@@ -60,6 +64,8 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
          loader.put(PermissionImplementation.class, permissionImplementation);
          loader.put(PaperPermissionImplementation.class, permissionImplementation);
          loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());
@@ -748,10 +748,10 @@ index 0000000000000000000000000000000000000000..7cd54e86b39af30069ef5c67e78429d4
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandPayload.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandPayload.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..2d1b1ff0980f5936e36876853d645b0499c0682f
+index 0000000000000000000000000000000000000000..ea1ebd22238e0172939c6fd770fdea76f03517a4
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandPayload.java
-@@ -0,0 +1,226 @@
+@@ -0,0 +1,231 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -938,6 +938,11 @@ index 0000000000000000000000000000000000000000..2d1b1ff0980f5936e36876853d645b04
 +                getSender().sendMessage(Component.translatable("server.command.confirm.required", time));
 +            }
 +            return true;
++        }
++
++        if(sendMessage)
++        {
++            getSender().sendMessage(Component.translatable("server.command.confirm.already.request"));
 +        }
 +        return false;
 +    }

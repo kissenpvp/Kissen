@@ -23,9 +23,6 @@ import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.time.TemporalObject;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Optional;
-
-
 public interface PlayerRank<RANK extends Rank> extends TemporalObject {
     /**
      * Returns the id of this player rank.

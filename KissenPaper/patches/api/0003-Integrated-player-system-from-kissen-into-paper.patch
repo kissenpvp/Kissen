@@ -679,6 +679,19 @@ index 0000000000000000000000000000000000000000..f4003d7ada0ed5573ad4d3d6e0b25aec
 +
 +public class PermissibleOverriddenException extends IllegalStateException {
 +} // LuckPerms, I know where you live
+diff --git a/src/main/java/net/kissenpvp/paper/api/user/event/VisualChangeEvent.java b/src/main/java/net/kissenpvp/paper/api/user/event/VisualChangeEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..1c8930ab609ef6f71e3cf5b17006ceac38d57c02
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/user/event/VisualChangeEvent.java
+@@ -0,0 +1,7 @@
++package net.kissenpvp.paper.api.user.event;
++
++import net.kissenpvp.core.api.event.EventClass;
++import org.bukkit.entity.Player;
++import org.jetbrains.annotations.NotNull;
++
++public record VisualChangeEvent(@NotNull Player player) implements EventClass {}
 diff --git a/src/main/java/net/kissenpvp/paper/api/user/rank/PaperPlayerRank.java b/src/main/java/net/kissenpvp/paper/api/user/rank/PaperPlayerRank.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..ba0970a4eba9afafe7919fbb0318777590f70e67
@@ -879,7 +892,7 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..72227c4175f588f2f9181ca4d5647d75
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index ec937534f049ba25fb359c3e022ebe52ead6abef..cb2f0eec1c90c2e1afe4a212f597c0e3508c8462 100644
+index ae61a39b25267b84fe0b8766e4b12d9b24b44ded..cd38c7943c32be160fd2c280ba65b3226601118b 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
 @@ -52,7 +52,7 @@ import org.jetbrains.annotations.Nullable;

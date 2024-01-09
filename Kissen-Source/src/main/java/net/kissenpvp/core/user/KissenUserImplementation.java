@@ -79,24 +79,20 @@ public abstract class KissenUserImplementation implements UserImplementation {
     }
 
     @Override
+    public boolean start()
+    {
+        registerUserSetting(new PrimaryUserColor());
+        registerUserSetting(new SecondaryUserColor());
+        registerUserSetting(new GeneralUserColor());
+        registerUserSetting(new EnabledUserColor());
+        registerUserSetting(new DisabledUserColor());
+        return UserImplementation.super.start();
+    }
+
+    @Override
     public boolean postStart() {
-        try {
-            TaskImplementation taskImplementation = KissenCore.getInstance().getImplementation(TaskImplementation.class);
-            Runnable runnable = () -> getOnlineUser().stream().filter(userEntry -> userEntry.getStorage().containsKey("tick")).forEach(user -> ((KissenUser<? extends Permission>) user).tick());
-            taskImplementation.registerAsyncTask("user_tick", 20, runnable);
-
-            registerUserSetting(new PrimaryUserColor());
-            registerUserSetting(new SecondaryUserColor());
-            registerUserSetting(new GeneralUserColor());
-            registerUserSetting(new EnabledUserColor());
-            registerUserSetting(new DisabledUserColor());
-
-        } catch (TaskException taskException) {
-            throw new IllegalStateException("Cannot start user tick!", taskException);
-        }
 
         fetchUserProfiles();
-
         return UserImplementation.super.postStart();
     }
 
@@ -202,7 +198,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
     private void fetchUserProfiles() {
         cachedProfiles.clear();
         QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "name", FilterType.EXACT_MATCH);
-        querySelect.execute().thenAcceptAsync(data ->
+        querySelect.execute().thenAccept(data ->
         {
             for (String[] user : data)
             {
@@ -302,6 +298,6 @@ public abstract class KissenUserImplementation implements UserImplementation {
         }
         getCachedProfiles().remove(userInfoNode);
         getCachedProfiles().add(userInfoNode);
-        KissenCore.getInstance().getLogger().info("The profile {} has been cached now.", userInfoNode);
+        KissenCore.getInstance().getLogger().info("The profile {} has been cached.", userInfoNode);
     }
 }

@@ -1,6 +1,5 @@
 package net.kissenpvp.core.command.confirmation;
 
-import lombok.SneakyThrows;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
@@ -36,10 +35,9 @@ public abstract class KissenConfirmationImplementation implements KissenImplemen
                 KissenLocalizationImplementation.class);
         localize.register("server.command.confirm.required", new MessageFormat(
                 "Are you sure you want to execute this task? Type /confirm to execute it, or /cancel to cancel it. This confirmation will expire after {0} seconds."));
-        localize.register("server.command.confirm.cancelled",
-                new MessageFormat("The confirmation request has not been executed."));
-        localize.register("server.command.confirm.no.request",
-                new MessageFormat("You do not have any task to confirm."));
+        localize.register("server.command.confirm.cancelled", new MessageFormat("The confirmation request has not been executed."));
+        localize.register("server.command.confirm.no.request", new MessageFormat("You do not have any task to confirm."));
+        localize.register("server.command.confirm.already.request", new MessageFormat("You already have a task to confirm. Please first confirm or cancel the other task."));
         return KissenImplementation.super.postStart();
     }
 

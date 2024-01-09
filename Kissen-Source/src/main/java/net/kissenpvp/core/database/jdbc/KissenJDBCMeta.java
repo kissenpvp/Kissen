@@ -72,7 +72,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
 
     @Override
     public void purge(@NotNull String totalID) throws BackendException {
-        getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ?;", getTable(), getKeyColumn()), preparedStatement -> {
+        getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ?;", getTable(), getTotalIDColumn()), preparedStatement -> {
             preparedStatement.setString(1, totalID);
             preparedStatement.executeUpdate();
         });
