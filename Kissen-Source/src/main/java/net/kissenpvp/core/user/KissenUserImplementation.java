@@ -32,6 +32,7 @@ import net.kissenpvp.core.api.user.UserInfo;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.message.usersettings.*;
+import net.kissenpvp.core.user.suffix.SuffixInChatSetting;
 import net.kissenpvp.core.user.suffix.SuffixSetting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
@@ -83,6 +84,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
         registerUserSetting(new EnabledUserColor());
         registerUserSetting(new DisabledUserColor());
         registerUserSetting(new SuffixSetting());
+        registerUserSetting(new SuffixInChatSetting());
         return UserImplementation.super.start();
     }
 

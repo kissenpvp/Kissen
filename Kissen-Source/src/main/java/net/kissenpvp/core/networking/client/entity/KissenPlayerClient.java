@@ -49,6 +49,7 @@ import net.kissenpvp.core.message.PlayerTheme;
 import net.kissenpvp.core.user.rank.KissenPlayerRank;
 import net.kissenpvp.core.user.rank.KissenPlayerRankNode;
 import net.kissenpvp.core.user.suffix.KissenSuffix;
+import net.kissenpvp.core.user.suffix.SuffixInChatSetting;
 import net.kissenpvp.core.user.suffix.SuffixNode;
 import net.kissenpvp.core.user.suffix.SuffixSetting;
 import net.kissenpvp.core.user.usersettings.KissenUserBoundSettings;
@@ -215,7 +216,10 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         TextColor rankTheme = getLastColor(rank.getPrefix().orElse(Component.empty())).orElse(null);
         rank.getPrefix().ifPresent(prefix -> builder.append(prefix).appendSpace());
         builder.append(displayName().color(rankTheme));
-        getSelectedSuffix().ifPresent(suffix -> builder.appendSpace().append(suffix.getContent().color(rankTheme)));
+        if(getUserSetting(SuffixInChatSetting.class).getValue())
+        {
+            getSelectedSuffix().ifPresent(suffix -> builder.appendSpace().append(suffix.getContent().color(rankTheme)));
+        }
         return builder.asComponent();
     }
 
