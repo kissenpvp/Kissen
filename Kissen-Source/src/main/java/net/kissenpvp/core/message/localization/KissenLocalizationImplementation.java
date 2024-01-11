@@ -160,10 +160,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
     }
 
     public @NotNull Optional<Locale> getInternalLocale(@NotNull String localeTag) {
-        return globallyKnown.stream()
-                .filter(locale ->
-                        locale.toString().equalsIgnoreCase(localeTag))
-                .findFirst();
+        return globallyKnown.stream().filter(locale -> locale.toString().equalsIgnoreCase(localeTag)).findFirst();
     }
 
     @Override
@@ -443,15 +440,15 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
             }
         }
 
-        localeData.translationRegistry().registerAll(Objects.requireNonNull(getInternalLocale(locale).orElseGet(() ->
+        Locale parsedLocale = getInternalLocale(locale).orElseGet(() -> buildLocale(locale));
+        if (!localeData.installed().contains(parsedLocale))
         {
-            Locale parseLocale = buildLocale(locale);
-            localeData.installed().add(parseLocale);
-            KissenCore.getInstance()
-                    .getLogger()
-                    .info("Found and registered locale '{}' from '{}'.", parseLocale.getDisplayName(), localeData.translationRegistry.name());
-            return parseLocale;
-        })), stringStringMap);
+            localeData.installed().add(parsedLocale);
+            KissenCore.getInstance().getLogger().info("Found and registered locale '{}' from '{}'.",
+                    parsedLocale.getDisplayName(), localeData.translationRegistry.name());
+        }
+
+        localeData.translationRegistry().registerAll(Objects.requireNonNull(parsedLocale), stringStringMap);
     }
 
     private @NotNull Locale buildLocale(@NotNull String locale)
