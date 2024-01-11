@@ -100,6 +100,6 @@ public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject imple
     @Override
     public int hashCode()
     {
-        return Objects.hash(getKissenPlayerRankNode(), dataWriter, getSource().hashCode());
+        return Objects.hash(getKissenPlayerRankNode(), getSource().hashCode());
     }
 }

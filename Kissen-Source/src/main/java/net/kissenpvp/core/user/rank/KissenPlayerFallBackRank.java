@@ -69,4 +69,10 @@ public abstract class KissenPlayerFallBackRank<T extends Rank> implements Player
     {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public int hashCode()
+    {
+        return 0;
+    }
 }
