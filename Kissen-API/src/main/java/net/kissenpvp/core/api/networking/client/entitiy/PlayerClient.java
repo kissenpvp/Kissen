@@ -21,7 +21,7 @@ package net.kissenpvp.core.api.networking.client.entitiy;
 import net.kissenpvp.core.api.ban.Ban;
 import net.kissenpvp.core.api.ban.Punishment;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.user.User;
@@ -91,13 +91,13 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
 
     @NotNull Optional<Suffix> getSuffix(@NotNull String name);
 
-    @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content);
+    @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content) throws EventCancelledException;
 
-    boolean deleteSuffix(@NotNull String name);
+    @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content, @Nullable AccurateDuration accurateDuration) throws EventCancelledException;
+
+    boolean revokeSuffix(@NotNull String name);
 
     @NotNull Optional<Suffix> getSelectedSuffix();
-
-    void setSelectedSuffix(@NotNull String name) throws NullPointerException;
 
     long getOnlineTime();
 
@@ -105,7 +105,7 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
 
     @NotNull User getUser();
 
-    <X> @NotNull UserSetting<X> getUserSetting(Class<? extends PlayerSetting<X>> settingClass);
+    <X> @NotNull UserSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass);
 
 
 }

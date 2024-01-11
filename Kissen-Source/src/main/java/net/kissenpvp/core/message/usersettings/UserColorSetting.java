@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.message.usersettings;
 
+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.api.user.usersetttings.UserValue;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -39,7 +40,7 @@ public abstract class UserColorSetting implements PlayerSetting<NamedTextColor> 
     }
 
     @Override
-    public @NotNull UserValue<NamedTextColor>[] getPossibleValues() {
+    public @NotNull UserValue<NamedTextColor>[] getPossibleValues(@NotNull PlayerClient<?, ?, ?> playerClient) {
         return new UserValue[]
                 {
                         new UserValue<>(NamedTextColor.DARK_BLUE),

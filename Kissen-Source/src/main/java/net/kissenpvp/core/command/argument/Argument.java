@@ -23,7 +23,7 @@ import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 
 @Builder
-public record Argument<T, S extends ServerEntity>(String name, Class<?> type, T defaultValue,
+public record Argument<T, S extends ServerEntity>(String name, String argumentName, Class<?> type, T defaultValue,
                                                   ArgumentParser<T, S> argumentParser, boolean isNullable, boolean isEnum, ArgumentType argumentType,
                                                   boolean ignoreQuote) {
 }

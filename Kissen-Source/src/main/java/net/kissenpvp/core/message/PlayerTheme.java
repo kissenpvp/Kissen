@@ -24,6 +24,8 @@ import net.kissenpvp.core.message.usersettings.*;
 import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 @AllArgsConstructor
 public class PlayerTheme extends DefaultTheme {
 
@@ -40,7 +42,7 @@ public class PlayerTheme extends DefaultTheme {
     }
 
     @Override
-    public @NotNull TextColor getDefaultColor() {
+    public @NotNull TextColor getGeneralColor() {
         return playerClient.getUserSetting(GeneralUserColor.class).getValue();
     }
 
@@ -52,5 +54,11 @@ public class PlayerTheme extends DefaultTheme {
     @Override
     public @NotNull TextColor getDisabledColor() {
         return playerClient.getUserSetting(DisabledUserColor.class).getValue();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(getPrimaryAccentColor(), getSecondaryAccentColor(), getGeneralColor(), getDisabledColor(), getEnabledColor());
     }
 }

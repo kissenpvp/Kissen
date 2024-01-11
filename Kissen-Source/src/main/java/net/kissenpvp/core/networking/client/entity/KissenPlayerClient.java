@@ -26,13 +26,16 @@ import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
+import net.kissenpvp.core.api.database.savable.list.SavableList;
 import net.kissenpvp.core.api.database.savable.list.SavableRecordList;
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.message.Theme;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.time.AccurateDuration;
+import net.kissenpvp.core.api.time.TemporalObject;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.rank.PlayerRank;
@@ -47,27 +50,32 @@ import net.kissenpvp.core.user.rank.KissenPlayerRank;
 import net.kissenpvp.core.user.rank.KissenPlayerRankNode;
 import net.kissenpvp.core.user.suffix.KissenSuffix;
 import net.kissenpvp.core.user.suffix.SuffixNode;
+import net.kissenpvp.core.user.suffix.SuffixSetting;
 import net.kissenpvp.core.user.usersettings.KissenUserBoundSettings;
 import net.kissenpvp.core.time.TemporalMeasureNode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class KissenPlayerClient<P extends Permission, R extends PlayerRank<?>, B extends Punishment<?>> implements PlayerClient<P, R, B> {
 
     @Override
     public @NotNull @Unmodifiable List<R> getRankHistory() {
-        return getUser().getList("rank_list").map(list -> list.toRecordList(KissenPlayerRankNode.class).toRecordList().stream().map(rank -> translateRank(rank, getRankSaveChanges())).sorted(Comparator.comparing(PlayerRank::getStart)).toList()).orElse(new ArrayList<>());
+        return getUser().getList("rank_list").map(
+                list -> list.toRecordList(KissenPlayerRankNode.class).toRecordList().stream().map(
+                        rank -> translateRank(rank, rankDataWriter())).sorted(
+                        Comparator.comparing(PlayerRank::getStart)).toList()).orElse(new ArrayList<>());
     }
 
     @Override
@@ -86,8 +94,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         KissenPlayerRankNode kissenPlayerRankNode = new KissenPlayerRankNode(id, rank.getName(), new TemporalMeasureNode(accurateDuration));
         R playerRank = translateRank(kissenPlayerRankNode, record ->
         {});
-        setRank(playerRank);
-        return playerRank;
+        return setRank(playerRank);
     }
 
     @Override
@@ -140,7 +147,15 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
 
     @Override
     public @NotNull Set<Suffix> getSuffixSet() {
-        return getUser().getListNotNull("suffix_list").toRecordList(SuffixNode.class).toRecordList().stream().map(KissenSuffix::new).collect(Collectors.toUnmodifiableSet());
+        SavableRecordList<SuffixNode> recordList = getSuffixList(getUser());
+        Function<SuffixNode, KissenSuffix> translator = suffixNode -> new KissenSuffix(suffixNode, suffixDataWriter());
+        Set<Suffix> suffixes = recordList.toRecordList().stream().map(translator).collect(Collectors.toSet());
+        getRank().getSource().getSuffix().ifPresent(component ->
+        {
+            KissenSuffix kissenSuffix = new KissenSuffix(new SuffixNode("rank", component), null);
+            suffixes.add(kissenSuffix);
+        });
+        return Collections.unmodifiableSet(suffixes);
     }
 
     @Override
@@ -149,33 +164,41 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     @Override
-    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
-        SuffixNode suffixNode = new SuffixNode(name, JSONComponentSerializer.json().serialize(content));
-        SavableRecordList<SuffixNode> savableRecordList = getUser().getListNotNull("suffix_list").toRecordList(SuffixNode.class);
-
-        if (savableRecordList.contains(suffixNode)) {
-            return overrideSuffix(name, savableRecordList, suffixNode);
-        }
-
-        if (!savableRecordList.add(suffixNode)) {
-            KissenCore.getInstance().getLogger().error("A suffix by the name '{}' from user '{}' could not be added and only god knows why (and probably some programmers who are better than me).", name, getName());
-        }
-        return Optional.empty();
+    public @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content)
+    {
+        return grantSuffix(name, content, null);
     }
 
     @Override
-    public boolean deleteSuffix(@NotNull String name) {
-        return getUser().getListNotNull("suffix_list").toRecordList(SuffixNode.class).removeIfRecord(currentRecord -> currentRecord.name().equals(name));
+    public @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content, @Nullable AccurateDuration accurateDuration) throws EventCancelledException
+    {
+        SuffixNode suffixNode = new SuffixNode(name, content, new TemporalMeasureNode(accurateDuration));
+        SavableRecordList<SuffixNode> suffixes = getSuffixList(getUser());
+        if (suffixes.replaceRecord(suffix -> suffix.name().equals(name), suffixNode) == 0)
+        {
+            suffixes.add(suffixNode);
+        }
+
+        return new KissenSuffix(suffixNode, suffixDataWriter());
+    }
+
+    @Override
+    public boolean revokeSuffix(@NotNull String name)
+    {
+        return getSuffix(name).map(suffix -> {
+            suffix.setEnd(Instant.now());
+            return true;
+        }).orElse(false);
     }
 
     @Override
     public @NotNull Optional<Suffix> getSelectedSuffix() {
-        return getUser().get("selected_suffix").flatMap(this::getSuffix);
-    }
-
-    @Override
-    public void setSelectedSuffix(@NotNull String name) throws NullPointerException {
-        getUser().set("selected_suffix", Objects.requireNonNull(getSuffix(name).orElseThrow(NullPointerException::new)).getName());
+        String setting = getUserSetting(SuffixSetting.class).getValue();
+        if (setting.equals("none"))
+        {
+            return Optional.empty();
+        }
+        return getSuffix(setting).filter(TemporalObject::isValid);
     }
 
     @Override
@@ -188,19 +211,17 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     public @NotNull Component styledRankName() {
         TextComponent.Builder builder = Component.text();
         Rank rank = getRank().getSource();
+
+        TextColor rankTheme = getLastColor(rank.getPrefix().orElse(Component.empty())).orElse(null);
         rank.getPrefix().ifPresent(prefix -> builder.append(prefix).appendSpace());
-        builder.append(displayName().color(getLastColor(rank.getPrefix().orElse(Component.empty())).orElse(null)));
-        getSelectedSuffix().ifPresent(suffix -> builder.appendSpace().append(suffix.getContent()));
+        builder.append(displayName().color(rankTheme));
+        getSelectedSuffix().ifPresent(suffix -> builder.appendSpace().append(suffix.getContent().color(rankTheme)));
         return builder.asComponent();
     }
 
     @Override
     public @NotNull <X> UserSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass) {
-        try {
-            return (UserSetting<X>) new KissenUserBoundSettings<>(KissenCore.getInstance().getImplementation(UserImplementation.class).getUserSettings().stream().filter(currentSetting -> currentSetting.getClass().equals(settingClass)).findFirst().orElseThrow(ClassCastException::new), this.getUniqueId());
-        } catch (ClassCastException classCastException) {
-            throw new IllegalArgumentException(String.format("Attempted to request content from setting %s which isn't registered. Please ensure the setting %s is correctly registered before trying to fetch its content.", settingClass.getSimpleName(), settingClass.getSimpleName()));
-        }
+        return getUserSetting(getUser(), settingClass);
     }
 
     @Override
@@ -223,61 +244,17 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return true;
     }
 
-    @SuppressWarnings("UnusedReturnValue")
-    public @NotNull Optional<R> setRank(@NotNull R playerRank) {
-        KissenPlayerRankNode kissenPlayerRankNode = ((KissenPlayerRank<?>) playerRank).getKissenPlayerRankNode();
-        return getUser().getListNotNull("rank_list").toRecordList(KissenPlayerRankNode.class).toRecordList().stream().filter(rank -> rank.equals(kissenPlayerRankNode)).findFirst().map(oldOne -> Optional.of(overrideRank(translateRank(oldOne, null), playerRank))).orElseGet(() -> {
-            addRank(kissenPlayerRankNode);
-            return Optional.empty();
-        });
-    }
+    public @NotNull R setRank(@NotNull R playerRank)
+    {
+        KissenPlayerRankNode rankNode = ((KissenPlayerRank<?>) playerRank).getKissenPlayerRankNode();
 
-    /**
-     * Overrides the user's current rank with a new rank. This method takes two arguments, both of which are {@link R} objects: the old rank
-     * that the user had and the new rank that the user will have.
-     * This method updates the user's rank by creating a new {@link KissenPlayerRankNode} object from the new rank and updating the corresponding
-     * record in the user's "rank_list" with the new {@link KissenPlayerRankNode}. If the update is successful, it returns the old rank.
-     *
-     * @param oldRank    the old rank that the user had
-     * @param playerRank the new rank that the user will have
-     * @return the old rank that the user had
-     * @throws NullPointerException if either of the {@link R} arguments are null
-     * @see R
-     * @see KissenPlayerRankNode
-     * @see User#getList(String)
-     * @see SavableRecordList#toRecordList(Class)
-     * @see SavableRecordList#replaceRecord(Predicate, Record)
-     */
-    private @NotNull R overrideRank(@NotNull R oldRank, @NotNull R playerRank) {
-        KissenPlayerRankNode kissenPlayerRankNode = ((KissenPlayerRank<?>) playerRank).getKissenPlayerRankNode();
-        //TODO events
-        getUser().getListNotNull("rank_list").toRecordList(KissenPlayerRankNode.class).replaceRecord((rank -> rank.equals(kissenPlayerRankNode)), kissenPlayerRankNode);
-        return oldRank;
-    }
-
-    /**
-     * Adds the specified {@link KissenPlayerRankNode} object to the user's rank_list.
-     * If the rank_list does not exist, it is created and the {@link KissenPlayerRankNode} object is added to it.
-     * <p>
-     * The method first serializes the {@link KissenPlayerRankNode} object to a JSON string representation
-     * using the {@link DataImplementation#toJson(Record)} method.
-     *
-     * @param kissenPlayerRankNode the {@link KissenPlayerRankNode} object to be added to the user's rank_list
-     * @throws NullPointerException if the kissenPlayerRankNode argument is null
-     * @see User#containsList(String)
-     * @see User#getList(String)
-     * @see User#setList(String, List)
-     * @see SavableRecordList#toRecordList(Class)
-     */
-    private void addRank(@NotNull KissenPlayerRankNode kissenPlayerRankNode) throws NullPointerException {
-
-        if (!getUser().containsList("rank_list")) {
-            String jsonRankNode = KissenCore.getInstance().getImplementation(DataImplementation.class).toJson(kissenPlayerRankNode);
-            getUser().setList("rank_list", Collections.singletonList(jsonRankNode));
-            return;
+        SavableList savableList = getUser().getListNotNull("rank_list");
+        SavableRecordList<KissenPlayerRankNode> ranks = savableList.toRecordList(KissenPlayerRankNode.class);
+        if (ranks.replaceRecord(rank -> rank.equals(rankNode), rankNode) == 0)
+        {
+            ranks.add(rankNode);
         }
-
-        getUser().getListNotNull("rank_list").toRecordList(KissenPlayerRankNode.class).add(kissenPlayerRankNode);
+        return translateRank(rankNode, rankDataWriter());
     }
 
     /**
@@ -296,7 +273,8 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
      * @see Record
      * @see SavableRecordList
      */
-    protected @NotNull DataWriter getRankSaveChanges() {
+    protected @NotNull DataWriter rankDataWriter()
+    {
         return record -> {
             SavableRecordList<KissenPlayerRankNode> savableRecordList = getUser().getListNotNull("rank_list").toRecordList(KissenPlayerRankNode.class);
             if (savableRecordList.contains((KissenPlayerRankNode) record)) {
@@ -304,6 +282,24 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
                 return;
             }
             savableRecordList.add((KissenPlayerRankNode) record);
+        };
+    }
+
+    private @NotNull DataWriter suffixDataWriter()
+    {
+        return suffixDataWriter(getUser());
+    }
+
+    protected @NotNull DataWriter suffixDataWriter(@NotNull User user)
+    {
+        return (suffix) ->
+        {
+            SuffixNode suffixNode = (SuffixNode) suffix;
+            SavableRecordList<SuffixNode> suffixes = getSuffixList(user);
+            if (suffixes.replaceRecord(current -> current.name().equals(suffixNode.name()), suffixNode) == 0)
+            {
+                suffixes.add(suffixNode);
+            }
         };
     }
 
@@ -329,6 +325,26 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return Optional.ofNullable(index);
     }
 
+    protected <X> UserSetting<X> getUserSetting(@NotNull User user, @NotNull Class<? extends PlayerSetting<X>> settingClass)
+    {
+        try
+        {
+            Class<UserImplementation> clazz = UserImplementation.class;
+            UserImplementation userImplementation = KissenCore.getInstance().getImplementation(clazz);
+            Stream<PlayerSetting<?>> settingStream = userImplementation.getUserSettings().stream();
+
+            Predicate<PlayerSetting<?>> predicate = currentSetting -> currentSetting.getClass().equals(settingClass);
+            return (UserSetting<X>) new KissenUserBoundSettings<>(
+                    settingStream.filter(predicate).findFirst().orElseThrow(ClassCastException::new), user);
+        }
+        catch (ClassCastException classCastException)
+        {
+            throw new IllegalArgumentException(String.format(
+                    "Attempted to request content from setting %s which isn't registered. Please ensure the setting %s is correctly registered before trying to fetch its content.",
+                    settingClass.getSimpleName(), settingClass.getSimpleName()));
+        }
+    }
+
     public long getOnlineTime(@NotNull User user) {
         return isConnected() ? Long.parseLong(user.get("online_time").orElse("0")) + (System.currentTimeMillis() - (long) user.getStorage().get("time_joined")) : Long.parseLong(user.get("online_time").orElse("-1"));
     }
@@ -347,20 +363,12 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return Optional.ofNullable(color);
     }
 
-    private @NotNull Optional<Suffix> overrideSuffix(@NotNull String name, @NotNull SavableRecordList<SuffixNode> savableRecordList, SuffixNode suffixNode) {
-        Optional<Suffix> suffix = savableRecordList.toRecordList().stream().filter(currentSuffix -> currentSuffix.name().equals(name)).findFirst().map(KissenSuffix::new);
-
-        switch (savableRecordList.replaceRecord((current -> current.equals(suffixNode)), suffixNode)) {
-            case 0 ->
-                    KissenCore.getInstance().getLogger().warn("A suffix by the name '{}' from user '{}' was found in the list but was not replaced.", name, getName());
-            case 1 -> { /* ignored */ }
-            default ->
-                    KissenCore.getInstance().getLogger().warn("A duplicated suffix by the name '{}' from user '{}' has been detected, this can only happen, if the dataset was manually adjusted. It's advised to clear this duplicate.", name, getName());
-        }
-        return suffix;
-    }
-
     protected abstract @NotNull R translateRank(@NotNull KissenPlayerRankNode kissenPlayerRankNode, @Nullable DataWriter dataWriter);
 
     protected abstract @NotNull R fallbackRank();
+
+    protected @NotNull SavableRecordList<SuffixNode> getSuffixList(@NotNull User user)
+    {
+        return user.getListNotNull("suffix_list").toRecordList(SuffixNode.class);
+    }
 }

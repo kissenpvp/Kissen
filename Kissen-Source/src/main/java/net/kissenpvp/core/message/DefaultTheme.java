@@ -50,7 +50,7 @@ public class DefaultTheme implements Theme
     }
 
     @Override
-    public @NotNull TextColor getDefaultColor()
+    public @NotNull TextColor getGeneralColor()
     {
         return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultColor.class);
     }
@@ -89,7 +89,7 @@ public class DefaultTheme implements Theme
      * @throws NullPointerException if the component is null.
      */
     private @NotNull Component transformComponent(@NotNull Component component) {
-        return transformComponent(component, getDefaultColor());
+        return transformComponent(component, getGeneralColor());
     }
 
 
@@ -151,7 +151,7 @@ public class DefaultTheme implements Theme
                 switch (textPassage.substring(0, 1).toLowerCase()) {
                     case "p" -> replacements.put(textPassage.substring(1), getPrimaryAccentColor());
                     case "s" -> replacements.put(textPassage.substring(1), getSecondaryAccentColor());
-                    case "t" -> replacements.put(textPassage.substring(1), getDefaultColor());
+                    case "t" -> replacements.put(textPassage.substring(1), getGeneralColor());
                     case "+" -> replacements.put(textPassage.substring(1), getEnabledColor());
                     case "-" -> replacements.put(textPassage.substring(1), getDisabledColor());
                 }
@@ -183,7 +183,7 @@ public class DefaultTheme implements Theme
         Map<TextColor, net.kyori.adventure.text.format.TextColor> colorMap = Map.of(
                 ThemeProvider.primary(), getPrimaryAccentColor(),
                 ThemeProvider.secondary(), getSecondaryAccentColor(),
-                ThemeProvider.general(), getDefaultColor(),
+                ThemeProvider.general(), getGeneralColor(),
                 ThemeProvider.enabled(), getEnabledColor(),
                 ThemeProvider.disabled(), getDisabledColor()
         );

@@ -6,6 +6,7 @@ import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TimeImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.format.DateTimeParseException;
 
@@ -13,6 +14,12 @@ public class AccurateDurationParser<S extends ServerEntity> implements ArgumentP
     @Override
     public @NotNull String serialize(@NotNull AccurateDuration object) {
         return String.valueOf(object.getMillis());
+    }
+
+    @Override
+    public @Nullable String argumentName()
+    {
+        return "duration";
     }
 
     @Override

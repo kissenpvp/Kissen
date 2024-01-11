@@ -96,7 +96,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
         boolean justCreated = false;
         if (!meta.containsKey("id"))
         {
-            delete(); // delete data from previously created objects
+            this.getMeta().purge(this.getDatabaseID()); // delete data from previously created objects
             Map<String, String> newMeta = new HashMap<>(meta);
             newMeta.put("id", this.getRawID());
             getMeta().add(this.getDatabaseID(), newMeta);

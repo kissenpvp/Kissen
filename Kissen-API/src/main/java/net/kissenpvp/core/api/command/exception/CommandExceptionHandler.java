@@ -5,6 +5,7 @@ import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 
+@FunctionalInterface
 public interface CommandExceptionHandler<T extends Throwable, S extends ServerEntity> extends ExceptionHandler<T> {
 
     @Override

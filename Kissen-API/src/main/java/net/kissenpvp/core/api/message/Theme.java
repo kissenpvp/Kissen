@@ -28,7 +28,7 @@ public interface Theme
 
     @NotNull TextColor getSecondaryAccentColor();
 
-    @NotNull TextColor getDefaultColor();
+    @NotNull TextColor getGeneralColor();
 
     @NotNull TextColor getEnabledColor();
 

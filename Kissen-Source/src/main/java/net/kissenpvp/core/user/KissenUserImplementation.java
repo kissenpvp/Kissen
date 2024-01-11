@@ -26,17 +26,13 @@ import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
-import net.kissenpvp.core.api.database.savable.SavableMap;
-import net.kissenpvp.core.api.networking.client.entitiy.UnknownPlayerException;
-import net.kissenpvp.core.api.permission.Permission;
-import net.kissenpvp.core.api.task.TaskException;
-import net.kissenpvp.core.api.task.TaskImplementation;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.UserInfo;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.message.usersettings.*;
+import net.kissenpvp.core.user.suffix.SuffixSetting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -86,6 +82,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
         registerUserSetting(new GeneralUserColor());
         registerUserSetting(new EnabledUserColor());
         registerUserSetting(new DisabledUserColor());
+        registerUserSetting(new SuffixSetting());
         return UserImplementation.super.start();
     }
 

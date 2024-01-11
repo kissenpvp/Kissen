@@ -64,7 +64,7 @@ public interface EventImplementation extends Implementation
      * @param eventListener the event listener to register.
      * @throws NullPointerException if the eventListener is {@code null}.
      */
-    void registerEvent(EventListener<?> eventListener) throws NullPointerException;
+    void registerEvent(@NotNull EventListener<?>... eventListener) throws NullPointerException;
 
     /**
      * Triggers an event by calling all registered event listeners for that event.

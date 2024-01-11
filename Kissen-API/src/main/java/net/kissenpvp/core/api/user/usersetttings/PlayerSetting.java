@@ -19,6 +19,7 @@
 package net.kissenpvp.core.api.user.usersetttings;
 
 import net.kissenpvp.core.api.base.serializer.TextSerializer;
+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,9 +28,9 @@ import java.util.Optional;
 public interface PlayerSetting<T> extends TextSerializer<T> {
     @NotNull String getKey();
 
-    @NotNull T getDefaultValue();
+    @NotNull T getDefaultValue(@NotNull PlayerClient<?, ?, ?> playerClient);
 
-    @NotNull UserValue<T>[] getPossibleValues();
+    @NotNull UserValue<T>[] getPossibleValues(@NotNull PlayerClient<?, ?, ?> playerClient);
 
     default @NotNull Optional<String> getPermission() {
         return Optional.empty();

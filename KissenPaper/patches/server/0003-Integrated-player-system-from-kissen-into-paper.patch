@@ -92,10 +92,10 @@ index cf608a90d188c853d72326b7763995f9fa72a3e4..9f054b22f0f1a8f82402f8544ed14c67
  
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..24dc0f73925de7b7353c9db5c2d3dc0f4d4fa67d
+index 0000000000000000000000000000000000000000..fa9c2ce70a9c623418a8a881b7c0f53355493e14
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,127 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -119,16 +119,23 @@ index 0000000000000000000000000000000000000000..24dc0f73925de7b7353c9db5c2d3dc0f
 +import io.netty.channel.Channel;
 +import net.kissenpvp.core.api.ban.Ban;
 +import net.kissenpvp.core.api.base.KissenServer;
++import net.kissenpvp.core.api.message.ThemeProvider;
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
 +import net.kyori.adventure.audience.Audience;
++import net.kyori.adventure.key.Key;
++import net.kyori.adventure.sound.Sound;
 +import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.format.NamedTextColor;
 +import net.kyori.adventure.text.minimessage.MiniMessage;
++import net.kyori.adventure.title.Title;
 +import net.minecraft.network.protocol.Packet;
 +import net.minecraft.server.MinecraftServer;
 +import org.bukkit.craftbukkit.entity.CraftPlayer;
++import org.bukkit.potion.PotionEffect;
++import org.bukkit.potion.PotionEffectType;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +
@@ -204,17 +211,24 @@ index 0000000000000000000000000000000000000000..24dc0f73925de7b7353c9db5c2d3dc0f
 +        }
 +
 +        storage.put("warn_count", warnCount);
-+        getCraftPlayer().sendMessage("You were warned yk");
++        Component title = Component.translatable("server.ban.player.warned.target").color(NamedTextColor.RED);
++        Component subTitle = getCraftPlayer().getTheme().style(
++                Component.translatable("server.ban.player.warned.target.subtitle",
++                        Component.text(ban.getName()).color(ThemeProvider.primary()).color(ThemeProvider.general())));
++
++        getCraftPlayer().showTitle(Title.title(title, subTitle));
++        getCraftPlayer().playSound(Sound.sound(Key.key("music_disc.13"), Sound.Source.MASTER, 1f, 1f));
++        getCraftPlayer().addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 100, 255));
 +
 +        return warnCount;
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a73d2a335e03cb38a4214814cd08a3eed6be32e4
+index 0000000000000000000000000000000000000000..ae2ee9fb29c1b13e91ffb8d80c9f64d263c2d192
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
-@@ -0,0 +1,153 @@
+@@ -0,0 +1,193 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -235,12 +249,20 @@ index 0000000000000000000000000000000000000000..a73d2a335e03cb38a4214814cd08a3ee
 +
 +package net.kissenpvp.paper.networking.client.entity;
 +
++import net.kissenpvp.core.api.database.savable.list.SavableRecordList;
++import net.kissenpvp.core.api.event.EventCancelledException;
++import net.kissenpvp.core.api.time.TemporalObject;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.suffix.Suffix;
++import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
++import net.kissenpvp.core.api.user.usersetttings.UserSetting;
 +import net.kissenpvp.core.database.DataWriter;
 +import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
 +import net.kissenpvp.core.user.rank.KissenPlayerRankNode;
++import net.kissenpvp.core.user.suffix.KissenSuffix;
++import net.kissenpvp.core.user.suffix.SuffixNode;
++import net.kissenpvp.core.user.suffix.SuffixSetting;
 +import net.kissenpvp.paper.api.ban.PaperPunishment;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
@@ -258,9 +280,11 @@ index 0000000000000000000000000000000000000000..a73d2a335e03cb38a4214814cd08a3ee
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.util.HashSet;
++import java.time.Instant;
++import java.util.List;
 +import java.util.Optional;
 +import java.util.Set;
++import java.util.function.Function;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
@@ -290,13 +314,14 @@ index 0000000000000000000000000000000000000000..a73d2a335e03cb38a4214814cd08a3ee
 +
 +    @Override
 +    public @NotNull Set<Suffix> getSuffixSet() {
-+        return Stream.concat(getSuffixSet(Context.LOCAL).stream(), getSuffixSet(Context.GLOBAL).stream()).collect(Collectors.toSet());
++        Stream<Suffix> suffixes = Stream.concat(getSuffixSet(Context.LOCAL).stream(), super.getSuffixSet().stream());
++        return suffixes.collect(Collectors.toUnmodifiableSet());
 +    }
 +
 +    @Override
 +    public @NotNull Set<Suffix> getSuffixSet(@NotNull Context context) {
-+        //TODO
-+        return new HashSet<>();
++        Stream<SuffixNode> suffixStream = getSuffixList(getUser(context)).toRecordList().stream();
++        return suffixStream.map(transform(context)).collect(Collectors.toUnmodifiableSet());
 +    }
 +
 +    @Override
@@ -306,38 +331,56 @@ index 0000000000000000000000000000000000000000..a73d2a335e03cb38a4214814cd08a3ee
 +
 +    @Override
 +    public @NotNull Optional<Suffix> getSuffix(@NotNull String name, @NotNull Context context) {
-+        return Optional.empty(); //TODO
++        List<SuffixNode> suffixes = getSuffixList(getUser(context)).toRecordList();
++        return suffixes.stream().filter(suffix -> suffix.name().equals(name)).findFirst().map(transform(context));
 +    }
 +
 +
 +    @Override
-+    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
-+        return setSuffix(name, content, Context.LOCAL);
++    public @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content)
++    {
++        return grantSuffix(name, content, Context.LOCAL);
 +    }
 +
 +    @Override
-+    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content, @NotNull Context context) {
-+        return Optional.empty(); //TODO
++    public @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content, @NotNull Context context) throws EventCancelledException
++    {
++        if(name.equals("rank") || name.equals("none"))
++        {
++            throw new EventCancelledException();
++        }
++        SuffixNode suffixNode = new SuffixNode(name, content);
++        SavableRecordList<SuffixNode> suffixes = getSuffixList(getUser(context));
++        if (suffixes.replaceRecord(suffix -> suffix.name().equals(name), suffixNode) == 0)
++        {
++            suffixes.add(suffixNode);
++        }
++
++        return transform(context).apply(suffixNode);
 +    }
 +
 +    @Override
-+    public boolean deleteSuffix(@NotNull String name) {
-+        return getSuffix(name, Context.LOCAL).map((suffix) -> deleteSuffix(name, Context.LOCAL)).orElse(false) || super.deleteSuffix(name);
++    public @NotNull Optional<Suffix> getSelectedSuffix()
++    {
++        String local = getUserSetting(SuffixSetting.class, Context.LOCAL).getValue();
++        if(!local.equals("none"))
++        {
++            return getSuffix(local).filter(TemporalObject::isValid);
++        }
++        return super.getSelectedSuffix();
 +    }
 +
 +    @Override
-+    public boolean deleteSuffix(@NotNull String name, @NotNull Context context) {
-+        return false; //TODO
++    public boolean revokeSuffix(@NotNull String name) {
++        return revokeSuffix(name, Context.LOCAL) || super.revokeSuffix(name);
 +    }
 +
 +    @Override
-+    public void setSelectedSuffix(@NotNull String name) throws NullPointerException {
-+        setSelectedSuffix(name, Context.LOCAL);
-+    }
-+
-+    @Override
-+    public void setSelectedSuffix(@NotNull String name, @NotNull Context context) throws NullPointerException {
-+        //TODO
++    public boolean revokeSuffix(@NotNull String name, @NotNull Context context) {
++        return getSuffix(name, context).map(suffix -> {
++            suffix.setEnd(Instant.now());
++            return true;
++        }).orElse(false);
 +    }
 +
 +    @Override
@@ -364,8 +407,19 @@ index 0000000000000000000000000000000000000000..a73d2a335e03cb38a4214814cd08a3ee
 +        };
 +    }
 +
++    @Override
++    public @NotNull <X> UserSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context)
++    {
++        return getUserSetting(getUser(context), settingClass);
++    }
++
 +    public @NotNull KissenPaperPermissible getPermissionContext() throws PermissibleOverriddenException {
 +        return (KissenPaperPermissible) getPermissible();
++    }
++
++    private @NotNull Function<SuffixNode, KissenSuffix> transform(@NotNull Context context)
++    {
++        return suffix -> new KissenSuffix(suffix, suffixDataWriter(getUser(context)));
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperAttachmentPermission.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperAttachmentPermission.java
@@ -797,10 +851,10 @@ index 0000000000000000000000000000000000000000..4a99737311bfa497edfcec80c701f771
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/PaperPermissionGroupParser.java b/src/main/java/net/kissenpvp/paper/permission/PaperPermissionGroupParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ebfef6383ddb6dc7717e29ce6d6cb7f76b2c9093
+index 0000000000000000000000000000000000000000..0098e317437e60571f5b4320743c0b33615bc2f4
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/PaperPermissionGroupParser.java
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,47 @@
 +package net.kissenpvp.paper.permission;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -811,6 +865,7 @@ index 0000000000000000000000000000000000000000..ebfef6383ddb6dc7717e29ce6d6cb7f7
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
 +
 +import java.util.Collection;
 +import java.util.Set;
@@ -833,6 +888,12 @@ index 0000000000000000000000000000000000000000..ebfef6383ddb6dc7717e29ce6d6cb7f7
 +    }
 +
 +    @Override
++    public @Nullable String argumentName()
++    {
++        return "group";
++    }
++
++    @Override
 +    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
 +    {
 +        Class<PaperPermissionImplementation> clazz = PaperPermissionImplementation.class;
@@ -843,13 +904,14 @@ index 0000000000000000000000000000000000000000..ebfef6383ddb6dc7717e29ce6d6cb7f7
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java b/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..c1c3fec517bf0256524df83f29406888bb9e5172
+index 0000000000000000000000000000000000000000..874fc7f21f1a0b40eff3d927a51739517e3e0545
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/PermissionCommand.java
-@@ -0,0 +1,222 @@
+@@ -0,0 +1,223 @@
 +package net.kissenpvp.paper.permission;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.annotations.ArgumentName;
 +import net.kissenpvp.core.api.command.annotations.CommandData;
 +import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
 +import net.kissenpvp.core.api.message.ThemeProvider;
@@ -885,68 +947,68 @@ index 0000000000000000000000000000000000000000..c1c3fec517bf0256524df83f29406888
 +    }
 +
 +    @CommandData(value = "permission.user", permission = "*", runAsync = true)
-+    public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull PermissionParser.PermissionArgument permission, @NotNull Optional<PermissionAction> value)
++    public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value)
 +    {
 +        commandPayload.confirmRequest(() -> commandPayload.getSender().sendMessage(
-+                executeAction(offlinePlayer, permission.permission(), value)));
++                executeAction(player, permission.permission(), value)));
 +    }
 +
 +    @CommandData(value = "permission.user.group.add", permission = "*", runAsync = true)
-+    public void permissionGroupAdd(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull PaperPermissionGroup permissionGroup)
++    public void permissionGroupAdd(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PaperPermissionGroup group)
 +    {
-+        commandPayload.getSender().sendMessage(setGroup(true, offlinePlayer, permissionGroup));
++        commandPayload.getSender().sendMessage(setGroup(true, player, group));
 +    }
 +
 +    @CommandData(value = "permission.user.group.remove", permission = "*", runAsync = true)
-+    public void permissionGroupRemove(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull PaperPermissionGroup permissionGroup)
++    public void permissionGroupRemove(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PaperPermissionGroup group)
 +    {
-+        commandPayload.getSender().sendMessage(setGroup(false, offlinePlayer, permissionGroup));
++        commandPayload.getSender().sendMessage(setGroup(false, player, group));
 +    }
 +
 +    @CommandData(value = "permission.group.group.add", permission = "*", runAsync = true)
-+    public void permissionGroupAdd(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PaperPermissionGroup permissionGroup)
++    public void permissionGroupAdd(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PaperPermissionGroup group1)
 +    {
-+        commandPayload.getSender().sendMessage(setGroup(true, group, permissionGroup));
++        commandPayload.getSender().sendMessage(setGroup(true, group, group1));
 +    }
 +
 +    @CommandData(value = "permission.group.group.remove", permission = "*", runAsync = true)
-+    public void permissionGroupRemove(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PaperPermissionGroup permissionGroup)
++    public void permissionGroupRemove(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PaperPermissionGroup group1)
 +    {
-+        commandPayload.getSender().sendMessage(setGroup(false, group, permissionGroup));
++        commandPayload.getSender().sendMessage(setGroup(false, group, group1));
 +    }
 +
 +    @CommandData(value = "permission.group", permission = "*", runAsync = true)
-+    public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup paperPermissionGroup, @NotNull PermissionParser.PermissionArgument permission, @NotNull Optional<PermissionAction> value)
++    public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value)
 +    {
 +        commandPayload.confirmRequest(() -> commandPayload.getSender().sendMessage(
-+                executeAction(paperPermissionGroup, permission.permission(), value)));
++                executeAction(group, permission.permission(), value)));
 +    }
 +
 +    @CommandData(value = "permissioninfo", aliases = {"peri"})
 +    public void permissionInfo() {throw new ArgumentMissingException();}
 +
 +    @CommandData("permissioninfo.user")
-+    public void permissionInfoUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull Optional<Integer> page)
++    public void permissionInfoUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull @ArgumentName("page") Optional<Integer> page)
 +    {
-+        commandPayload.getSender().sendMessage(buildInfoComponent(offlinePlayer, page.orElse(1)));
++        commandPayload.getSender().sendMessage(buildInfoComponent(player, page.orElse(1)));
 +    }
 +
 +    @CommandData("permissioninfo.user.permission")
-+    public void permissionInfoUserPermission(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull String permission)
++    public void permissionInfoUserPermission(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull @ArgumentName("permission") String permission)
 +    {
-+        commandPayload.getSender().sendMessage(buildInfoComponent(offlinePlayer, permission));
++        commandPayload.getSender().sendMessage(buildInfoComponent(player, permission));
 +    }
 +
 +    @CommandData("permissioninfo.group")
-+    public void permissionInfoGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup permissionGroup, @NotNull Optional<Integer> page)
++    public void permissionInfoGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull @ArgumentName("page") Optional<Integer> page)
 +    {
-+        commandPayload.getSender().sendMessage(buildInfoComponent(permissionGroup, page.orElse(1)));
++        commandPayload.getSender().sendMessage(buildInfoComponent(group, page.orElse(1)));
 +    }
 +
 +    @CommandData("permissioninfo.group.permission")
-+    public void permissionInfoGroupPermission(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup permissionGroup, @NotNull String permission)
++    public void permissionInfoGroupPermission(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull @ArgumentName("permission") String permission)
 +    {
-+        commandPayload.getSender().sendMessage(buildInfoComponent(permissionGroup, permission));
++        commandPayload.getSender().sendMessage(buildInfoComponent(group, permission));
 +    }
 +
 +    private @NotNull Component buildInfoComponent(@NotNull PaperGroubablePermissionEntry permissionEntry, @NotNull String permission)
@@ -1071,10 +1133,10 @@ index 0000000000000000000000000000000000000000..c1c3fec517bf0256524df83f29406888
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/PermissionParser.java b/src/main/java/net/kissenpvp/paper/permission/PermissionParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..54e615898eec3d914fd22aec9aca6cd99ae6fbfa
+index 0000000000000000000000000000000000000000..600829fb87eea75302de3f02d8e66838ebf78a6e
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/PermissionParser.java
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,67 @@
 +package net.kissenpvp.paper.permission;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -1082,6 +1144,7 @@ index 0000000000000000000000000000000000000000..54e615898eec3d914fd22aec9aca6cd9
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
 +
 +import java.util.Collection;
 +import java.util.HashSet;
@@ -1101,6 +1164,12 @@ index 0000000000000000000000000000000000000000..54e615898eec3d914fd22aec9aca6cd9
 +    public @NotNull PermissionArgument deserialize(@NotNull String input)
 +    {
 +        return new PermissionArgument(input);
++    }
++
++    @Override
++    public @Nullable String argumentName()
++    {
++        return "permission";
 +    }
 +
 +    @Override
@@ -2081,10 +2150,10 @@ index 0000000000000000000000000000000000000000..1dc4273c190d512036b4257a6370d112
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3aa1c85585b94525c738fc113e795185bb5f2923
+index 0000000000000000000000000000000000000000..ac52d52b480836c404448618280a7175aeddc3a9
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
-@@ -0,0 +1,323 @@
+@@ -0,0 +1,330 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2188,8 +2257,14 @@ index 0000000000000000000000000000000000000000..3aa1c85585b94525c738fc113e795185
 +            .getImplementation(PaperPermissionImplementation.class)
 +            .getGroups()
 +            .stream()
-+            .filter(permissionGroup -> permissionGroup.getMember().contains(getPermissionID()))
-+            .collect(Collectors.toUnmodifiableSet());
++            .filter(permissionGroup ->
++            {
++                if(permissionGroup.getPermissionID().equals(getPlayerClient().getRank().getSource().getName()))
++                {
++                    return true;
++                }
++                return permissionGroup.getMember().contains(getPermissionID());
++            }).collect(Collectors.toUnmodifiableSet());
 +    }
 +
 +    @Override
@@ -2294,9 +2369,10 @@ index 0000000000000000000000000000000000000000..3aa1c85585b94525c738fc113e795185
 +
 +    private void checkVisuals()
 +    {
-+        String visualHash = getVisualHash();
++        int visualHash = getVisualHash();
 +        if(!Objects.equals(getStorage().get("visual_hash"), visualHash))
 +        {
++            permissionUpdate(); // rank group change
 +            getStorage().put("visual_hash", visualHash);
 +            Player player = Objects.requireNonNull(Bukkit.getPlayer(UUID.fromString(getRawID())));
 +            VisualChangeEvent visualChangeEvent = new VisualChangeEvent(player);
@@ -2304,11 +2380,11 @@ index 0000000000000000000000000000000000000000..3aa1c85585b94525c738fc113e795185
 +        }
 +    }
 +
-+    private @NotNull String getVisualHash()
++    private int getVisualHash()
 +    {
 +        PlayerClient<?, ?, ?> playerClient = getPlayerClient();
 +        String suffix = playerClient.getSelectedSuffix().map(component -> component.getContent().toString()).orElse("");
-+        return playerClient.getRank().getID() + suffix;
++        return playerClient.getRank().hashCode() + suffix.hashCode() + playerClient.getTheme().hashCode();
 +    }
 +
 +    /**
@@ -2410,10 +2486,10 @@ index 0000000000000000000000000000000000000000..3aa1c85585b94525c738fc113e795185
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..32b893ede8d5413c0b5f1414326e46a5b5e56747
+index 0000000000000000000000000000000000000000..5b31c474fe63ac53ee67de2f701bb518884ef467
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
-@@ -0,0 +1,177 @@
+@@ -0,0 +1,185 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2449,6 +2525,7 @@ index 0000000000000000000000000000000000000000..32b893ede8d5413c0b5f1414326e46a5
 +import net.kissenpvp.core.user.KissenUserImplementation;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
++import net.kissenpvp.paper.user.suffix.SuffixCommand;
 +import org.bukkit.Bukkit;
 +import org.bukkit.craftbukkit.scheduler.MinecraftInternalPlugin;
 +import org.jetbrains.annotations.NotNull;
@@ -2482,7 +2559,19 @@ index 0000000000000000000000000000000000000000..32b893ede8d5413c0b5f1414326e46a5
 +        localize.register("server.user.setting.changed", new MessageFormat("The setting {0} has been set to {1}."));
 +        localize.register("server.user.setting.value.invalid", new MessageFormat("The value {0} is not allowed in setting {1}."));
 +        localize.register("server.user.setting.not.found", new MessageFormat("The setting {0} does not exists."));
-+        localize.register("server.user.setting.reset", new MessageFormat("The setting {0} has been reset to its default value {1}."));
++        localize.register("server.user.setting.reset", new MessageFormat("The setting {1} has been reset to its default value {0}."));
++
++        localize.register("server.user.suffix.granted", new MessageFormat("The suffix {0} was granted to {1}."));
++        localize.register("server.user.suffix.received", new MessageFormat("You have received the suffix {0}."));
++        localize.register("server.user.suffix.revoked", new MessageFormat("The suffix {0} from player {1} was revoked."));
++        localize.register("server.user.suffix.not.found", new MessageFormat("The suffix {0} from player {1} was not found."));
++
++        registerUserSetting(new PrimaryUserColor());
++        registerUserSetting(new SecondaryUserColor());
++        registerUserSetting(new GeneralUserColor());
++        registerUserSetting(new EnabledUserColor());
++        registerUserSetting(new DisabledUserColor());
++
 +        return super.start();
 +    }
 +
@@ -2492,12 +2581,7 @@ index 0000000000000000000000000000000000000000..32b893ede8d5413c0b5f1414326e46a5
 +        Class<KissenPaperCommandImplementation> clazz = KissenPaperCommandImplementation.class;
 +        KissenPaperCommandImplementation commandImplementation = Bukkit.getKissen().getImplementation(clazz);
 +        commandImplementation.registerCommand(new UserSettingCommand());
-+
-+        registerUserSetting(new PrimaryUserColor());
-+        registerUserSetting(new SecondaryUserColor());
-+        registerUserSetting(new GeneralUserColor());
-+        registerUserSetting(new EnabledUserColor());
-+        registerUserSetting(new DisabledUserColor());
++        commandImplementation.registerCommand(new SuffixCommand());
 +
 +        Consumer<ScheduledTask> runnable = (task) -> getOnlineUser().stream().filter(userEntry -> userEntry.getStorage().containsKey("tick")).forEach(user -> ((KissenUser<? extends Permission>) user).tick());
 +        Bukkit.getAsyncScheduler().runAtFixedRate(new MinecraftInternalPlugin(), runnable, 0, 1, TimeUnit.SECONDS);
@@ -3145,15 +3229,17 @@ index 0000000000000000000000000000000000000000..6d8ebd6fd429aa977a8ca61101938a1b
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java b/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..47ed5f8f8398b83c4979f3f4068ac36164b2d20d
+index 0000000000000000000000000000000000000000..03bcb13d0571f5ff6474c3d47d39fcd58af18504
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/UserSettingCommand.java
-@@ -0,0 +1,104 @@
+@@ -0,0 +1,105 @@
 +package net.kissenpvp.paper.user;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.CommandTarget;
 +import net.kissenpvp.core.api.command.annotations.CommandData;
 +import net.kissenpvp.core.api.command.annotations.TabCompleter;
++import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.exception.UnauthorizedException;
 +import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
@@ -3170,7 +3256,6 @@ index 0000000000000000000000000000000000000000..47ed5f8f8398b83c4979f3f4068ac361
 +import java.util.Arrays;
 +import java.util.Collection;
 +import java.util.Collections;
-+import java.util.UUID;
 +import java.util.function.Predicate;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
@@ -3185,7 +3270,7 @@ index 0000000000000000000000000000000000000000..47ed5f8f8398b83c4979f3f4068ac361
 +        return true;
 +    }
 +
-+    @CommandData(value = "setting", aliases = "settings")
++    @CommandData(value = "setting", aliases = "settings", target = CommandTarget.PLAYER)
 +    public void settingCommand(@NotNull CommandPayload<CommandSender> sender, @NotNull String setting, @NotNull String value) throws UnauthorizedException
 +    {
 +        sender.getSender().sendMessage(setSetting(sender, deserialize(setting), value));
@@ -3198,14 +3283,13 @@ index 0000000000000000000000000000000000000000..47ed5f8f8398b83c4979f3f4068ac361
 +        {
 +            boolean reset = value.equalsIgnoreCase("reset");
 +            PaperPlayerClient player = (PaperPlayerClient) commandPayload.getSender();
-+            UUID uuid = player.getUniqueId();
-+            KissenUserBoundSettings<T> kissenUserBoundSettings = new KissenUserBoundSettings<>(settingsKey, uuid);
++            KissenUserBoundSettings<T> stetting = new KissenUserBoundSettings<>(settingsKey, player.getUser());
 +
-+            T newValue = reset ? settingsKey.getDefaultValue() : settingsKey.deserialize(value);
-+            kissenUserBoundSettings.setValue(newValue);
++            T newValue = reset ? settingsKey.getDefaultValue(player) : settingsKey.deserialize(value);
++            stetting.setValue(newValue);
 +
 +            String langKey = reset ? "server.user.setting.reset" : "server.user.setting.changed";
-+            Component changedTo = Component.text(kissenUserBoundSettings.getUserSetting().serialize(newValue));
++            Component changedTo = Component.text(stetting.getUserSetting().serialize(newValue));
 +            return Component.translatable(langKey, setting, changedTo);
 +        }
 +        catch (ClassCastException | IllegalArgumentException exception)
@@ -3225,7 +3309,8 @@ index 0000000000000000000000000000000000000000..47ed5f8f8398b83c4979f3f4068ac361
 +            }
 +
 +            PlayerSetting<?> playerSetting = deserialize(payload.getArguments()[0]);
-+            Stream<? extends @NotNull UserValue<?>> stream = Arrays.stream(playerSetting.getPossibleValues());
++            Stream<? extends @NotNull UserValue<?>> stream = Arrays.stream(playerSetting.getPossibleValues(
++                    (PlayerClient<?, ?, ?>) payload.getSender()));
 +            Stream<String> possibilities = stream.map(value -> castUnknownValue(value, playerSetting));
 +            return Stream.concat(Stream.of("reset"), possibilities).collect(Collectors.toSet());
 +        }
@@ -3489,7 +3574,7 @@ index 0000000000000000000000000000000000000000..5fb36d5f5c0bb1bb26378dafcfa5b255
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRankImplementation.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRankImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..12a5d087414bd5040a7030ea5002a0c288a53e36
+index 0000000000000000000000000000000000000000..2be959134a9910bc2fb11e326e9409fdc2beae52
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRankImplementation.java
 @@ -0,0 +1,59 @@
@@ -3499,9 +3584,9 @@ index 0000000000000000000000000000000000000000..12a5d087414bd5040a7030ea5002a0c2
 +import net.kissenpvp.core.base.KissenImplementation;
 +import net.kissenpvp.core.command.KissenCommandImplementation;
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
-+import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
 +import net.kissenpvp.core.user.rank.KissenRankImplementation;
 +import net.kissenpvp.paper.api.user.rank.PaperRank;
++import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
 +import org.bukkit.Bukkit;
 +import org.jetbrains.annotations.NotNull;
 +
@@ -3554,10 +3639,10 @@ index 0000000000000000000000000000000000000000..12a5d087414bd5040a7030ea5002a0c2
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/PaperRankParser.java b/src/main/java/net/kissenpvp/paper/user/rank/PaperRankParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6b9fa4f17f34a6dcb5c753097238e506c45d0d0a
+index 0000000000000000000000000000000000000000..f8a3c48622f620f1ffbebbfddd0a1cd623e650ff
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/PaperRankParser.java
-@@ -0,0 +1,36 @@
+@@ -0,0 +1,43 @@
 +package net.kissenpvp.paper.user.rank;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -3566,6 +3651,7 @@ index 0000000000000000000000000000000000000000..6b9fa4f17f34a6dcb5c753097238e506
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
 +
 +import java.util.Collection;
 +import java.util.stream.Collectors;
@@ -3587,6 +3673,12 @@ index 0000000000000000000000000000000000000000..6b9fa4f17f34a6dcb5c753097238e506
 +    }
 +
 +    @Override
++    public @Nullable String argumentName()
++    {
++        return "rank";
++    }
++
++    @Override
 +    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
 +    {
 +        Class<KissenPaperRankImplementation> clazz = KissenPaperRankImplementation.class;
@@ -3596,13 +3688,14 @@ index 0000000000000000000000000000000000000000..6b9fa4f17f34a6dcb5c753097238e506
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ee6d1b23b8a031568d71cd760dff91338390a6f6
+index 0000000000000000000000000000000000000000..e69273416c9b0f08b2d659c2abcae1c54b7bcafb
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
-@@ -0,0 +1,158 @@
+@@ -0,0 +1,159 @@
 +package net.kissenpvp.paper.user.rank;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.annotations.ArgumentName;
 +import net.kissenpvp.core.api.command.annotations.CommandData;
 +import net.kissenpvp.core.api.command.annotations.TabCompleter;
 +import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
@@ -3638,7 +3731,7 @@ index 0000000000000000000000000000000000000000..ee6d1b23b8a031568d71cd760dff9133
 +    }
 +
 +    @CommandData(value = "rank.grant", runAsync = true)
-+    public void rankGrant(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull PaperRank paperRank, @NotNull Optional<AccurateDuration> accurateDuration)
++    public void rankGrant(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull @ArgumentName("rank") PaperRank paperRank, @NotNull @ArgumentName("duration") Optional<AccurateDuration> accurateDuration)
 +    {
 +        Function<AccurateDuration, PaperPlayerRank> grant = duration -> offlinePlayer.grantRank(paperRank, duration);
 +        Supplier<PaperPlayerRank> orElse = () -> offlinePlayer.grantRank(paperRank);
@@ -3646,19 +3739,19 @@ index 0000000000000000000000000000000000000000..ee6d1b23b8a031568d71cd760dff9133
 +    }
 +
 +    @CommandData(value = "rank.revoke", runAsync = true)
-+    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull String id)
++    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @ArgumentName("playerrankid") @NotNull String id)
 +    {
 +        commandPayload.getSender().sendMessage(rankRevoke(offlinePlayer, id));
 +    }
 +
 +    @CommandData(value = "rankedit", aliases = "re")
-+    public void rankEdit()
++    public void rankEdit(@NotNull CommandPayload<?> commandPayload)
 +    {
 +        throw new ArgumentMissingException();
 +    }
 +
 +    @CommandData(value = "rankedit.prefix", runAsync = true)
-+    public void rankPrefix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull String[] prefix)
++    public void rankPrefix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull @ArgumentName("prefix") String[] prefix)
 +    {
 +        String mounted = String.join(" ", prefix).replace('&', '§');
 +        Component prefixComponent = LegacyComponentSerializer.legacySection().deserialize(mounted);
@@ -3669,10 +3762,10 @@ index 0000000000000000000000000000000000000000..ee6d1b23b8a031568d71cd760dff9133
 +    }
 +
 +    @CommandData(value = "rankedit.suffix", runAsync = true)
-+    public void rankSuffix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull String[] suffix)
++    public void rankSuffix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull @ArgumentName("suffix") String[] suffix)
 +    {
 +        String mounted = String.join(" ", suffix).replace('&', '§');
-+        Component suffixComponent = LegacyComponentSerializer.legacyAmpersand().deserialize(mounted);
++        Component suffixComponent = LegacyComponentSerializer.legacySection().deserialize(mounted);
 +        paperRank.setSuffix(suffixComponent);
 +
 +        Component[] args = {Component.text(paperRank.getName()), suffixComponent};
@@ -3680,7 +3773,7 @@ index 0000000000000000000000000000000000000000..ee6d1b23b8a031568d71cd760dff9133
 +    }
 +
 +    @CommandData(value = "rankedit.priority", runAsync = true)
-+    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, int priority)
++    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @ArgumentName("priority") int priority)
 +    {
 +        paperRank.setPriority(priority);
 +
@@ -3697,7 +3790,7 @@ index 0000000000000000000000000000000000000000..ee6d1b23b8a031568d71cd760dff9133
 +    }
 +
 +    @CommandData(value = "rankcreate", aliases = "createrank", runAsync = true)
-+    public void rankCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull String name, int priority, @NotNull NamedTextColor namedTextColor)
++    public void rankCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull @ArgumentName("name") String name, @ArgumentName("priority") int priority, @NotNull NamedTextColor namedTextColor)
 +    {
 +        Class<KissenPaperRankImplementation> clazz = KissenPaperRankImplementation.class;
 +        KissenPaperRankImplementation rankImplementation = Bukkit.getKissen().getImplementation(clazz);
@@ -3717,13 +3810,13 @@ index 0000000000000000000000000000000000000000..ee6d1b23b8a031568d71cd760dff9133
 +    {
 +        paperRank.delete();
 +        commandPayload.getSender().sendMessage(
-+                Component.translatable("server.rank.deleted", Component.text(paperRank.getName())));
++                Component.translatable("server.rank.player.deleted", Component.text(paperRank.getName())));
 +    }
 +
 +    private @NotNull Component rankGrant(@NotNull OfflinePlayer offlinePlayer, @NotNull PaperPlayerRank paperPlayerRank)
 +    {
 +        Component rankName = Component.text(paperPlayerRank.getSource().getName());
-+        return Component.translatable("server.rank.granted", offlinePlayer.displayName(), rankName);
++        return Component.translatable("server.rank.player.granted", offlinePlayer.displayName(), rankName);
 +    }
 +
 +    public @NotNull Component rankRevoke(@NotNull OfflinePlayer offlinePlayer, @NotNull String id)
@@ -3841,6 +3934,76 @@ index 0000000000000000000000000000000000000000..1fa9a490165d87b19312001931bb3dd5
 +    public KissenPaperRankSetSuffixEvent(@NotNull PaperRank rank, @Nullable Component old, @Nullable Component updated)
 +    {
 +        super(rank, old, updated);
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/user/suffix/SuffixCommand.java b/src/main/java/net/kissenpvp/paper/user/suffix/SuffixCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..28164dfeb2fd039e3375342ddedd0a118121c6d9
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/user/suffix/SuffixCommand.java
+@@ -0,0 +1,64 @@
++package net.kissenpvp.paper.user.suffix;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.annotations.ArgumentName;
++import net.kissenpvp.core.api.command.annotations.CommandData;
++import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
++import net.kissenpvp.core.api.time.TimeImplementation;
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
++import org.bukkit.Bukkit;
++import org.bukkit.OfflinePlayer;
++import org.bukkit.command.CommandSender;
++import org.bukkit.entity.Player;
++import org.jetbrains.annotations.NotNull;
++
++public class SuffixCommand
++{
++
++    @CommandData("suffix")
++    public void suffix(@NotNull CommandPayload<CommandSender> commandPayload)
++    {
++        throw new ArgumentMissingException();
++    }
++
++    @CommandData("suffix.grant")
++    public void grantSuffix(@NotNull CommandPayload<CommandSender> payload, @NotNull @ArgumentName("player") OfflinePlayer offlinePlayer, @NotNull @ArgumentName("name") String name, @NotNull @ArgumentName("suffix") String[] suffix)
++    {
++        Runnable setSuffix = () ->
++        {
++            String mounted = String.join(" ", suffix).replace('&', '§');
++            Component suffixComponent = LegacyComponentSerializer.legacySection().deserialize(mounted);
++
++            TimeImplementation timeImplementation = Bukkit.getKissen().getImplementation(TimeImplementation.class);
++            offlinePlayer.grantSuffix(name, suffixComponent);
++
++            Component suffixName = Component.text(name);
++
++            payload.getSender().sendMessage(Component.translatable("server.user.suffix.granted", suffixName, offlinePlayer.displayName()));
++            if(offlinePlayer.isOnline())
++            {
++                ((Player) offlinePlayer).sendMessage(Component.translatable("server.user.suffix.received", suffixComponent));
++            }
++        };
++
++        if (offlinePlayer.getSuffix(name).isPresent())
++        {
++            payload.confirmRequest(setSuffix);
++            return;
++        }
++        setSuffix.run();
++    }
++
++    @CommandData("suffix.revoke")
++    public void grantSuffix(@NotNull CommandPayload<CommandSender> payload, @NotNull @ArgumentName("player") OfflinePlayer offlinePlayer, @NotNull @ArgumentName("name") String name)
++    {
++        Component suffixName = Component.text(name);
++        if(offlinePlayer.revokeSuffix(name))
++        {
++            payload.getSender().sendMessage(Component.translatable("server.user.suffix.revoked", suffixName, offlinePlayer.displayName()));
++            return;
++        }
++        payload.getSender().sendMessage(Component.translatable("server.user.suffix.not.found", suffixName));
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
@@ -4042,7 +4205,7 @@ index 452fbb0aa44157225d8a9064e3eae2db7771b27d..4bcf963cf96d8443bc38f0a2d554b4d3
          private final GameProfile profile;
          final Date expirationDate;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index e98a455b6bca9d094d0da323bddd7b3f2c07bb23..b85198a78cacd4c4d553542be7bdfd9e58a38bfa 100644
+index e98a455b6bca9d094d0da323bddd7b3f2c07bb23..1ec75a4a30702bae51383133a3b6cd8e5675431d 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -165,8 +165,8 @@ public abstract class PlayerList {
@@ -4056,7 +4219,15 @@ index e98a455b6bca9d094d0da323bddd7b3f2c07bb23..b85198a78cacd4c4d553542be7bdfd9e
          // CraftBukkit start
          // this.stats = Maps.newHashMap();
          // this.advancements = Maps.newHashMap();
-@@ -340,6 +340,13 @@ public abstract class PlayerList {
+@@ -311,7 +311,6 @@ public abstract class PlayerList {
+         } else {
+             ichatmutablecomponent = Component.translatable("multiplayer.player.joined.renamed", player.getDisplayName(), s);
+         }
+-        // CraftBukkit start
+         ichatmutablecomponent.withStyle(ChatFormatting.YELLOW);
+         Component joinMessage = ichatmutablecomponent; // Paper - Adventure
+ 
+@@ -340,6 +339,13 @@ public abstract class PlayerList {
          // Ensure that player inventory is populated with its viewer
          player.containerMenu.transferTo(player.containerMenu, bukkitPlayer);
  
@@ -4071,7 +4242,7 @@ index e98a455b6bca9d094d0da323bddd7b3f2c07bb23..b85198a78cacd4c4d553542be7bdfd9e
          this.cserver.getPluginManager().callEvent(playerJoinEvent);
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..8d26d3416f8fde9b70fa4e0bd9469cc0c51f1d3d 100644
+index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..060066d9844b50787d1dcc88a7c3205f4b9071cc 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -9,6 +9,8 @@ import java.util.LinkedHashMap;
@@ -4148,7 +4319,7 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..8d26d3416f8fde9b70fa4e0bd9469cc0
      protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
          this.server = server;
          this.profile = profile;
-@@ -567,4 +612,403 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -567,4 +612,405 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
              manager.save();
          }
      }
@@ -4246,23 +4417,24 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..8d26d3416f8fde9b70fa4e0bd9469cc0
 +    }
 +
 +    @Override
-+    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content) {
-+        return getKissenPaperPlayerClient().setSuffix(name, content);
++    public @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content) {
++        return getKissenPaperPlayerClient().grantSuffix(name, content);
 +    }
 +
 +    @Override
-+    public boolean deleteSuffix(@NotNull String name) {
-+        return getKissenPaperPlayerClient().deleteSuffix(name);
++    public @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content, @Nullable AccurateDuration accurateDuration) throws EventCancelledException
++    {
++        return getKissenPaperPlayerClient().grantSuffix(name, content, accurateDuration);
++    }
++
++    @Override
++    public boolean revokeSuffix(@NotNull String name) {
++        return getKissenPaperPlayerClient().revokeSuffix(name);
 +    }
 +
 +    @Override
 +    public @NotNull Optional<Suffix> getSelectedSuffix() {
 +        return getKissenPaperPlayerClient().getSelectedSuffix();
-+    }
-+
-+    @Override
-+    public void setSelectedSuffix(@NotNull String name) throws NullPointerException {
-+        getKissenPaperPlayerClient().setSelectedSuffix(name);
 +    }
 +
 +    @Override
@@ -4276,7 +4448,7 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..8d26d3416f8fde9b70fa4e0bd9469cc0
 +    }
 +
 +    @Override
-+    public @NotNull <X> UserSetting<X> getUserSetting(Class<? extends PlayerSetting<X>> settingClass) {
++    public @NotNull <X> UserSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass) {
 +        return getKissenPaperPlayerClient().getUserSetting(settingClass);
 +    }
 +
@@ -4326,18 +4498,13 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..8d26d3416f8fde9b70fa4e0bd9469cc0
 +    }
 +
 +    @Override
-+    public @NotNull Optional<Suffix> setSuffix(@NotNull String name, @NotNull Component content, @NotNull Context context) {
-+        return getKissenPaperPlayerClient().setSuffix(name, content, context);
++    public @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content, @NotNull Context context) {
++        return getKissenPaperPlayerClient().grantSuffix(name, content, context);
 +    }
 +
 +    @Override
-+    public boolean deleteSuffix(@NotNull String name, @NotNull Context context) {
-+        return getKissenPaperPlayerClient().deleteSuffix(name, context);
-+    }
-+
-+    @Override
-+    public void setSelectedSuffix(@NotNull String name, @NotNull Context context) throws NullPointerException {
-+        getKissenPaperPlayerClient().setSelectedSuffix(name, context);
++    public boolean revokeSuffix(@NotNull String name, @NotNull Context context) {
++        return getKissenPaperPlayerClient().revokeSuffix(name, context);
 +    }
 +
 +    @Override
@@ -4358,6 +4525,12 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..8d26d3416f8fde9b70fa4e0bd9469cc0
 +    @Override
 +    public @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException {
 +        return getKissenPaperPlayerClient().getPermissible();
++    }
++
++    @Override
++    public @NotNull <X> UserSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context)
++    {
++        return getKissenPaperPlayerClient().getUserSetting(settingClass, context);
 +    }
 +
 +    @Override
@@ -4688,7 +4861,7 @@ index c3dbcb317b7d366feb31f707ad1199c60169f07f..8b92f1f4969e28c67dae7a25e9cc778a
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index da63b4050be25dcb91d04df8c2fcc643cbb0751d..0611ce87b063b58362d1abc35bacf9713867560c 100644
+index da63b4050be25dcb91d04df8c2fcc643cbb0751d..6bc32a9cde798e74e9f749a2539f69e780f44982 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -174,6 +174,35 @@ import org.jetbrains.annotations.NotNull;
@@ -4801,7 +4974,7 @@ index da63b4050be25dcb91d04df8c2fcc643cbb0751d..0611ce87b063b58362d1abc35bacf971
          }
  
          // Paper start
-@@ -3373,4 +3433,380 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3373,4 +3433,388 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          return this.spigot;
      }
      // Spigot end
@@ -4919,23 +5092,27 @@ index da63b4050be25dcb91d04df8c2fcc643cbb0751d..0611ce87b063b58362d1abc35bacf971
 +    }
 +
 +    @Override
-+    public @NotNull Optional<@org.jetbrains.annotations.Nullable Suffix> setSuffix(@NotNull String name, net.kyori.adventure.text.@NotNull Component content) {
-+        return getKissenPaperOnlinePlayerClient().setSuffix(name, content);
++    public @NotNull Suffix grantSuffix(@NotNull String name, net.kyori.adventure.text.@NotNull Component content) throws EventCancelledException
++    {
++        return getKissenPaperOnlinePlayerClient().grantSuffix(name, content);
 +    }
 +
 +    @Override
-+    public boolean deleteSuffix(@NotNull String name) {
-+        return getKissenPaperOnlinePlayerClient().deleteSuffix(name);
++    public @NotNull Suffix grantSuffix(@NotNull String name, net.kyori.adventure.text.@NotNull Component content, @org.jetbrains.annotations.Nullable AccurateDuration accurateDuration) throws EventCancelledException
++    {
++        return getKissenPaperOnlinePlayerClient().grantSuffix(name, content, accurateDuration);
 +    }
++
++    @Override
++    public boolean revokeSuffix(@NotNull String name)
++    {
++        return getKissenPaperOnlinePlayerClient().revokeSuffix(name);
++    }
++
 +
 +    @Override
 +    public @NotNull Optional<@org.jetbrains.annotations.Nullable Suffix> getSelectedSuffix() {
 +        return getKissenPaperOnlinePlayerClient().getSelectedSuffix();
-+    }
-+
-+    @Override
-+    public void setSelectedSuffix(@NotNull String name) throws NullPointerException {
-+        getKissenPaperOnlinePlayerClient().setSelectedSuffix(name);
 +    }
 +
 +    @Override
@@ -5014,19 +5191,17 @@ index da63b4050be25dcb91d04df8c2fcc643cbb0751d..0611ce87b063b58362d1abc35bacf971
 +    }
 +
 +    @Override
-+    public @NotNull Optional<@org.jetbrains.annotations.Nullable Suffix> setSuffix(@NotNull String name, net.kyori.adventure.text.@NotNull Component content, @NotNull Context context) {
-+        return getKissenPaperOnlinePlayerClient().setSuffix(name, content);
++    public @NotNull Suffix grantSuffix(@NotNull String name, net.kyori.adventure.text.@NotNull Component content, @NotNull Context context) throws EventCancelledException
++    {
++        return getKissenPaperOnlinePlayerClient().grantSuffix(name, content, context);
 +    }
 +
 +    @Override
-+    public boolean deleteSuffix(@NotNull String name, @NotNull Context context) {
-+        return getKissenPaperOnlinePlayerClient().deleteSuffix(name, context);
++    public boolean revokeSuffix(@NotNull String name, @NotNull Context context)
++    {
++        return getKissenPaperOnlinePlayerClient().revokeSuffix(name, context);
 +    }
 +
-+    @Override
-+    public void setSelectedSuffix(@NotNull String name, @NotNull Context context) throws NullPointerException {
-+        getKissenPaperOnlinePlayerClient().setSelectedSuffix(name, context);
-+    }
 +
 +    @Override
 +    public long getOnlineTime(@NotNull Context context) {
@@ -5041,6 +5216,12 @@ index da63b4050be25dcb91d04df8c2fcc643cbb0751d..0611ce87b063b58362d1abc35bacf971
 +    @Override
 +    public @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException {
 +        return getKissenPaperOnlinePlayerClient().getPermissible();
++    }
++
++    @Override
++    public @NotNull <X> UserSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context)
++    {
++        return getKissenPaperOnlinePlayerClient().getUserSetting(settingClass, context);
 +    }
 +
 +    @Override

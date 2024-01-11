@@ -21,14 +21,21 @@ package net.kissenpvp.core.api.command;
 import net.kissenpvp.core.api.base.serializer.TextSerializer;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 public interface ArgumentParser<T, S extends ServerEntity> extends TextSerializer<T> {
 
     @Override
     @NotNull T deserialize(@NotNull String input);
+
+    default @Nullable String argumentName()
+    {
+        return null;
+    }
 
     default @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<S> commandPayload) { return Collections.emptySet(); };
 

@@ -23,9 +23,8 @@ import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.exception.deserialization.TemporaryDeserializationException;
 import net.kissenpvp.core.api.command.handler.DateTimeParseExceptionHandler;
-import net.kissenpvp.core.api.command.handler.EnumConstantNotPresentExceptionHandler;
 import net.kissenpvp.core.api.time.AccurateDuration;
-import net.kissenpvp.core.command.handler.NumberFormatExceptionHandler;
+import net.kissenpvp.core.command.handler.*;
 import net.kissenpvp.core.command.parser.BooleanParser;
 import net.kissenpvp.core.command.parser.ByteParser;
 import net.kissenpvp.core.command.parser.CharacterParser;
@@ -39,11 +38,8 @@ import net.kissenpvp.core.command.parser.ShortParser;
 import net.kissenpvp.core.command.parser.StringParser;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.base.KissenImplementation;
-import net.kissenpvp.core.api.command.handler.ArgumentMissingExceptionHandler;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.command.handler.BackendExceptionHandler;
-import net.kissenpvp.core.command.handler.CommandExceptionHandler;
-import net.kissenpvp.core.command.handler.InvocationTargetExceptionHandler;
 import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
@@ -100,17 +96,18 @@ public class KissenCommandImplementation implements KissenImplementation {
         registerHandler(new NumberFormatExceptionHandler<>());
         registerHandler(new CommandExceptionHandler<>());
         registerHandler(new InvocationTargetExceptionHandler<>());
-        registerHandler(new ArgumentMissingExceptionHandler<>());
-        registerHandler(new EnumConstantNotPresentExceptionHandler<>());
         registerHandler(new DateTimeParseExceptionHandler<>());
+        registerHandler(new NullPointerExceptionHandler<>());
+        registerHandler(new InvalidColorExceptionHandler<>());
     }
 
     @Override
     public boolean start() {
         KissenLocalizationImplementation kissenLocalizationImplementation = KissenCore.getInstance().getImplementation(KissenLocalizationImplementation.class);
-        kissenLocalizationImplementation.register("server.command.incorrect-usage", new MessageFormat("It appears that the command usage is not correct. Please refer to the commands help."));
+        kissenLocalizationImplementation.register("server.command.incorrect-usage", new MessageFormat("The command usage is not correct. Did you mean: {0}."));
         kissenLocalizationImplementation.register("server.command.invalid-duration", new MessageFormat("This duration does not seem to match the ISO 8601 duration format. If you want to know more: https://en.wikipedia.org/wiki/ISO_8601"));
         kissenLocalizationImplementation.register("server.command.backend-exception", new MessageFormat("It seems that the backend is currently unreachable. Please contact an Administrator."));
+        kissenLocalizationImplementation.register("server.command.invalid.color", new MessageFormat("The color {0} does not exist."));
         return KissenImplementation.super.start();
     }
 
@@ -205,7 +202,7 @@ public class KissenCommandImplementation implements KissenImplementation {
      * @param type    the class type of the array elements
      * @return the updated array with the element added
      */
-    private @NotNull Object[] addElementToArray(@NotNull Object[] array, @NotNull Object element, @NotNull Class<?> type) {
+    private @NotNull Object @NotNull [] addElementToArray(@NotNull Object[] array, @NotNull Object element, @NotNull Class<?> type) {
         Object[] newArray = copy(array, type);
         newArray[newArray.length - 1] = element;
         return newArray;

@@ -20,6 +20,7 @@ package net.kissenpvp.core.command.argument;
 
 import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
+import net.kissenpvp.core.api.command.annotations.ArgumentName;
 import net.kissenpvp.core.api.command.annotations.Optional;
 import net.kissenpvp.core.api.command.annotations.IgnoreQuote;
 import net.kissenpvp.core.api.command.exception.ArgumentParserAbsentException;
@@ -117,11 +118,11 @@ public class MethodEvaluator<S extends ServerEntity> {
      * @throws IllegalArgumentException      If the parameter is of a primitive type but does not have a default value, or if the parameter is an array but not placed as the last argument.
      * @throws ArgumentParserAbsentException If an ArgumentParser could not be retrieved for the parameter's type.
      */
-    private <T> @NotNull List<Argument<T, S>> processParameter(@NotNull Method method, @NotNull Parameter parameter) {
+    private <T> @Unmodifiable @NotNull List<Argument<T, S>> processParameter(@NotNull Method method, @NotNull Parameter parameter)
+    {
         Class<T> parameterType = (Class<T>) parameter.getType();
 
         ArgumentType argumentType = parameterType.isArray() ? ArgumentType.ARRAY : parameterType.equals(java.util.Optional.class) ? ArgumentType.OPTIONAL : ArgumentType.NONE;
-
         validateArrayPlacement(method.getParameters(), parameterType.isArray(), parameter);
 
         Argument.ArgumentBuilder<T, S> builder = Argument.<T, S>builder()
@@ -152,13 +153,23 @@ public class MethodEvaluator<S extends ServerEntity> {
         }
         boolean isEnum = parameterType.isEnum();
         builder.isEnum(isEnum);
-        if(isEnum)
+        ArgumentParser<T, S> argumentParser = (ArgumentParser<T, S>) (isEnum ? new EnumParser<>(parameterType) : getCommandImplementation().getParserList().get(parameterType));
+        if(argumentParser != null)
         {
-            builder.argumentParser((ArgumentParser<T, S>) new EnumParser<>(parameterType));
-        }
-        else
-        {
-            builder.argumentParser((ArgumentParser<T, S>) getCommandImplementation().getParserList().get(parameterType));
+            builder.argumentParser(argumentParser);
+
+            if(parameter.isAnnotationPresent(ArgumentName.class))
+            {
+                builder.argumentName(parameter.getAnnotation(ArgumentName.class).value());
+            }
+            else if (argumentParser.argumentName() != null)
+            {
+                builder.argumentName(argumentParser.argumentName());
+            }
+            else
+            {
+                builder.argumentName(parameterType.getSimpleName().toLowerCase().charAt(0) + parameterType.getSimpleName().substring(1));
+            }
         }
 
         Optional optionalValueAnnotated = parameter.getDeclaredAnnotation(Optional.class);

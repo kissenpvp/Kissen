@@ -208,25 +208,14 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
         for (Argument<?, S> argument : arguments) {
             if (CommandPayload.class.isAssignableFrom(argument.type())) continue;
 
-            builder.append(argument.isNullable() ? " [" : " <");
-            builder.append(uncapitalize(argument.type().getSimpleName()));
+            builder.append(" ").append(argument.isNullable() ? "[" : "").append("<");
+            builder.append(argument.argumentName());
 
             if (argument.argumentType().equals(ArgumentType.ARRAY)) builder.append("...");
 
-            builder.append(argument.isNullable() ? "]" : ">");
+            builder.append(">").append(argument.isNullable() ? "]" : "");
         }
 
         return builder.toString();
-    }
-
-    /**
-     * Transforms the first character of the given string to lower case.
-     *
-     * @param str the string to be transformed
-     * @return a transformed string where the first character is made lower case
-     */
-    private @NotNull String uncapitalize(@NotNull String str) {
-        if (str.isBlank()) return str;
-        return Character.toLowerCase(str.charAt(0)) + str.substring(1);
     }
 }

@@ -19,7 +19,7 @@
 package net.kissenpvp.core.user.usersettings;
 
 import lombok.Getter;
-import lombok.SneakyThrows;
+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.permission.PermissionEntry;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
@@ -39,21 +39,22 @@ import java.util.UUID;
 public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements UserSetting<T> {
     private final User user;
 
-    public KissenUserBoundSettings(@NotNull PlayerSetting<T> playerSetting, @NotNull UUID uuid) {
+    public KissenUserBoundSettings(@NotNull PlayerSetting<T> playerSetting, @NotNull User user) {
         super(playerSetting);
-        this.user = KissenCore.getInstance().getImplementation(UserImplementation.class).getUser(uuid);
+        this.user = user;
     }
 
     @Override
     public @NotNull T setValue(@NotNull T value) throws UnauthorizedException {
         T oldValue = getValue();
+        PlayerClient<?, ?, ?> playerClient = user.getPlayerClient();
 
-        if (Objects.equals(getUserSetting().getDefaultValue(), value)) {
+        if (Objects.equals(getUserSetting().getDefaultValue(playerClient), value)) {
             reset();
             return oldValue;
         }
 
-        UserValue<T>[] possibilities = getUserSetting().getPossibleValues(); //Get all possibilities
+        UserValue<T>[] possibilities = getUserSetting().getPossibleValues(playerClient); //Get all possibilities
         Optional<UserValue<T>> currentPossibility = Arrays.stream(possibilities).filter(possibility -> possibility.value().equals(value)).findFirst(); //find the one the user wants to set
 
         if (currentPossibility.isEmpty()) // throw exception if value is not listed as option
@@ -62,7 +63,7 @@ public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements
         }
 
         UserValue<T> currentValue = currentPossibility.get();
-        if (currentValue.permission().length > 0 && !value.equals(getUserSetting().getDefaultValue())) {
+        if (currentValue.permission().length > 0 && !value.equals(getUserSetting().getDefaultValue(playerClient))) {
             Optional<String> permission = Arrays.stream(currentValue.permission()).filter(
                     currentPermission -> !((PermissionEntry<?>) getUser().getPlayerClient()).hasPermission(
                             currentPermission)).toList().stream().findFirst();
@@ -78,7 +79,7 @@ public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements
 
     @Override
     public @NotNull T getValue() {
-        T defaultValue = getUserSetting().getDefaultValue();
+        T defaultValue = getUserSetting().getDefaultValue(user.getPlayerClient());
         Optional<String> value = getUser().get("setting_" + getUserSetting().getKey());
         return value.map(val -> getUserSetting().deserialize(val)).orElse(defaultValue);
     }

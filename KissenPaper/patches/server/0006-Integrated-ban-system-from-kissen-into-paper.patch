@@ -122,10 +122,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f7b8b9a1f27e889c6ae4b50ab022ab3c59159332
+index 0000000000000000000000000000000000000000..286376e67cb260101c60647bf6f5e7f01a7a7d34
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,507 @@
+@@ -0,0 +1,505 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -405,21 +405,13 @@ index 0000000000000000000000000000000000000000..f7b8b9a1f27e889c6ae4b50ab022ab3c
 +
 +    @Override
 +    public boolean isBanned(@NotNull PlayerProfile target) {
-+        try {
 +            return getLatestPunishment(Objects.requireNonNull(target.getId())).isPresent();
-+        } catch (BackendException backendException) {
-+            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
-+        }
 +    }
 +
 +    @SuppressWarnings("deprecation")
 +    @Override
 +    public boolean isBanned(@NotNull org.bukkit.profile.PlayerProfile target) {
-+        try {
-+            return getLatestPunishment(Objects.requireNonNull(target.getUniqueId())).isPresent();
-+        } catch (BackendException backendException) {
-+            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
-+        }
++        return getLatestPunishment(Objects.requireNonNull(target.getUniqueId())).isPresent();
 +    }
 +
 +    @Override
@@ -500,63 +492,69 @@ index 0000000000000000000000000000000000000000..f7b8b9a1f27e889c6ae4b50ab022ab3c
 +     * To handle such situations, this method has a catch block to wrap the {@link BackendException}
 +     *
 +     * @param target              represents the {@link User} object to be banned.
-+     *                            This parameter is annotated with {@link org.jetbrains.annotations.NotNull}
++     *                            This parameter is annotated with {@link NotNull}
 +     *                            which means it must never be null.
 +     * @param reason              is a string containing the reason for the ban.
-+     *                            This parameter is allowed to be null, represent by {@link org.jetbrains.annotations.Nullable}.
++     *                            This parameter is allowed to be null, represent by {@link Nullable}.
 +     *                            If null, the default reason specified by the system will be used.
 +     * @param durationTransformer is an instance of {@link DurationTransformer}.
 +     *                            This parameter is used to determine the duration of the ban.
 +     *                            This cannot be null.
 +     * @param source              is a string representing the entity which imposes the ban action.
-+     *                            Though this parameter is nullable, a {@link java.lang.IllegalArgumentException}
++     *                            Though this parameter is nullable, a {@link IllegalArgumentException}
 +     *                            will be thrown if source is null after an internal checking.
 +     * @return An instance of {@link BanEntry}<{@link PlayerProfile}> is created and returned.
 +     * The return value encapsulates details such as ban type, ban duration,
 +     * operator and reason for the ban.
-+     * @throws java.lang.IllegalArgumentException If the {@code source} parameter is null.
-+     * @throws java.lang.RuntimeException         If the backend system cannot be reached.
++     * @throws IllegalArgumentException If the {@code source} parameter is null.
++     * @throws RuntimeException         If the backend system cannot be reached.
 +     */
 +    private @NotNull BanEntry<PlayerProfile> addBan(@NotNull User target, @Nullable String reason, @NotNull DurationTransformer durationTransformer, @Nullable String source) {
-+        try {
-+            if (source == null) {
-+                throw new IllegalArgumentException("Source must not be null");
-+            }
-+            // Detect source
-+            return punish(target.getPlayerClient().getTotalID(), new MinecraftBan(BanType.BAN, durationTransformer.create()), new ServerEntity() {
-+                @Override
-+                public @NotNull String getName() {
-+                    return source;
-+                }
 +
-+                @Override
-+                public @NotNull Component displayName() {
-+                    return Component.text(source);
-+                }
-+
-+                @Override
-+                public @NotNull Locale getCurrentLocale() {
-+                    return Bukkit.getKissen().getImplementation(LocalizationImplementation.class).getDefaultLocale();
-+                }
-+
-+                @Override
-+                public @NotNull Theme getTheme() {
-+                    return Bukkit.getKissen().getImplementation(MessageImplementation.class).getDefaultTheme();
-+                }
-+
-+                @Override
-+                public boolean isConnected() {
-+                    return false;
-+                }
-+
-+                @Override
-+                public boolean isClient() {
-+                    return true;
-+                }
-+            }, reason == null ? null : LegacyComponentSerializer.legacySection().deserialize(reason));
-+        } catch (BackendException backendException) {
-+            throw new RuntimeException("It seems like the backend was not reachable. It is advised in order to prevent further damage or loss to the servers data.", backendException);
++        if (source == null) {
++            throw new IllegalArgumentException("Source must not be null");
 +        }
++        // Detect source
++        return punish(target.getPlayerClient().getTotalID(),
++                new MinecraftBan(BanType.BAN, durationTransformer.create()), new ServerEntity()
++                {
++                    @Override
++                    public @NotNull String getName()
++                    {
++                        return source;
++                    }
++
++                    @Override
++                    public @NotNull Component displayName()
++                    {
++                        return Component.text(source);
++                    }
++
++                    @Override
++                    public @NotNull Locale getCurrentLocale()
++                    {
++                        return Bukkit.getKissen().getImplementation(
++                                LocalizationImplementation.class).getDefaultLocale();
++                    }
++
++                    @Override
++                    public @NotNull Theme getTheme()
++                    {
++                        return Bukkit.getKissen().getImplementation(MessageImplementation.class).getDefaultTheme();
++                    }
++
++                    @Override
++                    public boolean isConnected()
++                    {
++                        return false;
++                    }
++
++                    @Override
++                    public boolean isClient()
++                    {
++                        return true;
++                    }
++                }, reason == null ? null : LegacyComponentSerializer.legacySection().deserialize(reason));
 +    }
 +
 +    /**
@@ -635,7 +633,7 @@ index 0000000000000000000000000000000000000000..f7b8b9a1f27e889c6ae4b50ab022ab3c
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..2c3be7f05b8ecbcec508285cf874e3a5f38b7e32
+index 0000000000000000000000000000000000000000..f3aa1569a7d9afd281d3d2914ba384783a6652f0
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java
 @@ -0,0 +1,131 @@
@@ -660,8 +658,8 @@ index 0000000000000000000000000000000000000000..2c3be7f05b8ecbcec508285cf874e3a5
 +package net.kissenpvp.paper.ban;
 +
 +import com.destroystokyo.paper.profile.PlayerProfile;
-+import net.kissenpvp.core.ban.KissenPunishmentNode;
 +import net.kissenpvp.core.ban.KissenPunishment;
++import net.kissenpvp.core.ban.KissenPunishmentNode;
 +import net.kissenpvp.core.database.DataWriter;
 +import net.kissenpvp.paper.api.ban.PaperPunishment;
 +import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -968,15 +966,16 @@ index 0000000000000000000000000000000000000000..d2b3e173d8ef4886da76a40f48761a9f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..42342eef424fc1f4e5aeb3048490928a56782b1e
+index 0000000000000000000000000000000000000000..f4a61161bc88924ab632c3c7540ce8acd31b29e5
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/KissenPaperBanCommand.java
-@@ -0,0 +1,367 @@
+@@ -0,0 +1,373 @@
 +package net.kissenpvp.paper.ban.command;
 +
 +import net.kissenpvp.core.api.ban.BanType;
 +import net.kissenpvp.core.api.ban.Punishment;
 +import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.annotations.ArgumentName;
 +import net.kissenpvp.core.api.command.annotations.CommandData;
 +import net.kissenpvp.core.api.command.annotations.Optional;
 +import net.kissenpvp.core.api.command.annotations.TabCompleter;
@@ -1023,7 +1022,12 @@ index 0000000000000000000000000000000000000000..42342eef424fc1f4e5aeb3048490928a
 +     * @throws BackendException if there is an error in the backend
 +     */
 +    @CommandData(value = "ban", aliases = {"punish"}, description = "This command is used to ban or punish a specific user by removing their access rights from the server.")
-+    public void ban(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer offlinePlayer, @NotNull PaperBan paperBan, @NotNull @Optional String[] reason) throws BackendException {
++    public void ban(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer offlinePlayer, @NotNull PaperBan paperBan, @NotNull @Optional @ArgumentName("reason") String[] reason) throws BackendException {
++        if(payload.getSender() instanceof Player player && offlinePlayer.getRank().getSource().getPriority() < player.getRank().getSource().getPriority())
++        {
++            payload.getSender().sendMessage(Component.translatable("server.ban.player.not.allowed", offlinePlayer.displayName()));
++            return;
++        }
 +        java.util.Optional<Component> transformedReason = getReason(reason);
 +        payload.getSender().sendMessage(obtainPunishedMessage(offlinePlayer.displayName(), offlinePlayer.punish(paperBan, payload.getSender(), transformedReason.orElse(null)).getBanType(), transformedReason.orElse(null)));
 +    }
@@ -1041,7 +1045,7 @@ index 0000000000000000000000000000000000000000..42342eef424fc1f4e5aeb3048490928a
 +     * @throws BackendException If any error occurs during the creation of the ban template at the backend.
 +     */
 +    @CommandData(value = "bancreate", aliases = {"bc", "createban"}, description = "Command to create predefined ban types with a specified duration. These can be used as templates for various ban situations.")
-+    public void create(@NotNull CommandPayload<CommandSender> payload, int id, @NotNull String name, @NotNull BanType banType, @NotNull java.util.Optional<AccurateDuration> accurateDuration) throws BackendException {
++    public void create(@NotNull CommandPayload<CommandSender> payload, @ArgumentName("id") int id, @NotNull @ArgumentName("name") String name, @NotNull @ArgumentName("type") BanType banType, @NotNull java.util.Optional<AccurateDuration> accurateDuration) throws BackendException {
 +        PaperBanImplementation paperBanImplementation = Bukkit.getKissen().getImplementation(PaperBanImplementation.class);
 +
 +        Runnable runnable = () -> {
@@ -1091,12 +1095,12 @@ index 0000000000000000000000000000000000000000..42342eef424fc1f4e5aeb3048490928a
 +     * @param reason   (Optional) The reason for the warning.
 +     */
 +    @CommandData(value = "warn", description = "This command is used to warn a specific user to refrain from inappropriate behavior.")
-+    public void warn(@NotNull CommandPayload<CommandSender> payload, @NotNull Player player, @NotNull PaperBan paperBan, @NotNull @Optional String[] reason) {
++    public void warn(@NotNull CommandPayload<CommandSender> payload, @NotNull Player player, @NotNull PaperBan paperBan, @NotNull @Optional @ArgumentName("reason") String[] reason) {
 +        java.util.Optional<Component> transformedReason = getReason(reason);
 +        payload.getSender().sendMessage(obtainWarnedMessage(player.displayName(), Component.text(player.warn(paperBan, payload.getSender(), transformedReason.orElse(null))), transformedReason.orElse(null)));
 +    }
 +
-+    @CommandData(value = "unban", description = "This command is used to lift a specific ban, identifying it by its unique ID.")
++    @CommandData(value = "unban", description = "This command is used to disable a specific ban, identifying it by its unique ID.")
 +    public void unban(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperBan) {
 +        paperBan.setEnd(Instant.now());
 +        payload.getSender().sendMessage(Component.translatable("server.ban.punishment.pardoned", Component.text(paperBan.getID())));
@@ -1109,7 +1113,7 @@ index 0000000000000000000000000000000000000000..42342eef424fc1f4e5aeb3048490928a
 +    }
 +
 +    @CommandData(value = "banhistory", aliases = "bh")
-+    public void history(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer offlinePlayer, @NotNull java.util.Optional<Integer> page) {
++    public void history(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer offlinePlayer, @NotNull @ArgumentName("page") java.util.Optional<Integer> page) {
 +
 +        List<PaperPunishment> playerHistory = offlinePlayer.getPunishmentHistory();
 +        if (playerHistory.isEmpty()) {
@@ -1341,10 +1345,10 @@ index 0000000000000000000000000000000000000000..42342eef424fc1f4e5aeb3048490928a
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/PaperBanParser.java b/src/main/java/net/kissenpvp/paper/ban/command/PaperBanParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a5483cbe7117fb928201a6ca56c71400f7b875b4
+index 0000000000000000000000000000000000000000..c461c3b8ee406be885c9c2d92e6de9ec0c2a7dc1
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/PaperBanParser.java
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,60 @@
 +package net.kissenpvp.paper.ban.command;
 +
 +import net.kissenpvp.core.api.ban.Ban;
@@ -1359,6 +1363,7 @@ index 0000000000000000000000000000000000000000..a5483cbe7117fb928201a6ca56c71400
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
 +
 +import java.util.Collection;
 +import java.util.Optional;
@@ -1388,13 +1393,14 @@ index 0000000000000000000000000000000000000000..a5483cbe7117fb928201a6ca56c71400
 +    }
 +
 +    @Override
-+    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
-+        return Bukkit.getKissen().getImplementation(PaperBanImplementation.class).getBanSet().stream().map(Ban::getID).map(String::valueOf).collect(Collectors.toSet());
++    public @Nullable String argumentName()
++    {
++        return "banid";
 +    }
 +
 +    @Override
-+    public void processError(@NotNull String string, @NotNull Exception exception) {
-+        PaperArgumentParser.super.processError(string, exception);
++    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
++        return Bukkit.getKissen().getImplementation(PaperBanImplementation.class).getBanSet().stream().map(Ban::getID).map(String::valueOf).collect(Collectors.toSet());
 +    }
 +
 +    @Override
@@ -1404,16 +1410,15 @@ index 0000000000000000000000000000000000000000..a5483cbe7117fb928201a6ca56c71400
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java b/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
-index 55167ae5fef79f24545df34479443dbb74399a57..5d3e45f35d6de0479938d85e13c1ae57cf1eaba7 100644
+index 55167ae5fef79f24545df34479443dbb74399a57..fa325b12e4ded7edd98a2a5d9740ccd87d1caa18 100644
 --- a/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
-@@ -1,19 +1,40 @@
+@@ -1,19 +1,46 @@
  package net.kissenpvp.paper.ban.command;
  
 +import net.kissenpvp.core.api.ban.Punishment;
 +import net.kissenpvp.core.api.ban.exception.NonexistentPunishmentException;
 +import net.kissenpvp.core.api.command.CommandPayload;
-+import net.kissenpvp.core.api.time.TemporalObject;
 +import net.kissenpvp.paper.api.ban.PaperBanImplementation;
  import net.kissenpvp.paper.api.ban.PaperPunishment;
  import net.kissenpvp.paper.api.command.PaperArgumentParser;
@@ -1422,6 +1427,7 @@ index 55167ae5fef79f24545df34479443dbb74399a57..5d3e45f35d6de0479938d85e13c1ae57
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
  import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
  
 -public class PaperPunishmentParser implements PaperArgumentParser<PaperPunishment>
 -{
@@ -1437,12 +1443,17 @@ index 55167ae5fef79f24545df34479443dbb74399a57..5d3e45f35d6de0479938d85e13c1ae57
      }
  
 -    @Override public @NotNull PaperPunishment deserialize(@NotNull String input)
--    {
--        //TODO
--        return null;
 +    @Override
 +    public @NotNull PaperPunishment deserialize(@NotNull String input) {
 +        return Bukkit.getKissen().getImplementation(PaperBanImplementation.class).getPunishmentSet().stream().filter(punishment -> punishment.getID().equals(input)).findFirst().orElseThrow(() -> new NonexistentPunishmentException(input));
++    }
++
++    @Override
++    public @Nullable String argumentName()
+     {
+-        //TODO
+-        return null;
++        return "punishmentid";
 +    }
 +
 +    @Override
@@ -1485,51 +1496,18 @@ index 82ba2cc094305de4fd5e11521b15ee5ae37229e0..f323a72deb613820d6806f38702cad7b
          super.loadImplementations(loader);
      }
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
-index 24dc0f73925de7b7353c9db5c2d3dc0f4d4fa67d..7b2db25cb128604c6ac3a4a9499c2f4e3a24aaa9 100644
+index fa9c2ce70a9c623418a8a881b7c0f53355493e14..7b2db25cb128604c6ac3a4a9499c2f4e3a24aaa9 100644
 --- a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
-@@ -21,16 +21,25 @@ package net.kissenpvp.paper.networking.client.entity;
- import io.netty.channel.Channel;
- import net.kissenpvp.core.api.ban.Ban;
- import net.kissenpvp.core.api.base.KissenServer;
-+import net.kissenpvp.core.api.message.ThemeProvider;
- import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
- import net.kissenpvp.core.api.user.User;
- import net.kissenpvp.paper.api.base.Context;
- import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
- import net.kyori.adventure.audience.Audience;
-+import net.kyori.adventure.key.Key;
-+import net.kyori.adventure.sound.Sound;
- import net.kyori.adventure.text.Component;
-+import net.kyori.adventure.text.format.NamedTextColor;
- import net.kyori.adventure.text.minimessage.MiniMessage;
-+import net.kyori.adventure.title.Title;
+@@ -35,6 +35,8 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
+ import net.kyori.adventure.title.Title;
  import net.minecraft.network.protocol.Packet;
  import net.minecraft.server.MinecraftServer;
 +import net.minecraft.world.level.block.SoundType;
 +import org.bukkit.EntityEffect;
  import org.bukkit.craftbukkit.entity.CraftPlayer;
-+import org.bukkit.potion.PotionEffect;
-+import org.bukkit.potion.PotionEffectType;
- import org.jetbrains.annotations.NotNull;
- import org.jetbrains.annotations.Nullable;
- 
-@@ -106,7 +115,14 @@ public abstract class KissenPaperOnlinePlayerClient extends KissenPaperPlayerCli
-         }
- 
-         storage.put("warn_count", warnCount);
--        getCraftPlayer().sendMessage("You were warned yk");
-+        Component title = Component.translatable("server.ban.player.warned.target").color(NamedTextColor.RED);
-+        Component subTitle = getCraftPlayer().getTheme().style(
-+                Component.translatable("server.ban.player.warned.target.subtitle",
-+                        Component.text(ban.getName()).color(ThemeProvider.primary()).color(ThemeProvider.general())));
-+
-+        getCraftPlayer().showTitle(Title.title(title, subTitle));
-+        getCraftPlayer().playSound(Sound.sound(Key.key("music_disc.13"), Sound.Source.MASTER, 1f, 1f));
-+        getCraftPlayer().addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 100, 255));
- 
-         return warnCount;
-     }
+ import org.bukkit.potion.PotionEffect;
+ import org.bukkit.potion.PotionEffectType;
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 index fa53db3e5ba305212878bc04334f628f2f9ca88b..c5dfc0338d22690d3d945fa74cf0fb478a9d69f2 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
@@ -1589,7 +1567,7 @@ index fa53db3e5ba305212878bc04334f628f2f9ca88b..c5dfc0338d22690d3d945fa74cf0fb47
      }
      // Spigot end
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index b85198a78cacd4c4d553542be7bdfd9e58a38bfa..0e8117ad5fcd09c5daa6f2bc864bf8d295834ce0 100644
+index 1ec75a4a30702bae51383133a3b6cd8e5675431d..376c6bd7851f7b429f55dc541e6a27b67d9f8551 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -163,7 +163,7 @@ public abstract class PlayerList {
@@ -1601,7 +1579,7 @@ index b85198a78cacd4c4d553542be7bdfd9e58a38bfa..0e8117ad5fcd09c5daa6f2bc864bf8d2
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
          this.ops = /*new ServerOpList(PlayerList.OPLIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserOperatorList(); // KissenPaper
          this.whitelist = /*new UserWhiteList(PlayerList.WHITELIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserWhiteList(); // KissenPaper
-@@ -733,37 +733,39 @@ public abstract class PlayerList {
+@@ -732,37 +732,39 @@ public abstract class PlayerList {
          Player player = entity.getBukkitEntity();
          PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
  

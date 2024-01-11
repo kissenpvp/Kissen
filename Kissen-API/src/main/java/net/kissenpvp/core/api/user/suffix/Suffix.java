@@ -18,10 +18,11 @@
 
 package net.kissenpvp.core.api.user.suffix;
 
+import net.kissenpvp.core.api.time.TemporalObject;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
-public interface Suffix
+public interface Suffix extends TemporalObject
 {
 
     @NotNull String getName();

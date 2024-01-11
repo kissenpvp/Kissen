@@ -30,6 +30,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -57,8 +58,8 @@ public class KissenEventImplementation implements EventImplementation {
     }
 
     @Override
-    public void registerEvent(@NotNull EventListener<?> eventListener) {
-        eventListenerSet.add(eventListener);
+    public void registerEvent(@NotNull EventListener<?>... eventListener) {
+        eventListenerSet.addAll(List.of(eventListener));
         KissenCore.getInstance().getLogger().debug("Register internal listener '{}'.", eventListener.getClass().getSimpleName());
     }
 

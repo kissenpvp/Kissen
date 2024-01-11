@@ -18,21 +18,28 @@
 
 package net.kissenpvp.core.user.suffix;
 
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.user.suffix.Suffix;
+import net.kissenpvp.core.database.DataWriter;
+import net.kissenpvp.core.time.KissenTemporalObject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.Objects;
 
-public class KissenSuffix implements Suffix
+public class KissenSuffix extends KissenTemporalObject implements Suffix
 {
-
     private final SuffixNode suffixNode;
+    private final DataWriter dataWriter;
 
-    public KissenSuffix(@NotNull SuffixNode suffixNode)
+    public KissenSuffix(@NotNull SuffixNode suffixNode, @Nullable DataWriter dataWriter)
     {
+        super(suffixNode.temporalMeasureNode());
         this.suffixNode = suffixNode;
+        this.dataWriter = dataWriter;
     }
 
     @Override public @NotNull String getName()
@@ -61,5 +68,17 @@ public class KissenSuffix implements Suffix
     @Override public int hashCode()
     {
         return Objects.hash(suffixNode);
+    }
+
+    @Override
+    public void setEnd(@Nullable Instant end) throws EventCancelledException
+    {
+        if(dataWriter == null)
+        {
+            throw new EventCancelledException();
+        }
+
+        rewriteEnd(end);
+        dataWriter.update(suffixNode);
     }
 }
