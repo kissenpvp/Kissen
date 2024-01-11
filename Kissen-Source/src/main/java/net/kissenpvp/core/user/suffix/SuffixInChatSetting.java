@@ -36,6 +36,6 @@ public class SuffixInChatSetting implements PlayerSetting<Boolean>
     @Override
     public @NotNull UserValue<Boolean>[] getPossibleValues(@NotNull PlayerClient<?, ?, ?> playerClient)
     {
-        return new UserValue[] {new UserValue<>(true), new UserValue<>(true)};
+        return new UserValue[] {new UserValue<>(true), new UserValue<>(false)};
     }
 }
