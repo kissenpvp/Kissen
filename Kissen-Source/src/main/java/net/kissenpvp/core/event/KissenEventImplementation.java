@@ -45,7 +45,7 @@ public class KissenEventImplementation implements EventImplementation {
     public boolean start()
     {
         KissenLocalizationImplementation loc = KissenCore.getInstance().getImplementation(KissenLocalizationImplementation.class);
-        loc.register("server.event.cancelled", new MessageFormat("The action has not been executed."));
+        loc.register("server.event.cancel", new MessageFormat("The action has not been executed."));
 
         KissenCommandImplementation command = KissenCore.getInstance().getImplementation(KissenCommandImplementation.class);
         command.registerHandler(new EventCancelledHandler<>());

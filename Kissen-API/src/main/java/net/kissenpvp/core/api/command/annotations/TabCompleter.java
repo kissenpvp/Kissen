@@ -29,5 +29,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TabCompleter {
 
-    @NotNull String command();
+    @NotNull String value();
 }

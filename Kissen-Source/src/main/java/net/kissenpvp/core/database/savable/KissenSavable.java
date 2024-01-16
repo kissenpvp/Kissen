@@ -30,10 +30,7 @@ import net.kissenpvp.core.database.savable.event.SavableDeletedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -75,7 +72,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
                     return new KissenSavableMap(this.getDatabaseID(), getMeta());
                 }
                 return savableMap.serializeSavable();
-            }).get());
+            }).join());
         }
         catch (InterruptedException | ExecutionException backendException)
         {
@@ -167,6 +164,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
 
     @Override
     public boolean equals(Object o) {
+
         if (this == o) {
             return true;
         }
@@ -182,9 +180,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + getDatabaseID().hashCode();
-        return result;
+        return Objects.hash(getDatabaseID());
     }
 
     /**
@@ -193,6 +189,10 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
     public int softDelete() throws BackendException {
         AtomicInteger count = new AtomicInteger(size());
         getStringArrayListMap().forEach((key, value) -> count.addAndGet(value.size()));
+
+        getStringArrayListMap().clear();
+        clear();
+
         this.getMeta().purge(this.getDatabaseID());
         KissenCore.getInstance().getImplementation(EventImplementation.class).call(new SavableDeletedEvent(this));
         KissenCore.getInstance().getImplementation(StorageImplementation.class).dropStorage(getDatabaseID());

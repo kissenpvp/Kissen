@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.user;
 
-import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;

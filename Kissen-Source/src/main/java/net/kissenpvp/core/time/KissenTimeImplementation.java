@@ -4,6 +4,8 @@ import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TimeImplementation;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
+import java.time.Period;
 import java.time.format.DateTimeParseException;
 
 public class KissenTimeImplementation implements TimeImplementation {
@@ -72,6 +74,18 @@ public class KissenTimeImplementation implements TimeImplementation {
     @Override public @NotNull AccurateDuration years(long years)
     {
         return months(years * 12);
+    }
+
+    @Override
+    public @NotNull AccurateDuration period(@NotNull Period period)
+    {
+        return new KissenAccurateDuration(period);
+    }
+
+    @Override
+    public @NotNull AccurateDuration duration(@NotNull Duration duration)
+    {
+        return new KissenAccurateDuration(duration);
     }
 
 }

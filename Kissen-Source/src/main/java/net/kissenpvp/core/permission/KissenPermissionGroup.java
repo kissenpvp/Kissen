@@ -21,6 +21,7 @@ package net.kissenpvp.core.permission;
 import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.permission.*;
 import net.kissenpvp.core.api.permission.event.GroupMemberAddEvent;
+import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
@@ -30,12 +31,19 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class KissenPermissionGroup<T extends Permission> extends KissenGroupablePermissionEntry<T> implements PermissionGroup<T>
 {
     @Override public @NotNull @Unmodifiable Set<String> getMember()
     {
-        return Set.copyOf(getListNotNull("group_member"));
+        Set<String> member = new HashSet<>(getListNotNull("group_member"));
+        UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
+        member.addAll(userImplementation.getOnlineUser().stream().map(
+                User::getPlayerClient).filter(
+                player -> player.getRank().getSource().getName().equals(getPermissionID())).map(
+                player -> player.getUniqueId().toString()).collect(Collectors.toUnmodifiableSet()));
+        return Collections.unmodifiableSet(member);
     }
 
     @Override public boolean addMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry) throws PermissionGroupConflictException
@@ -127,8 +135,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
         {
             if (member.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
             {
-                userImplementation.getOnlineUser(UUID.fromString(member)).ifPresent(user -> groups.add(
-                        (GroupablePermissionEntry<T>) user));
+                userImplementation.getOnlineUser(UUID.fromString(member)).ifPresent(user -> groups.add((GroupablePermissionEntry<T>) user));
                 continue;
             }
 
@@ -143,18 +150,8 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
     @Override
     public void permissionUpdate()
     {
-        super.permissionUpdate();
-        for(GroupablePermissionEntry<T> entry : getConnectedEntries())
-        {
-            if(!(entry instanceof PermissionGroup<T>))
-            {
-                entry.permissionUpdate();
-                continue;
-            }
-            ((KissenGroupablePermissionEntry<T>) entry).clearCache();
-        }
+        getConnectedEntries().forEach(PermissionEntry::permissionUpdate);
     }
-
 
     @Override public SerializableSavableHandler getSerializableSavableHandler()
     {

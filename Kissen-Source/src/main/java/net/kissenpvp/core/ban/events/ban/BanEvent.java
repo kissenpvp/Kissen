@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * The {@link BanEvent} class defines the events that are triggered when a {@link Ban} is enacted.
  * It extends {@link EventClass} which specifies that this class defines an event occurrence in a system,
- * and implements {@link Cancellable} which specifies that this event can be cancelled.
+ * and implements {@link Cancellable} which specifies that this event can be cancel.
  * <p>
  * The {@link BanEvent} class is parameterized with a subclass of {@link Ban}, which represents a specific type of ban.
  * This class provides methods for getting and setting the ban that the event is related to, as well as a method for cancelling the event.
@@ -38,9 +38,9 @@ public abstract class BanEvent<B extends Ban> implements EventClass, Cancellable
 
     /**
      * Constructs a {@link BanEvent} with the specified {@link Ban} object.
-     * This constructor initializes the ban event with the given ban and sets the event's cancelled status to false.
+     * This constructor initializes the ban event with the given ban and sets the event's cancel status to false.
      * <p>
-     * This constructor should be used to create a new ban event. The created event can then be processed by the system or cancelled.
+     * This constructor should be used to create a new ban event. The created event can then be processed by the system or cancel.
      *
      * @param ban the {@link Ban} this event relates to. This parameter must not be null, as indicated by the {@link NotNull} annotation.
      *

@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.permission;
 
+import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.savable.list.SavableList;
 import net.kissenpvp.core.api.database.savable.list.SavableRecordList;
 import net.kissenpvp.core.api.event.EventCancelledException;
@@ -228,11 +229,11 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
      * <p>
      * This method attempts to set a permission for the given Kissen permission node. It triggers an event to notify other components
      * about the permission change and checks if the event is allowed to proceed. If the event is allowed, the permission is internally set
-     * using the provided permission node. If the event is cancelled by any listener, an {@link EventCancelledException} is thrown.
+     * using the provided permission node. If the event is cancel by any listener, an {@link EventCancelledException} is thrown.
      *
      * @param kissenPermissionNode The Kissen permission node for which the permission should be set. Must not be null.
      * @return A non-null value representing the result of setting the permission.
-     * @throws EventCancelledException If the permission change event is cancelled by any listener.
+     * @throws EventCancelledException If the permission change event is cancel by any listener.
      */
     protected @NotNull T setPermission(@NotNull KissenPermissionNode kissenPermissionNode) throws EventCancelledException {
         PermissionEntrySetPermissionEvent permissionEntrySetPermissionEvent = new KissenPermissionEntrySetPermissionEvent(translatePermission(kissenPermissionNode, record -> {/* ignored */}), getPermission(kissenPermissionNode.name()).isPresent());
@@ -290,5 +291,13 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
      */
     private @NotNull DataWriter getSaveChanges() {
         return record -> internSetPermission((KissenPermissionNode) record);
+    }
+
+    @Override
+    public int softDelete() throws BackendException
+    {
+        int rows = super.softDelete();
+        permissionUpdate();
+        return rows;
     }
 }

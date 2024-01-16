@@ -18,13 +18,13 @@
 
 package net.kissenpvp.core.user;
 
-import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
 import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.user.User;
+import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 import net.kissenpvp.core.permission.KissenGroupablePermissionEntry;
@@ -67,8 +67,14 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
     }
 
     @Override
-    public @NotNull Map<String, Object> getStorage() {
-        return KissenCore.getInstance().getImplementation(StorageImplementation.class).getStorage("user" + getRawID());
+    public @NotNull Map<String, Object> getStorage()
+    {
+        UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
+        if(userImplementation.getOnlineUser(UUID.fromString(getRawID())).isEmpty())
+        {
+            return new HashMap<>(); // not connected
+        }
+        return super.getStorage();
     }
 
     @Override
@@ -79,19 +85,6 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
     @Override
     public @NotNull Component displayName() {
         return getPlayerClient().displayName();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-
-        if (!(obj instanceof KissenUser<?> userEntry)) {
-            return false;
-        }
-
-        return userEntry.getDatabaseID().equals(getDatabaseID());
     }
 
     /**
@@ -113,7 +106,7 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
     }
 
     /**
-     * Writes the online time the in the database.
+     * Writes the online expire the in the database.
      * Most likely this is called when the user quits.
      */
     protected void writeOnlineTimeData() {

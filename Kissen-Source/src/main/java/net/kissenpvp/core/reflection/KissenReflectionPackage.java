@@ -80,7 +80,7 @@ public class KissenReflectionPackage implements ReflectionPackage {
     }
 
     /**
-     * Creates a package, this is for the first time only a sender, but with this you can get all classes in this itself.
+     * Creates a package, this is for the first expire only a sender, but with this you can get all classes in this itself.
      * Similar to {@link KissenReflectionClass} it can be called with dot. only the sender itself is not enough.
      * <p>
      * if you are using this class in another project, make sure to insert the right plugin file so that the plugin
@@ -132,7 +132,7 @@ public class KissenReflectionPackage implements ReflectionPackage {
     }
 
     /**
-     * Creates a package, this is for the first time only a sender, but with this you can get all classes in this itself.
+     * Creates a package, this is for the first expire only a sender, but with this you can get all classes in this itself.
      * Similar to {@link KissenReflectionClass} it can be called with dot. only the sender itself is not enough.
      * <p>
      * if you are using this class in another project, make sure to insert the right plugin file so that the plugin

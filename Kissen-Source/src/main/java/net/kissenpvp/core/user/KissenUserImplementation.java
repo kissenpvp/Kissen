@@ -26,6 +26,7 @@ import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.UserInfo;
@@ -85,6 +86,8 @@ public abstract class KissenUserImplementation implements UserImplementation {
         registerUserSetting(new DisabledUserColor());
         registerUserSetting(new SuffixSetting());
         registerUserSetting(new SuffixInChatSetting());
+        registerUserSetting(new ShowPrefix());
+        registerUserSetting(new HighlightVariables());
         return UserImplementation.super.start();
     }
 
@@ -240,10 +243,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
     public boolean loadUser(@NotNull User user) {
         Optional<User> userOptional = getOnlineUser(UUID.fromString(user.getRawID()));
         if (userOptional.isPresent()) {
-            if (userOptional.get().getStorage().containsKey("tick")) {
-                return false;
-            }
-            getOnlineUserSet().removeIf(currentUser -> currentUser.getRawID().equals(user.getRawID()));
+            onlineUserSet.removeIf(currentUser -> currentUser.getRawID().equals(user.getRawID()));
         }
         onlineUserSet.add(user);
         return true;

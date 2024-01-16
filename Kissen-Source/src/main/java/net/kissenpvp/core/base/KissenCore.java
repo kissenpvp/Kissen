@@ -36,7 +36,6 @@ import net.kissenpvp.core.api.message.MessageImplementation;
 import net.kissenpvp.core.api.networking.APIRequestImplementation;
 import net.kissenpvp.core.api.reflection.ReflectionImplementation;
 import net.kissenpvp.core.api.reflection.ReflectionPackage;
-import net.kissenpvp.core.api.task.TaskImplementation;
 import net.kissenpvp.core.api.time.TimeImplementation;
 import net.kissenpvp.core.api.util.PageImplementation;
 import net.kissenpvp.core.config.KissenConfigurationImplementation;
@@ -50,7 +49,6 @@ import net.kissenpvp.core.networking.KissenAPIRequestImplementation;
 import net.kissenpvp.core.permission.event.KissenPermissionGroupCreateEvent;
 import net.kissenpvp.core.reflection.KissenReflectionClass;
 import net.kissenpvp.core.reflection.KissenReflectionImplementation;
-import net.kissenpvp.core.task.KissenTaskImplementation;
 import net.kissenpvp.core.time.KissenTimeImplementation;
 import net.kissenpvp.core.util.KissenPageImplementation;
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +64,6 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -88,7 +85,6 @@ public abstract class KissenCore implements Kissen {
      * This method is called to initialize and bootstrap the Kissen system within the KissenPlugin framework.
      *
      * @param clazz The Class object representing the main class of the KissenPlugin. Must not be null.
-     * @throws Exception If there is an error during the initialization process or when invoking implementations.
      */
     public void initialize(@NotNull Class<?> clazz)
     {
@@ -128,7 +124,6 @@ public abstract class KissenCore implements Kissen {
         loader.put(ReflectionImplementation.class, new KissenReflectionImplementation());
         loader.put(StorageImplementation.class, new KissenStorageImplementation());
         loader.put(MessageImplementation.class, new KissenMessageImplementation());
-        loader.put(TaskImplementation.class, new KissenTaskImplementation());
     }
 
     /**
@@ -287,7 +282,11 @@ public abstract class KissenCore implements Kissen {
         getKissenImplementations().forEach(kissenImplementationConsumer);
     }
 
+    public abstract void runTask(@NotNull KissenPlugin kissenPlugin, @NotNull Runnable runnable);
+
+    public abstract void runTask(@NotNull Runnable runnable, int delay, @NotNull String name);
+
     private enum OperationState {
-        PRE, START, POST,
+        PRE, START, POST
     }
 }

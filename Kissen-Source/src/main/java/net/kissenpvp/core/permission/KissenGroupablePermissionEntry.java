@@ -24,7 +24,6 @@ import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.permission.PermissionEntry;
 import net.kissenpvp.core.api.permission.PermissionGroup;
-import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.time.TemporalMeasureNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,9 +37,6 @@ import java.util.stream.Stream;
 @Getter
 public abstract class KissenGroupablePermissionEntry<T extends Permission> extends KissenPermissionEntry<T> implements PermissionCollector<T>
 {
-
-    private volatile Set<T> cachedPermissions;
-
     @Override
     public @NotNull T setPermission(@NotNull String permission, boolean value) throws EventCancelledException
     {
@@ -68,10 +64,7 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
 
     @Override
     public synchronized @NotNull @Unmodifiable Set<T> getPermissionList() {
-        if (cachedPermissions == null) {
-            cachedPermissions = calculatePermissions();
-        }
-        return Collections.unmodifiableSet(cachedPermissions);
+        return Collections.unmodifiableSet(permissionCollector());
     }
 
     @Override
@@ -115,18 +108,6 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
         return result;
     }
 
-    @Override
-    public void permissionUpdate() {
-        clearCache();
-    }
-
-
-    public void clearCache()
-    {
-        cachedPermissions = null;
-        KissenCore.getInstance().getLogger().debug("{}s cache has been cleared.", getPermissionID());
-    }
-
     private @NotNull Stream<T> getPermissionStream()
     {
         return parseGroups().stream().flatMap(group -> group.permissionCollector().stream());
@@ -136,7 +117,6 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
     {
         Function<PermissionGroup<T>, PermissionCollector<T>> mapper = (permissionGroup) -> ((PermissionCollector<T>) permissionGroup);
         Stream<PermissionGroup<T>> groupStream = getPermissionGroups().stream();
-        return groupStream.map(mapper).sorted(
-                (o1, o2) -> CharSequence.compare(o1.getPermissionID(), o2.getPermissionID())).toList();
+        return groupStream.map(mapper).sorted((o1, o2) -> CharSequence.compare(o1.getPermissionID(), o2.getPermissionID())).toList();
     }
 }

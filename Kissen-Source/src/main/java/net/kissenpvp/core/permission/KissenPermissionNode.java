@@ -109,7 +109,7 @@ public record KissenPermissionNode(@NotNull String name, @NotNull String owner, 
     }
 
     /**
-     * This constructor creates an instance of {@code KissenPermissionNode} with a minimal set of required parameters and a duration, represented as a {@code PeriodDuration}. The additional data is initialized to an empty {@code HashMap}. A new {@code TemporalNode} is created with the start time as the current system time and the end time as the start time plus the duration.
+     * This constructor creates an instance of {@code KissenPermissionNode} with a minimal set of required parameters and a duration, represented as a {@code PeriodDuration}. The additional data is initialized to an empty {@code HashMap}. A new {@code TemporalNode} is created with the start expire as the current system expire and the end expire as the start expire plus the duration.
      *
      * @param name  the name of the permission.
      * @param owner the owner of the permission, represented as a {@code PermissionEntry}.

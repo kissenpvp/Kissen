@@ -21,9 +21,11 @@ package net.kissenpvp.core.user.rank;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.user.rank.PlayerRank;
 import net.kissenpvp.core.api.user.rank.Rank;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 
@@ -40,7 +42,7 @@ public abstract class KissenPlayerFallBackRank<T extends Rank> implements Player
         return getID();
     }
 
-    @Override public Instant getStart()
+    @Override public @NotNull Instant getStart()
     {
         throw new UnsupportedOperationException();
     }
@@ -68,6 +70,12 @@ public abstract class KissenPlayerFallBackRank<T extends Rank> implements Player
     @Override public @NotNull Optional<Instant> getPredictedEnd()
     {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public @NotNull Component endComponent(@NotNull DateTimeFormatter formatter)
+    {
+        return Component.translatable("server.ban.punishment.end.never");
     }
 
     @Override

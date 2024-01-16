@@ -21,6 +21,8 @@ package net.kissenpvp.core.util;
 import lombok.Getter;
 import lombok.Setter;
 import net.kissenpvp.core.api.util.PageBuilder;
+import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,8 +73,7 @@ public class KissenPageBuilder<T> implements PageBuilder<T>
 
         List<T> pageEntries = new ArrayList<>();
 
-        currentPage = Math.max(1, currentPage);
-        currentPage = Math.min(currentPage, this.getLastPage());
+        currentPage = normalize(currentPage);
 
         int startIndex = (currentPage - 1) * this.splitter;
         int endIndex = Math.min(startIndex + this.splitter, this.entries.size());
@@ -83,6 +84,46 @@ public class KissenPageBuilder<T> implements PageBuilder<T>
         }
 
         return pageEntries;
+    }
+
+    @Override
+    public int normalize(int page)
+    {
+        if(page < 1)
+        {
+            return 1;
+        }
+
+        if(page > getLastPage())
+        {
+            return getLastPage();
+        }
+
+        return page;
+    }
+
+    @Override
+    public @NotNull Component getHeader(@NotNull Component title, int page)
+    {
+        Component[] args = {
+                title,
+                Component.text(normalize(page)),
+                Component.text(getLastPage())
+        };
+
+        return Component.translatable("server.command.general.header.paged", args);
+    }
+
+    @Override
+    public @NotNull Component getFooter(@NotNull Component title, int page)
+    {
+        Component[] args = {
+                title,
+                Component.text(normalize(page)),
+                Component.text(getLastPage())
+        };
+
+        return Component.translatable("server.command.general.footer.paged", args);
     }
 
     /**

@@ -4,10 +4,12 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TemporalObject;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 public abstract class KissenTemporalObject implements TemporalObject {
@@ -46,5 +48,12 @@ public abstract class KissenTemporalObject implements TemporalObject {
     @Override
     public boolean isValid() {
         return getEnd().map(end -> end.isAfter(Instant.now())).orElse(true);
+    }
+
+    @Override
+    public @NotNull Component endComponent(@NotNull DateTimeFormatter formatter)
+    {
+        return getEnd().map(end -> (Component) Component.text(formatter.format(end))).orElse(
+                Component.translatable("server.ban.punishment.end.never"));
     }
 }

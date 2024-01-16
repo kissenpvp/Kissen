@@ -39,7 +39,7 @@ import java.text.MessageFormat;
  * @see Implementation
  * @see Kissen
  */
-public interface KissenPlugin extends Implementation {
+public interface KissenPlugin {
 
     /**
      * Returns the name of the plugin. The name should be a short, human-readable string that identifies the plugin.

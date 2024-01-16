@@ -45,7 +45,7 @@ import java.util.List;
  * @param banType The type of the ban, this parameter must not be null
  * @param cause The reason for this punishment, this parameter can be null inside the container
  * @param comments Additional comments for this punishment, this parameter must not be null
- * @param temporalMeasureNode The time bound element of the punishment, this parameter must not be null
+ * @param temporalMeasureNode The expire bound element of the punishment, this parameter must not be null
  *
  * @see Record
  * @see NotNull

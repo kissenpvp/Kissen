@@ -202,9 +202,9 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
     }
 
     /**
-     * Constructs a {@link CommentNode} object with a generated comment ID, current time, sender UUID if the sender is a {@link PlayerClient}, and the provided comment.
+     * Constructs a {@link CommentNode} object with a generated comment ID, current expire, sender UUID if the sender is a {@link PlayerClient}, and the provided comment.
      * The comment ID is generated using {@link DataImplementation} obtained from {@link KissenCore}.
-     * Current time is obtained with `System.currentTimeMillis()`.
+     * Current expire is obtained with `System.currentTimeMillis()`.
      * Sender UUID is obtained only if the sender is a {@link PlayerClient}.
      * <p>
      * This method should be used when creating a new comment in the system.

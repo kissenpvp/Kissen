@@ -48,10 +48,10 @@ index cb9b13522a976b82bcb71cef486f11f4172e3e99..862625f912d8e8d980f06f58f7bef353
              provided.getSLF4JLogger().error("Error initializing plugin '%s' in folder '%s' (Is it up to date?)".formatted(provider.getFileName(), provider.getParentSource()), ex);
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..cf608a90d188c853d72326b7763995f9fa72a3e4
+index 0000000000000000000000000000000000000000..db1f1ca137bfe602406ebb41cd61c82c30801bbd
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -0,0 +1,85 @@
+@@ -0,0 +1,90 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -73,11 +73,14 @@ index 0000000000000000000000000000000000000000..cf608a90d188c853d72326b7763995f9
 +package net.kissenpvp.paper.base;
 +
 +import net.kissenpvp.core.api.base.Implementation;
++import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
 +import net.kissenpvp.core.base.KissenCore;
 +import net.kissenpvp.paper.api.base.PaperKissen;
 +import org.bukkit.Bukkit;
++import org.bukkit.craftbukkit.scheduler.CraftScheduler;
++import org.bukkit.plugin.Plugin;
 +import org.jetbrains.annotations.NotNull;
 +import org.slf4j.Logger;
 +
@@ -123,13 +126,15 @@ index 0000000000000000000000000000000000000000..cf608a90d188c853d72326b7763995f9
 +    }
 +
 +    @Override
-+    public void repeatTask(@NotNull String name, int l1, @NotNull Runnable runnable) {
-+        //TODO add task class
++    public void runTask(@NotNull KissenPlugin kissenPlugin, @NotNull Runnable runnable)
++    {
++        Bukkit.getScheduler().runTask((Plugin) kissenPlugin, runnable);
 +    }
 +
 +    @Override
-+    public void runTask(long l, @NotNull Runnable runnable) {
-+        //TODO look method above
++    public void runTask(@NotNull Runnable runnable, int delay, @NotNull String name)
++    {
++        ((CraftScheduler) Bukkit.getScheduler()).scheduleInternalTask(runnable, delay, name);
 +    }
 +
 +    @Override

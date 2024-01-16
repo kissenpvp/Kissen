@@ -5,10 +5,10 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index 0ce3e0f0a8d66ad4c021df0ced59dea33612e65f..82ba2cc094305de4fd5e11521b15ee5ae37229e0 100644
+index d3948efc1948f2c18e15eb380dba4334b55a82f5..0b60b0ce23e75ccc19b8afcb5a190e73761bf7a8 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -25,9 +25,13 @@ import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
+@@ -26,9 +26,13 @@ import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
  import net.kissenpvp.core.api.user.UserImplementation;
  import net.kissenpvp.core.api.user.rank.RankImplementation;
  import net.kissenpvp.core.base.KissenCore;
@@ -22,7 +22,7 @@ index 0ce3e0f0a8d66ad4c021df0ced59dea33612e65f..82ba2cc094305de4fd5e11521b15ee5a
  import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
  import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
  import net.kissenpvp.paper.user.KissenPaperUserImplementation;
-@@ -60,6 +64,8 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+@@ -63,6 +67,8 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
          loader.put(PermissionImplementation.class, permissionImplementation);
          loader.put(PaperPermissionImplementation.class, permissionImplementation);
          loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());
@@ -33,10 +33,10 @@ index 0ce3e0f0a8d66ad4c021df0ced59dea33612e65f..82ba2cc094305de4fd5e11521b15ee5a
  
 diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0cc3007a68f1ae5e8dd66c319d8d54e93cec3d29
+index 0000000000000000000000000000000000000000..e2c22d1eab9635054bf67d742afb86fa5ce75a69
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/KissenPaperCommandImplementation.java
-@@ -0,0 +1,310 @@
+@@ -0,0 +1,325 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -111,6 +111,7 @@ index 0000000000000000000000000000000000000000..0cc3007a68f1ae5e8dd66c319d8d54e9
 +    private final MethodEvaluator<CommandSender> methodEvaluator;
 +    private final KissenPaperTargetValidator kissenPaperTargetValidator;
 +    private final Set<KissenCommand> commands;
++    private final Set<KissenPaperPluginCommand> pluginCommands;
 +
 +    /**
 +     * Constructs a new instance of {@link KissenPaperCommandImplementation}.
@@ -124,6 +125,7 @@ index 0000000000000000000000000000000000000000..0cc3007a68f1ae5e8dd66c319d8d54e9
 +        this.methodEvaluator = new MethodEvaluator<>();
 +        this.kissenPaperTargetValidator = new KissenPaperTargetValidator();
 +        this.commands = new HashSet<>();
++        this.pluginCommands = new HashSet<>();
 +
 +        // Advanced
 +        registerParser(Player.class, new PlayerParser());
@@ -153,8 +155,10 @@ index 0000000000000000000000000000000000000000..0cc3007a68f1ae5e8dd66c319d8d54e9
 +    }
 +
 +    @Override
-+    public @NotNull Optional<KissenCommand> getCommand(@NotNull String name) {
-+        return commands.stream().filter(command -> command.getName().equals(name)).findFirst();
++    public @NotNull Optional<KissenCommand> getCommand(@NotNull Plugin plugin, @NotNull String name)
++    {
++        return pluginCommands.stream().filter(command -> command.getPlugin().equals(plugin) && command.getName().equals(name)).map(
++                pluginCommand -> (KissenCommand) pluginCommand).findFirst();
 +    }
 +
 +    @Override
@@ -250,7 +254,7 @@ index 0000000000000000000000000000000000000000..0cc3007a68f1ae5e8dd66c319d8d54e9
 +
 +        TabCompleter completer = method.getAnnotation(TabCompleter.class);
 +        if (completer != null) {
-+            registerCompleter(plugin, completer.command(), new KissenPaperCompleteExecutor(method, object));
++            registerCompleter(plugin, completer.value(), new KissenPaperCompleteExecutor(method, object));
 +        }
 +    }
 +
@@ -277,7 +281,7 @@ index 0000000000000000000000000000000000000000..0cc3007a68f1ae5e8dd66c319d8d54e9
 +
 +        TabCompleter completer = method.getAnnotation(TabCompleter.class);
 +        if (completer != null) {
-+            registerCompleter(completer.command(), new KissenPaperCompleteExecutor(method, object));
++            registerCompleter(completer.value(), new KissenPaperCompleteExecutor(method, object));
 +        }
 +    }
 +
@@ -313,11 +317,16 @@ index 0000000000000000000000000000000000000000..0cc3007a68f1ae5e8dd66c319d8d54e9
 +        KissenPaperAbstractCommand<?> command = (KissenPaperAbstractCommand<?>) getCommand(rootName).orElseGet(() ->
 +        {
 +            KissenCommand kissenCommand = rootCommandFactory.constructCommand(rootName);
++            if (kissenCommand instanceof KissenPaperPluginCommand pluginCommand)
++            {
++                this.pluginCommands.add(pluginCommand);
++                return kissenCommand;
++            }
 +            this.commands.add(kissenCommand);
 +            return kissenCommand;
 +        });
-+        if (!name.equals(rootName)) {
-+
++        if (!name.equals(rootName))
++        {
 +            command = command.createRecursive(name);
 +        }
 +        return command;
@@ -332,12 +341,18 @@ index 0000000000000000000000000000000000000000..0cc3007a68f1ae5e8dd66c319d8d54e9
 +        return Bukkit.getCommandMap();
 +    }
 +
++    public @NotNull Optional<KissenCommand> getCommand(@NotNull String name)
++    {
++        return commands.stream().filter(command -> command.getName().equals(name)).findFirst();
++    }
++
 +    /**
 +     * The RootCommandFactory is a functional interface used for constructing commands.
 +     * It defines a single method to construct a command based on the given name.
 +     */
 +    @FunctionalInterface
 +    private interface RootCommandFactory {
++
 +        /**
 +         * Constructs a KissenPaperAbstractCommand using the given name.
 +         *
@@ -349,10 +364,10 @@ index 0000000000000000000000000000000000000000..0cc3007a68f1ae5e8dd66c319d8d54e9
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a7b8965c7d7b98aefb110d357fceea4b7b5cc2a7
+index 0000000000000000000000000000000000000000..368f9fb37ed43583511072b2c6dfe8e7f2409a3e
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
-@@ -0,0 +1,441 @@
+@@ -0,0 +1,451 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -390,15 +405,14 @@ index 0000000000000000000000000000000000000000..a7b8965c7d7b98aefb110d357fceea4b
 +import net.kyori.adventure.text.Component;
 +import net.kyori.adventure.text.TextComponent;
 +import org.bukkit.Bukkit;
-+import org.bukkit.command.Command;
 +import org.bukkit.command.CommandException;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
 +
 +import java.util.*;
-+import java.util.function.Predicate;
 +import java.util.stream.Collectors;
++import java.util.stream.Stream;
 +
 +/**
 + * Represents a command implementation specific to the Kissen Paper framework.
@@ -456,7 +470,8 @@ index 0000000000000000000000000000000000000000..a7b8965c7d7b98aefb110d357fceea4b
 +    @Override
 +    public @NotNull Optional<C> getChildCommand(@NotNull String name)
 +    {
-+        return getChildCommandList().stream().filter(child -> child.equals(name)).findFirst();
++        return getChildCommandList().stream().filter(
++                child -> child.equals(name) || child.getAliases().contains(name)).findFirst();
 +    }
 +
 +    @Override
@@ -520,9 +535,18 @@ index 0000000000000000000000000000000000000000..a7b8965c7d7b98aefb110d357fceea4b
 +            return getTabCompletions(payload);
 +        }));
 +
-+        final String currentArgument = args.length > 0 ? args[args.length - 1] : "";
-+        Predicate<String> startsWithFilter = current -> current.toLowerCase().startsWith(currentArgument.toLowerCase());
-+        return new ArrayList<>(result).stream().filter(startsWithFilter).toList();
++        final String argument = args.length > 0 ? args[args.length - 1] : ""; //namespaces
++        return new ArrayList<>(result).stream().filter(currentSuggestion ->
++        {
++            for (String currentArgument : currentSuggestion.split(":"))
++            {
++                if(currentArgument.toLowerCase().startsWith(argument.toLowerCase()))
++                {
++                    return true;
++                }
++            }
++            return false;
++        }).toList();
 +    }
 +
 +    @Override
@@ -720,15 +744,16 @@ index 0000000000000000000000000000000000000000..a7b8965c7d7b98aefb110d357fceea4b
 +    {
 +        int index = commandPayload.getArgumentCount();
 +        Set<String> data = getChildCommandList().stream().filter(
-+                child -> child.getPosition() == index + getPosition()).map(Command::getName).collect(
++                child -> child.getPosition() == index + getPosition()).flatMap(
++                command -> Stream.concat(Stream.of(command.getName()), command.getAliases().stream())).collect(
 +                Collectors.toSet());
++
 +        if (getExecutor() instanceof KissenPaperCommandExecutor kissenPaperCommandExecutor && kissenPaperCommandExecutor.getEvaluator().arguments().size() > index)
 +        {
 +            Argument<?, CommandSender> argument = kissenPaperCommandExecutor.getEvaluator().arguments().get(index);
 +            if (argument.argumentParser() != null)
 +            {
 +                data.addAll(argument.argumentParser().tabCompletion(commandPayload));
-+
 +            }
 +        }
 +        return data;
@@ -786,7 +811,7 @@ index 0000000000000000000000000000000000000000..a7b8965c7d7b98aefb110d357fceea4b
 +     * This prevents blocking operations from freezing the thread that the command is currently executing on,
 +     * helping avoid potential server lag or non-responsiveness.</p>
 +     *
-+     * <p>All subclasses must provide an implementation for this method, ensuring that the command payload function is run asynchronously.
++     * <p>All subclasses must provide an implementation for this method, ensuring that the command payload function is task asynchronously.
 +     * The implementation may use the server's scheduler, a thread pool, or any other method of asynchronous execution.</p>
 +     *
 +     * @param payload A CommandPayload object that encapsulates the command, sender, command related data and a function to execute.
@@ -796,10 +821,10 @@ index 0000000000000000000000000000000000000000..a7b8965c7d7b98aefb110d357fceea4b
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandPayload.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandPayload.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..4dc735cc09166af498e79f58c8fd7d41d041e96e
+index 0000000000000000000000000000000000000000..5cbce0b8d5eff015df974b1cc2150d9990e2f96e
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandPayload.java
-@@ -0,0 +1,237 @@
+@@ -0,0 +1,246 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -828,11 +853,13 @@ index 0000000000000000000000000000000000000000..4dc735cc09166af498e79f58c8fd7d41
 +import net.kissenpvp.core.command.CommandHolder;
 +import net.kissenpvp.core.command.CommandInfo;
 +import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
++import net.kissenpvp.paper.command.command.plugin.KissenPaperPluginCommand;
 +import net.kissenpvp.paper.command.confirmation.KissenPaperConfirmationImplementation;
 +import net.kyori.adventure.text.Component;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
 +import org.bukkit.entity.Player;
++import org.bukkit.plugin.Plugin;
 +import org.jetbrains.annotations.NotNull;
 +
 +import java.lang.reflect.Array;
@@ -984,7 +1011,14 @@ index 0000000000000000000000000000000000000000..4dc735cc09166af498e79f58c8fd7d41
 +        Class<KissenPaperConfirmationImplementation> confirmClass = KissenPaperConfirmationImplementation.class;
 +        KissenPaperConfirmationImplementation implementation = Bukkit.getKissen().getImplementation(confirmClass);
 +        Instant now = Instant.now();
-+        if (implementation.requestConfirmation(getSender(), now.plus(duration), runnable, cancel, timeRunOut))
++
++        Plugin plugin = null;
++        if (getCommandHolder() instanceof KissenPaperPluginCommand holder)
++        {
++            plugin = holder.getPlugin();
++        }
++
++        if (implementation.requestConfirmation(plugin, getSender(), now.plus(duration), runnable, cancel, timeRunOut))
 +        {
 +            if (sendMessage)
 +            {
@@ -1011,11 +1045,11 @@ index 0000000000000000000000000000000000000000..4dc735cc09166af498e79f58c8fd7d41
 +    }
 +
 +    /**
-+     * Returns a non-null {@code Runnable} that represents the default behavior when a command confirmation is cancelled.
++     * Returns a non-null {@code Runnable} that represents the default behavior when a command confirmation is cancel.
 +     * The returned {@code Runnable} is a lambda expression that sends a cancellation message to the command sender.
 +     *
 +     * <p>The cancellation message is constructed using the {@link Component#translatable(String)} method with the
-+     * translation key "server.command.confirm.cancelled". The message is sent to the command sender using the
++     * translation key "server.command.confirm.cancel". The message is sent to the command sender using the
 +     * {@link #getSender()} method.</p>
 +     *
 +     * <p>Usage Example:</p>
@@ -1023,7 +1057,7 @@ index 0000000000000000000000000000000000000000..4dc735cc09166af498e79f58c8fd7d41
 +     * {@code
 +     * Runnable cancellationAction = defaultRunnable();
 +     * // Execute the cancellation action when needed
-+     * cancellationAction.run();
++     * cancellationAction.task();
 +     * }
 +     * </pre>
 +     *
@@ -1034,7 +1068,7 @@ index 0000000000000000000000000000000000000000..4dc735cc09166af498e79f58c8fd7d41
 +     */
 +    private @NotNull Runnable defaultRunnable()
 +    {
-+        return () -> getSender().sendMessage(Component.translatable("server.command.confirm.cancelled"));
++        return () -> getSender().sendMessage(Component.translatable("server.command.confirm.cancel"));
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/plugin/KissenPaperPluginChildCommand.java b/src/main/java/net/kissenpvp/paper/command/command/plugin/KissenPaperPluginChildCommand.java
@@ -1266,10 +1300,10 @@ index 0000000000000000000000000000000000000000..c52750b285782d26d9f6e14ecbf27409
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/system/KissenPaperCommand.java b/src/main/java/net/kissenpvp/paper/command/command/system/KissenPaperCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..132b91c185b2f777a7ae9c4ed82ea6a6334344a2
+index 0000000000000000000000000000000000000000..afa9c7593a55bc84405c9bc128c5480e770fde92
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/system/KissenPaperCommand.java
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,64 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1292,10 +1326,11 @@ index 0000000000000000000000000000000000000000..132b91c185b2f777a7ae9c4ed82ea6a6
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.paper.command.command.KissenPaperAbstractCommand;
-+import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
-+import org.bukkit.craftbukkit.scheduler.MinecraftInternalPlugin;
 +import org.jetbrains.annotations.NotNull;
++
++import java.util.concurrent.ExecutorService;
++import java.util.concurrent.Executors;
 +
 +/**
 + * Represents a top-level Kissen Paper command within the command hierarchy.
@@ -1305,11 +1340,11 @@ index 0000000000000000000000000000000000000000..132b91c185b2f777a7ae9c4ed82ea6a6
 + */
 +public class KissenPaperCommand extends KissenPaperAbstractCommand<KissenPaperChildCommand> {
 +
-+    static final MinecraftInternalPlugin MINECRAFT;
++    private static final ExecutorService executorService;
 +
 +    static
 +    {
-+        MINECRAFT = new MinecraftInternalPlugin();
++        executorService = Executors.newSingleThreadExecutor();
 +    }
 +
 +    /**
@@ -1325,7 +1360,7 @@ index 0000000000000000000000000000000000000000..132b91c185b2f777a7ae9c4ed82ea6a6
 +
 +    @Override
 +    public void runAsync(@NotNull CommandPayload<CommandSender> payload) {
-+        Bukkit.getAsyncScheduler().runNow(MINECRAFT, (scheduledTask) -> getExecutor().execute(payload));
++        executorService.execute(() -> getExecutor().execute(payload));
 +    }
 +
 +    @Override
@@ -1335,7 +1370,7 @@ index 0000000000000000000000000000000000000000..132b91c185b2f777a7ae9c4ed82ea6a6
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/confirmation/ConfirmCommand.java b/src/main/java/net/kissenpvp/paper/command/confirmation/ConfirmCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..911fb547227f82359045d2cce7140d3251dc1e3d
+index 0000000000000000000000000000000000000000..daeefc739da245544c09aeb33f4b5871c8dbf1a5
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/confirmation/ConfirmCommand.java
 @@ -0,0 +1,67 @@
@@ -1375,7 +1410,7 @@ index 0000000000000000000000000000000000000000..911fb547227f82359045d2cce7140d32
 +    @CommandData("confirm")
 +    public void confirm(@NotNull CommandPayload<CommandSender> commandPayload)
 +    {
-+        if(!getImplementation().action(commandPayload.getSender(), false))
++        if(!getImplementation().execute(commandPayload.getSender(), false))
 +        {
 +            commandPayload.getSender().sendMessage(Component.translatable("server.command.confirm.no.request"));
 +        }
@@ -1390,7 +1425,7 @@ index 0000000000000000000000000000000000000000..911fb547227f82359045d2cce7140d32
 +    @CommandData("cancel")
 +    public void cancel(@NotNull CommandPayload<CommandSender> commandPayload)
 +    {
-+        if(!getImplementation().action(commandPayload.getSender(), true))
++        if(!getImplementation().execute(commandPayload.getSender(), true))
 +        {
 +            commandPayload.getSender().sendMessage(Component.translatable("server.command.confirm.no.request"));
 +        }
@@ -2047,6 +2082,36 @@ index 8fe48c6bf65db6b11fcd0674aad01d5bb8d17a5f..f4e522cd1b920f4cb1278bbe680485cb
              org.bukkit.Bukkit.getServer().getPluginManager().callEvent(event);
              if (event.message() != null) {
                  commandlistenerwrapper.sendFailure(io.papermc.paper.adventure.PaperAdventure.asVanilla(event.message()), false);
+diff --git a/src/main/java/net/minecraft/server/commands/GiveCommand.java b/src/main/java/net/minecraft/server/commands/GiveCommand.java
+index 1b459a8ee8a6bc039e742d65796bc76660a1c765..ce91f3816a7e48c22dd89c9d29685d2a05f695f0 100644
+--- a/src/main/java/net/minecraft/server/commands/GiveCommand.java
++++ b/src/main/java/net/minecraft/server/commands/GiveCommand.java
+@@ -27,13 +27,18 @@ public class GiveCommand {
+     public GiveCommand() {}
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext commandRegistryAccess) {
+-        dispatcher.register((LiteralArgumentBuilder) ((LiteralArgumentBuilder) net.minecraft.commands.Commands.literal("give").requires((commandlistenerwrapper) -> {
+-            return commandlistenerwrapper.hasPermission(2);
+-        })).then(net.minecraft.commands.Commands.argument("targets", EntityArgument.players()).then(((RequiredArgumentBuilder) net.minecraft.commands.Commands.argument("item", ItemArgument.item(commandRegistryAccess)).executes((commandcontext) -> {
+-            return GiveCommand.giveItem((CommandSourceStack) commandcontext.getSource(), ItemArgument.getItem(commandcontext, "item"), EntityArgument.getPlayers(commandcontext, "targets"), 1);
+-        })).then(net.minecraft.commands.Commands.argument("count", IntegerArgumentType.integer(1)).executes((commandcontext) -> {
+-            return GiveCommand.giveItem((CommandSourceStack) commandcontext.getSource(), ItemArgument.getItem(commandcontext, "item"), EntityArgument.getPlayers(commandcontext, "targets"), IntegerArgumentType.getInteger(commandcontext, "count"));
+-        })))));
++        // KissenPaper start - add alias i to give
++        for(String name : java.util.List.of("give", "i")) // this code is shit, but hear me out... it's my shit
++        {
++            dispatcher.register((LiteralArgumentBuilder) ((LiteralArgumentBuilder) net.minecraft.commands.Commands.literal(name).requires((commandlistenerwrapper) -> {
++                return commandlistenerwrapper.hasPermission(2);
++            })).then(net.minecraft.commands.Commands.argument("targets", EntityArgument.players()).then(((RequiredArgumentBuilder) net.minecraft.commands.Commands.argument("item", ItemArgument.item(commandRegistryAccess)).executes((commandcontext) -> {
++                return GiveCommand.giveItem((CommandSourceStack) commandcontext.getSource(), ItemArgument.getItem(commandcontext, "item"), EntityArgument.getPlayers(commandcontext, "targets"), 1);
++            })).then(net.minecraft.commands.Commands.argument("count", IntegerArgumentType.integer(1)).executes((commandcontext) -> {
++                return GiveCommand.giveItem((CommandSourceStack) commandcontext.getSource(), ItemArgument.getItem(commandcontext, "item"), EntityArgument.getPlayers(commandcontext, "targets"), IntegerArgumentType.getInteger(commandcontext, "count"));
++            })))));
++        }
++        // KissenPaper end
+     }
+ 
+     private static int giveItem(CommandSourceStack source, ItemInput item, Collection<ServerPlayer> targets, int count) throws CommandSyntaxException {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 index 839b43a68642d4db7a2672b28f29d4ba317ef429..0237f75845feb6ca02f0fb59c61a3898dd26d29a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java

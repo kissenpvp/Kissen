@@ -126,7 +126,7 @@ public class KissenCommandImplementation implements KissenImplementation {
             parserList.put(type, parser);
             return;
         }
-        throw new IllegalArgumentException(String.format("Type %s already exists in the system. Unable to proceed with the operation. Please use a different type or ensure the existing type is correctly removed before attempting again.", type.getSimpleName()));
+        throw new IllegalArgumentException(String.format("Type %s already exists in the system.", type.getSimpleName()));
     }
 
     /**

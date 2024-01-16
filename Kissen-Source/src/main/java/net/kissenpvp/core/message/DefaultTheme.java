@@ -126,7 +126,7 @@ public class DefaultTheme implements Theme
 
     @NotNull
     private TranslatableComponent transformTranslatableComponent(@NotNull TranslatableComponent translatableComponent, @NotNull TextColor fallBack) {
-        Function<Component, Component> argumentMapper = argument -> transformComponent(argument, getPrimaryAccentColor());
+        Function<Component, Component> argumentMapper = argument -> transformComponent(argument, highlightColor());
         List<Component> transformedArgs = translatableComponent.args().stream().map(argumentMapper).toList();
 
         TextColor textColor = Objects.requireNonNullElse(translatableComponent.color(), fallBack);
@@ -196,5 +196,10 @@ public class DefaultTheme implements Theme
     private @org.jetbrains.annotations.Nullable TextColor resolveColorValue(int color)
     {
         return null;
+    }
+
+    protected @NotNull TextColor highlightColor()
+    {
+        return getPrimaryAccentColor();
     }
 }

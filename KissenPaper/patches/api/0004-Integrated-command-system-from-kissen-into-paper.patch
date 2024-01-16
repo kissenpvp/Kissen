@@ -165,7 +165,7 @@ index 0000000000000000000000000000000000000000..d63915d40118b0684d6e3850c0737dff
 +public interface PaperCommandExceptionHandler<T extends Throwable> extends CommandExceptionHandler<T, CommandSender> { }
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..55299b060eab441f70774ace312e2588bf2206af
+index 0000000000000000000000000000000000000000..6ec345fde9e21d50d0bd0dae833f590f2fda756f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
 @@ -0,0 +1,97 @@
@@ -215,7 +215,7 @@ index 0000000000000000000000000000000000000000..55299b060eab441f70774ace312e2588
 +     * @return An {@link java.util.Optional} that contains the Command if it exists; otherwise, it will be empty.
 +     * @throws NullPointerException If the {@code name} parameter is null.
 +     */
-+    @NotNull Optional<KissenCommand> getCommand(@NotNull String name);
++    @NotNull Optional<KissenCommand> getCommand(@NotNull Plugin plugin, @NotNull String name);
 +
 +    /**
 +     * Registers one or more objects that contain command methods with the specified {@link org.bukkit.plugin.Plugin}.

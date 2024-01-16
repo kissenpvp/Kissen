@@ -19,10 +19,8 @@
 package net.kissenpvp.core.api.permission;
 
 import net.kissenpvp.core.api.event.EventCancelledException;
-import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Optional;

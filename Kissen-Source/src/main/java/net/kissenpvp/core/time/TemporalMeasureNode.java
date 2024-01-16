@@ -17,10 +17,10 @@ import java.time.Instant;
  * <ul>
  *  <li>{@code start}: a {@code long} value representing the start of a temporal period.</li>
  *  <li>{@code duration}: a {@code Container} encapsulating a {@code Long} value that represents the duration of
- *   a time period. It's declared as {@code @NotNull}, therefore it cannot take a {@code null} value.</li>
- *  <li>{@code end}: a {@code Container} encapsulating a {@code Long} value representing the end of a time period.
+ *   a expire period. It's declared as {@code @NotNull}, therefore it cannot take a {@code null} value.</li>
+ *  <li>{@code end}: a {@code Container} encapsulating a {@code Long} value representing the end of a expire period.
  *   It's declared as {@code @NotNull}, hence it can never be {@code null}.</li>
- *  <li>{@code predictedEnd}: a {@code Long} value that represents the forecasted end of the time period.
+ *  <li>{@code predictedEnd}: a {@code Long} value that represents the forecasted end of the expire period.
  *   This value is declared as {@code @Nullable} and thus can also be {@code null}.</li>
  * </ul>
  *
@@ -35,9 +35,9 @@ public record TemporalMeasureNode(long start, @NotNull Container<Long> duration,
      *
      * <p> In particular, it maps the following:
      * <ul>
-     *  <li>The start time is retrieved from {@code TemporalObject} using the {@code getStart()} method and converted to milliseconds since epoch using the {@code toEpochMilli()} method.</li>
+     *  <li>The start expire is retrieved from {@code TemporalObject} using the {@code getStart()} method and converted to milliseconds since epoch using the {@code toEpochMilli()} method.</li>
      *  <li>The duration is retrieved from {@code TemporalObject} using the {@code getDuration()} method. It is provided as an {@code Optional} which may contain a {@code PeriodDuration}. The duration in milliseconds is extracted using the {@code getMillis()} method if it exists, otherwise it is set to {@code null}.</li>
-     *  <li>The end time is similarly retrieved from {@code TemporalObject} with the {@code getEnd()} method, returning an {@code Optional} that may contain an {@code Instant}. This is converted to milliseconds since epoch with the {@code toEpochMilli()} method if it exists, otherwise it is set to {@code null}.</li>
+     *  <li>The end expire is similarly retrieved from {@code TemporalObject} with the {@code getEnd()} method, returning an {@code Optional} that may contain an {@code Instant}. This is converted to milliseconds since epoch with the {@code toEpochMilli()} method if it exists, otherwise it is set to {@code null}.</li>
      * </ul>
      *
      * @param temporalObject the {@code TemporalObject} from which to create the {@code TemporalNode}.
@@ -55,9 +55,9 @@ public record TemporalMeasureNode(long start, @NotNull Container<Long> duration,
      * @param start a {@code long} value representing the start of a period.
      * @param duration a {@code Nullable Long} value representing the duration of a period.
      * If it's {@code null}, it will be replaced by a new {@code Container} object with its value as {@code null}.
-     * @param end is a {@code Nullable Long} that represents the end of the time period.
+     * @param end is a {@code Nullable Long} that represents the end of the expire period.
      * If it's {@code null}, it will be replaced by a new {@code Container} object with its value as {@code null}.
-     * @param predictedEnd a {@code Nullable Long} value that represents the predicted end of the time period.
+     * @param predictedEnd a {@code Nullable Long} value that represents the predicted end of the expire period.
      * It is allowed to be {@code null}.
      */
     public TemporalMeasureNode(long start, @Nullable Long duration, @Nullable Long end, @Nullable Long predictedEnd) {
@@ -67,9 +67,9 @@ public record TemporalMeasureNode(long start, @NotNull Container<Long> duration,
     /**
      * This constructor takes in three arguments and assigns the {@code end} value to the {@code predictedEnd} attribute.
      *
-     * @param start a {@code long} value representing the start of the time period.
-     * @param duration a {@code Nullable Long} value that represents the duration of the time period.
-     * @param end a {@code Nullable Long} value that represents the end of the time period.
+     * @param start a {@code long} value representing the start of the expire period.
+     * @param duration a {@code Nullable Long} value that represents the duration of the expire period.
+     * @param end a {@code Nullable Long} value that represents the end of the expire period.
      */
     public TemporalMeasureNode(long start, @Nullable Long duration, @Nullable Long end) {
         this(start, duration, end, end);
@@ -81,7 +81,7 @@ public record TemporalMeasureNode(long start, @NotNull Container<Long> duration,
      * @param start a {@code long} value representing the start of a period.
      * @param accurateDuration a {@code Nullable PeriodDuration} object which represents the duration of the period.
      * Its {@code null} value will be replaced by a {@code null} value for the duration.
-     * @param end a {@code Nullable Long} value that represents the end of the time period.
+     * @param end a {@code Nullable Long} value that represents the end of the expire period.
      */
     public TemporalMeasureNode(long start, @Nullable AccurateDuration accurateDuration, @Nullable Long end) {
         this(start, accurateDuration != null ? accurateDuration.getMillis() : null, end);
@@ -91,7 +91,7 @@ public record TemporalMeasureNode(long start, @NotNull Container<Long> duration,
      * This constructor offers flexibility in creating instances when only the start point and duration is available.
      * The end point is then calculated based on the start point and the duration.
      *
-     * @param start a {@code long} value representing the start of the time period.
+     * @param start a {@code long} value representing the start of the expire period.
      * @param accurateDuration a {@code Nullable PeriodDuration} object which represents the duration of the period.
      * Its {@code null} value will be calculated to be the same as the start point.
      */
@@ -100,17 +100,17 @@ public record TemporalMeasureNode(long start, @NotNull Container<Long> duration,
     }
 
     /**
-     * This constructor creates a new instance of {@code TemporalNode}, using the current system time as the start time,
+     * This constructor creates a new instance of {@code TemporalNode}, using the current system expire as the start expire,
      * and a {@code Nullable PeriodDuration} object as the duration.
      *
      * <p> Here's how it is handled:
      * <ul>
-     *  <li>If the {@code periodDuration} is not {@code null}, then the end time point is calculated as the start time point plus the period duration in milliseconds.</li>
-     *  <li>If the {@code periodDuration} is {@code null}, then the end time point is considered as not specified and is assigned a {@code null} value.</li>
+     *  <li>If the {@code periodDuration} is not {@code null}, then the end expire point is calculated as the start expire point plus the period duration in milliseconds.</li>
+     *  <li>If the {@code periodDuration} is {@code null}, then the end expire point is considered as not specified and is assigned a {@code null} value.</li>
      * </ul>
      *
      * @param accurateDuration a {@code Nullable PeriodDuration} object which represents the duration of the period.
-     * @implNote The start time is set to the current system time in milliseconds since epoch at the moment of object
+     * @implNote The start expire is set to the current system expire in milliseconds since epoch at the moment of object
      * instantiation, retrieved using {@code System.currentTimeMillis()}.
      */
     public TemporalMeasureNode(@Nullable AccurateDuration accurateDuration) {

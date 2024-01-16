@@ -201,6 +201,18 @@ index 0000000000000000000000000000000000000000..c59ee172bafb18359c227145de4e7f31
 + * @see Punishment
 + */
 +public interface PaperPunishment extends Punishment<Player>, BanEntry<PlayerProfile> {}
+diff --git a/src/main/java/net/kissenpvp/paper/api/ban/warn/PaperWarn.java b/src/main/java/net/kissenpvp/paper/api/ban/warn/PaperWarn.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..16d48f82197079800c347a536dc29f6ee15644c3
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/ban/warn/PaperWarn.java
+@@ -0,0 +1,6 @@
++package net.kissenpvp.paper.api.ban.warn;
++
++import net.kissenpvp.core.api.user.Warn;
++import net.kissenpvp.paper.api.ban.PaperBan;
++
++public interface PaperWarn extends Warn<PaperBan> {}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java b/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..ce61bd83bfcfb2dc09764f89b9bd1d1f48728e02
@@ -242,10 +254,44 @@ index 0000000000000000000000000000000000000000..ce61bd83bfcfb2dc09764f89b9bd1d1f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..50ef7670a47c36d23990644ecb7e9eb8ea1390eb
+index 0000000000000000000000000000000000000000..13e996d4dca6fb8638d8ba7a9e86b109762f109b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java
-@@ -0,0 +1,36 @@
+@@ -0,0 +1,28 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.paper.api.networking.client.entity;
++
++import net.kissenpvp.core.api.networking.client.entitiy.OnlinePlayerClient;
++import net.kissenpvp.paper.api.ban.PaperPunishment;
++import net.kissenpvp.paper.api.permission.PaperPermission;
++import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
++
++public interface PaperOnlinePlayerClient extends OnlinePlayerClient<PaperPermission, PaperPlayerRank, PaperPunishment> {
++
++}
+diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6e88feed2d33c219e9acefa04f3d439b0cbadf20
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
+@@ -0,0 +1,76 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -267,54 +313,15 @@ index 0000000000000000000000000000000000000000..50ef7670a47c36d23990644ecb7e9eb8
 +package net.kissenpvp.paper.api.networking.client.entity;
 +
 +import net.kissenpvp.core.api.ban.Ban;
-+import net.kissenpvp.core.api.networking.client.entitiy.OnlinePlayerClient;
-+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
-+import net.kissenpvp.paper.api.ban.PaperPunishment;
-+import net.kissenpvp.paper.api.permission.PaperPermission;
-+import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
-+import net.kyori.adventure.text.Component;
-+import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Nullable;
-+
-+public interface PaperOnlinePlayerClient extends OnlinePlayerClient<PaperPermission, PaperPlayerRank, PaperPunishment> {
-+
-+    int warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator);
-+
-+    int warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator, @Nullable Component reason);
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..23b6794546580b5eaec861e300444bed393dbb02
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
-@@ -0,0 +1,62 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.networking.client.entity;
-+
 +import net.kissenpvp.core.api.event.EventCancelledException;
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
++import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.api.user.suffix.Suffix;
 +import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 +import net.kissenpvp.core.api.user.usersetttings.UserSetting;
 +import net.kissenpvp.paper.api.ban.PaperPunishment;
++import net.kissenpvp.paper.api.ban.warn.PaperWarn;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.permission.PaperPermissible;
 +import net.kissenpvp.paper.api.permission.PaperPermission;
@@ -322,8 +329,10 @@ index 0000000000000000000000000000000000000000..23b6794546580b5eaec861e300444bed
 +import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
 +import net.kyori.adventure.text.Component;
 +import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
++import java.util.List;
 +import java.util.Optional;
 +import java.util.Set;
 +
@@ -348,7 +357,16 @@ index 0000000000000000000000000000000000000000..23b6794546580b5eaec861e300444bed
 +
 +    @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException;
 +
++
 +    <X> @NotNull UserSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context);
++
++    @NotNull PaperWarn warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator);
++
++    @NotNull PaperWarn warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator, @Nullable Component reason);
++
++    @NotNull @Unmodifiable List<PaperWarn> getWarnHistory();
++
++    void clearActiveWarns();
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperGroubablePermissionEntry.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperGroubablePermissionEntry.java
 new file mode 100644
@@ -508,10 +526,10 @@ index 0000000000000000000000000000000000000000..2ac394b60d4cccb4c59b2c5625e53709
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..1d7588bf403396af35f834d456672d2f7b040501
+index 0000000000000000000000000000000000000000..8c2c8122d0ad99f9729682c19232d472add79e02
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,41 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -536,13 +554,22 @@ index 0000000000000000000000000000000000000000..1d7588bf403396af35f834d456672d2f
 +import net.kissenpvp.core.api.permission.PermissionGroup;
 +import net.kissenpvp.paper.api.base.Context;
 +import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
++
++import java.util.Optional;
++import java.util.Set;
 +
 +public interface PaperPermissionGroup extends PermissionGroup<PaperPermission>, PaperGroubablePermissionEntry {
++
++    @NotNull @Unmodifiable Set<String> getMember(@NotNull Context context);
++
++    int delete(@NotNull Context context);
++
 +    boolean addMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry, @NotNull Context context);
 +
 +    boolean removeMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry, @NotNull Context context);
 +
-+    @NotNull PermissionGroup<PaperPermission> getContext(@NotNull Context context);
++    @NotNull Optional<PermissionGroup<PaperPermission>> getContext(@NotNull Context context);
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionImplementation.java
 new file mode 100644
@@ -588,10 +615,10 @@ index 0000000000000000000000000000000000000000..b4fd64e21c9e8abf2d1b885e3625a98a
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPrivatePermissionGroup.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPrivatePermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ad67991a91634590018919781cbcf9219b4a6cdd
+index 0000000000000000000000000000000000000000..813f723025d1a140c7f74916d0aef6189dd232c5
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPrivatePermissionGroup.java
-@@ -0,0 +1,28 @@
+@@ -0,0 +1,30 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -615,17 +642,19 @@ index 0000000000000000000000000000000000000000..ad67991a91634590018919781cbcf921
 +import net.kissenpvp.core.api.permission.PermissionGroup;
 +import org.jetbrains.annotations.NotNull;
 +
++import java.util.Optional;
++
 +public interface PaperPrivatePermissionGroup extends PermissionGroup<PaperPermission>
 +{
-+    @NotNull PaperPermissionGroup getPublicGroup();
++    @NotNull Optional<PermissionGroup<PaperPermission>> getPublicGroup();
 +
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPublicPermissionGroup.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPublicPermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..352079c0eedf0513bfcbd8b0a61ec0a4c8eacc72
+index 0000000000000000000000000000000000000000..8c61c60e837da6cd5054c2281ede692905a00aad
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPublicPermissionGroup.java
-@@ -0,0 +1,27 @@
+@@ -0,0 +1,29 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -649,9 +678,11 @@ index 0000000000000000000000000000000000000000..352079c0eedf0513bfcbd8b0a61ec0a4
 +import net.kissenpvp.core.api.permission.PermissionGroup;
 +import org.jetbrains.annotations.NotNull;
 +
++import java.util.Optional;
++
 +public interface PaperPublicPermissionGroup extends PermissionGroup<PaperPermission>
 +{
-+    @NotNull PaperPrivatePermissionGroup getPrivatePermissionGroup();
++    @NotNull Optional<PermissionGroup<PaperPermission>> getPrivateGroup();
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PermissibleOverriddenException.java b/src/main/java/net/kissenpvp/paper/api/permission/PermissibleOverriddenException.java
 new file mode 100644

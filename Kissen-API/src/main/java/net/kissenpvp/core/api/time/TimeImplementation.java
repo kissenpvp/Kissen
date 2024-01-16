@@ -3,6 +3,8 @@ package net.kissenpvp.core.api.time;
 import net.kissenpvp.core.api.base.Implementation;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
+import java.time.Period;
 import java.time.format.DateTimeParseException;
 
 /**
@@ -103,4 +105,8 @@ public interface TimeImplementation extends Implementation {
      * @return a new instance of KissenTemporalMeasure representing the duration in milliseconds.
      */
     @NotNull AccurateDuration years(long years);
+
+    @NotNull AccurateDuration period(@NotNull Period period);
+
+    @NotNull AccurateDuration duration(@NotNull Duration duration);
 }

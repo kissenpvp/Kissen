@@ -54,4 +54,6 @@ public interface PermissionGroup<T extends Permission> extends GroupablePermissi
      * @return true if the member was removed, false if the member was not a member of this group
      */
     boolean removeMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry);
+
+    int delete();
 }

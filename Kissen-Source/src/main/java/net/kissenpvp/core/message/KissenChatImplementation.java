@@ -19,13 +19,17 @@
 package net.kissenpvp.core.message;
 
 import net.kissenpvp.core.api.message.ChatImplementation;
-import net.kissenpvp.core.api.message.ThemeProvider;
+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+import net.kissenpvp.core.message.usersettings.ShowPrefix;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class KissenChatImplementation implements ChatImplementation
 {
@@ -33,17 +37,37 @@ public class KissenChatImplementation implements ChatImplementation
     public @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity serverEntity, @NotNull Component @NotNull ... components)
     {
         //TODO experimental
-        if(components.length < 2 && Arrays.stream(components).noneMatch(component -> component.contains(Component.newline())))
+
+        if(!serverEntity.isConnected())
         {
-            Component prefix = Component.text("Kissen").color(ThemeProvider.primary()).append(
-                    Component.text("PvP").color(ThemeProvider.secondary())).append(
-                    Component.text(" » ").color(ThemeProvider.general()));
-            Component[] components1 = new Component[components.length + 1];
-            components1[0] = prefix;
-            System.arraycopy(components, 0, components1, 1, components.length);
-            return Optional.of(styleComponent(serverEntity, components1));
+            return Optional.of(Component.join(JoinConfiguration.noSeparators(), components));
         }
-        return Optional.of(styleComponent(serverEntity, components));
+
+        Predicate<Component> contain = component -> component.contains(Component.newline());
+        boolean append = components.length < 2 && Arrays.stream(components).noneMatch(contain);
+
+        if (!append || (serverEntity instanceof PlayerClient<?, ?, ?> player && !player.getUserSetting(ShowPrefix.class).getValue()))
+        {
+            return Optional.of(styleComponent(serverEntity, components));
+        }
+
+        Component prefix = getPrefix(serverEntity);
+
+        Component[] prefixAppendedComponents = new Component[components.length + 1];
+        prefixAppendedComponents[0] = prefix.appendSpace().append(Component.text("»")).appendSpace();
+        System.arraycopy(components, 0, prefixAppendedComponents, 1, components.length);
+        return Optional.of(styleComponent(serverEntity, prefixAppendedComponents));
+    }
+
+
+    private @NotNull Component getPrefix(@NotNull ServerEntity serverEntity)
+    {
+        final MiniMessage miniMessage = MiniMessage.miniMessage();
+        String primary = serverEntity.getTheme().getPrimaryAccentColor().asHexString();
+        String secondary = serverEntity.getTheme().getSecondaryAccentColor().asHexString();
+        String base = "<gradient:%s:%s>KissenPvP</gradient>";
+
+        return MiniMessage.miniMessage().deserialize(base.formatted(primary, secondary));
     }
 
     @Override

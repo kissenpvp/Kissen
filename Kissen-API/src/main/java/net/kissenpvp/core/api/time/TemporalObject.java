@@ -1,10 +1,12 @@
 package net.kissenpvp.core.api.time;
 
 import net.kissenpvp.core.api.event.EventCancelledException;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 /**
@@ -51,4 +53,5 @@ public interface TemporalObject {
      */
     boolean isValid();
 
+    @NotNull Component endComponent(@NotNull DateTimeFormatter formatter);
 }

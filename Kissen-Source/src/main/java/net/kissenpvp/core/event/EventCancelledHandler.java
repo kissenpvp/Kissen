@@ -16,7 +16,7 @@ public class EventCancelledHandler<S extends ServerEntity> implements CommandExc
     {
         if(commandPayload.getSender() instanceof MessageReceiver messageReceiver)
         {
-            messageReceiver.getKyoriAudience().sendMessage(Component.translatable("server.event.cancelled"));
+            messageReceiver.getKyoriAudience().sendMessage(Component.translatable("server.event.cancel"));
             return true;
         }
 

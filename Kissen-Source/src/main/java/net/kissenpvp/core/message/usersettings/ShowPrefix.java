@@ -1,13 +1,14 @@
-package net.kissenpvp.core.user.suffix;
+package net.kissenpvp.core.message.usersettings;
 
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.api.user.usersetttings.UserValue;
 import org.jetbrains.annotations.NotNull;
 
-public class SuffixInChatSetting implements PlayerSetting<Boolean>
-{
+import java.util.Optional;
 
+public class ShowPrefix implements PlayerSetting<Boolean>
+{
     @Override
     public @NotNull String serialize(@NotNull Boolean object)
     {
@@ -23,7 +24,7 @@ public class SuffixInChatSetting implements PlayerSetting<Boolean>
     @Override
     public @NotNull String getKey()
     {
-        return "suffixinchat";
+        return "prefix";
     }
 
     @Override
@@ -36,5 +37,11 @@ public class SuffixInChatSetting implements PlayerSetting<Boolean>
     public @NotNull UserValue<Boolean>[] getPossibleValues(@NotNull PlayerClient<?, ?, ?> playerClient)
     {
         return new UserValue[] {new UserValue<>(true), new UserValue<>(false)};
+    }
+
+    @Override
+    public @NotNull Optional<String> getPermission()
+    {
+        return Optional.of("kissen.disable.prefix");
     }
 }

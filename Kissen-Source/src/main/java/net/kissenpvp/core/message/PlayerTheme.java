@@ -21,6 +21,7 @@ package net.kissenpvp.core.message;
 import lombok.AllArgsConstructor;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.message.usersettings.*;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,6 +36,7 @@ public class PlayerTheme extends DefaultTheme {
     public @NotNull TextColor getPrimaryAccentColor() {
         return playerClient.getUserSetting(PrimaryUserColor.class).getValue();
     }
+
 
     @Override
     public @NotNull TextColor getSecondaryAccentColor() {
@@ -54,6 +56,16 @@ public class PlayerTheme extends DefaultTheme {
     @Override
     public @NotNull TextColor getDisabledColor() {
         return playerClient.getUserSetting(DisabledUserColor.class).getValue();
+    }
+
+    @Override
+    protected @NotNull TextColor highlightColor()
+    {
+        if (playerClient.getUserSetting(HighlightVariables.class).getValue())
+        {
+            return super.highlightColor();
+        }
+        return getGeneralColor();
     }
 
     @Override

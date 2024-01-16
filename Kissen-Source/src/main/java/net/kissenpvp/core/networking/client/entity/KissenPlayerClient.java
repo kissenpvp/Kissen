@@ -186,7 +186,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     @Override
     public boolean revokeSuffix(@NotNull String name)
     {
-        return getSuffix(name).map(suffix -> {
+        return getSuffix(name).filter(TemporalObject::isValid).map(suffix -> {
             suffix.setEnd(Instant.now());
             return true;
         }).orElse(false);

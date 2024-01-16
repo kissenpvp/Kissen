@@ -33,7 +33,7 @@ public interface PlayerSetting<T> extends TextSerializer<T> {
     @NotNull UserValue<T>[] getPossibleValues(@NotNull PlayerClient<?, ?, ?> playerClient);
 
     default @NotNull Optional<String> getPermission() {
-        return Optional.empty();
+        return Optional.of("kissen.setting." + getKey());
     }
 
     default void setValue(@Nullable T value) {
