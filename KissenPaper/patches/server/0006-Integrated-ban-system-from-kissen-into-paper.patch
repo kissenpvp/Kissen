@@ -1326,65 +1326,67 @@ index 0b60b0ce23e75ccc19b8afcb5a190e73761bf7a8..0272123739ac57d03f50ed1e47373f85
          super.loadImplementations(loader);
      }
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index fa53db3e5ba305212878bc04334f628f2f9ca88b..c5dfc0338d22690d3d945fa74cf0fb478a9d69f2 100644
+index 06153274bfcaa4c8637b6d7a2496df0d5de38f53..62322448c83f06ea3866354402bf41f720367260 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-@@ -398,12 +398,53 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
-                     disconnect(Component.translatable("multiplayer.disconnect.not_whitelisted"));
-                     return false;
-                 }
-+
-+                net.kissenpvp.paper.api.ban.PaperBanImplementation banImplementation = org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class);
-+                net.kissenpvp.paper.api.ban.PaperPunishment paperPunishment = banImplementation.getLatestPunishment(kissenPaperPublicUser.get("total_id").map(java.util.UUID::fromString).orElse(gameProfile.getId()), net.kissenpvp.core.api.ban.BanType.BAN).orElse(null);
-+                if (paperPunishment != null) {
-+                    disconnect(io.papermc.paper.adventure.PaperAdventure.asVanilla(paperPunishment.getPunishmentText(getLocale(kissenPaperPublicUser))));
-+                    return false;
-+                }
-+
-             } catch (BackendException backendException) {
-                 disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
+@@ -401,12 +401,55 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+                 disconnect(Component.translatable("multiplayer.disconnect.not_whitelisted"));
                  return false;
              }
-             return true;
++
++            net.kissenpvp.paper.api.ban.PaperBanImplementation banImplementation = org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class);
++            net.kissenpvp.paper.api.ban.PaperPunishment paperPunishment = banImplementation.getLatestPunishment(kissenPaperPublicUser.get("total_id").map(java.util.UUID::fromString).orElse(gameProfile.getId()), net.kissenpvp.core.api.ban.BanType.BAN).orElse(null);
++            if (paperPunishment != null) {
++                disconnect(io.papermc.paper.adventure.PaperAdventure.asVanilla(paperPunishment.getPunishmentText(getLocale(kissenPaperPublicUser))));
++                return false;
++            }
++
+         } catch (BackendException backendException) {
+             disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
+             return false;
          }
-+
-+        /**
-+         * Gets the given KissenPaperPublicUsers locale. The method first attempts to retrieve the locale
-+         * identified by the key "forced_locale" from the user's property list. If the "forced_locale" is not defined or its
-+         * value cannot be translated into a Locale object by the localizationImplementation, the method then attempts to
-+         * retrieve the locale identified by the key "locale". If the "locale" is also absent or invalid, it defaults to
-+         * localizationImplementation's default locale.
-+         *
-+         * <p>The method interacts with the LocalizationImplementation to obtain locale strings
-+         * and convert them to Java Locale objects.</p>
-+         *
-+         * @param kissenPaperPublicUser The KissenPaperPublicUser object from which the locale is retrieved.
-+         *                              This parameter must be of type KissenPaperPublicUser and cannot be null.
-+         *
-+         * @return The Locale object corresponding to the user's forced locale, or their standard locale,
-+         *         or the default locale as defined by the LocalizationImplementation API.
-+         *         The result will not be null.
-+         *
-+         * @throws NullPointerException if kissenPaperPublicUser is null.
-+         *
-+         * @see net.kissenpvp.core.api.message.localization.LocalizationImplementation
-+         * @see java.util.Locale
-+         * @see java.util.Optional
-+         */
-+        private @org.jetbrains.annotations.NotNull java.util.Locale getLocale(@org.jetbrains.annotations.NotNull KissenPaperPublicUser kissenPaperPublicUser) {
-+            net.kissenpvp.core.api.message.localization.LocalizationImplementation localizationImplementation = Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class);
-+
-+            java.util.Optional<java.util.Locale> forcedLocale = kissenPaperPublicUser.get("forced_locale").map(localizationImplementation::getLocale);
-+            java.util.Optional<java.util.Locale> locale = kissenPaperPublicUser.get("locale").map(localizationImplementation::getLocale);
-+            java.util.Locale defaultLocale = localizationImplementation.getDefaultLocale();
-+
-+            return forcedLocale.orElse(locale.orElse(defaultLocale));
-+        }
-         // KissenPaper end
+         return true;
      }
-     // Spigot end
++
++    /**
++     * Gets the given KissenPaperPublicUsers locale. The method first attempts to retrieve the locale
++     * identified by the key "forced_locale" from the user's property list. If the "forced_locale" is not defined or its
++     * value cannot be translated into a Locale object by the localizationImplementation, the method then attempts to
++     * retrieve the locale identified by the key "locale". If the "locale" is also absent or invalid, it defaults to
++     * localizationImplementation's default locale.
++     *
++     * <p>The method interacts with the LocalizationImplementation to obtain locale strings
++     * and convert them to Java Locale objects.</p>
++     *
++     * @param kissenPaperPublicUser The KissenPaperPublicUser object from which the locale is retrieved.
++     *                              This parameter must be of type KissenPaperPublicUser and cannot be null.
++     *
++     * @return The Locale object corresponding to the user's forced locale, or their standard locale,
++     *         or the default locale as defined by the LocalizationImplementation API.
++     *         The result will not be null.
++     *
++     * @throws NullPointerException if kissenPaperPublicUser is null.
++     *
++     * @see net.kissenpvp.core.api.message.localization.LocalizationImplementation
++     * @see java.util.Locale
++     * @see java.util.Optional
++     */
++    private @org.jetbrains.annotations.NotNull java.util.Locale getLocale(@org.jetbrains.annotations.NotNull KissenPaperPublicUser kissenPaperPublicUser) {
++        net.kissenpvp.core.api.message.localization.LocalizationImplementation localizationImplementation = Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class);
++
++        java.util.Optional<java.util.Locale> forcedLocale = kissenPaperPublicUser.get("forced_locale").map(localizationImplementation::getLocale);
++        java.util.Optional<java.util.Locale> locale = kissenPaperPublicUser.get("locale").map(localizationImplementation::getLocale);
++        java.util.Locale defaultLocale = localizationImplementation.getDefaultLocale();
++
++        return forcedLocale.orElse(locale.orElse(defaultLocale));
++    }
++    // KissenPaper end
++
+     // KissenPaper end
+ 
+     @Override
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 1ec75a4a30702bae51383133a3b6cd8e5675431d..376c6bd7851f7b429f55dc541e6a27b67d9f8551 100644
+index dec368368fc97aaf777f13a5d88a3326262d1bab..3b897a777cd89394cfc56009576f6c6489242afd 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -163,7 +163,7 @@ public abstract class PlayerList {
@@ -1464,10 +1466,10 @@ index 1ec75a4a30702bae51383133a3b6cd8e5675431d..376c6bd7851f7b429f55dc541e6a27b6
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 0237f75845feb6ca02f0fb59c61a3898dd26d29a..c970ceb24c1f7cdebcac7a77e82a51f568915b9a 100644
+index a7bbe2bcba76adb9ffff5f98b648e8510e93312e..9b9983de2b345b5d747a3441fa001a8931c6bd98 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -2207,12 +2207,19 @@ public final class CraftServer implements Server {
+@@ -2206,12 +2206,19 @@ public final class CraftServer implements Server {
  
      @Override
      public <T extends BanList<?>> T getBanList(BanList.Type type) {

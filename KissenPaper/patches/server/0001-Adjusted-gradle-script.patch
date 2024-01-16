@@ -5,7 +5,7 @@ Subject: [PATCH] Adjusted gradle script
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 58da26ad2f128ba0b66f86820f60853f4be352f0..014109a5c455c3ff2905b177c4e3b33909c736f7 100644
+index 444ff797c70b0e285d4272ea2ce3d72453c9bda5..e6cc90595e210640c50eedc5517d5ce80ddd2f2a 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -13,8 +13,15 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
@@ -26,7 +26,7 @@ index 58da26ad2f128ba0b66f86820f60853f4be352f0..014109a5c455c3ff2905b177c4e3b339
      // Paper start
      implementation("org.jline:jline-terminal-jansi:3.21.0")
      implementation("net.minecrell:terminalconsoleappender:1.3.0")
-@@ -51,6 +58,11 @@ dependencies {
+@@ -50,6 +57,11 @@ dependencies {
      runtimeOnly("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.18")
      runtimeOnly("org.apache.maven.resolver:maven-resolver-transport-http:1.9.18")
  

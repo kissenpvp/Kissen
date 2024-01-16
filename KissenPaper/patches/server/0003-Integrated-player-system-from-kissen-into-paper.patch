@@ -4712,7 +4712,7 @@ index 0000000000000000000000000000000000000000..8f1bd1b7a6f528191d9fc7ac50a95ceb
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
-index 7573c12a77797146c51ef2dfe4b2a636df45e21a..29784060d8b0824488a7717f1b7ebf9a55c9375c 100644
+index 2568272a10c0d92bc49c0c244b10791db7bfae2b..bda67e12cb4841611060491c9e2d13e10a628494 100644
 --- a/src/main/java/net/minecraft/server/Main.java
 +++ b/src/main/java/net/minecraft/server/Main.java
 @@ -190,15 +190,17 @@ public class Main {
@@ -4731,26 +4731,26 @@ index 7573c12a77797146c51ef2dfe4b2a636df45e21a..29784060d8b0824488a7717f1b7ebf9a
                  file = new File(bukkitConfiguration.getString("settings.world-container", "."));
              }
              // Paper end - fix SPIGOT-5824
--            Services services = Services.create(new com.destroystokyo.paper.profile.PaperAuthenticationService(Proxy.NO_PROXY), file, userCacheFile, optionset); // Paper
-+            Services services = Services.create(new com.destroystokyo.paper.profile.PaperAuthenticationService(Proxy.NO_PROXY), file/*, userCacheFile KissenPaper - remove cache file*/, optionset); // Paper
+-            Services services = Services.create(new com.destroystokyo.paper.profile.PaperAuthenticationService(Proxy.NO_PROXY), file, userCacheFile, optionset); // Paper - pass OptionSet to load paper config files; override authentication service; fix world-container
++            Services services = Services.create(new com.destroystokyo.paper.profile.PaperAuthenticationService(Proxy.NO_PROXY), file/*, userCacheFile KissenPaper - remove cache file*/, optionset); // Paper - pass OptionSet to load paper config files; override authentication service; fix world-container
              // CraftBukkit start
              String s = (String) Optional.ofNullable((String) optionset.valueOf("world")).orElse(dedicatedserversettings.getProperties().levelName);
              LevelStorageSource convertable = LevelStorageSource.createDefault(file.toPath());
 diff --git a/src/main/java/net/minecraft/server/Services.java b/src/main/java/net/minecraft/server/Services.java
-index a5450eeeab5a6b0ab273810063806d11107d6b26..8c7b227a5a50d13181c2d80f788e23cd2dca1471 100644
+index d89c624554ab08bd1b33a3f62b52aa57aaafb8b4..bcf7dae94dd64b06d55dc4e7a5e6cb10ed35220f 100644
 --- a/src/main/java/net/minecraft/server/Services.java
 +++ b/src/main/java/net/minecraft/server/Services.java
 @@ -24,10 +24,10 @@ public record Services(MinecraftSessionService sessionService, ServicesKeySet se
-     // Paper end
+     // Paper end - add paper configuration files
      public static final String USERID_CACHE_FILE = "usercache.json"; // Paper - private -> public
  
--    public static Services create(YggdrasilAuthenticationService authenticationService, File rootDirectory, File userCacheFile, joptsimple.OptionSet optionSet) throws Exception { // Paper
-+    public static Services create(YggdrasilAuthenticationService authenticationService, File rootDirectory /*, File userCacheFile KissenPaper - remove file*/, joptsimple.OptionSet optionSet) throws Exception { // Paper
+-    public static Services create(YggdrasilAuthenticationService authenticationService, File rootDirectory, File userCacheFile, joptsimple.OptionSet optionSet) throws Exception { // Paper - add optionset to load paper config files; add userCacheFile parameter
++    public static Services create(YggdrasilAuthenticationService authenticationService, File rootDirectory, /* File userCacheFile KissenPaper - remove cache file,*/ joptsimple.OptionSet optionSet) throws Exception { // Paper - add optionset to load paper config files; add userCacheFile parameter
          MinecraftSessionService minecraftSessionService = authenticationService.createMinecraftSessionService();
          GameProfileRepository gameProfileRepository = authenticationService.createProfileRepository();
--        GameProfileCache gameProfileCache = new GameProfileCache(gameProfileRepository, userCacheFile); // Paper
-+        GameProfileCache gameProfileCache = /*new GameProfileCache(gameProfileRepository, userCacheFile); // Paper*/ new net.kissenpvp.paper.user.KissenPaperProfileCache(gameProfileRepository); // KissenPaper
-         // Paper start
+-        GameProfileCache gameProfileCache = new GameProfileCache(gameProfileRepository, userCacheFile); // Paper - use specified user cache file
++        GameProfileCache gameProfileCache = /*new GameProfileCache(gameProfileRepository, userCacheFile);*/  new net.kissenpvp.paper.user.KissenPaperProfileCache(gameProfileRepository); // Paper - use specified user cache file  // KissenPaper - use database instead
+         // Paper start - load paper config files from cli options
          final java.nio.file.Path legacyConfigPath = ((File) optionSet.valueOf("paper-settings")).toPath();
          final java.nio.file.Path configDirPath = ((File) optionSet.valueOf("paper-settings-directory")).toPath();
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedPlayerList.java b/src/main/java/net/minecraft/server/dedicated/DedicatedPlayerList.java
@@ -4767,7 +4767,7 @@ index 935dac757280731bfeb0a8f033cbe315ecac46da..932c83a9d41ddff73d38e87ac7d97fad
          }
  
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index be05a52be037042c6158100e2ce880b8ed415d53..0f3758071754eef2c9bd8a464a20b210bcd8149f 100644
+index d8bea03eb39b393751a69c4cfc8c004215ebd3d3..699b9362cc6d2552258aaa5b51d9d2f9fd719d15 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -2084,17 +2084,22 @@ public class ServerPlayer extends Player {
@@ -4805,7 +4805,7 @@ index be05a52be037042c6158100e2ce880b8ed415d53..0f3758071754eef2c9bd8a464a20b210
      }
  
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 8ce2fd887d9c2cf86fa4ec0332b70681f1572911..fa53db3e5ba305212878bc04334f628f2f9ca88b 100644
+index b9117be53b8b8b37af54621f54480f275546f0fd..06153274bfcaa4c8637b6d7a2496df0d5de38f53 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -45,6 +45,13 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
@@ -4822,73 +4822,73 @@ index 8ce2fd887d9c2cf86fa4ec0332b70681f1572911..fa53db3e5ba305212878bc04334f628f
  public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener, TickablePacketListener {
  
      private static final AtomicInteger UNIQUE_THREAD_ID = new AtomicInteger(0);
-@@ -302,6 +309,16 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
-                             disconnect("This server requires you to connect with Velocity.");
-                             return;
-                         }
-+
-+                        // KissenPaper start
-+                        KissenPaperPublicUser kissenPaperPublicUser = new KissenPaperPublicUser(gameprofile.getId(), gameprofile.getName());
-+                        if (!loginUser(kissenPaperPublicUser, gameprofile))
-+                        {
-+                            kissenPaperPublicUser.logout();
-+                            return;
-+                        }
-+                        // KissenPaper end
-+
-                         // Paper end
-                         String playerName = gameprofile.getName();
-                         java.net.InetAddress address = ((java.net.InetSocketAddress) ServerLoginPacketListenerImpl.this.connection.getRemoteAddress()).getAddress();
-@@ -347,6 +364,47 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
-                         ServerLoginPacketListenerImpl.LOGGER.info("UUID of player {} is {}", gameprofile.getName(), gameprofile.getId());
-                         ServerLoginPacketListenerImpl.this.startClientVerification(gameprofile);
+@@ -307,6 +314,16 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+             disconnect("This server requires you to connect with Velocity.");
+             return gameprofile;
          }
 +
 +        // KissenPaper start
-+        /**
-+         * Attempts to log in a user represented by a GameProfile object. This includes loading the KissenPaperPublicUser via a
-+         * KissenUserImplementation, checking the user's ban status, and if not banned, loading the user's
-+         * private data.
-+         *
-+         * <p>If the user cannot be loaded, or they have an outstanding punishment, the method
-+         * will disconnect them with an appropriate message and return false. If an exception occurs in the process,
-+         * the user is also disconnected and false is returned. If the user is loaded successfully and has no
-+         * outstanding punishments, true is returned.</p>
-+         *
-+         * @param gameProfile The GameProfile of the user attempting to log in. This parameter must not be null.
-+         * @return true if the user was successfully logged in, false otherwise.
-+         * @throws NullPointerException If gameProfile is null.
-+         *
-+         * @see KissenPaperPublicUser
-+         * @see net.kissenpvp.paper.api.ban.PaperBanImplementation
-+         * @see net.kissenpvp.paper.api.ban.PaperPunishment
-+         * @see GameProfile
-+         */
-+        private boolean loginUser(@org.jetbrains.annotations.NotNull KissenPaperPublicUser kissenPaperPublicUser, @org.jetbrains.annotations.NotNull GameProfile gameProfile) {
-+            try {
-+                if(!Bukkit.getKissen().getImplementation(KissenUserImplementation.class).loadUser(kissenPaperPublicUser))
-+                {
-+                    disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
-+                    return false;
-+                }
-+
-+                if(Bukkit.hasWhitelist() && !MinecraftServer.getServer().getPlayerList().isWhiteListed(gameProfile))
-+                {
-+                    disconnect(Component.translatable("multiplayer.disconnect.not_whitelisted"));
-+                    return false;
-+                }
-+            } catch (BackendException backendException) {
-+                disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
-+                return false;
-+            }
-+            return true;
++        KissenPaperPublicUser kissenPaperPublicUser = new KissenPaperPublicUser(gameprofile.getId(), gameprofile.getName());
++        if (!loginUser(kissenPaperPublicUser, gameprofile))
++        {
++            kissenPaperPublicUser.logout();
++            return gameprofile;
 +        }
 +        // KissenPaper end
++
+         // Paper end - Velocity support
+         String playerName = gameprofile.getName();
+         java.net.InetAddress address = ((java.net.InetSocketAddress) this.connection.getRemoteAddress()).getAddress();
+@@ -351,6 +368,47 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
      }
-     // Spigot end
+     // CraftBukkit end
  
++    // KissenPaper start
++    /**
++     * Attempts to log in a user represented by a GameProfile object. This includes loading the KissenPaperPublicUser via a
++     * KissenUserImplementation, checking the user's ban status, and if not banned, loading the user's
++     * private data.
++     *
++     * <p>If the user cannot be loaded, or they have an outstanding punishment, the method
++     * will disconnect them with an appropriate message and return false. If an exception occurs in the process,
++     * the user is also disconnected and false is returned. If the user is loaded successfully and has no
++     * outstanding punishments, true is returned.</p>
++     *
++     * @param gameProfile The GameProfile of the user attempting to log in. This parameter must not be null.
++     * @return true if the user was successfully logged in, false otherwise.
++     * @throws NullPointerException If gameProfile is null.
++     *
++     * @see KissenPaperPublicUser
++     * @see net.kissenpvp.paper.api.ban.PaperBanImplementation
++     * @see net.kissenpvp.paper.api.ban.PaperPunishment
++     * @see GameProfile
++     */
++    private boolean loginUser(@org.jetbrains.annotations.NotNull KissenPaperPublicUser kissenPaperPublicUser, @org.jetbrains.annotations.NotNull GameProfile gameProfile) {
++        try {
++            if(!Bukkit.getKissen().getImplementation(KissenUserImplementation.class).loadUser(kissenPaperPublicUser))
++            {
++                disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
++                return false;
++            }
++
++            if(Bukkit.hasWhitelist() && !MinecraftServer.getServer().getPlayerList().isWhiteListed(gameProfile))
++            {
++                disconnect(Component.translatable("multiplayer.disconnect.not_whitelisted"));
++                return false;
++            }
++        } catch (BackendException backendException) {
++            disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
++            return false;
++        }
++        return true;
++    }
++    // KissenPaper end
++
+     @Override
+     public void handleCustomQueryPacket(ServerboundCustomQueryAnswerPacket packet) {
+         // Paper start - Velocity support
 diff --git a/src/main/java/net/minecraft/server/players/GameProfileCache.java b/src/main/java/net/minecraft/server/players/GameProfileCache.java
-index 452fbb0aa44157225d8a9064e3eae2db7771b27d..4bcf963cf96d8443bc38f0a2d554b4d3d72e8802 100644
+index 85df8ebb1e0030e98a2b03688451cf391593651e..7619c5f8b8d0980432a4e453e9d8b31c4ad427bd 100644
 --- a/src/main/java/net/minecraft/server/players/GameProfileCache.java
 +++ b/src/main/java/net/minecraft/server/players/GameProfileCache.java
 @@ -230,7 +230,7 @@ public class GameProfileCache {
@@ -4910,7 +4910,7 @@ index 452fbb0aa44157225d8a9064e3eae2db7771b27d..4bcf963cf96d8443bc38f0a2d554b4d3
          private final GameProfile profile;
          final Date expirationDate;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index e98a455b6bca9d094d0da323bddd7b3f2c07bb23..1ec75a4a30702bae51383133a3b6cd8e5675431d 100644
+index 7535ff5f5495879a66085fa9e67c26efbdedb825..dec368368fc97aaf777f13a5d88a3326262d1bab 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -165,8 +165,8 @@ public abstract class PlayerList {
@@ -5577,7 +5577,7 @@ index 1c3e1153d08b59d29b3613fc3b50a4780aa7a3ac..6f85f5da0b2b52686c72ede0f2d43ff8
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-index c3dbcb317b7d366feb31f707ad1199c60169f07f..8b92f1f4969e28c67dae7a25e9cc778abb84124e 100644
+index 827fe201a7b74f485abb46b127a28bf0cb479c3b..adabe2f686480d560747e4261c0949a6d8f05b22 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 @@ -71,7 +71,7 @@ import org.bukkit.plugin.Plugin;
@@ -5590,7 +5590,7 @@ index c3dbcb317b7d366feb31f707ad1199c60169f07f..8b92f1f4969e28c67dae7a25e9cc778a
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index da63b4050be25dcb91d04df8c2fcc643cbb0751d..542c0d24ae81147f1c15ef5cd087170f5e2bfc5d 100644
+index 1359db54d76c1eb81ef65a6dc6f56b3ffad4bb62..05d8b96915703402db438fccec8bf48e59c2dc56 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -174,6 +174,35 @@ import org.jetbrains.annotations.NotNull;
