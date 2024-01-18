@@ -122,14 +122,17 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
 
     @Override
     public boolean hasPermission(@NotNull String permission) {
-        List<Permission> permissions = new ArrayList<>(
-                getPermissionList().stream().map(internalPermission -> matcher(permission, internalPermission)).filter(
-                        Objects::nonNull).toList());
+        return getInternalPermission(permission).orElse(false);
+    }
+
+    public @NotNull Optional<Boolean> getInternalPermission(String permission)
+    {
+        List<Permission> permissions = new ArrayList<>(getPermissionList().stream().map(internalPermission -> matcher(permission, internalPermission)).filter(Objects::nonNull).toList());
         if (permissions.isEmpty()) {
-            return false;
+            return Optional.empty();
         }
         permissions.sort((o1, o2) -> CharSequence.compare(o1.getName(), o2.getName()));
-        return permissions.get(permissions.size() - 1).getValue();
+        return Optional.of(permissions.get(permissions.size() - 1).getValue());
     }
 
     @Override
@@ -147,7 +150,6 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
         {
             throw new IllegalArgumentException("The specified permission owner does not match this object.");
         }
-
         if (permission.getValue() != value)
         {
             permission.setValue(value);

@@ -21,6 +21,7 @@ package net.kissenpvp.core.user;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.user.User;
@@ -60,6 +61,12 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
     public @NotNull @Unmodifiable Set<GroupablePermissionEntry<T>> getConnectedEntries()
     {
         return Collections.singleton(this);
+    }
+
+    @Override
+    public void permissionUpdate()
+    {
+        ((GroupablePermissionEntry<T>) getPlayerClient()).permissionUpdate();
     }
 
     protected @NotNull @Unmodifiable Map<String, String> getDefaultData(UUID uuid, String name) {

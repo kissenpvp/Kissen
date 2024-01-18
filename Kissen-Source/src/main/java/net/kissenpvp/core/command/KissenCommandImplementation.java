@@ -52,7 +52,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class KissenCommandImplementation implements KissenImplementation {
+public abstract class KissenCommandImplementation implements KissenImplementation {
 
     private final Map<Class<?>, ArgumentParser<?, ?>> parserList;
     private final CommandExceptionHandlerService commandExceptionHandlerService;
@@ -190,7 +190,7 @@ public class KissenCommandImplementation implements KissenImplementation {
      * @return The determined type of the array and element.
      * @throws NullPointerException if either the array or the element is null.
      */
-    private Class<?> determineType(@NotNull Object[] array, @NotNull Object element) {
+    private @NotNull Class<?> determineType(@NotNull Object[] array, @NotNull Object element) {
         return Objects.requireNonNullElse(array, element).getClass();
     }
 
@@ -244,4 +244,6 @@ public class KissenCommandImplementation implements KissenImplementation {
     private @NotNull Object[] createSingleElementArray(@NotNull Class<?> type) {
         return (Object[]) Array.newInstance(type, 1);
     }
+
+    public abstract void registerCommand(@NotNull Object... commands);
 }

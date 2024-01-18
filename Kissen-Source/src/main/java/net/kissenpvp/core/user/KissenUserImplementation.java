@@ -26,12 +26,13 @@ import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
-import net.kissenpvp.core.api.database.savable.Savable;
+import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.UserInfo;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
 import net.kissenpvp.core.message.usersettings.*;
 import net.kissenpvp.core.user.suffix.SuffixInChatSetting;
 import net.kissenpvp.core.user.suffix.SuffixSetting;
@@ -39,7 +40,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -59,6 +60,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
     @Getter(AccessLevel.PROTECTED)
     private final Set<UserInfoNode> cachedProfiles;
     private final Set<PlayerSetting<?>> userPlayerSettings;
+    private final ScheduledExecutorService tickExecutor;
 
     /**
      * Initializes the KissenUserImplementation instance.
@@ -74,6 +76,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
         this.onlineUserSet = new HashSet<>();
         this.cachedProfiles = new HashSet<>();
         this.userPlayerSettings = new HashSet<>();
+        this.tickExecutor = Executors.newScheduledThreadPool(1);
     }
 
     @Override
@@ -95,6 +98,21 @@ public abstract class KissenUserImplementation implements UserImplementation {
     public boolean postStart() {
 
         fetchUserProfiles();
+
+        Class<KissenConfirmationImplementation> clazz = KissenConfirmationImplementation.class;
+        KissenConfirmationImplementation confirmation = KissenCore.getInstance().getImplementation(clazz);
+
+        Runnable runnable = () ->
+        {
+            getOnlineUser().stream().filter(userEntry -> userEntry.getStorage().containsKey("tick")).forEach(user ->
+            {
+                KissenUser<? extends Permission> casted = (KissenUser<? extends Permission>) user;
+                casted.tick();
+            });
+            confirmation.cleanUp();
+        };
+
+        this.tickExecutor.scheduleAtFixedRate(runnable, 0, 1, TimeUnit.SECONDS);
         return UserImplementation.super.postStart();
     }
 
@@ -209,7 +227,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
                 cachedProfiles.add(new UserInfoNode(uuid, name));
             }
             KissenCore.getInstance().getLogger().info("Successfully loaded {} user profile(s) from the database.", cachedProfiles.size());
-        });
+        }).join();
     }
 
     /**

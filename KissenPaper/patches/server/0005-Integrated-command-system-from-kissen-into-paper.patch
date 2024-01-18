@@ -364,10 +364,10 @@ index 0000000000000000000000000000000000000000..e2c22d1eab9635054bf67d742afb86fa
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..368f9fb37ed43583511072b2c6dfe8e7f2409a3e
+index 0000000000000000000000000000000000000000..46a1520a3943f73fcfbad4721bb5eb62792b72da
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
-@@ -0,0 +1,451 @@
+@@ -0,0 +1,459 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -748,12 +748,15 @@ index 0000000000000000000000000000000000000000..368f9fb37ed43583511072b2c6dfe8e7
 +                command -> Stream.concat(Stream.of(command.getName()), command.getAliases().stream())).collect(
 +                Collectors.toSet());
 +
-+        if (getExecutor() instanceof KissenPaperCommandExecutor kissenPaperCommandExecutor && kissenPaperCommandExecutor.getEvaluator().arguments().size() > index)
++        if(hasOwnExecutor() && getExecutor() instanceof KissenPaperCommandExecutor kissenPaperCommandExecutor)
 +        {
-+            Argument<?, CommandSender> argument = kissenPaperCommandExecutor.getEvaluator().arguments().get(index);
-+            if (argument.argumentParser() != null)
++            if(kissenPaperCommandExecutor.getEvaluator().arguments().size() > index)
 +            {
-+                data.addAll(argument.argumentParser().tabCompletion(commandPayload));
++                Argument<?, CommandSender> argument = kissenPaperCommandExecutor.getEvaluator().arguments().get(index);
++                if (argument.argumentParser() != null)
++                {
++                    data.addAll(argument.argumentParser().tabCompletion(commandPayload));
++                }
 +            }
 +        }
 +        return data;
@@ -818,6 +821,11 @@ index 0000000000000000000000000000000000000000..368f9fb37ed43583511072b2c6dfe8e7
 +     *                The exact function varies among different commands and is defined when the payload is constructed.
 +     */
 +    public abstract void runAsync(@NotNull CommandPayload<CommandSender> payload);
++
++    private boolean hasOwnExecutor()
++    {
++        return commandExecutor != null;
++    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandPayload.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperCommandPayload.java
 new file mode 100644
@@ -2055,7 +2063,7 @@ index 0000000000000000000000000000000000000000..072e5b9ebdf07fc2e6848c620229b65a
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/commands/Commands.java b/src/main/java/net/minecraft/commands/Commands.java
-index 8fe48c6bf65db6b11fcd0674aad01d5bb8d17a5f..f4e522cd1b920f4cb1278bbe680485cb04a2d3d9 100644
+index 1a5b1be217e210db3f498b93fbcae7509be597ee..88c53844777220eb1edcb43b8f2d8c15eead90a3 100644
 --- a/src/main/java/net/minecraft/commands/Commands.java
 +++ b/src/main/java/net/minecraft/commands/Commands.java
 @@ -373,9 +373,12 @@ public class Commands {
@@ -2113,7 +2121,7 @@ index 1b459a8ee8a6bc039e742d65796bc76660a1c765..ce91f3816a7e48c22dd89c9d29685d2a
  
      private static int giveItem(CommandSourceStack source, ItemInput item, Collection<ServerPlayer> targets, int count) throws CommandSyntaxException {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 839b43a68642d4db7a2672b28f29d4ba317ef429..0237f75845feb6ca02f0fb59c61a3898dd26d29a 100644
+index 735811d03c7b885b944cb17619e6acd2d9320adc..88a0800b3ee67746a21a0b22c0253bc919eb9cbb 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -994,18 +994,27 @@ public final class CraftServer implements Server {

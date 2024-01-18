@@ -1326,10 +1326,10 @@ index 0b60b0ce23e75ccc19b8afcb5a190e73761bf7a8..0272123739ac57d03f50ed1e47373f85
          super.loadImplementations(loader);
      }
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 06153274bfcaa4c8637b6d7a2496df0d5de38f53..62322448c83f06ea3866354402bf41f720367260 100644
+index db2fbd585104896da2874fcbf831cf1884f6da8a..5fada3d88a277b1f7957bb9c5e9edba20f44f8a3 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-@@ -401,12 +401,55 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -402,12 +402,55 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                  disconnect(Component.translatable("multiplayer.disconnect.not_whitelisted"));
                  return false;
              }
@@ -1386,7 +1386,7 @@ index 06153274bfcaa4c8637b6d7a2496df0d5de38f53..62322448c83f06ea3866354402bf41f7
  
      @Override
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index dec368368fc97aaf777f13a5d88a3326262d1bab..3b897a777cd89394cfc56009576f6c6489242afd 100644
+index 7da87c5473e8b082d22af328b0b787cf7319c1f7..1e838e9c86aa7417dc4616736efef136eb04221b 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -163,7 +163,7 @@ public abstract class PlayerList {
@@ -1398,75 +1398,26 @@ index dec368368fc97aaf777f13a5d88a3326262d1bab..3b897a777cd89394cfc56009576f6c64
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
          this.ops = /*new ServerOpList(PlayerList.OPLIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserOperatorList(); // KissenPaper
          this.whitelist = /*new UserWhiteList(PlayerList.WHITELIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserWhiteList(); // KissenPaper
-@@ -732,37 +732,39 @@ public abstract class PlayerList {
+@@ -732,6 +732,8 @@ public abstract class PlayerList {
          Player player = entity.getBukkitEntity();
          PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
  
--        // Paper start - Fix MC-158900
--        UserBanListEntry gameprofilebanentry;
--        if (getBans().isBanned(gameprofile) && (gameprofilebanentry = getBans().get(gameprofile)) != null) {
--            // Paper end
--
--            ichatmutablecomponent = Component.translatable("multiplayer.disconnect.banned.reason", gameprofilebanentry.getReason());
--            if (gameprofilebanentry.getExpires() != null) {
--                ichatmutablecomponent.append((Component) Component.translatable("multiplayer.disconnect.banned.expiration", PlayerList.BAN_DATE_FORMAT.format(gameprofilebanentry.getExpires())));
--            }
--
--            // return chatmessage;
--            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
--        } else if (!this.isWhiteListed(gameprofile, event)) { // Paper
--            //ichatmutablecomponent = Component.translatable("multiplayer.disconnect.not_whitelisted"); // Paper
--            //event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.whitelistMessage)); // Spigot // Paper - Adventure - moved to isWhitelisted
--        } else if (this.getIpBans().isBanned(socketaddress) && getIpBans().get(socketaddress) != null && !this.getIpBans().get(socketaddress).hasExpired()) { // Paper - fix NPE with temp ip bans
--            IpBanListEntry ipbanentry = this.ipBans.get(socketaddress);
--
--            ichatmutablecomponent = Component.translatable("multiplayer.disconnect.banned_ip.reason", ipbanentry.getReason());
--            if (ipbanentry.getExpires() != null) {
--                ichatmutablecomponent.append((Component) Component.translatable("multiplayer.disconnect.banned_ip.expiration", PlayerList.BAN_DATE_FORMAT.format(ipbanentry.getExpires())));
--            }
--
--            // return chatmessage;
--            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
--        } else {
-+        // KissenPaper start - rework ban system
-+//      // Paper start - Fix MC-158900
-+//      UserBanListEntry gameprofilebanentry;
-+//      if (getBans().isBanned(gameprofile) && (gameprofilebanentry = getBans().get(gameprofile)) != null) {
-+//          // Paper end
-+//
-+//          ichatmutablecomponent = Component.translatable("multiplayer.disconnect.banned.reason", gameprofilebanentry.getReason());
-+//          if (gameprofilebanentry.getExpires() != null) {
-+//              ichatmutablecomponent.append((Component) Component.translatable("multiplayer.disconnect.banned.expiration", PlayerList.BAN_DATE_FORMAT.format(gameprofilebanentry.getExpires())));
-+//          }
-+//
-+//          // return chatmessage;
-+//          event.disallow(PlayerLoginEvent.Result.KICK_BANNED, io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
-+//      } else if (!this.isWhiteListed(gameprofile, event)) { // Paper
-+//          //ichatmutablecomponent = Component.translatable("multiplayer.disconnect.not_whitelisted"); // Paper
-+//          //event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.whitelistMessage)); // Spigot // Paper - Adventure - moved to isWhitelisted
-+//      } else if (this.getIpBans().isBanned(socketaddress) && getIpBans().get(socketaddress) != null && !this.getIpBans().get(socketaddress).hasExpired()) { // Paper - fix NPE with temp ip bans
-+//          IpBanListEntry ipbanentry = this.ipBans.get(socketaddress);
-+//
-+//          ichatmutablecomponent = Component.translatable("multiplayer.disconnect.banned_ip.reason", ipbanentry.getReason());
-+//          if (ipbanentry.getExpires() != null) {
-+//              ichatmutablecomponent.append((Component) Component.translatable("multiplayer.disconnect.banned_ip.expiration", PlayerList.BAN_DATE_FORMAT.format(ipbanentry.getExpires())));
-+//          }
-+//
-+//          // return chatmessage;
-+//          event.disallow(PlayerLoginEvent.Result.KICK_BANNED, io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
-+        //} else {
-             // return this.players.size() >= this.maxPlayers && !this.canBypassPlayerLimit(gameprofile) ? IChatBaseComponent.translatable("multiplayer.disconnect.server_full") : null;
-             if (this.players.size() >= this.maxPlayers && !this.canBypassPlayerLimit(gameprofile)) {
++        // KissenPaper start - Integrate ban system from kissen into paper
++        /*
+         // Paper start - Fix MC-158900
+         UserBanListEntry gameprofilebanentry;
+         if (getBans().isBanned(gameprofile) && (gameprofilebanentry = getBans().get(gameprofile)) != null) {
+@@ -763,6 +765,8 @@ public abstract class PlayerList {
                  event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.serverFullMessage)); // Spigot // Paper - Adventure
              }
--        }
-+//      }
-+        // KissenPaper end
+         }
++        */
++        // KissenPaper end - Integrate ban system from kissen into paper
  
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index a7bbe2bcba76adb9ffff5f98b648e8510e93312e..9b9983de2b345b5d747a3441fa001a8931c6bd98 100644
+index 88a0800b3ee67746a21a0b22c0253bc919eb9cbb..9b6c40b16ee9989123195a238bb70b433e01295a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -2206,12 +2206,19 @@ public final class CraftServer implements Server {

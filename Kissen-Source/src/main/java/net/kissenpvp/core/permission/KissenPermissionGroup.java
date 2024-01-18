@@ -31,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public abstract class KissenPermissionGroup<T extends Permission> extends KissenGroupablePermissionEntry<T> implements PermissionGroup<T>
@@ -126,7 +127,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
 
     @Override public @NotNull @Unmodifiable Set<GroupablePermissionEntry<T>> getConnectedEntries()
     {
-        Set<GroupablePermissionEntry<T>> groups = new HashSet<>();
+        Set<GroupablePermissionEntry<T>> entries = new HashSet<>();
         Class<PermissionImplementation> clazz = PermissionImplementation.class;
         PermissionImplementation permissionImplementation = KissenCore.getInstance().getImplementation(clazz);
         UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
@@ -135,22 +136,15 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
         {
             if (member.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
             {
-                userImplementation.getOnlineUser(UUID.fromString(member)).ifPresent(user -> groups.add((GroupablePermissionEntry<T>) user));
+                Consumer<User> add = user -> entries.add((GroupablePermissionEntry<T>) user);
+                userImplementation.getOnlineUser(UUID.fromString(member)).ifPresent(add);
                 continue;
             }
 
-            permissionImplementation.getPermissionGroupSavable(member).ifPresent(
-                    group -> groups.add((PermissionGroup<T>) group));
-            groups.addAll(permissionImplementation.getPermissionGroupSavable(member).map(
-                    entry -> ((KissenPermissionGroup<T>) entry).getConnectedEntries()).orElse(new HashSet<>()));
+            Consumer<PermissionGroup<?>> add = group -> entries.add((PermissionGroup<T>) group);
+            permissionImplementation.getPermissionGroupSavable(member).ifPresent(add);
         }
-        return Collections.unmodifiableSet(groups);
-    }
-
-    @Override
-    public void permissionUpdate()
-    {
-        getConnectedEntries().forEach(PermissionEntry::permissionUpdate);
+        return Collections.unmodifiableSet(entries);
     }
 
     @Override public SerializableSavableHandler getSerializableSavableHandler()

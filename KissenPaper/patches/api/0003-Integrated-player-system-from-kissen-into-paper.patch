@@ -368,11 +368,11 @@ index 0000000000000000000000000000000000000000..6e88feed2d33c219e9acefa04f3d439b
 +
 +    void clearActiveWarns();
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperGroubablePermissionEntry.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperGroubablePermissionEntry.java
+diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperGroupablePermissionEntry.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperGroupablePermissionEntry.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..232c540501b8b8663fa94d549240569a72064ab7
+index 0000000000000000000000000000000000000000..9a09ead1c0bae9d606be1983cb205c22ad493a1b
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperGroubablePermissionEntry.java
++++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperGroupablePermissionEntry.java
 @@ -0,0 +1,38 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -403,7 +403,7 @@ index 0000000000000000000000000000000000000000..232c540501b8b8663fa94d549240569a
 +import java.util.Optional;
 +import java.util.Set;
 +
-+public interface PaperGroubablePermissionEntry extends GroupablePermissionEntry<PaperPermission>, PaperPermissionEntry {
++public interface PaperGroupablePermissionEntry extends GroupablePermissionEntry<PaperPermission>, PaperPermissionEntry {
 +    @NotNull @Unmodifiable Set<PaperPermission> getOwnPermissions(@NotNull Context context);
 +
 +    @NotNull Optional<PaperPermission> getOwnPermission(@NotNull String permission, @NotNull Context context);
@@ -526,10 +526,10 @@ index 0000000000000000000000000000000000000000..2ac394b60d4cccb4c59b2c5625e53709
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8c2c8122d0ad99f9729682c19232d472add79e02
+index 0000000000000000000000000000000000000000..e2924f5669c4ef3d4baca2da06c7d4aa3afa4e04
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,46 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -559,17 +559,22 @@ index 0000000000000000000000000000000000000000..8c2c8122d0ad99f9729682c19232d472
 +import java.util.Optional;
 +import java.util.Set;
 +
-+public interface PaperPermissionGroup extends PermissionGroup<PaperPermission>, PaperGroubablePermissionEntry {
++public interface PaperPermissionGroup extends PermissionGroup<PaperPermission>, PaperGroupablePermissionEntry
++{
 +
 +    @NotNull @Unmodifiable Set<String> getMember(@NotNull Context context);
 +
 +    int delete(@NotNull Context context);
++
++    int wipeGroups(@NotNull Context context);
 +
 +    boolean addMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry, @NotNull Context context);
 +
 +    boolean removeMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry, @NotNull Context context);
 +
 +    @NotNull Optional<PermissionGroup<PaperPermission>> getContext(@NotNull Context context);
++
++    int wipePermissions(@NotNull Context context);
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionImplementation.java
 new file mode 100644
@@ -823,7 +828,7 @@ index 0000000000000000000000000000000000000000..f89bc619e02de3fd4c4bb000df66a11c
 +
 +public interface PaperRankImplementation extends RankImplementation<PaperRank> { }
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index bce07d84cafca677bb6fad78c21b82097f06430c..d1dbadd5c894a5e746655a6feac71a22d57461bd 100644
+index bce07d84cafca677bb6fad78c21b82097f06430c..dd6499c14a38d5edb4670b414a2a0f3bb6e25cc7 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
 +++ b/src/main/java/org/bukkit/OfflinePlayer.java
 @@ -4,6 +4,7 @@ import java.time.Duration;
@@ -839,7 +844,7 @@ index bce07d84cafca677bb6fad78c21b82097f06430c..d1dbadd5c894a5e746655a6feac71a22
   * player needing to be online.
   */
 -public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
-+public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient, net.kissenpvp.paper.api.permission.PaperGroubablePermissionEntry { // KissenPaper
++public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient, net.kissenpvp.paper.api.permission.PaperGroupablePermissionEntry { // KissenPaper
  
      /**
       * Checks if this player is currently online

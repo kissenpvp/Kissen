@@ -25,7 +25,8 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 
-public interface CommandPayload<S extends ServerEntity> {
+public interface CommandPayload<S extends ServerEntity>
+{
 
     @NotNull String getLabel();
 
@@ -35,19 +36,25 @@ public interface CommandPayload<S extends ServerEntity> {
 
     @NotNull String[] getArguments();
 
-    default int getArgumentCount() {
+    default int getArgumentCount()
+    {
         return getArguments().length;
     }
 
-    default @NotNull Optional<String> getArgument(int index) {
-        try {
+    default @NotNull Optional<String> getArgument(int index)
+    {
+        try
+        {
             return Optional.of(getArguments()[index]);
-        } catch (ArrayIndexOutOfBoundsException arrayIndexOutOfBoundsException) {
+        }
+        catch (ArrayIndexOutOfBoundsException arrayIndexOutOfBoundsException)
+        {
             return Optional.empty();
         }
     }
 
-    default String[] getArguments(int from, int to) throws ArrayIndexOutOfBoundsException {
+    default String[] getArguments(int from, int to) throws ArrayIndexOutOfBoundsException
+    {
         return Arrays.copyOfRange(getArguments(), from, to);
     }
 

@@ -6,20 +6,17 @@ import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.base.KissenImplementation;
 import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
+import net.kissenpvp.core.user.KissenUserImplementation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
-import org.slf4j.LoggerFactory;
 
 import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,13 +24,10 @@ import java.util.stream.Stream;
 public abstract class KissenConfirmationImplementation implements KissenImplementation
 {
     private final Set<Confirmation> confirmations;
-    private final ScheduledExecutorService cleanupScheduler;
 
     public KissenConfirmationImplementation()
     {
         this.confirmations = ConcurrentHashMap.newKeySet();
-        this.cleanupScheduler = Executors.newScheduledThreadPool(1);
-        this.cleanupScheduler.scheduleAtFixedRate(this::cleanUp, 0, 1, TimeUnit.SECONDS);
     }
 
     @Override
@@ -48,13 +42,6 @@ public abstract class KissenConfirmationImplementation implements KissenImplemen
         localize.register("server.command.confirm.no.request", new MessageFormat("You do not have any task to confirm."));
         localize.register("server.command.confirm.already.request", new MessageFormat("You already have a task to confirm. Please first confirm or cancel the other task."));
         return KissenImplementation.super.postStart();
-    }
-
-    @Override
-    public void stop()
-    {
-        this.cleanupScheduler.shutdown();
-        KissenImplementation.super.stop();
     }
 
     private @NotNull @Unmodifiable Set<PlayerConfirmationNode> getPlayerConfirmation()
@@ -115,9 +102,15 @@ public abstract class KissenConfirmationImplementation implements KissenImplemen
     /**
      * Performs cleanup tasks, including removing invalid confirmations and canceling associated player tasks.
      * After the cleanup, it checks if the list of confirmations is empty. If so, it shuts down the cleanup scheduler.
+     *
+     * @see KissenUserImplementation#postStart()
      */
-    private void cleanUp()
+    public void cleanUp()
     {
+        if(confirmations.isEmpty())
+        {
+           return;
+        }
         Stream<Confirmation> confirmationStream = Collections.unmodifiableSet(confirmations).stream();
         confirmations.removeAll(confirmationStream.filter(cleanFilter()).collect(Collectors.toSet()));
     }
