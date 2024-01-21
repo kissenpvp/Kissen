@@ -213,7 +213,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         TextComponent.Builder builder = Component.text();
         Rank rank = getRank().getSource();
 
-        TextColor rankTheme = getLastColor(rank.getPrefix().orElse(Component.empty())).orElse(null);
+        TextColor rankTheme = getLastColor(rank.getPrefix().orElse(Component.empty())).orElse(rank.getChatColor());
         rank.getPrefix().ifPresent(prefix -> builder.append(prefix).appendSpace());
         builder.append(displayName().color(rankTheme));
         if(getUserSetting(SuffixInChatSetting.class).getValue())

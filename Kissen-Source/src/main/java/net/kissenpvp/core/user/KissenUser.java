@@ -66,7 +66,13 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
     @Override
     public void permissionUpdate()
     {
+        clearCache();
         ((GroupablePermissionEntry<T>) getPlayerClient()).permissionUpdate();
+    }
+
+    public void clearCache()
+    {
+        super.permissionUpdate();
     }
 
     protected @NotNull @Unmodifiable Map<String, String> getDefaultData(UUID uuid, String name) {

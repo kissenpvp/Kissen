@@ -30,13 +30,18 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Getter
 public abstract class KissenGroupablePermissionEntry<T extends Permission> extends KissenPermissionEntry<T> implements PermissionCollector<T>
 {
+    private volatile Set<T> cache;
+    private volatile List<String> groupCache;
+
+    public KissenGroupablePermissionEntry()
+    {
+        this.cache = null;
+    }
+
     @Override
     public @NotNull T setPermission(@NotNull String permission, boolean value) throws EventCancelledException
     {
@@ -58,13 +63,25 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
     }
 
     @Override
+    public void permissionUpdate()
+    {
+        cache = null;
+        groupCache = null;
+    }
+
+    @Override
     public int wipeGroups() {
         return (int) getPermissionGroups().stream().filter(permissiongroup -> permissiongroup.removeMember(this)).count();
     }
 
     @Override
     public synchronized @NotNull @Unmodifiable Set<T> getPermissionList() {
-        return Collections.unmodifiableSet(permissionCollector());
+        if (cache == null)
+        {
+            cache = new HashSet<>();
+            cache.addAll(permissionCollector());
+        }
+        return Collections.unmodifiableSet(cache);
     }
 
     @Override
@@ -72,31 +89,27 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
         return permissionGroup.getMember().contains(getPermissionID());
     }
 
-    public @Unmodifiable @NotNull Set<T> calculatePermissions() {
-        return permissionCollector();
-    }
-
     @Override
     public @NotNull Set<T> permissionCollector()
     {
+        System.out.println(getPermissionID() + " " + getPermissionGroups().stream().map(PermissionEntry::getPermissionID).toList());
         Set<T> permissions = new KissenPermissionSet<>(getOwnPermissions());
-        permissions.addAll(getPermissionStream().collect(Collectors.toSet()));
+        getPermissionGroups().stream().map(PermissionGroup::getPermissionList).forEach(permissions::addAll);
         return permissions;
     }
 
     @Override
-    public @NotNull Set<String> internalGroupCollector(@NotNull Set<String> blacklistedGroups) {
-        if (blacklistedGroups.contains(getPermissionID())) {
-            return new HashSet<>();
+    public @NotNull @Unmodifiable List<String> groupCollector()
+    {
+        if(groupCache == null)
+        {
+            Comparator<PermissionGroup<T>> compareID = Comparator.comparing(PermissionGroup::getPermissionID);
+            List<PermissionGroup<T>> sorted = getPermissionGroups().stream().sorted(compareID).toList();
+            LinkedHashSet<String> permissionGroups = new LinkedHashSet<>(sorted.stream().map(PermissionGroup::getPermissionID).toList());
+            sorted.forEach(group -> permissionGroups.addAll(((PermissionCollector<T>) group).groupCollector()));
+            groupCache = new ArrayList<>(permissionGroups.stream().toList());
         }
-        blacklistedGroups.add(getPermissionID());
-        Set<String> groupList = new HashSet<>(getPermissionGroups().stream().map(PermissionEntry::getPermissionID).filter(permissionID -> !blacklistedGroups.contains(permissionID)).collect(Collectors.toUnmodifiableSet()));
-        for (PermissionCollector<T> permissionGroup : getPermissionGroups().stream().map(permissionGroup -> ((PermissionCollector<T>) permissionGroup)).collect(Collectors.toSet())) {
-            if (!blacklistedGroups.contains(permissionGroup.getPermissionID())) {
-                groupList.addAll(permissionGroup.internalGroupCollector(blacklistedGroups));
-            }
-        }
-        return groupList;
+        return groupCache;
     }
 
     @Override
@@ -106,17 +119,5 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
             permissionUpdate();
         }
         return result;
-    }
-
-    private @NotNull Stream<T> getPermissionStream()
-    {
-        return parseGroups().stream().flatMap(group -> group.permissionCollector().stream());
-    }
-
-    private @NotNull @Unmodifiable List<PermissionCollector<T>> parseGroups()
-    {
-        Function<PermissionGroup<T>, PermissionCollector<T>> mapper = (permissionGroup) -> ((PermissionCollector<T>) permissionGroup);
-        Stream<PermissionGroup<T>> groupStream = getPermissionGroups().stream();
-        return groupStream.map(mapper).sorted((o1, o2) -> CharSequence.compare(o1.getPermissionID(), o2.getPermissionID())).toList();
     }
 }

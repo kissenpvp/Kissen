@@ -36,14 +36,16 @@ import java.util.stream.Collectors;
 
 public abstract class KissenPermissionGroup<T extends Permission> extends KissenGroupablePermissionEntry<T> implements PermissionGroup<T>
 {
+
     @Override public @NotNull @Unmodifiable Set<String> getMember()
     {
         Set<String> member = new HashSet<>(getListNotNull("group_member"));
         UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
-        member.addAll(userImplementation.getOnlineUser().stream().map(
+        Set<String> u = userImplementation.getOnlineUser().stream().map(
                 User::getPlayerClient).filter(
                 player -> player.getRank().getSource().getName().equals(getPermissionID())).map(
-                player -> player.getUniqueId().toString()).collect(Collectors.toUnmodifiableSet()));
+                player -> player.getUniqueId().toString()).collect(Collectors.toUnmodifiableSet());
+        member.addAll(u);
         return Collections.unmodifiableSet(member);
     }
 
@@ -62,7 +64,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
     {
         if (groupablePermissionEntry instanceof PermissionGroup<?>)
         {
-            if (getPermissionID().equals(groupablePermissionEntry.getPermissionID()) || internalGroupCollector(new HashSet<>()).contains(groupablePermissionEntry.getPermissionID()))
+            if (getPermissionID().equals(groupablePermissionEntry.getPermissionID()) || groupCollector().contains(groupablePermissionEntry.getPermissionID()))
             {
                 throw new PermissionGroupConflictException();
             }

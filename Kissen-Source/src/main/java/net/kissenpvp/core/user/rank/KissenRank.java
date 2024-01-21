@@ -116,4 +116,10 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
         KissenCore.getInstance().getImplementation(KissenRankImplementation.class).removeRank(this);
         return super.softDelete();
     }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(getDatabaseID(), getPriority(), getPrefix(), getChatColor().asHexString(), getSuffix());
+    }
 }

@@ -21,12 +21,14 @@ package net.kissenpvp.core.permission;
 import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
 import net.kissenpvp.core.api.permission.Permission;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.List;
 import java.util.Set;
 
 public interface PermissionCollector<T extends Permission> extends GroupablePermissionEntry<T>
 {
     @NotNull Set<T> permissionCollector();
 
-    @NotNull Set<String> internalGroupCollector(@NotNull Set<String> blacklistedGroups);
+    @NotNull @Unmodifiable List<String> groupCollector();
 }

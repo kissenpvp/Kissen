@@ -16,7 +16,7 @@ public class InvalidColorExceptionHandler<S extends ServerEntity> implements Com
     {
         if(commandPayload.getSender() instanceof MessageReceiver messageReceiver)
         {
-            messageReceiver.getKyoriAudience().sendMessage(Component.translatable("server.command.invalid.color", throwable.getInput()));
+            messageReceiver.getKyoriAudience().sendMessage(Component.translatable("server.command.invalid.color", Component.text(throwable.getInput())));
         }
         return false;
     }

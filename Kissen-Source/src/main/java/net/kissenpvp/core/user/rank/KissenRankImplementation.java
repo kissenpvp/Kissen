@@ -32,7 +32,6 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -124,7 +123,7 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
                 cachedRankIdSet.add(setup(savableMap.getNotNull("id"), savableMap));
             }
             KissenCore.getInstance().getLogger().info("Successfully loaded {} rank(s) from the database.", cachedRankIdSet.size());
-        });
+        }).join();
     }
 
     /**

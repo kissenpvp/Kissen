@@ -125,9 +125,9 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
         return getInternalPermission(permission).orElse(false);
     }
 
-    public @NotNull Optional<Boolean> getInternalPermission(String permission)
+    public @NotNull Optional<Boolean> getInternalPermission(@NotNull String permission)
     {
-        List<Permission> permissions = new ArrayList<>(getPermissionList().stream().map(internalPermission -> matcher(permission, internalPermission)).filter(Objects::nonNull).toList());
+        List<Permission> permissions = new ArrayList<>(getPermissionList().stream().flatMap(internalPermission -> matcher(permission, internalPermission).stream()).toList());
         if (permissions.isEmpty()) {
             return Optional.empty();
         }
@@ -187,7 +187,7 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
      * internal permission, or null if it doesn't.
      * @throws NullPointerException if either the permission or internalPermission parameter is null.
      */
-    public @Nullable T matcher(@NotNull String permission, @NotNull T internalPermission)
+    public @NotNull Optional<T> matcher(@NotNull String permission, @NotNull T internalPermission)
     {
         int testedIndex = 0, givenIndex = 0, testedWildcardIndex = -1, givenWildcardIndex = -1;
 
@@ -215,7 +215,7 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
                 continue;
             }
 
-            return null;
+            return Optional.empty();
         }
 
         while (testedIndex < internalPermission.getName().length() && internalPermission.getName()
@@ -223,7 +223,7 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
             testedIndex++;
         }
 
-        return testedIndex == internalPermission.getName().length() && givenIndex == permission.length() ? internalPermission : null;
+        return testedIndex == internalPermission.getName().length() && givenIndex == permission.length() ? Optional.of(internalPermission) : Optional.empty();
     }
 
     /**
