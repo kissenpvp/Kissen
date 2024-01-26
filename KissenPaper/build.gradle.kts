@@ -76,6 +76,13 @@ paperweight {
 
             serverPatchDir.set(layout.projectDirectory.dir("patches/server"))
             serverOutputDir.set(layout.projectDirectory.dir("KissenPaper-Server"))
+
+            patchTasks.register("generatedApi") {
+                isBareDirectory = true
+                upstreamDirPath = "paper-api-generator/generated"
+                patchDir = layout.projectDirectory.dir("patches/generated-api")
+                outputDir = layout.projectDirectory.dir("paper-api-generator/generated")
+            }
         }
     }
 }
@@ -83,11 +90,10 @@ paperweight {
 tasks.generateDevelopmentBundle {
     apiCoordinates.set("net.kissenpvp:kissenpaper-api")
     mojangApiCoordinates.set("io.papermc.paper:paper-mojangapi")
-    libraryRepositories.set(
-        listOf(
+    libraryRepositories = listOf(
             "https://repo.maven.apache.org/maven2/",
             paperMavenPublicUrl,
-        )
+            "https://repo.purpurmc.org/snapshots",
     )
 }
 

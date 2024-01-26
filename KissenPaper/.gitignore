@@ -55,4 +55,5 @@ build-data/
 KissenPaper-API
 KissenPaper-MojangAPI
 KissenPaper-Server
+paper-api-generator
 *.jar

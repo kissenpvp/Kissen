@@ -24,7 +24,7 @@ if (!file(".git").exists()) {
 rootProject.name = "kissen"
 
 val projects = listOf("Kissen-API", "Kissen-Source", "KissenPaper")
-val paperprojects = listOf("KissenPaper-API", "KissenPaper-Server")
+val paperProjects = listOf("KissenPaper-API", "KissenPaper-Server", "paper-api-generator")
 
 projects.forEach { name ->
     val projName = name.lowercase(Locale.ENGLISH)
@@ -32,7 +32,7 @@ projects.forEach { name ->
     findProject(":$projName")?.projectDir = file(name)
 }
 
-paperprojects.forEach { name ->
+paperProjects.forEach { name ->
     val projName = name.lowercase(Locale.ENGLISH)
     include("kissenpaper:$projName")
     findProject(":kissenpaper:$projName")?.projectDir = file("KissenPaper/$name")
