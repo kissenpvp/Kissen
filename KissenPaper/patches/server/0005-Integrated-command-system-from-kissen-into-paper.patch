@@ -1198,11 +1198,11 @@ index 0000000000000000000000000000000000000000..bec525498f76bf2238337ef5fe1f6c7b
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/commands/Commands.java b/src/main/java/net/minecraft/commands/Commands.java
-index 1a5b1be217e210db3f498b93fbcae7509be597ee..88c53844777220eb1edcb43b8f2d8c15eead90a3 100644
+index b7f338e982d0dcab99137ab6dc200b82ac6b7cba..c41f51fc6b65c3e027296bfcd1c7550067ae7f4c 100644
 --- a/src/main/java/net/minecraft/commands/Commands.java
 +++ b/src/main/java/net/minecraft/commands/Commands.java
 @@ -373,9 +373,12 @@ public class Commands {
-             // Paper start
+             // Paper start - Add UnknownCommandEvent
              final net.kyori.adventure.text.TextComponent.Builder builder = net.kyori.adventure.text.Component.text();
              if ((parseresults.getContext().getNodes().isEmpty() || !this.vanillaCommandNodes.contains(parseresults.getContext().getNodes().get(0).getNode()))) {
 -                if (!org.spigotmc.SpigotConfig.unknownCommandMessage.isEmpty()) {
@@ -1216,7 +1216,7 @@ index 1a5b1be217e210db3f498b93fbcae7509be597ee..88c53844777220eb1edcb43b8f2d8c15
              } else {
                  // commandlistenerwrapper.sendFailure(ComponentUtils.fromMessage(commandsyntaxexception.getRawMessage()));
                  builder.color(net.kyori.adventure.text.format.NamedTextColor.RED).append(io.papermc.paper.brigadier.PaperBrigadier.componentFromMessage(commandsyntaxexception.getRawMessage()));
-@@ -406,7 +409,7 @@ public class Commands {
+@@ -405,7 +408,7 @@ public class Commands {
                      .append(io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent));
              }
              }
@@ -1256,7 +1256,7 @@ index 1b459a8ee8a6bc039e742d65796bc76660a1c765..ce91f3816a7e48c22dd89c9d29685d2a
  
      private static int giveItem(CommandSourceStack source, ItemInput item, Collection<ServerPlayer> targets, int count) throws CommandSyntaxException {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 735811d03c7b885b944cb17619e6acd2d9320adc..88a0800b3ee67746a21a0b22c0253bc919eb9cbb 100644
+index f074cf41846b24c22e76f133076194b856927ea9..60362d51121aac6b641b07881dd5de91e67ee1a4 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -994,18 +994,27 @@ public final class CraftServer implements Server {
