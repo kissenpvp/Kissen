@@ -18,8 +18,14 @@
 
 package net.kissenpvp.core.command;
 
+import net.kissenpvp.core.api.command.CommandPayload;
+import net.kissenpvp.core.api.command.annotations.CommandData;
 import net.kissenpvp.core.api.command.executor.CommandExecutor;
+import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
+import net.kissenpvp.core.api.message.ThemeProvider;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -28,9 +34,48 @@ import java.util.function.Function;
 
 public interface CommandHolder<S extends ServerEntity, C extends CommandHolder<S, C>> extends Iterable<CommandHolder<?, ?>> {
 
+
+    /**
+     * Initializes the command with the provided command data and executor.
+     * <p>
+     * This method is used to set up the command with the given data and to assign an executor to handle
+     * the command execution. This setup process is typically performed during command registration.
+     *
+     * @param commandData     The details about the command (e.g., name, description, usage). Must not be null.
+     * @param commandExecutor The executor to handle the command execution. Must not be null.
+     * @throws NullPointerException if any of the parameters is null.
+     */
+    void initCommand(@NotNull CommandData commandData, @NotNull CommandExecutor<S> commandExecutor);
+
+    /**
+     * Initializes the command with a given tab completer.
+     * <p>
+     * This method is used to set up a tab completion system for the command, which assists the user by
+     * filling in possible command arguments as they type. This method is typically called when the command is registered.
+     *
+     * @param completerExecutor The tab completion executor to register. Must not be null.
+     * @throws NullPointerException if the completerExecutor is null.
+     */
+    void initCompleter(@NotNull TabCompleterExecutor<S> completerExecutor);
+
+    default @NotNull Component getFormattedUsage(@NotNull CommandPayload<S> payload)
+    {
+        TextComponent.Builder builder = Component.text();
+        String[] usages = getUsage().split(";");
+        for (String usage : usages)
+        {
+            Component usageComponent = Component.text(usage).color(ThemeProvider.general());
+            builder.appendNewline().append(Component.text("» ")).append(usageComponent);
+        }
+        return Component.translatable("server.command.incorrect-usage", builder);
+    }
+
     @NotNull String getName();
 
     @NotNull String getFullName();
+
+
+    @NotNull String getUsage();
 
     int getPosition();
 

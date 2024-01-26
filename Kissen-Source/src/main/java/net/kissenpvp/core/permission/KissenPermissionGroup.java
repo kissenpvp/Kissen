@@ -111,7 +111,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
     @Override public @NotNull @Unmodifiable Set<UUID> getAffectedUsers()
     {
         Set<UUID> uuids = new HashSet<>();
-        PermissionImplementation permissionImplementation = KissenCore.getInstance().getImplementation(
+        PermissionImplementation<?> permissionImplementation = KissenCore.getInstance().getImplementation(
                 PermissionImplementation.class);
         for (String member : getMember())
         {
@@ -130,8 +130,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
     @Override public @NotNull @Unmodifiable Set<GroupablePermissionEntry<T>> getConnectedEntries()
     {
         Set<GroupablePermissionEntry<T>> entries = new HashSet<>();
-        Class<PermissionImplementation> clazz = PermissionImplementation.class;
-        PermissionImplementation permissionImplementation = KissenCore.getInstance().getImplementation(clazz);
+        PermissionImplementation<T> permissionImplementation = KissenCore.getInstance().getImplementation(PermissionImplementation.class);
         UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
 
         for (String member : getMember())

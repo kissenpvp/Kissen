@@ -18,6 +18,9 @@
 
 package net.kissenpvp.core.command.argument;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.command.ArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.annotations.ArgumentName;
@@ -26,8 +29,8 @@ import net.kissenpvp.core.api.command.annotations.IgnoreQuote;
 import net.kissenpvp.core.api.command.exception.ArgumentParserAbsentException;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.command.CommandImplementation;
 import net.kissenpvp.core.command.parser.EnumParser;
-import net.kissenpvp.core.command.KissenCommandImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -36,6 +39,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * This class is responsible for evaluating and processing the parameters of a command method,
@@ -51,74 +56,43 @@ import java.util.List;
  * If a parameter type has an associated {@link ArgumentParser}, it's used to deserialize default values (if any) to the
  * appropriate type. If no such parser exists for a parameter's type, an {@link ArgumentParserAbsentException} is thrown.
  * <p>
- * The main public method provided by this class is {@link #evaluateMethod(Method)}, which processes a method and returns
+ * The main public method provided by this class is {@link #evaluateMethod(KissenPlugin, Method)}, which processes a method and returns
  * a list of its parameters represented as {@link Argument} objects.
  */
 public class MethodEvaluator<S extends ServerEntity> {
 
-    /**
-     * Evaluates a given method, analyzing each of its parameters to extract {@link Argument} objects from them.
-     * <p>
-     * This function iterates over each parameter in the provided method. Each parameter is then processed using
-     * the {@link #processParameter(Method, Parameter)} function which generates a list of {@link Argument} objects
-     * that represent the parameter.
-     * <p>
-     * All these lists are then combined into a single list, which is finally returned.
-     * <p>
-     * This function ensures that every single parameter of the provided method is represented as an {@link Argument}
-     * in the returned list.
-     *
-     * @param method The method whose parameters are to be evaluated and represented as a list of {@link Argument} objects.
-     * @return A list of {@link Argument} objects representing each parameter in the provided method.
-     * @throws IllegalArgumentException      If a parameter in the provided method is an array but not placed as the last argument.
-     * @throws ArgumentParserAbsentException If an ArgumentParser could not be retrieved for a parameter's type.
-     */
+    @Getter(AccessLevel.PRIVATE) private final Supplier<Map<Class<?>, ArgumentParser<?, S>>> argumentSupplier;
+
+    public MethodEvaluator(@NotNull Supplier<Map<Class<?>, ArgumentParser<?, S>>> argumentSupplier)
+    {
+        this.argumentSupplier = argumentSupplier;
+    }
+
     public @NotNull @Unmodifiable List<Argument<?, S>> evaluateMethod(@NotNull Method method) {
         List<Argument<?, S>> argumentList = new ArrayList<>();
+        CommandImplementation command = getCommandImplementation();
 
         for (Parameter parameter : method.getParameters()) {
-            argumentList.addAll(processParameter(method, parameter));
+            argumentList.addAll(processParameter(getArgumentSupplier().get(), method, parameter));
         }
 
         return argumentList;
     }
 
     /**
-     * Retrieves the {@link KissenCommandImplementation} singleton instance that exists within the {@link KissenCore}.
+     * Retrieves the {@link CommandImplementation} singleton instance that exists within the {@link KissenCore}.
      * <p>
-     * This function provides a simple and direct way of accessing the {@link KissenCommandImplementation} instance.
+     * This function provides a simple and direct way of accessing the {@link CommandImplementation} instance.
      * It's like a convenience proxy that simplifies the retrieval of the singleton instance by avoiding the need
      * to always use the full {@code KissenCore.getInstance().getImplementation(KissenCommandImplementation.class)} expression.
      *
-     * @return The {@link KissenCommandImplementation} singleton instance that exists within the {@link KissenCore}.
+     * @return The {@link CommandImplementation} singleton instance that exists within the {@link KissenCore}.
      */
-    private @NotNull KissenCommandImplementation getCommandImplementation() {
-        return KissenCore.getInstance().getImplementation(KissenCommandImplementation.class);
+    private @NotNull CommandImplementation getCommandImplementation() {
+        return KissenCore.getInstance().getImplementation(CommandImplementation.class);
     }
 
-    /**
-     * Processes a single parameter of a provided method, transforming it into a list of one or more {@link Argument} objects.
-     * <p>
-     * This function first analyzes the provided parameter while validating its type and position in case it is an array.
-     * This is done using the {@link #validateArrayPlacement(Parameter[], boolean, Parameter)} function.
-     * <p>
-     * It then builds an {@link Argument} using properties such as its name, type, array status, and any {@link IgnoreQuote} annotations present.
-     * <p>
-     * If the parameter's type is assignable from {@link CommandPayload}, or it does not have a {@link Optional} annotation,
-     * the function considers it to be a basic argument and returns it wrapped in a list.
-     * <p>
-     * However, if the parameter has a {@link Optional} annotation, it means that it might have a default value(s) specified.
-     * In this case, it will generate a "nullable" optional {@link Argument} using the {@link #createOptional(Method, Class, ArgumentType, String[], Argument.ArgumentBuilder)} function.
-     * <p>
-     * In both cases, a list containing the single {@link Argument} that was processed from this parameter is returned.
-     *
-     * @param method    The method where the parameter originates from.
-     * @param parameter The parameter to be processed into an {@link Argument}.
-     * @return A list with one {@link Argument} representing the provided parameter.
-     * @throws IllegalArgumentException      If the parameter is of a primitive type but does not have a default value, or if the parameter is an array but not placed as the last argument.
-     * @throws ArgumentParserAbsentException If an ArgumentParser could not be retrieved for the parameter's type.
-     */
-    private <T> @Unmodifiable @NotNull List<Argument<T, S>> processParameter(@NotNull Method method, @NotNull Parameter parameter)
+    private @Unmodifiable <T> @NotNull List<Argument<T, S>> processParameter(@NotNull Map<Class<?>, ArgumentParser<?, S>> parserMap, @NotNull Method method, @NotNull Parameter parameter)
     {
         Class<T> parameterType = (Class<T>) parameter.getType();
 
@@ -153,7 +127,7 @@ public class MethodEvaluator<S extends ServerEntity> {
         }
         boolean isEnum = parameterType.isEnum();
         builder.isEnum(isEnum);
-        ArgumentParser<T, S> argumentParser = (ArgumentParser<T, S>) (isEnum ? new EnumParser<>(parameterType) : getCommandImplementation().getParserList().get(parameterType));
+        ArgumentParser<T, S> argumentParser = (ArgumentParser<T, S>) (isEnum ? new EnumParser<>(parameterType) : parserMap.get(parameterType));
         if(argumentParser != null)
         {
             builder.argumentParser(argumentParser);
@@ -177,38 +151,17 @@ public class MethodEvaluator<S extends ServerEntity> {
             return List.of(builder.build());
         }
 
-        return List.of(createOptional(method, parameterType, argumentType, optionalValueAnnotated.value(), builder));
+        return List.of(createOptional(parserMap, method, parameterType, argumentType, optionalValueAnnotated.value(), builder));
     }
 
-    /**
-     * Creates an optional {@link Argument} using the provided metadata.
-     * <p>
-     * This function is used to transform method parameters that have a {@link Optional} annotation into nullable or optional {@link Argument}s.
-     * An optional {@link Argument} is characterized by the fact that it can be left unspecified when invoking the command because it will have a default value.
-     * <p>
-     * Default values are specified as an array of strings in the {@link Optional} annotation of the parameter. Each string will be deserialized into the required type {@code T}
-     * to create the default value of the {@link Argument}.
-     * <p>
-     * If the type {@code T} of the {@link Argument} is an array, the default values will be an array as well.
-     * <p>
-     * Note: Primitive types are not supported for optional arguments because they can't be null. If a primitive type is encountered, it will cause an {@link IllegalArgumentException}.
-     *
-     * @param method  The method where the parameter originates from.
-     * @param type    The type class of the {@link Argument} being built.
-     * @param isArray A boolean representing whether the {@link Argument} is an array. This will affect the way default values are processed.
-     * @param def     A {@link String} array containing the default values for the {@link Argument} being built.
-     * @param builder The builder instance to be used for constructing the {@link Argument}.
-     * @return The created nullable or optional {@link Argument}.
-     * @throws IllegalArgumentException      If the {@link Argument} type is a primitive type but does not have a default value.
-     * @throws ArgumentParserAbsentException If an ArgumentParser could not be retrieved for the {@link Argument} type.
-     */
-    private <T> Argument<T, S> createOptional(@NotNull Method method, @NotNull Class<T> type, ArgumentType isArray, @NotNull String[] def, @NotNull Argument.ArgumentBuilder<T, S> builder) {
+
+    private <T> Argument<T, S> createOptional(@NotNull Map<Class<?>, ArgumentParser<?, S>> parserMap, @NotNull Method method, @NotNull Class<T> type, ArgumentType isArray, @NotNull String[] def, @NotNull Argument.ArgumentBuilder<T, S> builder) {
 
         if (type.isPrimitive() && def.length == 0) {
             throw new IllegalArgumentException(String.format("Use wrappers instead of primitive types for nullability, %s.", method.getName()));
         }
 
-        final ArgumentParser<?, ?> parser = getCommandImplementation().getParserList().get(type);
+        final ArgumentParser<?, ?> parser = parserMap.get(type);
         if (parser == null) {
             throw new ArgumentParserAbsentException(type);
         }

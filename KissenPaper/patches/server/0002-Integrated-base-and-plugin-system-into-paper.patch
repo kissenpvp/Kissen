@@ -142,8 +142,237 @@ index 0000000000000000000000000000000000000000..db1f1ca137bfe602406ebb41cd61c82c
 +        return KissenCore.getInstance().getPublicMeta(); //TODO
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperInternalCommandHandler.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperInternalCommandHandler.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..466f4168cf90923e692ad0dc4a062e4d2f8825f9
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/command/KissenPaperInternalCommandHandler.java
+@@ -0,0 +1,39 @@
++package net.kissenpvp.paper.command;
++
++import net.kissenpvp.core.command.handler.InternalCommandHandler;
++import net.kissenpvp.paper.command.command.system.KissenPaperCommand;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
++import org.bukkit.craftbukkit.CraftServer;
++import org.jetbrains.annotations.NotNull;
++
++public class KissenPaperInternalCommandHandler extends InternalCommandHandler<CommandSender, KissenPaperCommand>
++{
++    @Override
++    protected void registerCommand(@NotNull KissenPaperCommand command)
++    {
++        if(Bukkit.getCommandMap().register("kissenpaper", command))
++        {
++            ((CraftServer) Bukkit.getServer()).syncCommands();
++        }
++    }
++
++    @Override
++    protected @NotNull KissenPaperCommand buildCommand(@NotNull String name)
++    {
++        String rootName = name.split("\\.")[0];
++        KissenPaperCommand command = getCommand(rootName).orElseGet(() ->
++        {
++            KissenPaperCommand kissenCommand = new KissenPaperCommand(rootName, 0, this);
++            getCommands().add(kissenCommand);
++            return kissenCommand;
++        });
++
++        if (!name.equals(rootName))
++        {
++            command = (KissenPaperCommand) command.createRecursive(name);
++            getCommands().add(command);
++        }
++        return command;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperPluginHandler.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperPluginHandler.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..8439a8f619b889999ec3d19f3db49c82da561d77
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/command/KissenPaperPluginHandler.java
+@@ -0,0 +1,50 @@
++package net.kissenpvp.paper.command;
++
++import net.kissenpvp.core.api.base.plugin.KissenPlugin;
++import net.kissenpvp.core.api.command.executor.CommandExecutor;
++import net.kissenpvp.core.command.handler.PluginCommandHandler;
++import net.kissenpvp.paper.command.command.plugin.KissenPaperPluginCommand;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
++import org.bukkit.craftbukkit.CraftServer;
++import org.bukkit.plugin.Plugin;
++import org.jetbrains.annotations.NotNull;
++
++import java.lang.reflect.Method;
++import java.util.Objects;
++
++public class KissenPaperPluginHandler extends PluginCommandHandler<CommandSender, KissenPaperPluginCommand>
++{
++    public KissenPaperPluginHandler(@NotNull KissenPlugin plugin)
++    {
++        super(plugin);
++    }
++
++    @Override
++    protected void registerCommand(@NotNull KissenPaperPluginCommand command)
++    {
++        if(Bukkit.getCommandMap().register(getPlugin().getName(), command))
++        {
++            ((CraftServer) Bukkit.getServer()).syncCommands();
++        }
++    }
++
++    @Override
++    protected @NotNull KissenPaperPluginCommand buildCommand(@NotNull String name)
++    {
++        String rootName = name.split("\\.")[0];
++        KissenPaperPluginCommand command = getCommand(rootName).orElseGet(() ->
++        {
++            KissenPaperPluginCommand kissenCommand = new KissenPaperPluginCommand((Plugin) getPlugin(), rootName, 0, this);
++            getCommands().add(kissenCommand);
++            return kissenCommand;
++        });
++
++        if (!Objects.equals(name, rootName))
++        {
++            command = (KissenPaperPluginCommand) command.createRecursive(name);
++            getCommands().add(command);
++        }
++        return command;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/command/PaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/PaperCommandImplementation.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..a2bfb1547286a1817305196df63cf5479662eb88
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/command/PaperCommandImplementation.java
+@@ -0,0 +1,122 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.paper.command;
++
++import net.kissenpvp.core.api.base.plugin.KissenPlugin;
++import net.kissenpvp.core.api.command.CommandHandler;
++import net.kissenpvp.core.command.CommandImplementation;
++import net.kissenpvp.core.command.TargetValidator;
++import net.kissenpvp.core.command.argument.MethodEvaluator;
++import net.kissenpvp.core.command.handler.InternalCommandHandler;
++import net.kissenpvp.core.command.handler.PluginCommandHandler;
++import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
++import net.kissenpvp.paper.api.command.KissenCommand;
++import net.kissenpvp.paper.command.handler.CompletionExceptionHandler;
++import net.kissenpvp.paper.command.handler.PlayerExceptionHandler;
++import net.kissenpvp.paper.command.handler.ProfileNotFoundExceptionHandler;
++import net.kissenpvp.paper.command.parser.OfflinePlayerParser;
++import net.kissenpvp.paper.command.parser.PlayerParser;
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.minimessage.MiniMessage;
++import org.bukkit.Bukkit;
++import org.bukkit.OfflinePlayer;
++import org.bukkit.command.CommandSender;
++import org.bukkit.entity.Player;
++import org.jetbrains.annotations.NotNull;
++
++import java.text.MessageFormat;
++import java.util.Optional;
++
++/**
++ * Represents a Kissen Paper command implementation that extends the functionality of the Kissen command framework
++ * and is compatible with the Paper server platform.
++ * <p>
++ * This class extends {@link CommandImplementation} and implements the {@link net.kissenpvp.paper.api.command.PaperCommandImplementation} interface
++ * to provide specialized command handling and execution functionality tailored for the Paper server platform.
++ * It integrates seamlessly with the Kissen command framework and enhances it with Paper-specific features.
++ */
++public class PaperCommandImplementation extends CommandImplementation<CommandSender> implements net.kissenpvp.paper.api.command.PaperCommandImplementation
++{
++
++
++    /**
++     * Constructs a new instance of {@link PaperCommandImplementation}.
++     * <p>
++     * This constructor initializes the {@link MethodEvaluator} and {@link TargetValidator} instances used by this
++     * Kissen Paper command implementation for evaluating command methods and validating command execution targets.
++     */
++    public PaperCommandImplementation()
++    {
++        super();
++
++        // Advanced
++        getInternalHandler().registerParser(Player.class, new PlayerParser());
++        getInternalHandler().registerParser(OfflinePlayer.class, new OfflinePlayerParser());
++
++        //Exception handler
++        getInternalHandler().registerExceptionHandler(new PlayerExceptionHandler());
++        getInternalHandler().registerExceptionHandler(new CompletionExceptionHandler());
++        getInternalHandler().registerExceptionHandler(new ProfileNotFoundExceptionHandler());
++    }
++
++    @Override
++    public boolean start()
++    {
++        KissenLocalizationImplementation kissenLocalizationImplementation = Bukkit.getKissen().getImplementation(
++                KissenLocalizationImplementation.class);
++        kissenLocalizationImplementation.register("server.command.mojang.profile.invalid",
++                new MessageFormat("Mojangs repository does not contain the specified profile."));
++        kissenLocalizationImplementation.register("server.command.player.offline",
++                new MessageFormat("The player {0} seems to be offline."));
++        kissenLocalizationImplementation.register("server.command.failed",
++                new MessageFormat(MiniMessage.miniMessage().serialize(Component.translatable("commands.help.failed"))));
++
++        kissenLocalizationImplementation.register("server.command.general.header",
++                new MessageFormat("===== [ {0} ] ====="));
++        kissenLocalizationImplementation.register("server.command.general.header.paged",
++                new MessageFormat("===== [ {0} ({1}/{2}) ] ====="));
++        kissenLocalizationImplementation.register("server.command.general.footer",
++                new MessageFormat("===== [ {0} ] ====="));
++        kissenLocalizationImplementation.register("server.command.general.footer.paged",
++                new MessageFormat("===== [ {0} ({1}/{2}) ] ====="));
++
++        kissenLocalizationImplementation.register("server.command.general.key.value", new MessageFormat("{0}: {1}"));
++
++        return super.start();
++    }
++
++    @Override
++    protected InternalCommandHandler<CommandSender, ?> constructInternalHandler()
++    {
++        return new KissenPaperInternalCommandHandler();
++    }
++
++    @Override
++    protected @NotNull PluginCommandHandler<CommandSender, ?> constructHandler(@NotNull KissenPlugin kissenPlugin)
++    {
++        return new KissenPaperPluginHandler(kissenPlugin);
++    }
++
++
++    @Override
++    public @NotNull Optional<CommandHandler<CommandSender, KissenCommand>> getPluginHandler(@NotNull KissenPlugin kissenPlugin)
++    {
++        return getHandler().stream().filter(handler -> handler.getPlugin().equals(kissenPlugin)).map(handler -> (CommandHandler<CommandSender, KissenCommand>) handler).findFirst();
++    }
++}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 016b7628b289fb882f3ec15dd5b0cb4e0af72edc..571c48c7c710444d287d587f276cd88b90a462ed 100644
+index f023f888d46c170d63e7a1a6e0a2685070f46236..67502cc0c565a5bd64dd5c8e30bfc13a45a2d2cb 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -191,7 +191,7 @@ import org.bukkit.event.server.ServerLoadEvent;
@@ -188,7 +417,7 @@ index 016b7628b289fb882f3ec15dd5b0cb4e0af72edc..571c48c7c710444d287d587f276cd88b
  
      public SystemReport fillSystemReport(SystemReport details) {
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 9d7e1b306f8c96883dbe1adbf7e77825da4cbc21..4cbda7f6273df7df097c92300c75988ca51ce450 100644
+index cb7fe116a29916761299a808572f76547d143971..611efc230bb946a0d0a97fe439b51b1b5a86f9e0 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -179,6 +179,14 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
@@ -218,7 +447,7 @@ index 9d7e1b306f8c96883dbe1adbf7e77825da4cbc21..4cbda7f6273df7df097c92300c75988c
          // this.setPlayerList(new DedicatedPlayerList(this, this.registries(), this.playerDataStorage)); // Spigot - moved up
          this.server.loadPlugins();
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 9ef8f911632598fd589368cedde268c8abcad3b6..c1b78547e298c42128d4f59566145d15aea228cf 100644
+index 66b858bbd8b4087bf95e1608c9be4df191d94bd4..735811d03c7b885b944cb17619e6acd2d9320adc 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -264,7 +264,7 @@ import javax.annotation.Nullable; // Paper
@@ -245,10 +474,10 @@ index 9ef8f911632598fd589368cedde268c8abcad3b6..c1b78547e298c42128d4f59566145d15
          }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
-index d96399e9bf1a58db5a4a22e58abb99e7660e0694..15bdda17fa0bdec6c068733ba25570e7bd41e428 100644
+index d96399e9bf1a58db5a4a22e58abb99e7660e0694..a4cc66a3dc5a1eb7bda96d94da8817c09e89c57b 100644
 --- a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
 +++ b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
-@@ -143,4 +143,16 @@ public class MinecraftInternalPlugin extends PluginBase {
+@@ -143,4 +143,22 @@ public class MinecraftInternalPlugin extends PluginBase {
      public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
          throw new UnsupportedOperationException("Not supported.");
      }
@@ -261,15 +490,21 @@ index d96399e9bf1a58db5a4a22e58abb99e7660e0694..15bdda17fa0bdec6c068733ba25570e7
 +
 +    @Override
 +    public void registerTranslation(@org.jetbrains.annotations.NotNull String key, java.text.@org.jetbrains.annotations.NotNull MessageFormat defaultMessage) {
-+        getKissen().getImplementation(net.kissenpvp.core.message.localization.KissenLocalizationImplementation.class).register(key, defaultMessage);
++        throw new UnsupportedOperationException("Not supported.");
++    }
++
++    @Override
++    public @org.jetbrains.annotations.NotNull net.kissenpvp.core.api.command.CommandHandler<?, ?> getCommandHandler()
++    {
++        throw new UnsupportedOperationException("Not supported.");
 +    }
 +    // KissenPaper end
  }
 diff --git a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
-index 1d14f530ef888102e47eeeaf0d1a6076e51871c4..655210f266a39118960b75d3606a12975587ebf9 100644
+index 1d14f530ef888102e47eeeaf0d1a6076e51871c4..551e9a05c1ff096fad0cc9dccd46306bef04702b 100644
 --- a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
 +++ b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
-@@ -143,4 +143,16 @@ public class PaperTestPlugin extends PluginBase {
+@@ -143,4 +143,22 @@ public class PaperTestPlugin extends PluginBase {
      public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
          throw new UnsupportedOperationException("Not supported.");
      }
@@ -282,6 +517,12 @@ index 1d14f530ef888102e47eeeaf0d1a6076e51871c4..655210f266a39118960b75d3606a1297
 +
 +    @Override
 +    public void registerTranslation(@org.jetbrains.annotations.NotNull String key, java.text.@org.jetbrains.annotations.NotNull MessageFormat defaultMessage) {
++        throw new UnsupportedOperationException("Not supported.");
++    }
++
++    @Override
++    public @org.jetbrains.annotations.NotNull net.kissenpvp.core.api.command.CommandHandler<?, ?> getCommandHandler()
++    {
 +        throw new UnsupportedOperationException("Not supported.");
 +    }
 +    // KissenPaper end

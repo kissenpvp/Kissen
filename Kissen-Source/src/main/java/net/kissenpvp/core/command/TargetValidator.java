@@ -19,13 +19,31 @@
 package net.kissenpvp.core.command;
 
 import net.kissenpvp.core.api.command.CommandTarget;
+import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 
-public interface TargetValidator {
+public class TargetValidator
+{
+    public boolean validate(@NotNull CommandTarget commandTarget, @NotNull ServerEntity serverEntity) {
+        return switch (commandTarget) {
+            case PLAYER -> serverEntity instanceof PlayerClient<?, ?, ?>;
+            case SYSTEM -> serverEntity instanceof ConsoleClient;
+            case ALL -> true;
+        };
+    }
 
-    boolean validate(@NotNull CommandTarget commandTarget, @NotNull ServerEntity sender);
+    public @NotNull CommandTarget parseSender(@NotNull ServerEntity serverEntity) {
+        if (serverEntity instanceof ConsoleClient) {
+            return CommandTarget.SYSTEM;
+        }
 
-    @NotNull CommandTarget parseSender(@NotNull ServerEntity sender);
+        if (serverEntity instanceof PlayerClient<?, ?, ?>) {
+            return CommandTarget.PLAYER;
+        }
 
+        throw new IllegalArgumentException(String.format("No suitable target type has been found for target %s.", serverEntity.getClass()
+            .getName()));
+    }
 }

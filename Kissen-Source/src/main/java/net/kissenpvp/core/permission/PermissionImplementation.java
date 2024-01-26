@@ -20,18 +20,23 @@ package net.kissenpvp.core.permission;
 
 import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.event.EventCancelledException;
+import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.permission.PermissionGroup;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
-public interface PermissionImplementation extends Implementation {
+public interface PermissionImplementation<T extends Permission> extends Implementation {
 
     @NotNull PermissionGroup<?> create(@NotNull String name, @Nullable Map<String, String> data) throws EventCancelledException;
 
     @NotNull Optional<PermissionGroup<?>> getPermissionGroupSavable(@NotNull String name);
+
+    @NotNull @Unmodifiable Set<PermissionGroup<T>> getInternalGroups();
 
     void removePermissionGroup(@NotNull String name);
 

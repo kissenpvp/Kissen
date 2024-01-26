@@ -22,14 +22,15 @@ import lombok.Getter;
 import net.kissenpvp.core.api.database.savable.list.SavableList;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.permission.Permission;
-import net.kissenpvp.core.api.permission.PermissionEntry;
 import net.kissenpvp.core.api.permission.PermissionGroup;
+import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.time.TemporalMeasureNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 public abstract class KissenGroupablePermissionEntry<T extends Permission> extends KissenPermissionEntry<T> implements PermissionCollector<T>
@@ -75,6 +76,14 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
     }
 
     @Override
+    public @NotNull @Unmodifiable Set<PermissionGroup<T>> getPermissionGroups()
+    {
+        PermissionImplementation<T> permission = KissenCore.getInstance().getImplementation(PermissionImplementation.class);
+        return permission.getInternalGroups().stream().filter(group -> group.getMember().contains(getPermissionID())).collect(
+                Collectors.toUnmodifiableSet());
+    }
+
+    @Override
     public synchronized @NotNull @Unmodifiable Set<T> getPermissionList() {
         if (cache == null)
         {
@@ -92,7 +101,6 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
     @Override
     public @NotNull Set<T> permissionCollector()
     {
-        System.out.println(getPermissionID() + " " + getPermissionGroups().stream().map(PermissionEntry::getPermissionID).toList());
         Set<T> permissions = new KissenPermissionSet<>(getOwnPermissions());
         getPermissionGroups().stream().map(PermissionGroup::getPermissionList).forEach(permissions::addAll);
         return permissions;
@@ -105,6 +113,7 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
         {
             Comparator<PermissionGroup<T>> compareID = Comparator.comparing(PermissionGroup::getPermissionID);
             List<PermissionGroup<T>> sorted = getPermissionGroups().stream().sorted(compareID).toList();
+
             LinkedHashSet<String> permissionGroups = new LinkedHashSet<>(sorted.stream().map(PermissionGroup::getPermissionID).toList());
             sorted.forEach(group -> permissionGroups.addAll(((PermissionCollector<T>) group).groupCollector()));
             groupCache = new ArrayList<>(permissionGroups.stream().toList());

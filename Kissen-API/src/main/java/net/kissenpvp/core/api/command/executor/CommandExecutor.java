@@ -26,5 +26,4 @@ import org.jetbrains.annotations.NotNull;
 public interface CommandExecutor<S extends ServerEntity> {
 
     boolean execute(@NotNull CommandPayload<S> commandPayload);
-
 }

@@ -6,10 +6,10 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..39ba8eba71f584e717ec2ccbf3967be9958790a8
+index 0000000000000000000000000000000000000000..0b37b7c0653395d7aa554846cde0e9254a11c93d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
-@@ -0,0 +1,78 @@
+@@ -0,0 +1,50 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -30,12 +30,7 @@ index 0000000000000000000000000000000000000000..39ba8eba71f584e717ec2ccbf3967be9
 +
 +package net.kissenpvp.paper.api.command;
 +
-+import net.kissenpvp.core.api.command.annotations.CommandData;
-+import net.kissenpvp.core.api.command.executor.CommandExecutor;
-+import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
 +import org.bukkit.command.Command;
-+import org.bukkit.command.CommandMap;
-+import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
 +
 +/**
@@ -48,7 +43,7 @@ index 0000000000000000000000000000000000000000..39ba8eba71f584e717ec2ccbf3967be9
 + * <p>
 + * Subclasses should extend this class to provide specific implementations for each command.
 + *
-+ * @see org.bukkit.command.Command
++ * @see Command
 + */
 +public abstract class KissenCommand extends Command {
 +
@@ -59,38 +54,15 @@ index 0000000000000000000000000000000000000000..39ba8eba71f584e717ec2ccbf3967be9
 +     *             This is the primary identifier for the command and is used in command
 +     *             processing to map user inputs to the corresponding command.
 +     * @throws NullPointerException if the {@code name} parameter is null.
-+     * @see org.bukkit.command.Command
++     * @see Command
 +     */
 +    protected KissenCommand(@NotNull String name) {
 +        super(name);
 +    }
-+
-+    /**
-+     * Initializes the command with the provided command data and executor.
-+     * <p>
-+     * This method is used to set up the command with the given data and to assign an executor to handle
-+     * the command execution. This setup process is typically performed during command registration.
-+     *
-+     * @param commandData     The details about the command (e.g., name, description, usage). Must not be null.
-+     * @param commandExecutor The executor to handle the command execution. Must not be null.
-+     * @throws NullPointerException if any of the parameters is null.
-+     */
-+    public abstract void initCommand(@NotNull CommandData commandData, @NotNull CommandExecutor<CommandSender> commandExecutor);
-+
-+    /**
-+     * Initializes the command with a given tab completer.
-+     * <p>
-+     * This method is used to set up a tab completion system for the command, which assists the user by
-+     * filling in possible command arguments as they type. This method is typically called when the command is registered.
-+     *
-+     * @param completerExecutor The tab completion executor to register. Must not be null.
-+     * @throws NullPointerException if the completerExecutor is null.
-+     */
-+    public abstract void initCompleter(@NotNull TabCompleterExecutor<CommandSender> completerExecutor);
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java b/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ca377cfde793abb8eebe3aa9ded9391dc84d387d
+index 0000000000000000000000000000000000000000..0dc73860f7084c32a4103a2facb8b5b5426d3d25
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/PaperArgumentParser.java
 @@ -0,0 +1,40 @@
@@ -131,12 +103,12 @@ index 0000000000000000000000000000000000000000..ca377cfde793abb8eebe3aa9ded9391d
 + *
 + * @param <T> the type of object that the parser can parse.
 + * @see ArgumentParser
-+ * @see org.bukkit.command.CommandSender
++ * @see CommandSender
 + */
 +public interface PaperArgumentParser<T> extends ArgumentParser<T, CommandSender> { }
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d63915d40118b0684d6e3850c0737dff5a2bd9a1
+index 0000000000000000000000000000000000000000..a3e32fb7c82aeaaebd8f1ec73f12ddf066367613
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandExceptionHandler.java
 @@ -0,0 +1,23 @@
@@ -160,15 +132,15 @@ index 0000000000000000000000000000000000000000..d63915d40118b0684d6e3850c0737dff
 + *
 + * @param <T> the type of exception this handler can handle
 + * @see CommandExceptionHandler
-+ * @see org.bukkit.command.CommandSender
++ * @see CommandSender
 + */
 +public interface PaperCommandExceptionHandler<T extends Throwable> extends CommandExceptionHandler<T, CommandSender> { }
 diff --git a/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6ec345fde9e21d50d0bd0dae833f590f2fda756f
+index 0000000000000000000000000000000000000000..a29d1dac0b3a8737af4e2376ac894bb919fa4416
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/command/PaperCommandImplementation.java
-@@ -0,0 +1,97 @@
+@@ -0,0 +1,42 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -189,11 +161,10 @@ index 0000000000000000000000000000000000000000..6ec345fde9e21d50d0bd0dae833f590f
 +
 +package net.kissenpvp.paper.api.command;
 +
-+import net.kissenpvp.core.api.base.ExceptionHandler;
 +import net.kissenpvp.core.api.base.Implementation;
-+import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
++import net.kissenpvp.core.api.base.plugin.KissenPlugin;
++import net.kissenpvp.core.api.command.CommandHandler;
 +import org.bukkit.command.CommandSender;
-+import org.bukkit.plugin.Plugin;
 +import org.jetbrains.annotations.NotNull;
 +
 +import java.util.Optional;
@@ -201,68 +172,14 @@ index 0000000000000000000000000000000000000000..6ec345fde9e21d50d0bd0dae833f590f
 +/**
 + * Interface for the specific implementation of command operations for the Paper API.
 + * <p>
-+ * This interface extends the {@link net.kissenpvp.core.api.base.Implementation} and provides methods related to the command handling
++ * This interface extends the {@link Implementation} and provides methods related to the command handling
 + * in the context of the Paper API. It outlines the operations for command retrieval, registration, tab completion, and de-registration.
 + *
-+ * @see net.kissenpvp.core.api.base.Implementation
++ * @see Implementation
 + */
-+public interface PaperCommandImplementation extends Implementation {
++public interface PaperCommandImplementation extends Implementation
++{
 +
-+    /**
-+     * Retrieves a command by its name.
-+     *
-+     * @param name The name of the command. Must not be null.
-+     * @return An {@link java.util.Optional} that contains the Command if it exists; otherwise, it will be empty.
-+     * @throws NullPointerException If the {@code name} parameter is null.
-+     */
-+    @NotNull Optional<KissenCommand> getCommand(@NotNull Plugin plugin, @NotNull String name);
++    @NotNull Optional<CommandHandler<CommandSender, KissenCommand>> getPluginHandler(@NotNull KissenPlugin kissenPlugin);
 +
-+    /**
-+     * Registers one or more objects that contain command methods with the specified {@link org.bukkit.plugin.Plugin}.
-+     *
-+     * @param plugin  The plugin to register the commands with. Must not be null.
-+     * @param objects The object(s) containing the commands to be registered. Must not be null.
-+     * @throws NullPointerException If any of the parameters is null.
-+     */
-+    void registerCommand(@NotNull Plugin plugin, @NotNull Object... objects);
-+
-+    /**
-+     * Registers a tab completion executor for a command with the given name.
-+     *
-+     * @param plugin               The plugin to register the tab completer with. Must not be null.
-+     * @param name                 The name of the command to associate the tab completer with. Must not be null.
-+     * @param tabCompleterExecutor The tab completion executor to register. Must not be null.
-+     * @throws NullPointerException If any of the parameters is null.
-+     */
-+    void registerCompleter(@NotNull Plugin plugin, @NotNull String name, @NotNull TabCompleterExecutor<CommandSender> tabCompleterExecutor);
-+
-+    /**
-+     * Unregisters a command by its name.
-+     *
-+     * @param name The name of the command to unregister. Must not be null.
-+     * @return true if the command was found and unregistered successfully, false otherwise.
-+     * @throws NullPointerException If the {@code name} parameter is null.
-+     */
-+    boolean unregisterCommand(@NotNull String name);
-+
-+    /**
-+     * Registers a parser for arguments of a specific type.
-+     * <p>
-+     * The provided parser will be used to convert command-line parameters into objects of the specified type.
-+     *
-+     * @param type           The type of object that the parser will create. Must not be null.
-+     * @param argumentParser The parser that parses command-line parameters and creates objects of the specified type. Must not be null.
-+     * @throws NullPointerException If any of the parameters is null.
-+     */
-+    <T> void registerParser(@NotNull Class<T> type, @NotNull PaperArgumentParser<T> argumentParser);
-+
-+    /**
-+     * Registers an exception handler.
-+     * <p>
-+     * The provided handler will be used to handle the exceptions that occur in the command execution.
-+     *
-+     * @param exceptionHandler The exception handler that is responsible to handle exceptions occurring during command execution. Must not be null.
-+     * @throws NullPointerException If the {@code exceptionHandler} parameter is null.
-+     */
-+    void registerHandler(@NotNull ExceptionHandler<?> exceptionHandler);
 +}

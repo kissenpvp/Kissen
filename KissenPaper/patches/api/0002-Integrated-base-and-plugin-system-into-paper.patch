@@ -108,10 +108,10 @@ index 4eb639fbb46a0848be207149ea433455550fae1c..5526f527d85e25070e6d3c335bc313fa
       * Returns the folder that the plugin data's files are located in. The
       * folder may not yet exist.
 diff --git a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..73a253f24ef83ec7b07f022c9f935c0c68fdacec 100644
+index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..e7536f94638f3d274a435e522fa911144d2e7af9 100644
 --- a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
 +++ b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-@@ -456,4 +456,16 @@ public abstract class JavaPlugin extends PluginBase {
+@@ -456,4 +456,22 @@ public abstract class JavaPlugin extends PluginBase {
          }
          return plugin;
      }
@@ -126,13 +126,27 @@ index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..73a253f24ef83ec7b07f022c9f935c0c
 +    public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat translationTemplate) {
 +        getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(this, key, translationTemplate);
 +    }
++
++    @Override
++    public @NotNull net.kissenpvp.core.api.command.CommandHandler<CommandSender, net.kissenpvp.paper.api.command.KissenCommand> getCommandHandler()
++    {
++        return getKissen().getImplementation(net.kissenpvp.paper.api.command.PaperCommandImplementation.class).getPluginHandler(this).orElseThrow();
++    }
 +    // KissenPaper end
  }
 diff --git a/src/test/java/org/bukkit/plugin/TestPlugin.java b/src/test/java/org/bukkit/plugin/TestPlugin.java
-index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..bccca0582db73d9551acd8b64ecd6c83889f8bec 100644
+index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..a9c294be5f42f7359f302a343e4a09747293c6d2 100644
 --- a/src/test/java/org/bukkit/plugin/TestPlugin.java
 +++ b/src/test/java/org/bukkit/plugin/TestPlugin.java
-@@ -133,4 +133,16 @@ public class TestPlugin extends PluginBase {
+@@ -9,6 +9,7 @@ import org.bukkit.command.CommandSender;
+ import org.bukkit.configuration.file.FileConfiguration;
+ import org.bukkit.generator.BiomeProvider;
+ import org.bukkit.generator.ChunkGenerator;
++import org.jetbrains.annotations.NotNull;
+ 
+ public class TestPlugin extends PluginBase {
+     private boolean enabled = true;
+@@ -133,4 +134,22 @@ public class TestPlugin extends PluginBase {
      public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
          throw new UnsupportedOperationException("Not supported.");
      }
@@ -146,6 +160,12 @@ index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..bccca0582db73d9551acd8b64ecd6c83
 +    @Override
 +    public void registerTranslation(@org.jetbrains.annotations.NotNull String key, java.text.@org.jetbrains.annotations.NotNull MessageFormat defaultMessage) {
 +        throw new UnsupportedOperationException("Not supported.");
++    }
++
++    @Override
++    public @NotNull net.kissenpvp.core.api.command.CommandHandler<?, ?> getCommandHandler()
++    {
++        throw new UnsupportedOperationException();
 +    }
 +    // KissenPaper end
  }

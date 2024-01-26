@@ -20,6 +20,7 @@ package net.kissenpvp.core.api.base.plugin;
 
 import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.base.Kissen;
+import net.kissenpvp.core.api.command.CommandHandler;
 import org.intellij.lang.annotations.Subst;
 import org.jetbrains.annotations.NotNull;
 
@@ -76,4 +77,6 @@ public interface KissenPlugin {
     @NotNull Kissen getKissen();
 
     void registerTranslation(@NotNull String key, @NotNull MessageFormat defaultMessage);
+
+    @NotNull CommandHandler<?, ?> getCommandHandler();
 }

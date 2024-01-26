@@ -18,28 +18,21 @@
 
 package net.kissenpvp.core.command;
 
-import net.kissenpvp.core.api.base.ExceptionHandler;
+import lombok.Getter;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.command.ArgumentParser;
-import net.kissenpvp.core.api.command.CommandPayload;
+import net.kissenpvp.core.api.command.CommandHandler;
 import net.kissenpvp.core.api.command.exception.deserialization.TemporaryDeserializationException;
+import net.kissenpvp.core.api.command.handler.BackendExceptionHandler;
 import net.kissenpvp.core.api.command.handler.DateTimeParseExceptionHandler;
+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.AccurateDuration;
-import net.kissenpvp.core.command.handler.*;
-import net.kissenpvp.core.command.parser.BooleanParser;
-import net.kissenpvp.core.command.parser.ByteParser;
-import net.kissenpvp.core.command.parser.CharacterParser;
-import net.kissenpvp.core.command.parser.DoubleParser;
-import net.kissenpvp.core.command.parser.AccurateDurationParser;
-import net.kissenpvp.core.command.parser.FloatParser;
-import net.kissenpvp.core.command.parser.IntegerParser;
-import net.kissenpvp.core.command.parser.LongParser;
-import net.kissenpvp.core.command.parser.NamedTextColorParser;
-import net.kissenpvp.core.command.parser.ShortParser;
-import net.kissenpvp.core.command.parser.StringParser;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.base.KissenImplementation;
-import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
-import net.kissenpvp.core.api.command.handler.BackendExceptionHandler;
+import net.kissenpvp.core.command.exceptionhandler.*;
+import net.kissenpvp.core.command.handler.InternalCommandHandler;
+import net.kissenpvp.core.command.handler.PluginCommandHandler;
+import net.kissenpvp.core.command.parser.*;
 import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
@@ -47,58 +40,58 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.reflect.Array;
 import java.text.MessageFormat;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
-public abstract class KissenCommandImplementation implements KissenImplementation {
-
-    private final Map<Class<?>, ArgumentParser<?, ?>> parserList;
-    private final CommandExceptionHandlerService commandExceptionHandlerService;
+@Getter
+public abstract class CommandImplementation<S extends ServerEntity> implements KissenImplementation
+{
+    private final Set<PluginCommandHandler<S, ?>> handler;
+    private final InternalCommandHandler<S, ?> internalHandler;
+    private final TargetValidator targetValidator;
 
     /**
      * Creates a new instance of KissenCommandImplementation.
      * Initializes the parserList with an empty HashMap.
      * Initializes the exceptionHandlers with an empty HashSet.
      */
-    public KissenCommandImplementation() {
-        this.parserList = new HashMap<>();
-        this.commandExceptionHandlerService = new CommandExceptionHandlerService();
+    public CommandImplementation() {
+        this.handler = new HashSet<>();
+        this.internalHandler = constructInternalHandler();
+        this.targetValidator = new TargetValidator();
 
         // default
-        registerParser(String.class, new StringParser<>());
-        registerParser(Byte.class, new ByteParser<>());
-        registerParser(Short.class, new ShortParser<>());
-        registerParser(Integer.class, new IntegerParser<>());
-        registerParser(Float.class, new FloatParser<>());
-        registerParser(Double.class, new DoubleParser<>());
-        registerParser(Long.class, new LongParser<>());
-        registerParser(Character.class, new CharacterParser<>());
-        registerParser(Boolean.class, new BooleanParser<>());
+        getInternalHandler().registerParser(String.class, new StringParser<>());
+        getInternalHandler().registerParser(Byte.class, new ByteParser<>());
+        getInternalHandler().registerParser(Short.class, new ShortParser<>());
+        getInternalHandler().registerParser(Integer.class, new IntegerParser<>());
+        getInternalHandler().registerParser(Float.class, new FloatParser<>());
+        getInternalHandler().registerParser(Double.class, new DoubleParser<>());
+        getInternalHandler().registerParser(Long.class, new LongParser<>());
+        getInternalHandler().registerParser(Character.class, new CharacterParser<>());
+        getInternalHandler().registerParser(Boolean.class, new BooleanParser<>());
 
         // we love java, right?
-        registerParser(Byte.TYPE, new ByteParser<>());
-        registerParser(Short.TYPE, new ShortParser<>());
-        registerParser(Integer.TYPE, new IntegerParser<>());
-        registerParser(Float.TYPE, new FloatParser<>());
-        registerParser(Double.TYPE, new DoubleParser<>());
-        registerParser(Long.TYPE, new LongParser<>());
-        registerParser(Character.TYPE, new CharacterParser<>());
-        registerParser(Boolean.TYPE, new BooleanParser<>());
+        getInternalHandler().registerParser(Byte.TYPE, new ByteParser<>());
+        getInternalHandler().registerParser(Short.TYPE, new ShortParser<>());
+        getInternalHandler().registerParser(Integer.TYPE, new IntegerParser<>());
+        getInternalHandler().registerParser(Float.TYPE, new FloatParser<>());
+        getInternalHandler().registerParser(Double.TYPE, new DoubleParser<>());
+        getInternalHandler().registerParser(Long.TYPE, new LongParser<>());
+        getInternalHandler().registerParser(Character.TYPE, new CharacterParser<>());
+        getInternalHandler().registerParser(Boolean.TYPE, new BooleanParser<>());
 
         // advanced
-        registerParser(NamedTextColor.class, new NamedTextColorParser<>());
-        registerParser(AccurateDuration.class, new AccurateDurationParser<>());
+        getInternalHandler().registerParser(NamedTextColor.class, new NamedTextColorParser<>());
+        getInternalHandler().registerParser(AccurateDuration.class, new AccurateDurationParser<>());
 
         // Handler
-        registerHandler(new BackendExceptionHandler<>());
-        registerHandler(new NumberFormatExceptionHandler<>());
-        registerHandler(new CommandExceptionHandler<>());
-        registerHandler(new InvocationTargetExceptionHandler<>());
-        registerHandler(new DateTimeParseExceptionHandler<>());
-        registerHandler(new NullPointerExceptionHandler<>());
-        registerHandler(new InvalidColorExceptionHandler<>());
+        getInternalHandler().registerExceptionHandler(new BackendExceptionHandler<>());
+        getInternalHandler().registerExceptionHandler(new NumberFormatExceptionHandler<>());
+        getInternalHandler().registerExceptionHandler(new CommandExceptionHandler<>());
+        getInternalHandler().registerExceptionHandler(new InvocationTargetExceptionHandler<>());
+        getInternalHandler().registerExceptionHandler(new DateTimeParseExceptionHandler<>());
+        getInternalHandler().registerExceptionHandler(new NullPointerExceptionHandler<>());
+        getInternalHandler().registerExceptionHandler(new InvalidColorExceptionHandler<>());
     }
 
     @Override
@@ -111,46 +104,30 @@ public abstract class KissenCommandImplementation implements KissenImplementatio
         return KissenImplementation.super.start();
     }
 
-    /**
-     * Registers a parser for a given type.
-     * If the type already exists in the system, an exception will be thrown.
-     *
-     * @param <T>     the type to register parser for
-     * @param <S>     the server entity type
-     * @param type    the type to register parser for
-     * @param parser  the parser to register
-     * @throws IllegalArgumentException if the type already exists in the system
-     */
-    public <T, S extends ServerEntity> void registerParser(@NotNull Class<T> type, @NotNull ArgumentParser<T, S> parser) {
-        if (!parserList.containsKey(type)) {
-            parserList.put(type, parser);
-            return;
-        }
-        throw new IllegalArgumentException(String.format("Type %s already exists in the system.", type.getSimpleName()));
-    }
-
-    /**
-     * Registers an ExceptionHandler to be used by KissenCommandImplementation.
-     *
-     * @param exceptionHandler The ExceptionHandler to be registered.
-     */
-    public void registerHandler(@NotNull ExceptionHandler<?> exceptionHandler)
+    @Override
+    public void load(@NotNull KissenPlugin kissenPlugin)
     {
-        commandExceptionHandlerService.registerHandler(exceptionHandler);
+        KissenCore.getInstance().getLogger().info("Register command handler for {}.", kissenPlugin.getName());
+        registerHandler(kissenPlugin);
     }
 
-    /**
-     * Handles a Throwable using the registered ExceptionHandlers.
-     *
-     * @param throwable The Throwable to be handled.
-     */
-    public <S extends ServerEntity> boolean handle(@NotNull CommandPayload<S> commandPayload, @NotNull Throwable throwable) {
-        return commandExceptionHandlerService.handleThrowable(commandPayload, throwable);
+    protected void registerHandler(@NotNull KissenPlugin kissenPlugin)
+    {
+        PluginCommandHandler<S, ?> pluginHandler = constructHandler(kissenPlugin);
+        if (getHandler().contains(pluginHandler))
+        {
+            throw new IllegalArgumentException(String.format("Command handler for %s is already registered.", kissenPlugin.getName()));
+        }
+        this.handler.add(pluginHandler);
     }
 
+    protected abstract InternalCommandHandler<S, ?> constructInternalHandler();
 
-    public @NotNull @Unmodifiable Map<Class<?>, ArgumentParser<?, ?>> getParserList() {
-        return Collections.unmodifiableMap(parserList);
+    protected abstract @NotNull PluginCommandHandler<S, ?> constructHandler(@NotNull KissenPlugin kissenPlugin);
+
+    public @NotNull @Unmodifiable Set<PluginCommandHandler<S, ?>> getHandler()
+    {
+        return Collections.unmodifiableSet(handler);
     }
 
     /**
@@ -244,6 +221,4 @@ public abstract class KissenCommandImplementation implements KissenImplementatio
     private @NotNull Object[] createSingleElementArray(@NotNull Class<?> type) {
         return (Object[]) Array.newInstance(type, 1);
     }
-
-    public abstract void registerCommand(@NotNull Object... commands);
 }

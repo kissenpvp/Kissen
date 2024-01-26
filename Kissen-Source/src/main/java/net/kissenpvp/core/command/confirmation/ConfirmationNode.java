@@ -11,6 +11,7 @@ public record ConfirmationNode(@Nullable KissenPlugin plugin, @NotNull Instant t
     @Override
     public boolean isValid()
     {
+        //TODO not valid when plugin disabled
         return Instant.now().isBefore(timeStamp());
     }
 }

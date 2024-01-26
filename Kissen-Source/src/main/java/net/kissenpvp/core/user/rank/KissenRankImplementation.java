@@ -116,14 +116,12 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
      */
     protected void fetchRanks()
     {
-        getMeta().getData(getSavableType()).thenAccept((data) ->
+        Map<String, SavableMap> data = getMeta().getData(getSavableType()).join();
+        for(SavableMap savableMap : data.values())
         {
-            for(SavableMap savableMap : data.values())
-            {
-                cachedRankIdSet.add(setup(savableMap.getNotNull("id"), savableMap));
-            }
-            KissenCore.getInstance().getLogger().info("Successfully loaded {} rank(s) from the database.", cachedRankIdSet.size());
-        }).join();
+            cachedRankIdSet.add(setup(savableMap.getNotNull("id"), savableMap));
+        }
+        KissenCore.getInstance().getLogger().info("Successfully loaded {} rank(s) from the database.", cachedRankIdSet.size());
     }
 
     /**

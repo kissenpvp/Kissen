@@ -1,4 +1,4 @@
-package net.kissenpvp.core.command.handler;
+package net.kissenpvp.core.command.exceptionhandler;
 
 import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.exception.CommandExceptionHandler;

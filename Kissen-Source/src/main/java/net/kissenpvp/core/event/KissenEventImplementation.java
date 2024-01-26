@@ -22,7 +22,7 @@ import net.kissenpvp.core.api.event.EventClass;
 import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.event.EventListener;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.command.KissenCommandImplementation;
+import net.kissenpvp.core.command.CommandImplementation;
 import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
@@ -47,8 +47,8 @@ public class KissenEventImplementation implements EventImplementation {
         KissenLocalizationImplementation loc = KissenCore.getInstance().getImplementation(KissenLocalizationImplementation.class);
         loc.register("server.event.cancel", new MessageFormat("The action has not been executed."));
 
-        KissenCommandImplementation command = KissenCore.getInstance().getImplementation(KissenCommandImplementation.class);
-        command.registerHandler(new EventCancelledHandler<>());
+        CommandImplementation<?> command = KissenCore.getInstance().getImplementation(CommandImplementation.class);
+        command.getInternalHandler().registerExceptionHandler(new EventCancelledHandler<>());
         return EventImplementation.super.start();
     }
 

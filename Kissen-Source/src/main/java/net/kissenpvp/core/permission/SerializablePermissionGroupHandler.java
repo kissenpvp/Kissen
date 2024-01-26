@@ -40,7 +40,7 @@ public class SerializablePermissionGroupHandler implements SerializableSavableHa
     public Savable getSavable() {
         return (Savable) KissenCore.getInstance()
                 .getImplementation(PermissionImplementation.class)
-                .getPermissionGroupSavable(permissionGroup).orElseThrow(NullPointerException::new);
+                .getPermissionGroupSavable(permissionGroup).orElse(null);
     }
 
     @Override

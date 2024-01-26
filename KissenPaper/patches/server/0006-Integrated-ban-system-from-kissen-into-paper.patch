@@ -122,10 +122,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ecb0baf6216f53f3254b330817debaaf15f78938
+index 0000000000000000000000000000000000000000..a2c8fa7921cedfaec2829f15ac9a14eb431cc1b3
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,506 @@
+@@ -0,0 +1,509 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -165,22 +165,22 @@ index 0000000000000000000000000000000000000000..ecb0baf6216f53f3254b330817debaaf
 +import net.kissenpvp.core.ban.KissenPunishmentNode;
 +import net.kissenpvp.core.base.KissenCore;
 +import net.kissenpvp.core.base.KissenImplementation;
++import net.kissenpvp.core.command.CommandImplementation;
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 +import net.kissenpvp.paper.api.ban.PaperBan;
 +import net.kissenpvp.paper.api.ban.PaperBanImplementation;
 +import net.kissenpvp.paper.api.ban.PaperPunishment;
 +import net.kissenpvp.paper.api.base.Context;
-+import net.kissenpvp.paper.api.command.PaperCommandImplementation;
 +import net.kissenpvp.paper.ban.command.BanCommand;
 +import net.kissenpvp.paper.ban.command.PaperBanParser;
 +import net.kissenpvp.paper.ban.command.PaperPunishmentParser;
 +import net.kissenpvp.paper.ban.warn.command.WarnCommand;
-+import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
 +import net.kyori.adventure.text.Component;
 +import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 +import net.minecraft.server.MinecraftServer;
 +import org.bukkit.BanEntry;
 +import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
 +import org.bukkit.entity.Player;
 +import org.bukkit.event.player.PlayerKickEvent;
 +import org.jetbrains.annotations.Contract;
@@ -224,18 +224,21 @@ index 0000000000000000000000000000000000000000..ecb0baf6216f53f3254b330817debaaf
 +        kissenLocalizationImplementation.register("server.ban.warn.ban", new MessageFormat("The player {0} already has {1} warn(s). Do you want to punish the player instead?\n{2} {3}"));
 +        kissenLocalizationImplementation.register("server.ban.warn.clear", new MessageFormat("The warn(s) of the player {0} have been reset."));
 +
-+        PaperCommandImplementation command = Bukkit.getKissen().getImplementation(PaperCommandImplementation.class);
-+        command.registerParser(PaperBan.class, new PaperBanParser());
-+        command.registerParser(PaperPunishment.class, new PaperPunishmentParser());
-+        command.registerHandler(new PaperBanParser());
-+        command.registerHandler(new PaperPunishmentParser());
++        CommandImplementation<CommandSender> command = Bukkit.getKissen().getImplementation(
++                CommandImplementation.class);
++        command.getInternalHandler().registerParser(PaperBan.class, new PaperBanParser());
++        command.getInternalHandler().registerParser(PaperPunishment.class, new PaperPunishmentParser());
++        command.getInternalHandler().registerExceptionHandler(new PaperBanParser());
++        command.getInternalHandler().registerExceptionHandler(new PaperPunishmentParser());
 +        return super.start();
 +    }
 +
 +    @Override
 +    public void setupComplete() {
-+        Bukkit.getKissen().getImplementation(KissenPaperCommandImplementation.class).registerCommand(new BanCommand());
-+        Bukkit.getKissen().getImplementation(KissenPaperCommandImplementation.class).registerCommand(new WarnCommand());
++        CommandImplementation<CommandSender> command = Bukkit.getKissen().getImplementation(
++                CommandImplementation.class);
++        command.getInternalHandler().registerCommand(new BanCommand());
++        command.getInternalHandler().registerCommand(new WarnCommand());
 +    }
 +
 +    @Override
