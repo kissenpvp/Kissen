@@ -56,7 +56,7 @@ import java.util.function.Supplier;
  * If a parameter type has an associated {@link ArgumentParser}, it's used to deserialize default values (if any) to the
  * appropriate type. If no such parser exists for a parameter's type, an {@link ArgumentParserAbsentException} is thrown.
  * <p>
- * The main public method provided by this class is {@link #evaluateMethod(KissenPlugin, Method)}, which processes a method and returns
+ * The main public method provided by this class is {@link #evaluateMethod(Method)}, which processes a method and returns
  * a list of its parameters represented as {@link Argument} objects.
  */
 public class MethodEvaluator<S extends ServerEntity> {
