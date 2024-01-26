@@ -68,8 +68,6 @@ public class SerializablePermissionGroupHandler implements SerializableSavableHa
 
     @Override
     public void delete() {
-        KissenCore.getInstance()
-                .getImplementation(PermissionImplementation.class)
-                .removePermissionGroup(permissionGroup);
+
     }
 }

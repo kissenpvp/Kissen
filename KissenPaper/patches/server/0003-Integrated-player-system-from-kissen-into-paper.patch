@@ -2293,10 +2293,10 @@ index 0000000000000000000000000000000000000000..7448120623d9cd920dee47b1b76c0629
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..69bbd716814ff259190b217caa27bc63f65cfbeb
+index 0000000000000000000000000000000000000000..0408f67c80dd4a8ec327b8317e2fc5c06fd19386
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java
-@@ -0,0 +1,141 @@
+@@ -0,0 +1,144 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2389,6 +2389,9 @@ index 0000000000000000000000000000000000000000..69bbd716814ff259190b217caa27bc63
 +    @Override
 +    public int delete()
 +    {
++        KissenPaperPermissionImplementation implementation = Bukkit.getKissen().getImplementation(KissenPaperPermissionImplementation.class);
++        implementation.removePermissionGroup(getPermissionID());
++
 +        Function<GroupablePermissionEntry<PaperPermission>, Integer> delete = group -> ((Savable) group).delete();
 +        return getContext(Context.LOCAL).map(delete).orElse(0) + getContext(Context.GLOBAL).map(delete).orElse(0);
 +    }
