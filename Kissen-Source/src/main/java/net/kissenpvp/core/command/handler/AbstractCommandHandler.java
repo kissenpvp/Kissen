@@ -52,7 +52,7 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
     @Override
     public @NotNull Optional<C> getCommand(@NotNull String name)
     {
-        return getCommands().stream().filter(command -> command.getName().equals(name)).findFirst();
+        return getCommands().stream().filter(command -> command.getFullName().equals(name)).findFirst();
     }
 
     @Override

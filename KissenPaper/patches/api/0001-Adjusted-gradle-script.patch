@@ -5,7 +5,7 @@ Subject: [PATCH] Adjusted gradle script
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index bf01892c248b988531d21d9fb0f74d0adf2205ac..e07b98e24a773e71fda054a73f0df0c0efd08838 100644
+index bf01892c248b988531d21d9fb0f74d0adf2205ac..8e022c42acd75995454ab50fcc876f1cb946b4b6 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -56,6 +56,10 @@ dependencies {
@@ -19,3 +19,14 @@ index bf01892c248b988531d21d9fb0f74d0adf2205ac..e07b98e24a773e71fda054a73f0df0c0
      api("org.apache.maven:maven-resolver-provider:3.9.6") // Paper - make API dependency for Paper Plugins
      compileOnly("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.18")
      compileOnly("org.apache.maven.resolver:maven-resolver-transport-http:1.9.18")
+@@ -77,8 +81,8 @@ dependencies {
+     testImplementation("org.ow2.asm:asm-tree:9.5")
+ }
+ 
+-// Paper start
+-val generatedApiPath: java.nio.file.Path = rootProject.projectDir.toPath().resolve("paper-api-generator/generated")
++// Paper start // KissenPaper - adjust generator path
++val generatedApiPath: java.nio.file.Path = rootProject.projectDir.toPath().resolve("KissenPaper/paper-api-generator/generated")
+ idea {
+     module {
+         generatedSourceDirs.add(generatedApiPath.toFile())
