@@ -987,7 +987,7 @@ index 0000000000000000000000000000000000000000..b09c3c75fd962ed7aab8f694f4bea263
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..779cafe5ae29510bbb02fd561295a5f1e54ac0a1
+index 0000000000000000000000000000000000000000..f1d03a73d9abd5c115dd2b4582e77656857f4368
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java
 @@ -0,0 +1,291 @@
@@ -1231,9 +1231,9 @@ index 0000000000000000000000000000000000000000..779cafe5ae29510bbb02fd561295a5f1
 +    }
 +
 +    @Override
-+    public boolean hasPermission(@NotNull String s)
++    public boolean hasPermission(@NotNull String permission)
 +    {
-+        return hasPermission(s, Context.LOCAL) || hasPermission(s, Context.GLOBAL);
++        return hasPermission(permission, Context.LOCAL) || hasPermission(permission, Context.GLOBAL);
 +    }
 +
 +    @Override
@@ -1255,7 +1255,7 @@ index 0000000000000000000000000000000000000000..779cafe5ae29510bbb02fd561295a5f1
 +    }
 +
 +    @NotNull
-+    public abstract Optional<GroupablePermissionEntry<PaperPermission>> getContext(@NotNull Context context);
++    public abstract Optional<? extends GroupablePermissionEntry<PaperPermission>> getContext(@NotNull Context context);
 +
 +    @NotNull
 +    public abstract GroupablePermissionEntry<PaperPermission> getContextNotNull(@NotNull Context context);
@@ -1324,10 +1324,10 @@ index 0000000000000000000000000000000000000000..7a22a03f4c65ff2c5cb8d8362802c26f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..461a287fe014650de2f12f85ee24e86e167d87d6
+index 0000000000000000000000000000000000000000..bcc8e9ffb6e9e78f3757664c5e645a6a33acec15
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
-@@ -0,0 +1,366 @@
+@@ -0,0 +1,362 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1467,16 +1467,12 @@ index 0000000000000000000000000000000000000000..461a287fe014650de2f12f85ee24e86e
 +    @Override
 +    public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getInternalGroups()
 +    {
-+        return getGroups().stream().map(group -> (PermissionGroup<PaperPermission>) group).collect(Collectors.toUnmodifiableSet());
++        return getGroups().stream().collect(Collectors.toUnmodifiableSet());
 +    }
 +
 +    @Override
 +    public @NotNull Optional<PermissionGroup<?>> getPermissionGroupSavable(@NotNull String name) {
-+        return getGroup(name).flatMap(group ->
-+        {
-+            KissenPaperPermissionGroup paperPermissionGroup = (KissenPaperPermissionGroup) group;
-+            return paperPermissionGroup.getContext(Context.GLOBAL).map(groupablePermissionEntry -> (PermissionGroup<?>) groupablePermissionEntry);
-+        });
++        return getGroup(name).flatMap(group -> ((KissenPaperPermissionGroup) group).getContext(Context.GLOBAL));
 +    }
 +
 +    @Override
@@ -1857,7 +1853,7 @@ index 0000000000000000000000000000000000000000..318e2520843c49567887703a254e03a8
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java b/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..203b642ae09198c695b84bbbd24100459e1edc6f
+index 0000000000000000000000000000000000000000..59063943235780b39c4128751dd68e70f143fb84
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java
 @@ -0,0 +1,277 @@
@@ -1939,7 +1935,7 @@ index 0000000000000000000000000000000000000000..203b642ae09198c695b84bbbd2410045
 +    @CommandData(value = "permission.group.wipe", permission = "*", runAsync = true)
 +    public void permissionGroupWipe(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group)
 +    {
-+        commandPayload.getSender().sendMessage(Component.text(group.wipePermissions() + " permissions wiped"));
++        commandPayload.getSender().sendMessage(Component.translatable("server.permission.groups.clear", commandPayload.getSender().displayName(), Component.text(group.wipeGroups())));
 +    }
 +
 +    @CommandData(value = "group", permission = "*", runAsync = true)
@@ -2293,10 +2289,10 @@ index 0000000000000000000000000000000000000000..7448120623d9cd920dee47b1b76c0629
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0408f67c80dd4a8ec327b8317e2fc5c06fd19386
+index 0000000000000000000000000000000000000000..64d10be321071db6793cfb48b30d3561d9916eea
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java
-@@ -0,0 +1,144 @@
+@@ -0,0 +1,131 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2360,11 +2356,7 @@ index 0000000000000000000000000000000000000000..0408f67c80dd4a8ec327b8317e2fc5c0
 +    @Override
 +    public @NotNull @Unmodifiable Set<String> getMember(@NotNull Context context)
 +    {
-+        return getContext(context).map(group ->
-+        {
-+            PermissionGroup<PaperPermission> permissionGroup = (PermissionGroup<PaperPermission>) group;
-+            return permissionGroup.getMember();
-+        }).orElse(Collections.emptySet());
++        return getContext(context).map(PermissionGroup::getMember).orElse(Collections.emptySet());
 +    }
 +
 +    @Override
@@ -2374,11 +2366,7 @@ index 0000000000000000000000000000000000000000..0408f67c80dd4a8ec327b8317e2fc5c0
 +
 +    @Override
 +    public boolean addMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry, @NotNull Context context) {
-+        return getContext(context).map(group ->
-+        {
-+            PermissionGroup<PaperPermission> permissionGroup = (PermissionGroup<PaperPermission>) group;
-+            return permissionGroup.addMember(groupablePermissionEntry);
-+        }).orElse(false);
++        return getContext(context).map(group -> group.addMember(groupablePermissionEntry)).orElse(false);
 +    }
 +
 +    @Override
@@ -2398,20 +2386,15 @@ index 0000000000000000000000000000000000000000..0408f67c80dd4a8ec327b8317e2fc5c0
 +
 +    @Override
 +    public boolean removeMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry, @NotNull Context context) {
-+        return getContext(context).map(group ->
-+        {
-+            PermissionGroup<PaperPermission> permissionGroup = (PermissionGroup<PaperPermission>) group;
-+            return permissionGroup.removeMember(groupablePermissionEntry);
-+        }).orElse(false);
++        return getContext(context).map(group -> group.removeMember(groupablePermissionEntry)).orElse(false);
 +    }
 +
 +    @Override
-+    public @NotNull Optional<GroupablePermissionEntry<PaperPermission>> getContext(@NotNull Context context)
++    public @NotNull Optional<PermissionGroup<PaperPermission>> getContext(@NotNull Context context)
 +    {
 +        Class<KissenPaperPermissionImplementation> clazz = KissenPaperPermissionImplementation.class;
 +        KissenPaperPermissionImplementation permissionImplementation = Bukkit.getKissen().getImplementation(clazz);
-+        // IntelliJ wants to map ladies within a radius of 30 miles
-+        return permissionImplementation.getGroup(getPermissionID(), context).map(group -> group);
++        return permissionImplementation.getGroup(getPermissionID(), context);
 +    }
 +
 +    @Override
