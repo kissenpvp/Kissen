@@ -11,6 +11,6 @@ public class CommandExceptionHandler<S extends ServerEntity> implements net.kiss
         //Basically pass through or return false if no suitable handler has been found
         //TODO
         // return Optional.ofNullable(throwable.getCause()).map(cause -> KissenCore.getInstance().getImplementation(KissenCommandImplementation.class).handle(commandPayload, cause)).orElse(false);
-        return true;
+        return false;
     }
 }

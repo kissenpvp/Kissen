@@ -18,6 +18,6 @@ public class InvalidColorExceptionHandler<S extends ServerEntity> implements Com
         {
             messageReceiver.getKyoriAudience().sendMessage(Component.translatable("server.command.invalid.color", Component.text(throwable.getInput())));
         }
-        return false;
+        return true;
     }
 }

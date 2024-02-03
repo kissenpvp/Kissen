@@ -1027,15 +1027,16 @@ index 0000000000000000000000000000000000000000..3109a2d03d33758a89ec9e23f77d3572
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/handler/ProfileNotFoundExceptionHandler.java b/src/main/java/net/kissenpvp/paper/command/handler/ProfileNotFoundExceptionHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..bc8cef62578687822d1835b89ff4557155518d2f
+index 0000000000000000000000000000000000000000..76bfba3f5bcba73d548659af671123e9cfe36754
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/handler/ProfileNotFoundExceptionHandler.java
-@@ -0,0 +1,16 @@
+@@ -0,0 +1,17 @@
 +package net.kissenpvp.paper.command.handler;
 +
 +import com.mojang.authlib.yggdrasil.ProfileNotFoundException;
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.paper.api.command.PaperCommandExceptionHandler;
++import net.kyori.adventure.text.Component;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
 +
@@ -1043,7 +1044,7 @@ index 0000000000000000000000000000000000000000..bc8cef62578687822d1835b89ff45571
 +    @Override
 +    public boolean handle(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull ProfileNotFoundException throwable) {
 +
-+        //TODO commandPayload.getSender().sendMessage(Component.translatable("server.command.mojang.profile.invalid"));
++        commandPayload.getSender().sendMessage(Component.translatable("server.command.mojang.profile.invalid"));
 +        return true;
 +    }
 +}
