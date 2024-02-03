@@ -5,10 +5,10 @@ Subject: [PATCH] Integrated base and plugin system into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-index 04efba1517e2bde8ecced31ab2eb669b2e84a28c..6293e86189a4fc6459dd4ded7ed1ee534166ea9c 100644
+index eeea1e6f7b1ed64567a3f90d8eb2e2cfd53e5912..3897b9706b588c780d055086498fa6a537068106 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-@@ -146,7 +146,13 @@ class PaperPluginInstanceManager {
+@@ -144,7 +144,13 @@ class PaperPluginInstanceManager {
      public void disablePlugins() {
          Plugin[] plugins = this.getPlugins();
          for (int i = plugins.length - 1; i >= 0; i--) {
@@ -372,7 +372,7 @@ index 0000000000000000000000000000000000000000..a2bfb1547286a1817305196df63cf547
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index fa2b4cdd4c4e2c1df3e378a7c706f06c3361ad53..faad1f194fdc4affad89678a76e737be9df7cef8 100644
+index d06185566b447c432d4dc2e3ba04d121bcdbc71b..98531c5e718f80c25c6d6009a1494b8bc5ac98a9 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -191,7 +191,7 @@ import org.bukkit.event.server.ServerLoadEvent;
@@ -380,15 +380,14 @@ index fa2b4cdd4c4e2c1df3e378a7c706f06c3361ad53..faad1f194fdc4affad89678a76e737be
  import co.aikar.timings.MinecraftTimings; // Paper
  
 -public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements ServerInfo, CommandSource, AutoCloseable {
-+public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements ServerInfo, CommandSource, AutoCloseable, net.kissenpvp.core.api.base.KissenServer {
++public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements ServerInfo, CommandSource, AutoCloseable, net.kissenpvp.core.api.base.KissenServer { // KissenPaper
  
      private static MinecraftServer SERVER; // Paper
      public static final Logger LOGGER = LogUtils.getLogger();
-@@ -1015,6 +1015,11 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
-             this.getProfileCache().save(false); // Paper - Perf: Async GameProfileCache saving
+@@ -1016,6 +1016,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
          }
          // Spigot end
-+
+ 
 +        // KissenPaper start
 +        net.kissenpvp.core.base.KissenCore.getInstance().shutdown();
 +        // KissenPaper end
@@ -396,7 +395,7 @@ index fa2b4cdd4c4e2c1df3e378a7c706f06c3361ad53..faad1f194fdc4affad89678a76e737be
          // Paper start - move final shutdown items here
          LOGGER.info("Flushing Chunk IO");
          // Paper end - move final shutdown items here
-@@ -1131,6 +1136,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1132,6 +1136,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
                  throw new IllegalStateException("Failed to initialize server");
              }
  
@@ -407,7 +406,7 @@ index fa2b4cdd4c4e2c1df3e378a7c706f06c3361ad53..faad1f194fdc4affad89678a76e737be
              this.nextTickTimeNanos = Util.getNanos();
              this.statusIcon = (ServerStatus.Favicon) this.loadStatusIcon().orElse(null); // CraftBukkit - decompile error
              this.status = this.buildServerStatus();
-@@ -1854,7 +1863,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1855,7 +1863,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
  
      @DontObfuscate
      public String getServerModName() {
@@ -447,7 +446,7 @@ index 6de6dad36203479677a29ad61e21bc369d4e5513..2514e7a65c95d4680d2c2b37fdf6e3bd
          // this.setPlayerList(new DedicatedPlayerList(this, this.registries(), this.playerDataStorage)); // Spigot - moved up
          this.server.loadPlugins();
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 25f41119bcc19bab7cd2fdb044147b3f78a8ef1c..f074cf41846b24c22e76f133076194b856927ea9 100644
+index 4df3b94c8126f00188f5e125757411a0359728fa..c6dc30a13b6b69dbb722cf128b34523fb2c4b2ec 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -264,7 +264,7 @@ import javax.annotation.Nullable; // Paper
