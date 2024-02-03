@@ -21,6 +21,7 @@ package net.kissenpvp.core.api.permission;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -45,12 +46,14 @@ public interface GroupablePermissionEntry<T extends Permission> extends Permissi
      */
     int wipeGroups();
 
+    @NotNull @Unmodifiable List<PermissionGroup<T>> getOwnPermissionGroups();
+
     /**
      * This method returns all groups of this specific permission entry
      *
      * @return A set of all groups
      */
-    @NotNull @Unmodifiable Set<PermissionGroup<T>> getPermissionGroups();
+    @NotNull @Unmodifiable List<PermissionGroup<T>> getPermissionGroups();
 
     /**
      * This method checks if the permission entry has a specific group

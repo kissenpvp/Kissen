@@ -38,6 +38,8 @@ public interface PermissionGroup<T extends Permission> extends GroupablePermissi
      */
     @NotNull @Unmodifiable Set<String> getMember();
 
+    @NotNull @Unmodifiable Set<String> getOwnMember();
+
     /**
      * This method add a member to this permission group.
      * If the member is already a member of this group, nothing will happen.

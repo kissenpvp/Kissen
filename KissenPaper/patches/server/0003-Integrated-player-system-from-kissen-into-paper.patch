@@ -987,10 +987,10 @@ index 0000000000000000000000000000000000000000..b09c3c75fd962ed7aab8f694f4bea263
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f1d03a73d9abd5c115dd2b4582e77656857f4368
+index 0000000000000000000000000000000000000000..8e273ff5c125a54de435c43460e5c2d9bfe2c092
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperGroupablePermissionEntry.java
-@@ -0,0 +1,291 @@
+@@ -0,0 +1,301 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1026,10 +1026,7 @@ index 0000000000000000000000000000000000000000..f1d03a73d9abd5c115dd2b4582e77656
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.util.Collections;
-+import java.util.Optional;
-+import java.util.Set;
-+import java.util.UUID;
++import java.util.*;
 +import java.util.function.Function;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
@@ -1055,6 +1052,22 @@ index 0000000000000000000000000000000000000000..f1d03a73d9abd5c115dd2b4582e77656
 +        int local = getContext(Context.LOCAL).map(GroupablePermissionEntry::wipeGroups).orElse(0);
 +        int global = getContext(Context.GLOBAL).map(GroupablePermissionEntry::wipeGroups).orElse(0);
 +        return local + global;
++    }
++
++    @Override
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getOwnPermissionGroups()
++    {
++        LinkedHashSet<PermissionGroup<PaperPermission>> groups = new LinkedHashSet<>(getOwnPermissionsGroups(Context.LOCAL));
++        groups.addAll(getOwnPermissionsGroups(Context.GLOBAL));
++        return groups.stream().toList();
++    }
++
++    @Override
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getPermissionGroups()
++    {
++        LinkedHashSet<PermissionGroup<PaperPermission>> groups = new LinkedHashSet<>(getPermissionGroups(Context.LOCAL));
++        groups.addAll(getPermissionGroups(Context.GLOBAL));
++        return groups.stream().toList();
 +    }
 +
 +    @Override
@@ -1088,20 +1101,15 @@ index 0000000000000000000000000000000000000000..f1d03a73d9abd5c115dd2b4582e77656
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups()
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getOwnPermissionsGroups(@NotNull Context context)
 +    {
-+
-+        Stream<PermissionGroup<PaperPermission>> local = getPermissionGroups(Context.LOCAL).stream();
-+        Stream<PermissionGroup<PaperPermission>> global = getPermissionGroups(Context.GLOBAL).stream();
-+
-+        return Stream.concat(local, global).collect(Collectors.toUnmodifiableSet());
++        return getContext(context).map(GroupablePermissionEntry::getOwnPermissionGroups).orElse(Collections.emptyList());
 +    }
 +
 +    @Override
-+    @NotNull
-+    public Set<PermissionGroup<PaperPermission>> getPermissionGroups(@NotNull Context context)
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getPermissionGroups(@NotNull Context context)
 +    {
-+        return getContext(context).map(GroupablePermissionEntry::getPermissionGroups).orElse(Collections.emptySet());
++        return getContext(context).map(GroupablePermissionEntry::getPermissionGroups).orElse(Collections.emptyList());
 +    }
 +
 +    @Override
@@ -1138,9 +1146,9 @@ index 0000000000000000000000000000000000000000..f1d03a73d9abd5c115dd2b4582e77656
 +
 +    @Override
 +    @NotNull
-+    public PaperPermission setPermission(@NotNull String s, boolean b) throws EventCancelledException
++    public PaperPermission setPermission(@NotNull String permission, boolean value) throws EventCancelledException
 +    {
-+        return setPermission(s, b, Context.LOCAL);
++        return setPermission(permission, value, Context.LOCAL);
 +    }
 +
 +    @Override
@@ -1245,6 +1253,8 @@ index 0000000000000000000000000000000000000000..f1d03a73d9abd5c115dd2b4582e77656
 +    @Override
 +    public void permissionUpdate()
 +    {
++        getContext(Context.LOCAL).ifPresent(PermissionEntry::permissionUpdate);
++        getContext(Context.GLOBAL).ifPresent(PermissionEntry::permissionUpdate);
 +        getConnectedEntries().forEach(PermissionEntry::permissionUpdate);
 +    }
 +
@@ -1324,10 +1334,10 @@ index 0000000000000000000000000000000000000000..7a22a03f4c65ff2c5cb8d8362802c26f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..bcc8e9ffb6e9e78f3757664c5e645a6a33acec15
+index 0000000000000000000000000000000000000000..39d78a29bf56e85ca1eff144ef9033d26b597f40
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
-@@ -0,0 +1,362 @@
+@@ -0,0 +1,363 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1599,6 +1609,7 @@ index 0000000000000000000000000000000000000000..bcc8e9ffb6e9e78f3757664c5e645a6a
 +            case GLOBAL -> new KissenPaperPrivatePermissionGroup.KissenPaperPublicPermissionGroup();
 +            case LOCAL -> new KissenPaperPrivatePermissionGroup();
 +        }, context).setup(name, data);
++
 +        return holder;
 +    }
 +
@@ -2250,10 +2261,10 @@ index 0000000000000000000000000000000000000000..d7ba9e479bc17461f8ef36b1e6330fdf
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperAbstractPermissionGroup.java b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperAbstractPermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7448120623d9cd920dee47b1b76c06293d12b634
+index 0000000000000000000000000000000000000000..39816b5db1c2568bb737a33d617703a0faa1ee13
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperAbstractPermissionGroup.java
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,38 @@
 +package net.kissenpvp.paper.permission.group;
 +
 +import net.kissenpvp.core.api.permission.PermissionEntry;
@@ -2274,10 +2285,15 @@ index 0000000000000000000000000000000000000000..7448120623d9cd920dee47b1b76c0629
 +    @Override
 +    public void permissionUpdate()
 +    {
-+        super.permissionUpdate();
++        // instead update paper permission group
 +        Class<PaperPermissionImplementation> clazz = PaperPermissionImplementation.class;
 +        PaperPermissionImplementation permission = Bukkit.getKissen().getImplementation(clazz);
 +        permission.getGroup(getPermissionID()).ifPresent(PermissionEntry::permissionUpdate);
++    }
++
++    public void internalPermissionUpdate()
++    {
++        super.permissionUpdate();
 +    }
 +
 +    @Override
@@ -2289,10 +2305,10 @@ index 0000000000000000000000000000000000000000..7448120623d9cd920dee47b1b76c0629
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..64d10be321071db6793cfb48b30d3561d9916eea
+index 0000000000000000000000000000000000000000..42633597684d9817a7a5c80b493fd45fee4a87d0
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/group/KissenPaperPermissionGroup.java
-@@ -0,0 +1,131 @@
+@@ -0,0 +1,163 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2316,6 +2332,7 @@ index 0000000000000000000000000000000000000000..64d10be321071db6793cfb48b30d3561
 +import net.kissenpvp.core.api.database.savable.Savable;
 +import net.kissenpvp.core.api.event.EventCancelledException;
 +import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
++import net.kissenpvp.core.api.permission.PermissionEntry;
 +import net.kissenpvp.core.api.permission.PermissionGroup;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.permission.PaperPermission;
@@ -2329,12 +2346,30 @@ index 0000000000000000000000000000000000000000..64d10be321071db6793cfb48b30d3561
 +import java.util.Collections;
 +import java.util.Optional;
 +import java.util.Set;
++import java.util.function.Consumer;
 +import java.util.function.Function;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
 +public class KissenPaperPermissionGroup extends KissenPaperPermissible implements PaperPermissionGroup
 +{
++    @Override
++    public void permissionUpdate()
++    {
++        Consumer<PermissionGroup<PaperPermission>> internalUpdate = entry ->
++        {
++            if(entry instanceof KissenPaperAbstractPermissionGroup abstractPermissionGroup)
++            {
++                abstractPermissionGroup.internalPermissionUpdate();
++            }
++        };
++
++        getContext(Context.LOCAL).ifPresent(internalUpdate);
++        getContext(Context.GLOBAL).ifPresent(internalUpdate);
++
++        getConnectedEntries().forEach(PermissionEntry::permissionUpdate);
++    }
++
 +    private final String permissionID;
 +
 +    public KissenPaperPermissionGroup(@NotNull String permissionID)
@@ -2354,9 +2389,22 @@ index 0000000000000000000000000000000000000000..64d10be321071db6793cfb48b30d3561
 +    }
 +
 +    @Override
++    public @NotNull @Unmodifiable Set<String> getOwnMember()
++    {
++        Stream<String> local = getOwnMember(Context.LOCAL).stream(), global = getOwnMember(Context.GLOBAL).stream();
++        return Stream.concat(local, global).collect(Collectors.toUnmodifiableSet());
++    }
++
++    @Override
 +    public @NotNull @Unmodifiable Set<String> getMember(@NotNull Context context)
 +    {
 +        return getContext(context).map(PermissionGroup::getMember).orElse(Collections.emptySet());
++    }
++
++    @Override
++    public @NotNull @Unmodifiable Set<String> getOwnMember(@NotNull Context context)
++    {
++        return getContext(context).map(PermissionGroup::getOwnMember).orElse(Collections.emptySet());
 +    }
 +
 +    @Override
@@ -4996,19 +5044,25 @@ index e0ee45036b9bf14a6e2013fe291cde0402b85b1f..034c5afe825962b96d0f115c5c310450
          this.cserver.getPluginManager().callEvent(playerJoinEvent);
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..5b5b01e6cb80d65f26d0cada9dd00738a021b10d 100644
+index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..98a3265996276afb397d563f62cebe1d890be13c 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-@@ -9,6 +9,8 @@ import java.util.LinkedHashMap;
- import java.util.List;
- import java.util.Map;
- import java.util.UUID;
+@@ -4,11 +4,9 @@ import com.mojang.authlib.GameProfile;
+ import java.io.File;
+ import java.time.Duration;
+ import java.time.Instant;
+-import java.util.Date;
+-import java.util.LinkedHashMap;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.UUID;
++import java.util.*;
 +
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
  import net.minecraft.core.GlobalPos;
  import net.minecraft.nbt.CompoundTag;
  import net.minecraft.nbt.NbtOps;
-@@ -27,12 +29,47 @@ import org.bukkit.ban.ProfileBanList;
+@@ -27,12 +25,43 @@ import org.bukkit.ban.ProfileBanList;
  import org.bukkit.configuration.serialization.ConfigurationSerializable;
  import org.bukkit.configuration.serialization.SerializableAs;
  import org.bukkit.craftbukkit.entity.memory.CraftMemoryMapper;
@@ -5024,10 +5078,6 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..5b5b01e6cb80d65f26d0cada9dd00738
 +import org.bukkit.permissions.Permissible;
 +import org.bukkit.permissions.PermissionAttachment;
 +import org.bukkit.permissions.PermissionAttachmentInfo;
-+
-+import java.util.Optional;
-+import java.util.Set;
-+import java.util.Locale;
 +
 +import net.kissenpvp.core.api.ban.Ban;
 +import net.kissenpvp.core.api.database.meta.BackendException;
@@ -5058,7 +5108,7 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..5b5b01e6cb80d65f26d0cada9dd00738
  
  @SerializableAs("Player")
  public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializable {
-@@ -41,6 +78,11 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -41,6 +70,11 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
      private final CraftServer server;
      private final PlayerDataStorage storage;
  
@@ -5070,7 +5120,7 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..5b5b01e6cb80d65f26d0cada9dd00738
      protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
          this.server = server;
          this.profile = profile;
-@@ -567,4 +609,441 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -567,4 +601,454 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
              manager.save();
          }
      }
@@ -5374,7 +5424,13 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..5b5b01e6cb80d65f26d0cada9dd00738
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups() {
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getOwnPermissionGroups()
++    {
++        return getKissenPaperPlayerClient().getPermissionContext().getOwnPermissionGroups();
++    }
++
++    @Override
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getPermissionGroups() {
 +        return getKissenPaperPlayerClient().getPermissionContext().getPermissionGroups();
 +    }
 +
@@ -5450,13 +5506,20 @@ index 2bbc39c257965ad91ee360cdfcd3538a0f041c7e..5b5b01e6cb80d65f26d0cada9dd00738
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<PaperPermission> getOwnPermissions(@NotNull Context context) {
-+        return getKissenPaperPlayerClient().getPermissionContext().getOwnPermissions(context);
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getOwnPermissionsGroups(@NotNull Context context)
++    {
++        return getKissenPaperPlayerClient().getPermissionContext().getOwnPermissionsGroups(context);
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups(@NotNull Context context) {
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getPermissionGroups(@NotNull Context context)
++    {
 +        return getKissenPaperPlayerClient().getPermissionContext().getPermissionGroups(context);
++    }
++
++    @Override
++    public @NotNull @Unmodifiable Set<PaperPermission> getOwnPermissions(@NotNull Context context) {
++        return getKissenPaperPlayerClient().getPermissionContext().getOwnPermissions(context);
 +    }
 +
 +    @Override
@@ -5648,10 +5711,52 @@ index acbb64010cd59668aa1bcb52ff1220789cadb1d3..56383900e594602dbaa5223aeb0a1616
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 5c1e016de183933c5458deaae257b978e6350307..99b2c8c0553183c298fda51a5795990be1274f05 100644
+index 5c1e016de183933c5458deaae257b978e6350307..41f867efce95c7a78604c3c57247ab1f5c791889 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -174,6 +174,35 @@ import org.jetbrains.annotations.NotNull;
+@@ -17,18 +17,7 @@ import java.net.SocketAddress;
+ import java.nio.charset.StandardCharsets;
+ import java.time.Duration;
+ import java.time.Instant;
+-import java.util.ArrayList;
+-import java.util.Collection;
+-import java.util.Date;
+-import java.util.HashMap;
+-import java.util.HashSet;
+-import java.util.LinkedHashMap;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Optional;
+-import java.util.Set;
+-import java.util.UUID;
+-import java.util.WeakHashMap;
++import java.util.*;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ import javax.annotation.Nullable;
+@@ -144,7 +133,6 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
+ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.craftbukkit.map.CraftMapView;
+ import org.bukkit.craftbukkit.map.RenderData;
+-import org.bukkit.craftbukkit.profile.CraftPlayerProfile;
+ import org.bukkit.craftbukkit.scoreboard.CraftScoreboard;
+ import org.bukkit.craftbukkit.util.CraftChatMessage;
+ import org.bukkit.craftbukkit.util.CraftLocation;
+@@ -157,7 +145,6 @@ import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
+ import org.bukkit.event.player.PlayerHideEntityEvent;
+ import org.bukkit.event.player.PlayerRegisterChannelEvent;
+ import org.bukkit.event.player.PlayerShowEntityEvent;
+-import org.bukkit.event.player.PlayerSpawnChangeEvent;
+ import org.bukkit.event.player.PlayerTeleportEvent;
+ import org.bukkit.event.player.PlayerUnregisterChannelEvent;
+ import org.bukkit.inventory.EquipmentSlot;
+@@ -168,12 +155,40 @@ import org.bukkit.map.MapView;
+ import org.bukkit.metadata.MetadataValue;
+ import org.bukkit.plugin.Plugin;
+ import org.bukkit.plugin.messaging.StandardMessenger;
+-import org.bukkit.profile.PlayerProfile;
+ import org.bukkit.scoreboard.Scoreboard;
+ import org.jetbrains.annotations.NotNull;
  
  import net.md_5.bungee.api.chat.BaseComponent; // Spigot
  
@@ -5687,7 +5792,7 @@ index 5c1e016de183933c5458deaae257b978e6350307..99b2c8c0553183c298fda51a5795990b
  @DelegateDeserialization(CraftOfflinePlayer.class)
  public class CraftPlayer extends CraftHumanEntity implements Player {
      private long firstPlayed = 0;
-@@ -194,6 +223,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -194,6 +209,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      private static final boolean DISABLE_CHANNEL_LIMIT = System.getProperty("paper.disableChannelLimit") != null; // Paper - add a flag to disable the channel limit
      private long lastSaveTime; // Paper - getLastPlayed replacement API
  
@@ -5698,7 +5803,7 @@ index 5c1e016de183933c5458deaae257b978e6350307..99b2c8c0553183c298fda51a5795990b
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2505,7 +2538,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2505,7 +2524,19 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -5719,7 +5824,7 @@ index 5c1e016de183933c5458deaae257b978e6350307..99b2c8c0553183c298fda51a5795990b
      }
  
      @Override
-@@ -2852,7 +2897,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2852,7 +2883,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -5728,7 +5833,7 @@ index 5c1e016de183933c5458deaae257b978e6350307..99b2c8c0553183c298fda51a5795990b
      }
      // Paper end
      @Override
-@@ -2987,7 +3032,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2987,7 +3018,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
          if (getHandle().connection == null) return;
          final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
@@ -5744,7 +5849,7 @@ index 5c1e016de183933c5458deaae257b978e6350307..99b2c8c0553183c298fda51a5795990b
      }
  
      @Override
-@@ -3253,7 +3305,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3253,7 +3291,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          public void sendMessage(net.md_5.bungee.api.ChatMessageType position, UUID sender, BaseComponent... components) {
              if ( CraftPlayer.this.getHandle().connection == null ) return;
  
@@ -5761,7 +5866,7 @@ index 5c1e016de183933c5458deaae257b978e6350307..99b2c8c0553183c298fda51a5795990b
          }
  
          // Paper start
-@@ -3361,4 +3421,412 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3361,4 +3407,425 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void setSendViewDistance(final int viewDistance) {
          this.getHandle().setSendViewDistance(viewDistance);
      }
@@ -6034,7 +6139,13 @@ index 5c1e016de183933c5458deaae257b978e6350307..99b2c8c0553183c298fda51a5795990b
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups() {
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getOwnPermissionGroups()
++    {
++        return getKissenPaperOnlinePlayerClient().getPermissionContext().getOwnPermissionGroups();
++    }
++
++    @Override
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getPermissionGroups() {
 +        return getKissenPaperOnlinePlayerClient().getPermissionContext().getPermissionGroups();
 +    }
 +
@@ -6117,7 +6228,14 @@ index 5c1e016de183933c5458deaae257b978e6350307..99b2c8c0553183c298fda51a5795990b
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<PermissionGroup<PaperPermission>> getPermissionGroups(@NotNull Context context) {
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getOwnPermissionsGroups(@NotNull Context context)
++    {
++        return getKissenPaperOnlinePlayerClient().getPermissionContext().getOwnPermissionsGroups(context);
++    }
++
++    @Override
++    public @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getPermissionGroups(@NotNull Context context)
++    {
 +        return getKissenPaperOnlinePlayerClient().getPermissionContext().getPermissionGroups(context);
 +    }
 +

@@ -91,8 +91,8 @@ public interface SavableMap extends Map<String, String>, Serializable {
      * SavableMap targetMap = new SomeSavableMapImplementation();
      * targetMap.putAll(sourceMap);
      *
-     * String value = targetMap.get("key1");
-     * System.out.println(value); // Output: "value1"
+     * Optional<String> value = targetMap.get("key1");
+     * System.out.println(value.orElse(null)); // Output: "value1"
      * }
      * </pre>
      *
@@ -123,12 +123,12 @@ public interface SavableMap extends Map<String, String>, Serializable {
      * savableMap.set("key1", "value1");
      * savableMap.set("key2", "value2");
      *
-     * String value = savableMap.get("key1");
-     * System.out.println(value); // Output: "value1"
+     * Optional<String> value = savableMap.get("key1");
+     * System.out.println(value.orElse(null)); // Output: "value1"
      *
      * savableMap.set("key1", null); // Remove the entry associated with "key1"
      * value = savableMap.get("key1");
-     * System.out.println(value); // Output: null
+     * System.out.println(value.orElse(null)); // Output: null
      * }
      * </pre>
      *
@@ -161,11 +161,11 @@ public interface SavableMap extends Map<String, String>, Serializable {
      * savableMap.setIfAbsent("key2", "value2"); // Set the value only if "key2" doesn't exist
      * savableMap.setIfAbsent("key1", "new value"); // "key1" already exists, so the value remains unchanged
      *
-     * String value1 = savableMap.get("key1");
-     * System.out.println(value1); // Output: "value1"
+     * Optional<String> value1 = savableMap.get("key1");
+     * System.out.println(value1.orElse(null)); // Output: "value1"
      *
-     * String value2 = savableMap.get("key2");
-     * System.out.println(value2); // Output: "value2"
+     * Optional<String> value2 = savableMap.get("key2");
+     * System.out.println(value2.orElse(null)); // Output: "value2"
      * }
      * </pre>
      *
@@ -192,11 +192,11 @@ public interface SavableMap extends Map<String, String>, Serializable {
      *
      * savableMap.delete("key1"); // Remove the entry associated with "key1"
      *
-     * String value1 = savableMap.get("key1");
-     * System.out.println(value1); // Output: null, as the entry was deleted
+     * Optional<String> value1 = savableMap.get("key1");
+     * System.out.println(value1.orElse(null)); // Output: null, as the entry was deleted
      *
-     * String value2 = savableMap.get("key2");
-     * System.out.println(value2); // Output: "value2"
+     * Optional<String> value2 = savableMap.get("key2");
+     * System.out.println(value2.orElse(null)); // Output: "value2"
      * }
      * </pre>
      *
