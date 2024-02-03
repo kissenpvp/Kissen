@@ -33,7 +33,6 @@ import net.kissenpvp.core.database.settings.KeepSQLiteFile;
 import net.kissenpvp.core.message.localization.settings.HighlightVariables;
 import net.kissenpvp.core.message.localization.settings.InsertMissingTranslation;
 import net.kissenpvp.core.message.settings.*;
-import net.kissenpvp.core.message.settings.prefix.*;
 import net.kissenpvp.core.networking.socket.ssl.settings.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -61,6 +60,7 @@ public class KissenConfigurationImplementation implements ConfigurationImplement
         internalOptions.add(new ClientCertificatePassword());
         internalOptions.add(new DatabaseDNS());
         internalOptions.add(new DefaultColor());
+        internalOptions.add(new DefaultSystemPrefix());
         internalOptions.add(new DefaultDisabledColor());
         internalOptions.add(new DefaultEnabledColor());
         internalOptions.add(new DefaultLanguage());
@@ -70,11 +70,6 @@ public class KissenConfigurationImplementation implements ConfigurationImplement
         internalOptions.add(new HighlightVariables());
         internalOptions.add(new InsertMissingTranslation());
         internalOptions.add(new KeepSQLiteFile());
-        internalOptions.add(new PrefixError());
-        internalOptions.add(new PrefixEvent());
-        internalOptions.add(new PrefixNormal());
-        internalOptions.add(new PrefixSupport());
-        internalOptions.add(new PrefixTeam());
         internalOptions.add(new ServerCertificateLocation());
         internalOptions.add(new ServerCertificatePassword());
         internalOptions.add(new ServerName());

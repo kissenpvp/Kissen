@@ -22,4 +22,10 @@ public class DefaultSystemPrefix extends OptionString
     {
         return "KissenPvP";
     }
+
+    @Override
+    public int getPriority()
+    {
+        return 1;
+    }
 }

@@ -22,12 +22,10 @@ import lombok.Getter;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.permission.PermissionEntry;
 import net.kissenpvp.core.api.user.User;
-import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.exception.UnauthorizedException;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.api.user.usersetttings.UserSetting;
 import net.kissenpvp.core.api.user.usersetttings.UserValue;
-import net.kissenpvp.core.base.KissenCore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;

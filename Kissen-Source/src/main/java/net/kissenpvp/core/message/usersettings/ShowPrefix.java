@@ -24,7 +24,7 @@ public class ShowPrefix implements PlayerSetting<Boolean>
     @Override
     public @NotNull String getKey()
     {
-        return "prefix";
+        return "showprefix";
     }
 
     @Override

@@ -90,6 +90,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
         registerUserSetting(new SuffixSetting());
         registerUserSetting(new SuffixInChatSetting());
         registerUserSetting(new ShowPrefix());
+        registerUserSetting(new SystemPrefix());
         registerUserSetting(new HighlightVariables());
         return UserImplementation.super.start();
     }
