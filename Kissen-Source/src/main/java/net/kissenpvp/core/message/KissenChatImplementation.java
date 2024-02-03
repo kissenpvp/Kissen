@@ -18,10 +18,14 @@
 
 package net.kissenpvp.core.message;
 
+import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.message.ChatImplementation;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.message.settings.DefaultSystemPrefix;
 import net.kissenpvp.core.message.usersettings.ShowPrefix;
+import net.kissenpvp.core.message.usersettings.SystemPrefix;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -65,9 +69,17 @@ public class KissenChatImplementation implements ChatImplementation
         final MiniMessage miniMessage = MiniMessage.miniMessage();
         String primary = serverEntity.getTheme().getPrimaryAccentColor().asHexString();
         String secondary = serverEntity.getTheme().getSecondaryAccentColor().asHexString();
-        String base = "<gradient:%s:%s>KissenPvP</gradient>";
 
-        return MiniMessage.miniMessage().deserialize(base.formatted(primary, secondary));
+        ConfigurationImplementation config = KissenCore.getInstance().getImplementation(ConfigurationImplementation.class);
+        String systemPrefix = config.getSetting(DefaultSystemPrefix.class);
+        if (serverEntity instanceof PlayerClient<?, ?, ?> player)
+        {
+            systemPrefix = player.getUserSetting(SystemPrefix.class).getValue();
+        }
+
+        String base = "<gradient:%s:%s>%s</gradient>";
+
+        return MiniMessage.miniMessage().deserialize(base.formatted(primary, secondary, systemPrefix));
     }
 
     @Override

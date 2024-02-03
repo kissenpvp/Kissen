@@ -55,20 +55,24 @@ public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements
         }
 
         UserValue<T>[] possibilities = getUserSetting().getPossibleValues(playerClient); //Get all possibilities
-        Optional<UserValue<T>> currentPossibility = Arrays.stream(possibilities).filter(possibility -> possibility.value().equals(value)).findFirst(); //find the one the user wants to set
 
-        if (currentPossibility.isEmpty()) // throw exception if value is not listed as option
+        if(possibilities.length != 0)
         {
-            throw new IllegalArgumentException("Value is not listed as possible value.");
-        }
+            Optional<UserValue<T>> currentPossibility = Arrays.stream(possibilities).filter(possibility -> possibility.value().equals(value)).findFirst(); //find the one the user wants to set
 
-        UserValue<T> currentValue = currentPossibility.get();
-        if (currentValue.permission().length > 0 && !value.equals(getUserSetting().getDefaultValue(playerClient))) {
-            Optional<String> permission = Arrays.stream(currentValue.permission()).filter(
-                    currentPermission -> !((PermissionEntry<?>) getUser().getPlayerClient()).hasPermission(
-                            currentPermission)).toList().stream().findFirst();
-            if (permission.isPresent()) {
-                throw new UnauthorizedException(UUID.fromString(getUser().getRawID()), permission.get());
+            if (currentPossibility.isEmpty()) // throw exception if value is not listed as option
+            {
+                throw new IllegalArgumentException("Value is not listed as possible value.");
+            }
+
+            UserValue<T> currentValue = currentPossibility.get();
+            if (currentValue.permission().length > 0 && !value.equals(getUserSetting().getDefaultValue(playerClient))) {
+                Optional<String> permission = Arrays.stream(currentValue.permission()).filter(
+                        currentPermission -> !((PermissionEntry<?>) getUser().getPlayerClient()).hasPermission(
+                                currentPermission)).toList().stream().findFirst();
+                if (permission.isPresent()) {
+                    throw new UnauthorizedException(UUID.fromString(getUser().getRawID()), permission.get());
+                }
             }
         }
 
