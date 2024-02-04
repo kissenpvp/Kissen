@@ -174,7 +174,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
     }
 
     @Override
-    public <T> void registerUserSetting(@NotNull KissenPlugin kissenPlugin, @NotNull PlayerSetting<T> playerSetting) throws EventCancelledException {
+    public <T> void registerPlayerSetting(@NotNull KissenPlugin kissenPlugin, @NotNull PlayerSetting<T> playerSetting) throws EventCancelledException {
 
         if (isKeyTaken(playerSetting)) {
             String errorMessage = String.format("Settings key %s is already registered.", playerSetting.getKey());

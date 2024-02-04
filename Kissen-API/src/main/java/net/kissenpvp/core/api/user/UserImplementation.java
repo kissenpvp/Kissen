@@ -273,7 +273,7 @@ public interface UserImplementation extends Implementation {
      * @param <T>           The type of the setting that can be adjusted.
      * @return A set containing all player settings that were deleted while adding this setting.
      */
-    <T> void registerUserSetting(@NotNull KissenPlugin kissenPlugin, @NotNull PlayerSetting<T> playerSetting) throws EventCancelledException;
+    <T> void registerPlayerSetting(@NotNull KissenPlugin kissenPlugin, @NotNull PlayerSetting<T> playerSetting) throws EventCancelledException;
 
     /**
      * Retrieves all user settings that have been registered.
@@ -292,7 +292,7 @@ public interface UserImplementation extends Implementation {
      * @throws UnsupportedOperationException if the operation to retrieve user settings is not supported by the
      *                                       implementation.
      * @see PlayerSetting
-     * @see #registerUserSetting(PlayerSetting)
+     * @see #registerPlayerSetting(KissenPlugin, PlayerSetting)
      */
     @NotNull @Unmodifiable Set<PlayerSetting<?>> getPlayerSettings();
 
