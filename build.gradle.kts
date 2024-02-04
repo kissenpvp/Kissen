@@ -47,5 +47,7 @@ subprojects {
         compileOnly("net.kyori:adventure-api:4.13.0")
         compileOnly("com.google.code.gson:gson:2.10.1")
         implementation("io.netty:netty-all:4.1.87.Final")
+
+        testCompileOnly("org.jetbrains:annotations:24.0.0")
     }
 }

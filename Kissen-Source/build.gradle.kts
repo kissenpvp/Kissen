@@ -19,6 +19,10 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("net.kyori:adventure-text-serializer-gson:4.14.0")
+    testImplementation("net.kyori:adventure-text-serializer-legacy:4.14.0")
+    testImplementation("net.kyori:adventure-text-minimessage:4.14.0")
+    testImplementation("org.mockito:mockito-core:3.12.4")
 }
 
 publishing {
