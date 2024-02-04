@@ -73,7 +73,7 @@ index 0000000000000000000000000000000000000000..8f6f824aa92c7dd0c4bd28d2c8fef974
 +    @NotNull ObjectMeta getPrivateMeta();
 +}
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index 48fab492609e0bae459d20cc2eae78b87e37ab75..c6111893ed20244659a80b23fd5ad508e7362155 100644
+index 2d53675907f411046978b0a234c0b6f33c909973..6c863d61490bd86a958bf1b674629e2df585bac2 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
 @@ -2842,4 +2842,17 @@ public final class Bukkit {
@@ -108,10 +108,18 @@ index 4eb639fbb46a0848be207149ea433455550fae1c..5526f527d85e25070e6d3c335bc313fa
       * Returns the folder that the plugin data's files are located in. The
       * folder may not yet exist.
 diff --git a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..e7536f94638f3d274a435e522fa911144d2e7af9 100644
+index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..a5094d3776494ca977f59d312c97ace23a1163d5 100644
 --- a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
 +++ b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-@@ -456,4 +456,22 @@ public abstract class JavaPlugin extends PluginBase {
+@@ -14,6 +14,7 @@ import java.net.URLConnection;
+ import java.util.List;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
++
+ import org.bukkit.Server;
+ import org.bukkit.command.Command;
+ import org.bukkit.command.CommandSender;
+@@ -456,4 +457,27 @@ public abstract class JavaPlugin extends PluginBase {
          }
          return plugin;
      }
@@ -128,6 +136,11 @@ index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..e7536f94638f3d274a435e522fa91114
 +    }
 +
 +    @Override
++    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting) {
++        getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerUserSetting(this, playerSetting);
++    }
++
++    @Override
 +    public @NotNull net.kissenpvp.core.api.command.CommandHandler<CommandSender, net.kissenpvp.paper.api.command.KissenCommand> getCommandHandler()
 +    {
 +        return getKissen().getImplementation(net.kissenpvp.paper.api.command.PaperCommandImplementation.class).getPluginHandler(this).orElseThrow();
@@ -135,7 +148,7 @@ index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..e7536f94638f3d274a435e522fa91114
 +    // KissenPaper end
  }
 diff --git a/src/test/java/org/bukkit/plugin/TestPlugin.java b/src/test/java/org/bukkit/plugin/TestPlugin.java
-index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..a9c294be5f42f7359f302a343e4a09747293c6d2 100644
+index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..089a8885cca1fca8ba12da16b17454281ede6588 100644
 --- a/src/test/java/org/bukkit/plugin/TestPlugin.java
 +++ b/src/test/java/org/bukkit/plugin/TestPlugin.java
 @@ -9,6 +9,7 @@ import org.bukkit.command.CommandSender;
@@ -146,7 +159,7 @@ index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..a9c294be5f42f7359f302a343e4a0974
  
  public class TestPlugin extends PluginBase {
      private boolean enabled = true;
-@@ -133,4 +134,22 @@ public class TestPlugin extends PluginBase {
+@@ -133,4 +134,27 @@ public class TestPlugin extends PluginBase {
      public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
          throw new UnsupportedOperationException("Not supported.");
      }
@@ -163,9 +176,14 @@ index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..a9c294be5f42f7359f302a343e4a0974
 +    }
 +
 +    @Override
++    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting) {
++        throw new UnsupportedOperationException("Not supported.");
++    }
++
++    @Override
 +    public @NotNull net.kissenpvp.core.api.command.CommandHandler<?, ?> getCommandHandler()
 +    {
-+        throw new UnsupportedOperationException();
++        throw new UnsupportedOperationException("Not supported.");
 +    }
 +    // KissenPaper end
  }

@@ -32,6 +32,8 @@ import java.util.Set;
 
 public interface PermissionImplementation<T extends Permission> extends Implementation {
 
+    void addPermission(@NotNull String permission);
+
     @NotNull PermissionGroup<?> create(@NotNull String name, @Nullable Map<String, String> data) throws EventCancelledException;
 
     @NotNull Optional<PermissionGroup<?>> getPermissionGroupSavable(@NotNull String name);

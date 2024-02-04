@@ -29,7 +29,7 @@ import net.kissenpvp.core.api.user.rank.PlayerRank;
 import net.kissenpvp.core.api.user.rank.Rank;
 import net.kissenpvp.core.api.user.suffix.Suffix;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
-import net.kissenpvp.core.api.user.usersetttings.UserSetting;
+import net.kissenpvp.core.api.user.usersetttings.BoundPlayerSetting;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -105,7 +105,7 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
 
     @NotNull User getUser();
 
-    <X> @NotNull UserSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass);
+    <X> @NotNull BoundPlayerSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass);
 
 
 }

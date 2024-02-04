@@ -5,8 +5,6 @@ import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.api.user.usersetttings.UserValue;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Optional;
-
 public class ShowPrefix implements PlayerSetting<Boolean>
 {
     @Override
@@ -37,11 +35,5 @@ public class ShowPrefix implements PlayerSetting<Boolean>
     public @NotNull UserValue<Boolean>[] getPossibleValues(@NotNull PlayerClient<?, ?, ?> playerClient)
     {
         return new UserValue[] {new UserValue<>(true), new UserValue<>(false)};
-    }
-
-    @Override
-    public @NotNull Optional<String> getPermission()
-    {
-        return Optional.of("kissen.disable.prefix");
     }
 }

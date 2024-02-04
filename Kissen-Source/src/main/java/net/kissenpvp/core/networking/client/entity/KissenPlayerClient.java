@@ -42,7 +42,7 @@ import net.kissenpvp.core.api.user.rank.PlayerRank;
 import net.kissenpvp.core.api.user.rank.Rank;
 import net.kissenpvp.core.api.user.suffix.Suffix;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
-import net.kissenpvp.core.api.user.usersetttings.UserSetting;
+import net.kissenpvp.core.api.user.usersetttings.BoundPlayerSetting;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.DataWriter;
 import net.kissenpvp.core.message.PlayerTheme;
@@ -52,7 +52,7 @@ import net.kissenpvp.core.user.suffix.KissenSuffix;
 import net.kissenpvp.core.user.suffix.SuffixInChatSetting;
 import net.kissenpvp.core.user.suffix.SuffixNode;
 import net.kissenpvp.core.user.suffix.SuffixSetting;
-import net.kissenpvp.core.user.usersettings.KissenUserBoundSettings;
+import net.kissenpvp.core.user.usersettings.KissenBoundPlayerSetting;
 import net.kissenpvp.core.time.TemporalMeasureNode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -224,7 +224,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     @Override
-    public @NotNull <X> UserSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass) {
+    public @NotNull <X> BoundPlayerSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass) {
         return getUserSetting(getUser(), settingClass);
     }
 
@@ -329,16 +329,16 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return Optional.ofNullable(index);
     }
 
-    protected <X> UserSetting<X> getUserSetting(@NotNull User user, @NotNull Class<? extends PlayerSetting<X>> settingClass)
+    protected <X> BoundPlayerSetting<X> getUserSetting(@NotNull User user, @NotNull Class<? extends PlayerSetting<X>> settingClass)
     {
         try
         {
             Class<UserImplementation> clazz = UserImplementation.class;
             UserImplementation userImplementation = KissenCore.getInstance().getImplementation(clazz);
-            Stream<PlayerSetting<?>> settingStream = userImplementation.getUserSettings().stream();
+            Stream<PlayerSetting<?>> settingStream = userImplementation.getPlayerSettings().stream();
 
             Predicate<PlayerSetting<?>> predicate = currentSetting -> currentSetting.getClass().equals(settingClass);
-            return (UserSetting<X>) new KissenUserBoundSettings<>(
+            return (BoundPlayerSetting<X>) new KissenBoundPlayerSetting<>(
                     settingStream.filter(predicate).findFirst().orElseThrow(ClassCastException::new), user);
         }
         catch (ClassCastException classCastException)

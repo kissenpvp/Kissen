@@ -16,23 +16,18 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.user.usersettings;
+package net.kissenpvp.core.api.user.usersetttings;
 
-import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
-import net.kissenpvp.core.api.user.usersetttings.UserSetting;
+import net.kissenpvp.core.api.user.exception.UnauthorizedException;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class KissenUserSettings<T> implements UserSetting<T>
+public interface BoundPlayerSetting<T>
 {
-    private final PlayerSetting<T> playerSetting;
 
-    public KissenUserSettings(@NotNull PlayerSetting<T> playerSetting)
-    {
-        this.playerSetting = playerSetting;
-    }
+    @NotNull T setValue(@NotNull T value) throws UnauthorizedException;
 
-    public @NotNull PlayerSetting<T> getUserSetting()
-    {
-        return playerSetting;
-    }
+    @NotNull T getValue();
+
+    void reset();
+
 }

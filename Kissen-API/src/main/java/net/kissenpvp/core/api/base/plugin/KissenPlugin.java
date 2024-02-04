@@ -21,6 +21,7 @@ package net.kissenpvp.core.api.base.plugin;
 import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.base.Kissen;
 import net.kissenpvp.core.api.command.CommandHandler;
+import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import org.intellij.lang.annotations.Subst;
 import org.jetbrains.annotations.NotNull;
 
@@ -52,7 +53,8 @@ public interface KissenPlugin {
      * @return the name of the plugin.
      */
     @Subst("")
-    @NotNull String getName();
+    @NotNull
+    String getName();
 
     /**
      * Returns the folder containing the plugin assets, such as configuration files, language files.
@@ -66,7 +68,8 @@ public interface KissenPlugin {
      *
      * @return the folder containing plugin assets.
      */
-    @NotNull File getDataFolder();
+    @NotNull
+    File getDataFolder();
 
     /**
      * Returns the Kissen instance associated with this plugin.
@@ -74,9 +77,15 @@ public interface KissenPlugin {
      *
      * @return The Kissen instance.
      */
-    @NotNull Kissen getKissen();
+    @NotNull
+    Kissen getKissen();
+
+    boolean isEnabled();
 
     void registerTranslation(@NotNull String key, @NotNull MessageFormat defaultMessage);
 
-    @NotNull CommandHandler<?, ?> getCommandHandler();
+    void registerPlayerSetting(@NotNull PlayerSetting<?> playerSetting);
+
+    @NotNull
+    CommandHandler<?, ?> getCommandHandler();
 }

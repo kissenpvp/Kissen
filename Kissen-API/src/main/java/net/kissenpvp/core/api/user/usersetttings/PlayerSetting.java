@@ -23,20 +23,24 @@ import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Optional;
-
 public interface PlayerSetting<T> extends TextSerializer<T> {
-    @NotNull String getKey();
 
-    @NotNull T getDefaultValue(@NotNull PlayerClient<?, ?, ?> playerClient);
+    @NotNull
+    String getKey();
 
-    default @NotNull UserValue<T>[] getPossibleValues(@NotNull PlayerClient<?, ?, ?> playerClient)
-    {
+    @NotNull
+    T getDefaultValue(@NotNull PlayerClient<?, ?, ?> playerClient);
+
+    default @NotNull UserValue<T>[] getPossibleValues(@NotNull PlayerClient<?, ?, ?> playerClient) {
         return new UserValue[0];
     }
 
-    default @NotNull Optional<String> getPermission() {
-        return Optional.of("kissen.setting." + getKey());
+    default @NotNull String getPermission() {
+        return "";
+    }
+
+    default boolean autoGeneratePermission() {
+        return true;
     }
 
     default void setValue(@Nullable T value) {

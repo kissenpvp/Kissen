@@ -288,7 +288,7 @@ index 0000000000000000000000000000000000000000..13e996d4dca6fb8638d8ba7a9e86b109
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6e88feed2d33c219e9acefa04f3d439b0cbadf20
+index 0000000000000000000000000000000000000000..59edb6cbbe483a0542dd263849c80a9ce5e7f4cd
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
 @@ -0,0 +1,76 @@
@@ -319,7 +319,7 @@ index 0000000000000000000000000000000000000000..6e88feed2d33c219e9acefa04f3d439b
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.api.user.suffix.Suffix;
 +import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
-+import net.kissenpvp.core.api.user.usersetttings.UserSetting;
++import net.kissenpvp.core.api.user.usersetttings.BoundPlayerSetting;
 +import net.kissenpvp.paper.api.ban.PaperPunishment;
 +import net.kissenpvp.paper.api.ban.warn.PaperWarn;
 +import net.kissenpvp.paper.api.base.Context;
@@ -358,7 +358,7 @@ index 0000000000000000000000000000000000000000..6e88feed2d33c219e9acefa04f3d439b
 +    @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException;
 +
 +
-+    <X> @NotNull UserSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context);
++    <X> @NotNull BoundPlayerSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context);
 +
 +    @NotNull PaperWarn warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator);
 +
@@ -828,7 +828,7 @@ index 0000000000000000000000000000000000000000..f89bc619e02de3fd4c4bb000df66a11c
 +
 +public interface PaperRankImplementation extends RankImplementation<PaperRank> { }
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index bce07d84cafca677bb6fad78c21b82097f06430c..dd6499c14a38d5edb4670b414a2a0f3bb6e25cc7 100644
+index abb5109ed08a3a651c2c27d4d17a3d49eb06da1e..899c102c7704231a11b83c7245aaa010e06cd5db 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
 +++ b/src/main/java/org/bukkit/OfflinePlayer.java
 @@ -4,6 +4,7 @@ import java.time.Duration;
@@ -930,7 +930,7 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..72227c4175f588f2f9181ca4d5647d75
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index 815631a6157b87a9ead270fe0b11ac3892a3fbf4..37fdd092813ebe4619b61595d45c559eb6cd8d92 100644
+index 31aa6ef5fc2b3b88c72f5a15b8cc7a0e50c29f46..b332cb0ad591b3b546e798c95892c2f2d9c13f7e 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
 @@ -52,7 +52,7 @@ import org.jetbrains.annotations.Nullable;

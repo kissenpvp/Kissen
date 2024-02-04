@@ -27,6 +27,7 @@ import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
@@ -74,6 +75,8 @@ public interface CommandHolder<S extends ServerEntity, C extends CommandHolder<S
 
     @NotNull String getFullName();
 
+    @Nullable
+    String getPermission();
 
     @NotNull String getUsage();
 

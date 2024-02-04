@@ -19,7 +19,9 @@
 package net.kissenpvp.core.api.user;
 
 import net.kissenpvp.core.api.base.Implementation;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.BackendException;
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import org.jetbrains.annotations.NotNull;
@@ -271,7 +273,7 @@ public interface UserImplementation extends Implementation {
      * @param <T>           The type of the setting that can be adjusted.
      * @return A set containing all player settings that were deleted while adding this setting.
      */
-    <T> @Unmodifiable @NotNull Set<PlayerSetting<?>> registerUserSetting(@NotNull PlayerSetting<T> playerSetting);
+    <T> void registerUserSetting(@NotNull KissenPlugin kissenPlugin, @NotNull PlayerSetting<T> playerSetting) throws EventCancelledException;
 
     /**
      * Retrieves all user settings that have been registered.
@@ -292,6 +294,6 @@ public interface UserImplementation extends Implementation {
      * @see PlayerSetting
      * @see #registerUserSetting(PlayerSetting)
      */
-    @NotNull @Unmodifiable Set<PlayerSetting<?>> getUserSettings();
+    @NotNull @Unmodifiable Set<PlayerSetting<?>> getPlayerSettings();
 
 }

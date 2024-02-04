@@ -20,12 +20,14 @@ package net.kissenpvp.core.user;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
@@ -34,15 +36,21 @@ import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
 import net.kissenpvp.core.message.usersettings.*;
+import net.kissenpvp.core.permission.PermissionImplementation;
 import net.kissenpvp.core.user.suffix.SuffixInChatSetting;
 import net.kissenpvp.core.user.suffix.SuffixSetting;
+import net.kissenpvp.core.user.usersettings.RegisteredPlayerSetting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Abstract implementation of the UserImplementation interface.
@@ -55,11 +63,10 @@ import java.util.stream.Collectors;
  */
 public abstract class KissenUserImplementation implements UserImplementation {
 
-    @Getter
-    private final Set<User> onlineUserSet;
-    @Getter(AccessLevel.PROTECTED)
-    private final Set<UserInfoNode> cachedProfiles;
-    private final Set<PlayerSetting<?>> userPlayerSettings;
+    @Getter private final Set<User> onlineUserSet;
+    @Getter(AccessLevel.PROTECTED) private final Set<UserInfoNode> cachedProfiles;
+    private final Set<RegisteredPlayerSetting> pluginSettings;
+    private final Set<PlayerSetting<?>> internalSettings;
     private final ScheduledExecutorService tickExecutor;
 
     /**
@@ -75,23 +82,23 @@ public abstract class KissenUserImplementation implements UserImplementation {
     public KissenUserImplementation() {
         this.onlineUserSet = new HashSet<>();
         this.cachedProfiles = new HashSet<>();
-        this.userPlayerSettings = new HashSet<>();
+        this.pluginSettings = new HashSet<>();
+        this.internalSettings = new HashSet<>();
         this.tickExecutor = Executors.newScheduledThreadPool(1);
     }
 
     @Override
-    public boolean start()
-    {
-        registerUserSetting(new PrimaryUserColor());
-        registerUserSetting(new SecondaryUserColor());
-        registerUserSetting(new GeneralUserColor());
-        registerUserSetting(new EnabledUserColor());
-        registerUserSetting(new DisabledUserColor());
-        registerUserSetting(new SuffixSetting());
-        registerUserSetting(new SuffixInChatSetting());
-        registerUserSetting(new ShowPrefix());
-        registerUserSetting(new SystemPrefix());
-        registerUserSetting(new HighlightVariables());
+    public boolean start() {
+        registerInternalUserSetting(new PrimaryUserColor());
+        registerInternalUserSetting(new SecondaryUserColor());
+        registerInternalUserSetting(new GeneralUserColor());
+        registerInternalUserSetting(new EnabledUserColor());
+        registerInternalUserSetting(new DisabledUserColor());
+        registerInternalUserSetting(new SuffixSetting());
+        registerInternalUserSetting(new SuffixInChatSetting());
+        registerInternalUserSetting(new ShowPrefix());
+        registerInternalUserSetting(new SystemPrefix());
+        registerInternalUserSetting(new HighlightVariables());
         return UserImplementation.super.start();
     }
 
@@ -103,10 +110,8 @@ public abstract class KissenUserImplementation implements UserImplementation {
         Class<KissenConfirmationImplementation> clazz = KissenConfirmationImplementation.class;
         KissenConfirmationImplementation confirmation = KissenCore.getInstance().getImplementation(clazz);
 
-        Runnable runnable = () ->
-        {
-            getOnlineUser().stream().filter(userEntry -> userEntry.getStorage().containsKey("tick")).forEach(user ->
-            {
+        Runnable runnable = () -> {
+            getOnlineUser().stream().filter(userEntry -> userEntry.getStorage().containsKey("tick")).forEach(user -> {
                 KissenUser<? extends Permission> casted = (KissenUser<? extends Permission>) user;
                 casted.tick();
             });
@@ -129,15 +134,10 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
     @Override
     public @NotNull User getUser(@NotNull String name) throws BackendException {
-        return getOnlineUser().stream().filter(user -> user.getNotNull("name").equals(name)).findFirst().orElseGet(() ->
-        {
+        return getOnlineUser().stream().filter(user -> user.getNotNull("name").equals(name)).findFirst().orElseGet(() -> {
             try {
-                return getUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "name", FilterType.EXACT_MATCH).and(
-                        Column.VALUE, name, FilterType.EXACT_MATCH).execute().thenApply(
-                        data -> getUser(UUID.fromString(data[0][0].substring(getUserSaveID().length())))).join();
-            }
-            catch (ArrayIndexOutOfBoundsException | BackendException backendException)
-            {
+                return getUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "name", FilterType.EXACT_MATCH).and(Column.VALUE, name, FilterType.EXACT_MATCH).execute().thenApply(data -> getUser(UUID.fromString(data[0][0].substring(getUserSaveID().length())))).join();
+            } catch (ArrayIndexOutOfBoundsException | BackendException backendException) {
                 throw new BackendException(backendException);
             }
         });
@@ -168,26 +168,64 @@ public abstract class KissenUserImplementation implements UserImplementation {
         return getUserInfo(userInfoNode -> userInfoNode.uuid().equals(uuid));
     }
 
-    @Override public @Unmodifiable @NotNull Set<UserInfo> getCachedUserProfiles()
-    {
+    @Override
+    public @Unmodifiable @NotNull Set<UserInfo> getCachedUserProfiles() {
         return getCachedProfiles().stream().map(UserInfoNode::getUserInfo).collect(Collectors.toSet());
     }
 
     @Override
-    public @Unmodifiable @NotNull <T> Set<PlayerSetting<?>> registerUserSetting(@NotNull PlayerSetting<T> playerSetting) {
-        Set<PlayerSetting<?>> playerSettings = userPlayerSettings.stream()
-                .filter(playerSetting1 -> playerSetting1.getKey().equals(playerSetting.getKey()))
-                .collect(Collectors.toUnmodifiableSet());
-        userPlayerSettings.removeAll(playerSettings);
-        userPlayerSettings.add(playerSetting);
-        return playerSettings;
+    public <T> void registerUserSetting(@NotNull KissenPlugin kissenPlugin, @NotNull PlayerSetting<T> playerSetting) throws EventCancelledException {
+
+        if (isKeyTaken(playerSetting)) {
+            String errorMessage = String.format("Settings key %s is already registered.", playerSetting.getKey());
+            throw new EventCancelledException(new IllegalArgumentException(errorMessage));
+        }
+
+        RegisteredPlayerSetting registeredPlayerSetting = new RegisteredPlayerSetting(kissenPlugin, playerSetting);
+        if (pluginSettings.add(registeredPlayerSetting)) {
+            addSettingPermissions(kissenPlugin.getName(), playerSetting);
+            return;
+        }
+        throw new EventCancelledException();
     }
+
+    public <T> void registerInternalUserSetting(@NotNull PlayerSetting<T> playerSetting) {
+
+        if (isKeyTaken(playerSetting)) {
+            String errorMessage = String.format("Settings key %s is already registered.", playerSetting.getKey());
+            throw new EventCancelledException(new IllegalArgumentException(errorMessage));
+        }
+
+        if (internalSettings.add(playerSetting)) {
+            addSettingPermissions("kissen", playerSetting);
+            return;
+        }
+        throw new EventCancelledException();
+    }
+
+    private <T> void addSettingPermissions(@NotNull String prefix, @NotNull PlayerSetting<T> playerSetting) {
+        String permission = playerSetting.getPermission();
+        if (playerSetting.autoGeneratePermission()) {
+            permission = String.format("%s.setting.%s", prefix, playerSetting.getKey());
+        }
+
+        if (permission!=null) {
+            PermissionImplementation<?> permissionImplementation = KissenCore.getInstance().getImplementation(PermissionImplementation.class);
+            permissionImplementation.addPermission(permission);
+        }
+    }
+
+    private boolean isKeyTaken(@NotNull PlayerSetting<?> playerSetting) {
+        Predicate<PlayerSetting<?>> present = currentSetting -> currentSetting.getKey().equals(playerSetting.getKey());
+        return getPlayerSettings().stream().anyMatch(present);
+    }
+
 
     @Override
-    public @NotNull @Unmodifiable Set<PlayerSetting<?>> getUserSettings() {
-        return Collections.unmodifiableSet(userPlayerSettings);
+    public @NotNull @Unmodifiable Set<PlayerSetting<?>> getPlayerSettings() {
+        Stream<PlayerSetting<?>> settingStream = pluginSettings.stream().filter(plugin -> plugin.plugin().isEnabled()).map(RegisteredPlayerSetting::playerSetting);
+        return Stream.concat(internalSettings.stream(), settingStream).collect(Collectors.toSet());
     }
-
 
     /**
      * Provides a default user save ID.
@@ -219,10 +257,8 @@ public abstract class KissenUserImplementation implements UserImplementation {
     private void fetchUserProfiles() {
         cachedProfiles.clear();
         QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "name", FilterType.EXACT_MATCH);
-        querySelect.execute().thenAccept(data ->
-        {
-            for (String[] user : data)
-            {
+        querySelect.execute().thenAccept(data -> {
+            for (String[] user : data) {
                 UUID uuid = UUID.fromString(user[0].substring(getUserSaveID().length()));
                 String name = user[1];
                 cachedProfiles.add(new UserInfoNode(uuid, name));
@@ -297,10 +333,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
     }
 
     public @NotNull CompletableFuture<Long> rewriteTotalID(@NotNull UUID from, @NotNull UUID to) {
-        return getUserMeta().update(new QueryUpdateDirective(Column.VALUE, to.toString()))
-                .where(Column.TOTAL_ID, getUserSaveID(), FilterType.STARTS_WITH)
-                .and(Column.KEY, "total_id", FilterType.EXACT_MATCH)
-                .and(Column.VALUE, from.toString(), FilterType.EXACT_MATCH).execute();
+        return getUserMeta().update(new QueryUpdateDirective(Column.VALUE, to.toString())).where(Column.TOTAL_ID, getUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "total_id", FilterType.EXACT_MATCH).and(Column.VALUE, from.toString(), FilterType.EXACT_MATCH).execute();
 
     }
 
@@ -308,10 +341,8 @@ public abstract class KissenUserImplementation implements UserImplementation {
         return getCachedProfiles().stream().filter(name).map(UserInfoNode::getUserInfo).findFirst();
     }
 
-    public void cacheProfile(@NotNull UserInfoNode userInfoNode)
-    {
-        if(getCachedProfiles().stream().anyMatch(current -> current.uuid().equals(userInfoNode.uuid()) && current.name().equals(userInfoNode.name())))
-        {
+    public void cacheProfile(@NotNull UserInfoNode userInfoNode) {
+        if (getCachedProfiles().stream().anyMatch(current -> current.uuid().equals(userInfoNode.uuid()) && current.name().equals(userInfoNode.name()))) {
             return;
         }
         getCachedProfiles().remove(userInfoNode);

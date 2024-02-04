@@ -23,8 +23,8 @@ import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.permission.PermissionEntry;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.exception.UnauthorizedException;
+import net.kissenpvp.core.api.user.usersetttings.BoundPlayerSetting;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
-import net.kissenpvp.core.api.user.usersetttings.UserSetting;
 import net.kissenpvp.core.api.user.usersetttings.UserValue;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,12 +32,14 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @Getter
-public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements UserSetting<T> {
+public class KissenBoundPlayerSetting<T> extends KissenUserSetting<T> implements BoundPlayerSetting<T> {
     private final User user;
 
-    public KissenUserBoundSettings(@NotNull PlayerSetting<T> playerSetting, @NotNull User user) {
+    public KissenBoundPlayerSetting(@NotNull PlayerSetting<T> playerSetting, @NotNull User user) {
         super(playerSetting);
         this.user = user;
     }
@@ -52,11 +54,10 @@ public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements
             return oldValue;
         }
 
-        UserValue<T>[] possibilities = getUserSetting().getPossibleValues(playerClient); //Get all possibilities
+        UserValue<T>[] possibilities = getUserSetting().getPossibleValues(playerClient); // Get all possibilities
 
-        if(possibilities.length != 0)
-        {
-            Optional<UserValue<T>> currentPossibility = Arrays.stream(possibilities).filter(possibility -> possibility.value().equals(value)).findFirst(); //find the one the user wants to set
+        if (possibilities.length!=0) {
+            Optional<UserValue<T>> currentPossibility = Arrays.stream(possibilities).filter(possibility -> possibility.value().equals(value)).findFirst(); // find the one the user wants to set
 
             if (currentPossibility.isEmpty()) // throw exception if value is not listed as option
             {
@@ -65,9 +66,15 @@ public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements
 
             UserValue<T> currentValue = currentPossibility.get();
             if (currentValue.permission().length > 0 && !value.equals(getUserSetting().getDefaultValue(playerClient))) {
-                Optional<String> permission = Arrays.stream(currentValue.permission()).filter(
-                        currentPermission -> !((PermissionEntry<?>) getUser().getPlayerClient()).hasPermission(
-                                currentPermission)).toList().stream().findFirst();
+
+                Predicate<String> isNotAllowed = currentPermission -> {
+                    PermissionEntry<?> permissionEntry = (PermissionEntry<?>) getUser().getPlayerClient();
+                    return !permissionEntry.hasPermission(currentPermission);
+                };
+
+                Stream<String> valueStream = Arrays.stream(currentValue.permission());
+                Optional<String> permission = valueStream.filter(isNotAllowed).toList().stream().findFirst();
+
                 if (permission.isPresent()) {
                     throw new UnauthorizedException(UUID.fromString(getUser().getRawID()), permission.get());
                 }
@@ -83,10 +90,11 @@ public class KissenUserBoundSettings<T> extends KissenUserSettings<T> implements
     public @NotNull T getValue() {
         T defaultValue = getUserSetting().getDefaultValue(user.getPlayerClient());
         Optional<String> value = getUser().get("setting_" + getUserSetting().getKey());
-        return value.map(val -> getUserSetting().deserialize(val)).orElse(defaultValue);
+        return value.map(currentValue -> getUserSetting().deserialize(currentValue)).orElse(defaultValue);
     }
 
-    @Override public void reset() {
+    @Override
+    public void reset() {
         getUser().delete("setting_" + getUserSetting().getKey());
     }
 }
