@@ -1176,6 +1176,19 @@ index 0000000000000000000000000000000000000000..fc6ceb34627bb42ed3ea533d41ffa271
 +        return java.util.Optional.empty();
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java b/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java
+index fe2f7c055e0c21eeb845118d8b8adf4c5badc13a..d0a418639b5ee4b68fcad5ef002db43a365ce564 100644
+--- a/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java
++++ b/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java
+@@ -236,7 +236,7 @@ public class BanCommandMessages
+ 
+         if (reasonComponent != null)
+         {
+-            return Component.translatable(translationKey.append(".reason").toString(), displayName, reasonComponent);
++            return Component.translatable(translationKey.append(".cause").toString(), displayName, reasonComponent);
+         }
+         return Component.translatable(translationKey.toString(), displayName);
+     }
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/PaperBanParser.java b/src/main/java/net/kissenpvp/paper/ban/command/PaperBanParser.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..c461c3b8ee406be885c9c2d92e6de9ec0c2a7dc1

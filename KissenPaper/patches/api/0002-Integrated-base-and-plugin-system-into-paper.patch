@@ -108,7 +108,7 @@ index 4eb639fbb46a0848be207149ea433455550fae1c..5526f527d85e25070e6d3c335bc313fa
       * Returns the folder that the plugin data's files are located in. The
       * folder may not yet exist.
 diff --git a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..a5094d3776494ca977f59d312c97ace23a1163d5 100644
+index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..9e41ccff678969cfcfa0cca45fd5594ad870e489 100644
 --- a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
 +++ b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
 @@ -14,6 +14,7 @@ import java.net.URLConnection;
@@ -137,7 +137,7 @@ index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..a5094d3776494ca977f59d312c97ace2
 +
 +    @Override
 +    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting) {
-+        getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerUserSetting(this, playerSetting);
++        getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(this, playerSetting);
 +    }
 +
 +    @Override
