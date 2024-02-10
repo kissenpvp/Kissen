@@ -37,7 +37,6 @@ public abstract class PluginCommandHandler<S extends ServerEntity, C extends Com
         CommandImplementation<S> command = kissen.getImplementation(CommandImplementation.class);
         Set<ExceptionHandler<?>> exceptionHandlers = new HashSet<>(super.getExceptionHandler());
         exceptionHandlers.addAll(command.getInternalHandler().getExceptionHandler());
-        //TODO check if plugin handlers are prioritized.
         return exceptionHandlers;
     }
 
