@@ -19,12 +19,12 @@
 package net.kissenpvp.core.permission;
 
 import net.kissenpvp.core.api.event.EventCancelledException;
-import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.permission.PermissionEntry;
 import net.kissenpvp.core.api.permission.event.PermissionEndUpdateEvent;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.DataWriter;
+import net.kissenpvp.core.event.EventImplementation;
 import net.kissenpvp.core.permission.event.KissenPermissionEndUpdateEvent;
 import net.kissenpvp.core.permission.event.KissenPermissionOptionDeleteEvent;
 import net.kissenpvp.core.permission.event.KissenPermissionOptionSetEvent;

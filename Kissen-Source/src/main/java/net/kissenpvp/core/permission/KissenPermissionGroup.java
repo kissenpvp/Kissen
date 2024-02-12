@@ -18,13 +18,13 @@
 
 package net.kissenpvp.core.permission;
 
-import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.permission.*;
 import net.kissenpvp.core.api.permission.event.GroupMemberAddEvent;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
+import net.kissenpvp.core.event.EventImplementation;
 import net.kissenpvp.core.permission.event.KissenGroupMemberAddEvent;
 import net.kissenpvp.core.permission.event.KissenGroupMemberRemoveEvent;
 import org.jetbrains.annotations.Contract;

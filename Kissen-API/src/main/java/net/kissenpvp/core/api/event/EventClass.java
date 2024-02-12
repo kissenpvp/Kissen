@@ -19,6 +19,8 @@
 package net.kissenpvp.core.api.event;
 
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * The {@code EventClass} interface is a marker interface that represents an event in the plugin architecture.
  * <p>
@@ -32,4 +34,15 @@ package net.kissenpvp.core.api.event;
  * Note that the {@code EventClass} interface itself does not provide any methods or fields for handling events. It
  * serves only as a marker interface to distinguish event classes from other classes in the plugin architecture.
  */
-public interface EventClass { }
+public interface EventClass
+{
+    default boolean isAsynchronous()
+    {
+        return false;
+    }
+
+    default @NotNull String getEventName()
+    {
+        return getClass().getSimpleName();
+    }
+}

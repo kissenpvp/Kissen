@@ -22,7 +22,6 @@ import net.kissenpvp.core.api.ban.Ban;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.event.EventCancelledException;
-import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TimeImplementation;
 import net.kissenpvp.core.ban.events.ban.BanAlterDurationEvent;
@@ -31,6 +30,7 @@ import net.kissenpvp.core.ban.events.ban.BanRenameEvent;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.KissenSavable;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
+import net.kissenpvp.core.event.EventImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

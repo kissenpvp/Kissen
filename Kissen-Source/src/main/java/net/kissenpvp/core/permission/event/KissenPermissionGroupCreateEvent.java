@@ -26,11 +26,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
+@Getter
 public class KissenPermissionGroupCreateEvent implements PermissionGroupCreateEvent
 {
-    @Getter private final String name;
-    @Getter @Setter private Map<String, String> data;
-    @Getter @Setter private boolean cancelled;
+    private final String name;
+    @Setter private Map<String, String> data;
+    @Setter private boolean cancelled;
 
     public KissenPermissionGroupCreateEvent(@NotNull String name, @Nullable Map<String, String> data)
     {

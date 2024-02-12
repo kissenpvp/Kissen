@@ -30,7 +30,6 @@ import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
-import net.kissenpvp.core.api.event.EventImplementation;
 import net.kissenpvp.core.api.message.ChatImplementation;
 import net.kissenpvp.core.api.message.MessageImplementation;
 import net.kissenpvp.core.api.networking.APIRequestImplementation;
@@ -42,11 +41,9 @@ import net.kissenpvp.core.config.KissenConfigurationImplementation;
 import net.kissenpvp.core.database.KissenDataImplementation;
 import net.kissenpvp.core.database.KissenDatabaseImplementation;
 import net.kissenpvp.core.database.savable.KissenStorageImplementation;
-import net.kissenpvp.core.event.KissenEventImplementation;
 import net.kissenpvp.core.message.KissenChatImplementation;
 import net.kissenpvp.core.message.KissenMessageImplementation;
 import net.kissenpvp.core.networking.KissenAPIRequestImplementation;
-import net.kissenpvp.core.permission.event.KissenPermissionGroupCreateEvent;
 import net.kissenpvp.core.reflection.KissenReflectionClass;
 import net.kissenpvp.core.reflection.KissenReflectionImplementation;
 import net.kissenpvp.core.time.KissenTimeImplementation;
@@ -103,7 +100,6 @@ public abstract class KissenCore implements Kissen {
             startImplementations();
             time = System.currentTimeMillis() - time;
             getLogger().info("The kissen system took {}ms to start.", time);
-            getImplementation(EventImplementation.class).call(new KissenPermissionGroupCreateEvent("", null));
         }
         catch (IOException exception)
         {
@@ -118,7 +114,6 @@ public abstract class KissenCore implements Kissen {
         loader.put(ConfigurationImplementation.class, new KissenConfigurationImplementation());
         loader.put(DataImplementation.class, new KissenDataImplementation());
         loader.put(DatabaseImplementation.class, new KissenDatabaseImplementation());
-        loader.put(EventImplementation.class, new KissenEventImplementation());
         loader.put(PageImplementation.class, new KissenPageImplementation());
         loader.put(TimeImplementation.class, new KissenTimeImplementation());
         loader.put(ReflectionImplementation.class, new KissenReflectionImplementation());
@@ -152,8 +147,7 @@ public abstract class KissenCore implements Kissen {
             try {
                 value.stop();
             } catch (Exception exception) {
-                getLogger().error("An error occurred when shutting down implementation '" + key.getSimpleName() + "'",
-                        exception);
+                getLogger().error("An error occurred when shutting down implementation '{}'", key.getSimpleName(), exception);
             }
         });
     }
