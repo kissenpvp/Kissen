@@ -20,13 +20,10 @@ package net.kissenpvp.core.api.base.plugin;
 
 import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.base.Kissen;
-import net.kissenpvp.core.api.command.CommandHandler;
-import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import org.intellij.lang.annotations.Subst;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.text.MessageFormat;
 
 /**
  * The {@link KissenPlugin} interface defines the methods that a plugins offer after being loaded. Note that this does NOT apply to modules.
