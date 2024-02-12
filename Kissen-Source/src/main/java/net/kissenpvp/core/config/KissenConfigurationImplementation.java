@@ -85,18 +85,11 @@ public class KissenConfigurationImplementation implements ConfigurationImplement
                 .filter(setting -> setting.getClass().equals(clazz))
                 .findFirst()
                 .map(setting -> (Option<T>) setting)
-                .orElseThrow(() ->
-                {
-                    System.out.println("not found " + clazz.getSimpleName());
-                    return new UnregisteredException();
-                });
+                .orElseThrow(UnregisteredException::new);
     }
 
     public void registerInternalSetting(@NotNull Option<?> option) {
-        internalSettings.add((Option<?>) KissenCore.getInstance()
-                .getImplementation(ReflectionImplementation.class)
-                .loadClass(option)
-                .newInstance());
+        internalSettings.add(option);
     }
 
     @Override
