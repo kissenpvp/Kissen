@@ -930,10 +930,10 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..72227c4175f588f2f9181ca4d5647d75
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index 31aa6ef5fc2b3b88c72f5a15b8cc7a0e50c29f46..b332cb0ad591b3b546e798c95892c2f2d9c13f7e 100644
+index 254a02ddb5dc867c9dd6c2086791f7ab94247fd3..4ad6e71249ea3d808f82a4bce0c47eebcfe43c5b 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
-@@ -52,7 +52,7 @@ import org.jetbrains.annotations.Nullable;
+@@ -54,7 +54,7 @@ import org.jetbrains.annotations.Nullable;
  /**
   * Represents a player, connected or not
   */

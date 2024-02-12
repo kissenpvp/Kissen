@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated base and plugin system into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-index eeea1e6f7b1ed64567a3f90d8eb2e2cfd53e5912..3897b9706b588c780d055086498fa6a537068106 100644
+index eedbf46e04b5ae420f9bedcbc2bbb10643ba7e22..89c67d804437feee16eac9639fc9961418b914dc 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 @@ -144,7 +144,13 @@ class PaperPluginInstanceManager {
@@ -416,7 +416,7 @@ index d06185566b447c432d4dc2e3ba04d121bcdbc71b..98531c5e718f80c25c6d6009a1494b8b
  
      public SystemReport fillSystemReport(SystemReport details) {
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 6de6dad36203479677a29ad61e21bc369d4e5513..2514e7a65c95d4680d2c2b37fdf6e3bddb56659e 100644
+index 68d268b6fff126e8645b6deec3fb549ea2286b77..eb70191348ddead971a09b9c45244002fcd815b8 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -179,6 +179,14 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
@@ -434,7 +434,7 @@ index 6de6dad36203479677a29ad61e21bc369d4e5513..2514e7a65c95d4680d2c2b37fdf6e3bd
          // Paper start - detect running as root
          if (io.papermc.paper.util.ServerEnvironment.userIsRootOrAdmin()) {
              DedicatedServer.LOGGER.warn("****************************");
-@@ -268,6 +276,10 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -269,6 +277,10 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
              return false;
          }
  
@@ -446,10 +446,10 @@ index 6de6dad36203479677a29ad61e21bc369d4e5513..2514e7a65c95d4680d2c2b37fdf6e3bd
          // this.setPlayerList(new DedicatedPlayerList(this, this.registries(), this.playerDataStorage)); // Spigot - moved up
          this.server.loadPlugins();
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 4df3b94c8126f00188f5e125757411a0359728fa..c6dc30a13b6b69dbb722cf128b34523fb2c4b2ec 100644
+index 9f7ed337463cc9bb370a5541d9de5cd8f9c1a78a..4806c417d46a835380c1cc13a17a76afa743b6f2 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -264,7 +264,7 @@ import javax.annotation.Nullable; // Paper
+@@ -266,7 +266,7 @@ import javax.annotation.Nullable; // Paper
  import javax.annotation.Nonnull; // Paper
  
  public final class CraftServer implements Server {
@@ -458,7 +458,7 @@ index 4df3b94c8126f00188f5e125757411a0359728fa..c6dc30a13b6b69dbb722cf128b34523f
      private final String serverVersion;
      private final String bukkitVersion = Versioning.getBukkitVersion();
      private final Logger logger = Logger.getLogger("Minecraft");
-@@ -545,7 +545,13 @@ public final class CraftServer implements Server {
+@@ -547,7 +547,13 @@ public final class CraftServer implements Server {
  
          for (Plugin plugin : plugins) {
              if ((!plugin.isEnabled()) && (plugin.getDescription().getLoad() == type)) {
@@ -473,13 +473,13 @@ index 4df3b94c8126f00188f5e125757411a0359728fa..c6dc30a13b6b69dbb722cf128b34523f
          }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
-index d96399e9bf1a58db5a4a22e58abb99e7660e0694..ff3afe9fa01e6282ff921e3d20ddd41453457d28 100644
+index 66bdac50130f523f9dc4379b103b7a469f9ca36b..c67f7e1c18d2b3f2863450b4d08c43ecdd5f72a7 100644
 --- a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
 +++ b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
-@@ -143,4 +143,27 @@ public class MinecraftInternalPlugin extends PluginBase {
-     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+@@ -150,4 +150,27 @@ public class MinecraftInternalPlugin extends PluginBase {
          throw new UnsupportedOperationException("Not supported.");
      }
+     // Paper end - lifecycle events
 +
 +    // KissenPaper start
 +    @Override
@@ -505,21 +505,13 @@ index d96399e9bf1a58db5a4a22e58abb99e7660e0694..ff3afe9fa01e6282ff921e3d20ddd414
 +    // KissenPaper end
  }
 diff --git a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
-index 1d14f530ef888102e47eeeaf0d1a6076e51871c4..ea21a7ef172d08e49b239ea8f33af691f17e9514 100644
+index 90cf0c702ca2ff9de64d9718ecba5f2d128953a6..6eb4ffd2ab30622ea1ff5002f407bda3650bb307 100644
 --- a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
 +++ b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
-@@ -11,6 +11,7 @@ import org.bukkit.plugin.PluginBase;
- import org.bukkit.plugin.PluginDescriptionFile;
- import org.bukkit.plugin.PluginLoader;
- import org.bukkit.plugin.PluginLogger;
-+import org.jetbrains.annotations.NotNull;
- 
- import java.io.File;
- import java.io.InputStream;
-@@ -143,4 +144,27 @@ public class PaperTestPlugin extends PluginBase {
-     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+@@ -150,4 +150,27 @@ public class PaperTestPlugin extends PluginBase {
          throw new UnsupportedOperationException("Not supported.");
      }
+     // Paper end - lifecycle events
 +
 +    // KissenPaper start
 +    @Override
@@ -533,7 +525,7 @@ index 1d14f530ef888102e47eeeaf0d1a6076e51871c4..ea21a7ef172d08e49b239ea8f33af691
 +    }
 +
 +    @Override
-+    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting) {
++    public void registerPlayerSetting(@org.jetbrains.annotations.NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting) {
 +        throw new UnsupportedOperationException("Not supported.");
 +    }
 +

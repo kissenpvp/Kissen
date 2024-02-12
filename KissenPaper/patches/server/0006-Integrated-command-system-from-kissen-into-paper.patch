@@ -1229,10 +1229,10 @@ index b7f338e982d0dcab99137ab6dc200b82ac6b7cba..c41f51fc6b65c3e027296bfcd1c75500
              if (event.message() != null) {
                  commandlistenerwrapper.sendFailure(io.papermc.paper.adventure.PaperAdventure.asVanilla(event.message()), false);
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index c6dc30a13b6b69dbb722cf128b34523fb2c4b2ec..f680712c18c6040e1eb4a7e48fc38abe16012957 100644
+index 4806c417d46a835380c1cc13a17a76afa743b6f2..3431c05a5fdd51e19cf68459b54e51478a4116ba 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -994,18 +994,26 @@ public final class CraftServer implements Server {
+@@ -1006,18 +1006,26 @@ public final class CraftServer implements Server {
              return true;
          }
  

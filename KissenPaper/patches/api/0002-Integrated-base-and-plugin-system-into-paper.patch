@@ -73,10 +73,10 @@ index 0000000000000000000000000000000000000000..8f6f824aa92c7dd0c4bd28d2c8fef974
 +    @NotNull ObjectMeta getPrivateMeta();
 +}
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index 2d53675907f411046978b0a234c0b6f33c909973..6c863d61490bd86a958bf1b674629e2df585bac2 100644
+index ca27559cf4aa1c2e44fdca2022e213b1b1c80f4e..b8a3890e78a794b45d61e3e641433c9163d7e351 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
-@@ -2842,4 +2842,17 @@ public final class Bukkit {
+@@ -2862,4 +2862,17 @@ public final class Bukkit {
      public static Server.Spigot spigot() {
          return server.spigot();
      }
@@ -95,34 +95,26 @@ index 2d53675907f411046978b0a234c0b6f33c909973..6c863d61490bd86a958bf1b674629e2d
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/plugin/Plugin.java b/src/main/java/org/bukkit/plugin/Plugin.java
-index 4eb639fbb46a0848be207149ea433455550fae1c..5526f527d85e25070e6d3c335bc313fadceef753 100644
+index ef431219fd2bce48bad63b6b92c99d54348d480e..b753260bb333c8909ac2b251c17c4e92c45d7e00 100644
 --- a/src/main/java/org/bukkit/plugin/Plugin.java
 +++ b/src/main/java/org/bukkit/plugin/Plugin.java
 @@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
   * <p>
   * The use of {@link PluginBase} is recommended for actual Implementation
   */
--public interface Plugin extends TabExecutor {
-+public interface Plugin extends TabExecutor, net.kissenpvp.core.api.base.plugin.KissenPlugin { // KissenPaper
+-public interface Plugin extends TabExecutor, io.papermc.paper.plugin.lifecycle.event.LifecycleEventOwner { // Paper
++public interface Plugin extends TabExecutor, io.papermc.paper.plugin.lifecycle.event.LifecycleEventOwner, net.kissenpvp.core.api.base.plugin.KissenPlugin { // Paper  // KissenPaper
      /**
       * Returns the folder that the plugin data's files are located in. The
       * folder may not yet exist.
 diff --git a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..9e41ccff678969cfcfa0cca45fd5594ad870e489 100644
+index 34037d3da2c536bac088e0ff629ee8f1daccc65b..75dc116ca7b33c6bee1aaa1e0dd0d3f7d899d38d 100644
 --- a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
 +++ b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-@@ -14,6 +14,7 @@ import java.net.URLConnection;
- import java.util.List;
- import java.util.logging.Level;
- import java.util.logging.Logger;
-+
- import org.bukkit.Server;
- import org.bukkit.command.Command;
- import org.bukkit.command.CommandSender;
-@@ -456,4 +457,27 @@ public abstract class JavaPlugin extends PluginBase {
-         }
-         return plugin;
+@@ -470,4 +470,27 @@ public abstract class JavaPlugin extends PluginBase {
+         return this.lifecycleEventManager;
      }
+     // Paper end - lifecycle events
 +
 +    // KissenPaper start
 +    @Override
@@ -148,21 +140,13 @@ index 5cd236965de12392d8c7aa81307c0ff1cc8673b1..9e41ccff678969cfcfa0cca45fd5594a
 +    // KissenPaper end
  }
 diff --git a/src/test/java/org/bukkit/plugin/TestPlugin.java b/src/test/java/org/bukkit/plugin/TestPlugin.java
-index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..089a8885cca1fca8ba12da16b17454281ede6588 100644
+index affe88cf8e98a787e197936f5fc443464a2343c6..17daf0fef0d684dcd6713478d4c1fcfbbedb1292 100644
 --- a/src/test/java/org/bukkit/plugin/TestPlugin.java
 +++ b/src/test/java/org/bukkit/plugin/TestPlugin.java
-@@ -9,6 +9,7 @@ import org.bukkit.command.CommandSender;
- import org.bukkit.configuration.file.FileConfiguration;
- import org.bukkit.generator.BiomeProvider;
- import org.bukkit.generator.ChunkGenerator;
-+import org.jetbrains.annotations.NotNull;
- 
- public class TestPlugin extends PluginBase {
-     private boolean enabled = true;
-@@ -133,4 +134,27 @@ public class TestPlugin extends PluginBase {
-     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+@@ -140,4 +140,27 @@ public class TestPlugin extends PluginBase {
          throw new UnsupportedOperationException("Not supported.");
      }
+     // Paper end - lifecycle events
 +
 +    // KissenPaper start
 +    @Override
@@ -176,12 +160,12 @@ index 43b58e920e739bb949ac0673e9ef73ba7b500dc9..089a8885cca1fca8ba12da16b1745428
 +    }
 +
 +    @Override
-+    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting) {
++    public void registerPlayerSetting(@org.jetbrains.annotations.NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting) {
 +        throw new UnsupportedOperationException("Not supported.");
 +    }
 +
 +    @Override
-+    public @NotNull net.kissenpvp.core.api.command.CommandHandler<?, ?> getCommandHandler()
++    public @org.jetbrains.annotations.NotNull net.kissenpvp.core.api.command.CommandHandler<?, ?> getCommandHandler()
 +    {
 +        throw new UnsupportedOperationException("Not supported.");
 +    }

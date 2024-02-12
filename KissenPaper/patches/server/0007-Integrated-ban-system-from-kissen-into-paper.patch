@@ -1433,10 +1433,10 @@ index 13d348ec03d03df2b37aea884360632148ebb292..faf74a5bd85b00b5d789fafe1dd30577
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index f680712c18c6040e1eb4a7e48fc38abe16012957..d4c917cc0d5bbbbd20af74a31c45dff2f11401ef 100644
+index 3431c05a5fdd51e19cf68459b54e51478a4116ba..8c2c7e5338213dbbb54cc739b3b8515b2f119483 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -2204,12 +2204,19 @@ public final class CraftServer implements Server {
+@@ -2221,12 +2221,19 @@ public final class CraftServer implements Server {
  
      @Override
      public <T extends BanList<?>> T getBanList(BanList.Type type) {
