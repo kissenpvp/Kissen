@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.message.settings;
+package net.kissenpvp.core.api.message.settings;
 
 import net.kissenpvp.core.api.config.options.OptionNamedTextColor;
 import net.kyori.adventure.text.format.NamedTextColor;

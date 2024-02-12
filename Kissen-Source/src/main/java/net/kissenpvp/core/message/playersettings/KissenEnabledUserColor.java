@@ -16,36 +16,24 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.message.usersettings;
+package net.kissenpvp.core.message.playersettings;
 
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
+import net.kissenpvp.core.api.message.playersettings.EnabledUserColor;
+import net.kissenpvp.core.api.message.settings.DefaultEnabledColor;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
-import net.kissenpvp.core.api.user.usersetttings.UserValue;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.message.settings.DefaultColor;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 
-public class GeneralUserColor extends UserColorSetting
-{
-    @Override public @NotNull String getKey()
-    {
-        return "generalcolor";
+public class KissenEnabledUserColor extends UserColorSetting implements EnabledUserColor {
+    @Override
+    public @NotNull String getKey() {
+        return "enabledcolor";
     }
 
     @Override
-    public @NotNull NamedTextColor getDefaultValue(@NotNull PlayerClient<?, ?, ?> playerClient)
-    {
-        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultColor.class);
-    }
-
-    @Override
-    public @NotNull UserValue<NamedTextColor>[] getPossibleValues(@NotNull PlayerClient<?, ?, ?> playerClient) {
-        return new UserValue[]
-                {
-                        new UserValue<>(NamedTextColor.GRAY),
-                        new UserValue<>(NamedTextColor.WHITE),
-                        new UserValue<>(NamedTextColor.DARK_GRAY)
-                };
+    public @NotNull NamedTextColor getDefaultValue(@NotNull PlayerClient<?, ?, ?> playerClient) {
+        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultEnabledColor.class);
     }
 }

@@ -16,22 +16,10 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.message.event;
+package net.kissenpvp.core.api.message.playersettings;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import net.kissenpvp.core.api.event.Cancellable;
-import net.kissenpvp.core.api.event.EventClass;
-import net.kissenpvp.core.api.networking.client.entitiy.OnlinePlayerClient;
+import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
+import net.kyori.adventure.text.format.NamedTextColor;
 
-@AllArgsConstructor
-public class KissenChatEvent implements EventClass, Cancellable {
-    private final OnlinePlayerClient playerClient;
-    @Getter
-    @Setter
-    private String message;
-    @Getter
-    @Setter
-    private boolean cancelled;
-}
+public interface SecondaryUserColor extends PlayerSetting<NamedTextColor>
+{ }

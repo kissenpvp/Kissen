@@ -25,14 +25,14 @@ import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.config.InvalidValueException;
 import net.kissenpvp.core.api.config.Option;
 import net.kissenpvp.core.api.config.UnregisteredException;
-import net.kissenpvp.core.api.message.settings.DefaultLanguage;
+import net.kissenpvp.core.api.message.settings.*;
 import net.kissenpvp.core.api.reflection.ReflectionImplementation;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.base.KissenImplementation;
 import net.kissenpvp.core.database.settings.DatabaseDNS;
 import net.kissenpvp.core.database.settings.KeepSQLiteFile;
 import net.kissenpvp.core.message.localization.settings.HighlightVariables;
 import net.kissenpvp.core.message.localization.settings.InsertMissingTranslation;
-import net.kissenpvp.core.message.settings.*;
 import net.kissenpvp.core.networking.socket.ssl.settings.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,87 +48,88 @@ import java.util.stream.Stream;
 
 
 @Getter
-public class KissenConfigurationImplementation implements ConfigurationImplementation {
+public class KissenConfigurationImplementation implements ConfigurationImplementation, KissenImplementation {
 
-    private final Set<Option<?>> internalOptions;
-    private final Map<KissenPlugin, Set<Option<?>>> kissenPluginSetMap;
+    private final Set<Option<?>> internalSettings;
+    private final Map<KissenPlugin, Set<Option<?>>> pluginSettings;
 
     public KissenConfigurationImplementation() {
-        kissenPluginSetMap = new HashMap<>();
-        internalOptions = new HashSet<>();
-        internalOptions.add(new ClientCertificateLocation());
-        internalOptions.add(new ClientCertificatePassword());
-        internalOptions.add(new DatabaseDNS());
-        internalOptions.add(new DefaultColor());
-        internalOptions.add(new DefaultSystemPrefix());
-        internalOptions.add(new DefaultDisabledColor());
-        internalOptions.add(new DefaultEnabledColor());
-        internalOptions.add(new DefaultLanguage());
-        internalOptions.add(new DefaultPrimaryColor());
-        internalOptions.add(new DefaultSecondaryColor());
-        internalOptions.add(new EnableSSLEncryption());
-        internalOptions.add(new HighlightVariables());
-        internalOptions.add(new InsertMissingTranslation());
-        internalOptions.add(new KeepSQLiteFile());
-        internalOptions.add(new ServerCertificateLocation());
-        internalOptions.add(new ServerCertificatePassword());
-        internalOptions.add(new ServerName());
+        pluginSettings = new HashMap<>();
+        internalSettings = new HashSet<>();
+        internalSettings.add(new ClientCertificateLocation());
+        internalSettings.add(new ClientCertificatePassword());
+        internalSettings.add(new DatabaseDNS());
+        internalSettings.add(new DefaultColor());
+        internalSettings.add(new DefaultDisabledColor());
+        internalSettings.add(new DefaultEnabledColor());
+        internalSettings.add(new DefaultLanguage());
+        internalSettings.add(new DefaultPrimaryColor());
+        internalSettings.add(new DefaultSecondaryColor());
+        internalSettings.add(new EnableSSLEncryption());
+        internalSettings.add(new HighlightVariables());
+        internalSettings.add(new InsertMissingTranslation());
+        internalSettings.add(new KeepSQLiteFile());
+        internalSettings.add(new ServerCertificateLocation());
+        internalSettings.add(new ServerCertificatePassword());
+        internalSettings.add(new ServerName());
+    }
+
+    @Override
+    public void postEnable(@NotNull KissenPlugin kissenPlugin) {
+        loadPlugin(kissenPlugin);
     }
 
     @Override
     public @NotNull <T> Option<T> getOption(@NotNull Class<? extends Option<T>> clazz) {
-        return Stream.concat(internalOptions.stream(), kissenPluginSetMap.values().stream())
-                .filter(setting -> setting.getClass().getName().equals(clazz.getName()))
+        return Stream.concat(internalSettings.stream(), pluginSettings.values().stream().flatMap(Collection::stream))
+                .filter(setting -> setting.getClass().equals(clazz))
                 .findFirst()
                 .map(setting -> (Option<T>) setting)
-                .orElseThrow(UnregisteredException::new);
+                .orElseThrow(() ->
+                {
+                    System.out.println("not found " + clazz.getSimpleName());
+                    return new UnregisteredException();
+                });
     }
 
-    public void registerOption(@NotNull Class<? extends Option<?>> option) {
-        internalOptions.add((Option<?>) KissenCore.getInstance()
+    public void registerInternalSetting(@NotNull Option<?> option) {
+        internalSettings.add((Option<?>) KissenCore.getInstance()
                 .getImplementation(ReflectionImplementation.class)
                 .loadClass(option)
                 .newInstance());
     }
 
     @Override
-    public void registerOption(@NotNull KissenPlugin kissenPlugin, @NotNull Class<? extends Option<?>> option) {
-        if (!kissenPluginSetMap.containsKey(kissenPlugin)) {
-            kissenPluginSetMap.put(kissenPlugin, new HashSet<>());
-        }
-        Option<?> optionInstance = (Option<?>) KissenCore.getInstance()
-                .getImplementation(ReflectionImplementation.class)
-                .loadClass(option)
-                .newInstance();
-        kissenPluginSetMap.get(kissenPlugin).add(optionInstance);
+    public void registerSetting(@NotNull KissenPlugin kissenPlugin, @NotNull Option<?> option) {
+        pluginSettings.computeIfAbsent(kissenPlugin, plugin -> new HashSet<>()).add(option);
     }
 
     public void loadInternalConfiguration(@NotNull File file) throws IOException {
-        if (!file.exists()) {
-            if (!file.createNewFile()) {
-                throw new IOException("Could not create config file!");
-            }
-        }
 
         Class<KissenConfigurationImplementation> clazz = KissenConfigurationImplementation.class;
         KissenCore instance = KissenCore.getInstance();
 
         KissenConfigurationImplementation kissenConfigurationImplementation = instance.getImplementation(clazz);
-        write(file, internalOptions.stream().sorted((o1, o2) -> CharSequence.compare(o1.getGroup(), o2.getGroup())).toList());
+        write(file, internalSettings.stream().sorted((o1, o2) -> CharSequence.compare(o1.getGroup(), o2.getGroup())).toList());
     }
 
     public void loadPlugin(@NotNull KissenPlugin plugin) {
-        if (!kissenPluginSetMap.containsKey(plugin)) {
+        if (!getPluginSettings().containsKey(plugin)) {
             return;
         }
-
-        write(new File(plugin.getDataFolder() + "/config.yml"), kissenPluginSetMap.get(plugin)
-                .stream()
-                .sorted((o1, o2) -> CharSequence.compare(o1.getGroup(), o2.getGroup()))
-                .toList());
+        KissenCore.getInstance().getLogger().info("Load configuration for plugin {}.", plugin.getName());
+        File file = new File(plugin.getDataFolder(), "config.yml");
+        try {
+            write(file, pluginSettings.get(plugin)
+                    .stream()
+                    .sorted((o1, o2) -> CharSequence.compare(o1.getGroup(), o2.getGroup()))
+                    .toList());
+        } catch (IOException ioException) {
+            KissenCore.getInstance().getLogger().error("The config file '{}' could not be written.", file.getAbsolutePath(), ioException);
+        }
     }
 
-    private void write(@NotNull File file, List<Option<?>> options) {
+    private void write(@NotNull File file, List<Option<?>> options) throws IOException {
 
         Map<String, String> fileData = new HashMap<>();
 
@@ -157,6 +158,11 @@ public class KissenConfigurationImplementation implements ConfigurationImplement
             sort.get(option.getGroup().toLowerCase(Locale.ROOT)).add(option);
         });
 
+        if(!file.exists() && !file.createNewFile())
+        {
+            throw new IOException("Could not create config file!");
+        }
+
         try (BufferedWriter bufferedWriter = Files.newBufferedWriter(file.toPath(), StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING)) {
             bufferedWriter.append("""
                     # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -180,16 +186,15 @@ public class KissenConfigurationImplementation implements ConfigurationImplement
                     loadSetting(bufferedWriter, fileData, currentOption);
                 }
             }
-        } catch (IOException ioException) {
-            KissenCore.getInstance()
-                    .getLogger()
-                    .error("The config file '{}' could not be written, please shut down the server to prevent any further damages to the systems config.", file.getAbsolutePath(), ioException);
+
+            KissenCore.getInstance().getLogger().info("Configuration loaded from '{}'. Any missing values have been written to the file.", file.getAbsolutePath());
         }
     }
 
     private <T> void loadSetting(@NotNull BufferedWriter bufferedWriter, @NotNull Map<String, String> fileData, @NotNull Option<T> entry) throws IOException {
-        bufferedWriter.append(!entry.getDescription().startsWith("\n") ? "#" : "")
-                .append(entry.getDescription().replace("\n", "\n#"));
+
+        String description = entry.getDescription().replace("\n", "\n#");
+        bufferedWriter.append(!entry.getDescription().startsWith("\n") ? "#" : "").append(description);
         bufferedWriter.newLine();
 
         try {

@@ -184,10 +184,10 @@ index 0000000000000000000000000000000000000000..a29d1dac0b3a8737af4e2376ac894bb9
 +
 +}
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index c4fca36d12396c752b60bd62870576a4eb4bfbb6..bf5c573741dd70b8e599c58543024acd876149bb 100644
+index 31b9002187aab40abeb6627c0b0d1ee60c575e5b..7d736b586068dac072e32963c6d2c0fd103fc73f 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -323,5 +323,6 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -325,5 +325,6 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
  
      void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin);
  
@@ -195,10 +195,10 @@ index c4fca36d12396c752b60bd62870576a4eb4bfbb6..bf5c573741dd70b8e599c58543024acd
      // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index bf13ca76d7cc1e2c763fe3112f3b9db05d75cf16..0893dcbbdffbc1784d0c4190f9812af24107ed0f 100644
+index 3a8ca4bf5c538c793072720159393c5644d42185..4688866ee25c176680ae26c6ba4940189ac52e1b 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -988,5 +988,10 @@ public final class SimplePluginManager implements PluginManager {
+@@ -994,5 +994,10 @@ public final class SimplePluginManager implements PluginManager {
      public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
      }

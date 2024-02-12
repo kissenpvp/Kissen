@@ -5,10 +5,10 @@ Subject: [PATCH] Integrated localization from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index 0786c9418a74b183e5946dbc205e71628ca6e647..0f185a8e173414ab6daa593d59e0e0211573a935 100644
+index f97d54d30e952c6d501f28ce48fd899190709884..7a1110f4c2491fb87575fbcf92380a0e15ef17a6 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-@@ -244,5 +244,10 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+@@ -249,5 +249,10 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
      public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
      }

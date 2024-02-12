@@ -16,25 +16,10 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.message.usersettings;
+package net.kissenpvp.core.api.message.playersettings;
 
-import net.kissenpvp.core.api.config.ConfigurationImplementation;
-import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
-import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.message.settings.DefaultPrimaryColor;
+import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.jetbrains.annotations.NotNull;
 
-public class PrimaryUserColor extends UserColorSetting
-{
-    @Override public @NotNull String getKey()
-    {
-        return "primarycolor";
-    }
-
-    @Override
-    public @NotNull NamedTextColor getDefaultValue(@NotNull PlayerClient<?, ?, ?> playerClient)
-    {
-        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultPrimaryColor.class);
-    }
-}
+public interface PrimaryUserColor extends PlayerSetting<NamedTextColor>
+{ }

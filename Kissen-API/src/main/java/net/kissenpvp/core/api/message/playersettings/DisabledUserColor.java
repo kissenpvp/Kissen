@@ -16,25 +16,9 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.api.message;
+package net.kissenpvp.core.api.message.playersettings;
 
-import java.io.Serializable;
+import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
+import net.kyori.adventure.text.format.NamedTextColor;
 
-
-public enum ChatImportance implements Serializable {
-    HIGHEST((byte) 0),
-    HIGH((byte) 1),
-    NORMAL((byte) 2),
-    LOW((byte) 3),
-    LOWEST((byte) 4);
-
-    final byte importance;
-
-    ChatImportance(byte importance) {
-        this.importance = importance;
-    }
-
-    public byte getImportance() {
-        return importance;
-    }
-}
+public interface DisabledUserColor extends PlayerSetting<NamedTextColor> { }

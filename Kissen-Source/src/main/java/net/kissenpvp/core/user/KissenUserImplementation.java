@@ -28,6 +28,7 @@ import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
 import net.kissenpvp.core.api.event.EventCancelledException;
+import net.kissenpvp.core.message.playersettings.*;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
@@ -35,7 +36,6 @@ import net.kissenpvp.core.api.user.UserInfo;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
-import net.kissenpvp.core.message.usersettings.*;
 import net.kissenpvp.core.permission.PermissionImplementation;
 import net.kissenpvp.core.user.suffix.SuffixInChatSetting;
 import net.kissenpvp.core.user.suffix.SuffixSetting;
@@ -89,16 +89,14 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
     @Override
     public boolean start() {
-        registerInternalUserSetting(new PrimaryUserColor());
-        registerInternalUserSetting(new SecondaryUserColor());
-        registerInternalUserSetting(new GeneralUserColor());
-        registerInternalUserSetting(new EnabledUserColor());
-        registerInternalUserSetting(new DisabledUserColor());
+        registerInternalUserSetting(new KissenPrimaryUserColor());
+        registerInternalUserSetting(new KissenSecondaryUserColor());
+        registerInternalUserSetting(new KissenGeneralUserColor());
+        registerInternalUserSetting(new KissenEnabledUserColor());
+        registerInternalUserSetting(new KissenDisabledUserColor());
         registerInternalUserSetting(new SuffixSetting());
         registerInternalUserSetting(new SuffixInChatSetting());
-        registerInternalUserSetting(new ShowPrefix());
-        registerInternalUserSetting(new SystemPrefix());
-        registerInternalUserSetting(new HighlightVariables());
+        registerInternalUserSetting(new KissenHighlightVariables());
         return UserImplementation.super.start();
     }
 

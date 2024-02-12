@@ -91,5 +91,5 @@ public interface ConfigurationImplementation extends Implementation
      * @throws NullPointerException if either the specified plugin or option class is {@code null}
      * @see Option
      */
-    void registerOption(@NotNull KissenPlugin kissenPlugin, @NotNull Class<? extends Option<?>> optionNode);
+    void registerSetting(@NotNull KissenPlugin kissenPlugin, @NotNull Option<?> optionNode);
 }

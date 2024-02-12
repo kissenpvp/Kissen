@@ -5,10 +5,10 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index 0f185a8e173414ab6daa593d59e0e0211573a935..ef1ac430046faf88ad7d5443bb38ea891ad5b2c7 100644
+index 7a1110f4c2491fb87575fbcf92380a0e15ef17a6..eec79ae5626afaaef25ea039d76d2c1a0716a484 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-@@ -249,5 +249,10 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+@@ -254,5 +254,10 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
      public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
      }

@@ -107,6 +107,41 @@ index ef431219fd2bce48bad63b6b92c99d54348d480e..b753260bb333c8909ac2b251c17c4e92
      /**
       * Returns the folder that the plugin data's files are located in. The
       * folder may not yet exist.
+diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
+index 03213fde8315384ec56c16031cfc606ade2e8091..88228a142f53199b048c5bd22ac23dd1b9e50426 100644
+--- a/src/main/java/org/bukkit/plugin/PluginManager.java
++++ b/src/main/java/org/bukkit/plugin/PluginManager.java
+@@ -317,4 +317,11 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+     @org.jetbrains.annotations.ApiStatus.Experimental
+     void overridePermissionManager(@NotNull Plugin plugin, @Nullable io.papermc.paper.plugin.PermissionManager permissionManager);
+     // Paper end
++
++    // KissenPaper start
++
++    void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?> setting, @NotNull Plugin plugin);
++
++    // KissenPaper end
++
+ }
+diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+index fc2dae69165776d08274e34a69962cc70445f411..c8aa887326fde648b05158c19cbeb830d10a3420 100644
+--- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
++++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+@@ -978,4 +978,14 @@ public final class SimplePluginManager implements PluginManager {
+         this.paperPluginManager.addPermissions(perm);
+     }
+     // Paper end
++
++    // KissenPaper start
++
++    @Override
++    public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?> setting, @NotNull Plugin plugin)
++    {
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
++    }
++
++    // KissenPaper end
+ }
 diff --git a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
 index 34037d3da2c536bac088e0ff629ee8f1daccc65b..350097c726eaf3e900ed4a073d43656cfaf0e95e 100644
 --- a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java

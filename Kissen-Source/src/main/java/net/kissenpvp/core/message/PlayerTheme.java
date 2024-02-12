@@ -19,9 +19,8 @@
 package net.kissenpvp.core.message;
 
 import lombok.AllArgsConstructor;
+import net.kissenpvp.core.api.message.playersettings.*;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
-import net.kissenpvp.core.message.usersettings.*;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
 

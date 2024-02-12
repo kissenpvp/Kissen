@@ -943,28 +943,36 @@ index 254a02ddb5dc867c9dd6c2086791f7ab94247fd3..4ad6e71249ea3d808f82a4bce0c47eeb
      // Paper start
      @Override
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 5c7d26c2b55821d7a45704827471d6a30f54fb18..4f8debb1666594aa2f49c2b56f6218f71a9bf16c 100644
+index 6ffafbabfdd65bee0b40ac34739973b93e1eba96..ece3a40f068c3ce0171c94d81ee77f68ef971472 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -317,4 +317,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
-     @org.jetbrains.annotations.ApiStatus.Experimental
-     void overridePermissionManager(@NotNull Plugin plugin, @Nullable io.papermc.paper.plugin.PermissionManager permissionManager);
+@@ -319,9 +319,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
      // Paper end
-+
-+    // KissenPaper start
+ 
+     // KissenPaper start
+-
+     void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?> setting, @NotNull Plugin plugin);
+ 
 +    void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin);
-+    // KissenPaper end
+     // KissenPaper end
+-
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 90687841e78b7dd890a1442a36a006962a287157..30f795d5c16efe681657236943246dbe57cec063 100644
+index 493b97b0e6e20ec39d8dd1102fc7f77d168b8c45..ae30066ca8e1dacd14d7add04aded9ddd7388069 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -977,4 +977,11 @@ public final class SimplePluginManager implements PluginManager {
-         this.paperPluginManager.addPermissions(perm);
-     }
+@@ -979,12 +979,15 @@ public final class SimplePluginManager implements PluginManager {
      // Paper end
-+
-+    // KissenPaper start
+ 
+     // KissenPaper start
+-
+     @Override
+     public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?> setting, @NotNull Plugin plugin)
+     {
+         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
+     }
+ 
+-    // KissenPaper end
 +    @Override
 +    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin) {
 +        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);

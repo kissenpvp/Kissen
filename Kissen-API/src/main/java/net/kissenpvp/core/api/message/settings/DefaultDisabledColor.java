@@ -16,14 +16,14 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.message.settings;
+package net.kissenpvp.core.api.message.settings;
 
 import net.kissenpvp.core.api.config.options.OptionNamedTextColor;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 
 
-public class DefaultSecondaryColor extends OptionNamedTextColor
+public class DefaultDisabledColor extends OptionNamedTextColor
 {
     @Override public @NotNull String getGroup()
     {
@@ -32,16 +32,16 @@ public class DefaultSecondaryColor extends OptionNamedTextColor
 
     @Override public @NotNull String getDescription()
     {
-        return "Theming for messages that are somehow important but not as much as some other.";
+        return "This color describes how disabled entries should be colored in.";
     }
 
     @Override public @NotNull NamedTextColor getDefault()
     {
-        return NamedTextColor.GOLD;
+        return NamedTextColor.RED;
     }
 
     @Override public int getPriority()
     {
-        return 12;
+        return 15;
     }
 }

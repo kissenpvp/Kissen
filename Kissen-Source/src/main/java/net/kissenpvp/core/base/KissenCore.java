@@ -157,8 +157,6 @@ public abstract class KissenCore implements Kissen {
 
         File file = new File("kissen.properties");
         getImplementation(KissenConfigurationImplementation.class).loadInternalConfiguration(file);
-        getLogger().info("Configuration loaded from '{}'. Any missing values have been written to the file.",
-                file.getAbsolutePath());
 
         getLogger().debug("Enable locale system and load Languages.");
 

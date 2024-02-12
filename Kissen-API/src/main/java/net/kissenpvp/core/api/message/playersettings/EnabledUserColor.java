@@ -16,15 +16,9 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.api.message;
+package net.kissenpvp.core.api.message.playersettings;
 
-import net.kissenpvp.core.api.base.Implementation;
-import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
-import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.NotNull;
+import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
+import net.kyori.adventure.text.format.NamedTextColor;
 
-import java.util.Optional;
-
-public interface ChatImplementation extends Implementation {
-    @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity serverEntity, @NotNull Component... components);
-}
+public interface EnabledUserColor extends PlayerSetting<NamedTextColor> { }

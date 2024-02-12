@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.message.usersettings;
+package net.kissenpvp.core.message.playersettings;
 
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;

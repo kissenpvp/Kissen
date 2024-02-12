@@ -1,11 +1,11 @@
-package net.kissenpvp.core.message.usersettings;
+package net.kissenpvp.core.message.playersettings;
 
+import net.kissenpvp.core.api.message.playersettings.HighlightVariables;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
-import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
 import net.kissenpvp.core.api.user.usersetttings.UserValue;
 import org.jetbrains.annotations.NotNull;
 
-public class HighlightVariables implements PlayerSetting<Boolean>
+public class KissenHighlightVariables implements HighlightVariables
 {
     @Override
     public @NotNull String serialize(@NotNull Boolean object)

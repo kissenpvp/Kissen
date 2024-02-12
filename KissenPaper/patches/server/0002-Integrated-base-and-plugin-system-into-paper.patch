@@ -22,6 +22,23 @@ index eedbf46e04b5ae420f9bedcbc2bbb10643ba7e22..89c67d804437feee16eac9639fc99614
          }
      }
  
+diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
+index dab211c458311869c61779305580a1c7da830f71..6b4ff21d64771486cf452d33c6a44a21dab2ff16 100644
+--- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
++++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
+@@ -238,4 +238,12 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+     public MutableGraph<String> getInstanceManagerGraph() {
+         return instanceManager.getDependencyGraph();
+     }
++
++    // KissenPaper start
++    @Override
++    public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?> setting, @NotNull Plugin plugin)
++    {
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
++    }
++    // KissenPaper end
+ }
 diff --git a/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java b/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java
 index cb9b13522a976b82bcb71cef486f11f4172e3e99..862625f912d8e8d980f06f58f7bef353578420e6 100644
 --- a/src/main/java/io/papermc/paper/plugin/storage/ServerPluginProviderStorage.java

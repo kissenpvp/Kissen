@@ -18,53 +18,53 @@
 
 package net.kissenpvp.core.message;
 
-import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.message.ChatImplementation;
-import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
+import net.kissenpvp.core.api.message.event.SystemMessageEvent;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.message.settings.DefaultSystemPrefix;
-import net.kissenpvp.core.message.usersettings.ShowPrefix;
-import net.kissenpvp.core.message.usersettings.SystemPrefix;
+import net.kissenpvp.core.event.EventImplementation;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 public class KissenChatImplementation implements ChatImplementation
 {
     @Override
-    public @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity serverEntity, @NotNull Component @NotNull ... components)
+    public @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity receiver, @NotNull Component @NotNull ... components)
     {
-        //TODO experimental
-
-        if(!serverEntity.isConnected())
+        if(!receiver.isConnected())
         {
             return Optional.of(Component.join(JoinConfiguration.noSeparators(), components));
         }
 
-        Predicate<Component> contain = component -> component.contains(Component.newline());
-        boolean append = components.length < 2 && Arrays.stream(components).noneMatch(contain);
-
-        if (!append || (serverEntity instanceof PlayerClient<?, ?, ?> player && !player.getUserSetting(ShowPrefix.class).getValue()))
+        SystemMessageEvent systemMessageEvent = new SystemMessageEvent(sender, receiver, components);
+        if(!KissenCore.getInstance().getImplementation(EventImplementation.class).call(systemMessageEvent))
         {
-            return Optional.of(styleComponent(serverEntity, components));
+            return Optional.empty();
         }
 
-        Component prefix = getPrefix(serverEntity);
+        return Optional.of(systemMessageEvent.getComponent());
+
+        /*Predicate<Component> contain = component -> component.contains(Component.newline());
+        boolean append = components.length < 2 && Arrays.stream(components).noneMatch(contain);
+
+        if (!append || (receiver instanceof PlayerClient<?, ?, ?> player && !player.getUserSetting(ShowPrefix.class).getValue()))
+        {
+            return Optional.of(styleComponent(receiver, components));
+        }
+
+        Component prefix = getPrefix(receiver);
 
         Component[] prefixAppendedComponents = new Component[components.length + 1];
         prefixAppendedComponents[0] = prefix.appendSpace().append(Component.text("»")).appendSpace();
         System.arraycopy(components, 0, prefixAppendedComponents, 1, components.length);
-        return Optional.of(styleComponent(serverEntity, prefixAppendedComponents));
+        return Optional.of(styleComponent(receiver, prefixAppendedComponents));*/
     }
 
 
-    private @NotNull Component getPrefix(@NotNull ServerEntity serverEntity)
+    /*private @NotNull Component getPrefix(@NotNull ServerEntity serverEntity)
     {
         final MiniMessage miniMessage = MiniMessage.miniMessage();
         String primary = serverEntity.getTheme().getPrimaryAccentColor().asHexString();
@@ -80,11 +80,5 @@ public class KissenChatImplementation implements ChatImplementation
         String base = "<gradient:%s:%s>%s</gradient>";
 
         return MiniMessage.miniMessage().deserialize(base.formatted(primary, secondary, systemPrefix));
-    }
-
-    @Override
-    public @NotNull Component styleComponent(@NotNull ServerEntity serverEntity, @NotNull Component... components)
-    {
-        return serverEntity.getTheme().style(components);
-    }
+    }*/
 }

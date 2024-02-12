@@ -33,15 +33,14 @@ index daa157eaa021d039f9a092bea0b78f7c1f746e3b..2445edc12487678c2db1f6b274f95a77
 +    // KissenPaper end
  }
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index 87d9a890d2be404f78e1b35a5aaacbf46101eadc..0786c9418a74b183e5946dbc205e71628ca6e647 100644
+index 6f194869251e6eed67264152f7c36daa43757094..f97d54d30e952c6d501f28ce48fd899190709884 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-@@ -238,4 +238,11 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
-     public MutableGraph<String> getInstanceManagerGraph() {
-         return instanceManager.getDependencyGraph();
+@@ -245,5 +245,9 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+     {
+         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
      }
-+
-+    // KissenPaper start
+-    // KissenPaper end
 +    @Override
 +    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin) {
 +        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
@@ -3231,10 +3230,10 @@ index 0000000000000000000000000000000000000000..b11c68b25f80a76c5e6d570895a39d74
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..37b8d3105b08652579dc41793c4c48bbe4d3aaf1
+index 0000000000000000000000000000000000000000..888ec31a0d24fba31ae859e0a39a6a82c560110e
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
-@@ -0,0 +1,167 @@
+@@ -0,0 +1,166 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -3263,7 +3262,6 @@ index 0000000000000000000000000000000000000000..37b8d3105b08652579dc41793c4c48bb
 +import net.kissenpvp.core.base.KissenImplementation;
 +import net.kissenpvp.core.command.CommandImplementation;
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
-+import net.kissenpvp.core.message.usersettings.*;
 +import net.kissenpvp.core.user.KissenUserImplementation;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.user.suffix.SuffixCommand;

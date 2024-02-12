@@ -337,7 +337,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
             UserImplementation userImplementation = KissenCore.getInstance().getImplementation(clazz);
             Stream<PlayerSetting<?>> settingStream = userImplementation.getPlayerSettings().stream();
 
-            Predicate<PlayerSetting<?>> predicate = currentSetting -> currentSetting.getClass().equals(settingClass);
+            Predicate<PlayerSetting<?>> predicate = currentSetting -> settingClass.isAssignableFrom(currentSetting.getClass());
             return (BoundPlayerSetting<X>) new KissenBoundPlayerSetting<>(
                     settingStream.filter(predicate).findFirst().orElseThrow(ClassCastException::new), user);
         }
