@@ -19,24 +19,31 @@ index aef19b44075a3b2e8696315baa89117dd8ebb513..a0b900bcf1baf348f655d55f0ece8914
      }
  
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java b/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
-index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..fc456fea5f1210f60d042b11665471b99da45646 100644
+index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..4abf5840c8846dd31b05926f0f55258fa5f562ca 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
-@@ -35,15 +35,24 @@ class PaperEventManager {
+@@ -35,15 +35,27 @@ class PaperEventManager {
      }
  
      // SimplePluginManager
 -    public void callEvent(@NotNull Event event) {
+-        if (event.isAsynchronous() && this.server.isPrimaryThread()) {
+-            throw new IllegalStateException(event.getEventName() + " may only be triggered asynchronously.");
+-        } else if (!event.isAsynchronous() && !this.server.isPrimaryThread() && !this.server.isStopping()) {
+-            throw new IllegalStateException(event.getEventName() + " may only be triggered synchronously.");
 +    public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) { // KissenPaper - integrate unified event system
-         if (event.isAsynchronous() && this.server.isPrimaryThread()) {
-             throw new IllegalStateException(event.getEventName() + " may only be triggered asynchronously.");
-         } else if (!event.isAsynchronous() && !this.server.isPrimaryThread() && !this.server.isStopping()) {
-             throw new IllegalStateException(event.getEventName() + " may only be triggered synchronously.");
++        // KissenPaper start - integrate unified event system
++        if(!event.volatileEvent())
++        {
++            if (event.isAsynchronous() && this.server.isPrimaryThread()) {
++                throw new IllegalStateException(event.getEventName() + " may only be triggered asynchronously.");
++            } else if (!event.isAsynchronous() && !this.server.isPrimaryThread() && !this.server.isStopping()) {
++                throw new IllegalStateException(event.getEventName() + " may only be triggered synchronously.");
++            }
          }
  
 -        HandlerList handlers = event.getHandlers();
 -        RegisteredListener[] listeners = handlers.getRegisteredListeners();
-+        // KissenPaper start - integrate unified event system
 +        HandlerList handlerList = net.kissenpvp.paper.event.KissenEventImplementation.getHandlerList();
 +        RegisteredListener[] listeners = handlerList.getRegisteredListeners();
 +        if(event instanceof Event bukkitEvent)
@@ -50,7 +57,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..fc456fea5f1210f60d042b11665471b9
  
          for (RegisteredListener registration : listeners) {
              if (!registration.getPlugin().isEnabled()) {
-@@ -75,22 +84,22 @@ class PaperEventManager {
+@@ -75,22 +87,22 @@ class PaperEventManager {
          }
      }
  
@@ -77,7 +84,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..fc456fea5f1210f60d042b11665471b9
          if (!plugin.isEnabled()) {
              throw new IllegalPluginAccessException("Plugin attempted to register " + event + " while not enabled");
          }
-@@ -100,7 +109,7 @@ class PaperEventManager {
+@@ -100,7 +112,7 @@ class PaperEventManager {
      }
  
      @NotNull
@@ -86,7 +93,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..fc456fea5f1210f60d042b11665471b9
          try {
              Method method = this.getRegistrationClass(type).getDeclaredMethod("getHandlerList");
              method.setAccessible(true);
-@@ -111,11 +120,17 @@ class PaperEventManager {
+@@ -111,11 +123,17 @@ class PaperEventManager {
      }
  
      @NotNull
@@ -105,7 +112,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..fc456fea5f1210f60d042b11665471b9
              if (clazz.getSuperclass() != null
                  && !clazz.getSuperclass().equals(Event.class)
                  && Event.class.isAssignableFrom(clazz.getSuperclass())) {
-@@ -128,8 +143,8 @@ class PaperEventManager {
+@@ -128,8 +146,8 @@ class PaperEventManager {
  
      // JavaPluginLoader
      @NotNull
@@ -116,7 +123,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..fc456fea5f1210f60d042b11665471b9
  
          Set<Method> methods;
          try {
-@@ -143,6 +158,16 @@ class PaperEventManager {
+@@ -143,6 +161,16 @@ class PaperEventManager {
              return ret;
          }
  
@@ -133,7 +140,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..fc456fea5f1210f60d042b11665471b9
          for (final Method method : methods) {
              final EventHandler eh = method.getAnnotation(EventHandler.class);
              if (eh == null) continue;
-@@ -152,15 +177,15 @@ class PaperEventManager {
+@@ -152,15 +180,15 @@ class PaperEventManager {
                  continue;
              }
              final Class<?> checkClass;
@@ -152,7 +159,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..fc456fea5f1210f60d042b11665471b9
                  // This loop checks for extending deprecated events
                  if (clazz.getAnnotation(Deprecated.class) != null) {
                      Warning warning = clazz.getAnnotation(Warning.class);
-@@ -191,4 +216,14 @@ class PaperEventManager {
+@@ -191,4 +219,14 @@ class PaperEventManager {
      public void clearEvents() {
          HandlerList.unregisterAll();
      }
@@ -168,7 +175,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..fc456fea5f1210f60d042b11665471b9
 +    // KissenPaper end - integrate unified event system
  }
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index dab211c458311869c61779305580a1c7da830f71..87d9a890d2be404f78e1b35a5aaacbf46101eadc 100644
+index 6b4ff21d64771486cf452d33c6a44a21dab2ff16..6f194869251e6eed67264152f7c36daa43757094 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 @@ -122,22 +122,22 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
@@ -253,6 +260,290 @@ index 0000000000000000000000000000000000000000..715d1f9d2a8bcbf2c01ef90c64279d2b
 +
 +    public static HandlerList getHandlerList() {
 +        return HANDLER_LIST;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java b/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4b96b6a41ca3ba9c0fce327cabcb02dcd10d6e6d
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java
+@@ -0,0 +1,278 @@
++package net.kissenpvp.paper.permission.command;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.command.annotations.ArgumentName;
++import net.kissenpvp.core.api.command.annotations.CommandData;
++import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
++import net.kissenpvp.core.api.message.ThemeProvider;
++import net.kissenpvp.core.api.util.PageBuilder;
++import net.kissenpvp.core.api.util.PageImplementation;
++import net.kissenpvp.paper.api.base.Context;
++import net.kissenpvp.paper.api.permission.PaperGroupablePermissionEntry;
++import net.kissenpvp.paper.api.permission.PaperPermission;
++import net.kissenpvp.paper.api.permission.PaperPermissionGroup;
++import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
++import net.kissenpvp.paper.permission.PermissionParser;
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.TextComponent;
++import net.kyori.adventure.text.TranslatableComponent;
++import net.kyori.adventure.text.format.TextColor;
++import org.bukkit.Bukkit;
++import org.bukkit.OfflinePlayer;
++import org.bukkit.command.CommandSender;
++import org.bukkit.entity.Player;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.Comparator;
++import java.util.List;
++import java.util.Optional;
++import java.util.Set;
++
++public class PermissionCommand
++{
++    @CommandData(value = "permission", permission = "*")
++    public void permissionGroup(CommandPayload<CommandSender> commandPayload)
++    {
++        throw new ArgumentMissingException();
++    }
++
++    @CommandData(value = "permission.user", permission = "*", runAsync = true)
++    public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value)
++    {
++        commandPayload.confirmRequest(() -> commandPayload.getSender().sendMessage(
++                execute(player, permission.permission(), value.orElse(null))));
++    }
++
++    @CommandData(value = "permission.user.wipe", permission = "*", runAsync = true)
++    public void permissionUserWipe(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player)
++    {
++        commandPayload.getSender().sendMessage(player.wipePermissions() + " permissions gewiped");
++    }
++
++    @CommandData(value = "permission.group", permission = "*", runAsync = true)
++    public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value)
++    {
++        commandPayload.confirmRequest(() -> commandPayload.getSender().sendMessage(
++                execute(group, permission.permission(), value.orElse(null))));
++    }
++
++    @CommandData(value = "permission.group.create", permission = "*", runAsync = true)
++    public void permissionGroupCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull String group)
++    {
++        PaperPermissionImplementation implementation = Bukkit.getKissen().getImplementation(PaperPermissionImplementation.class);
++        PaperPermissionGroup permissionGroup = implementation.getGroupNotNull(group);
++        Component message = Component.translatable("server.permission.group.created", Component.text(group));
++        commandPayload.getSender().sendMessage(message);
++    }
++
++    @CommandData(value = "permission.group.delete", permission = "*", runAsync = true)
++    public void permissionGroupCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group)
++    {
++        group.delete();
++        Component message = Component.translatable("server.permission.group.deleted", group.displayName());
++        commandPayload.getSender().sendMessage(message);
++    }
++
++    @CommandData(value = "permission.group.wipe", permission = "*", runAsync = true)
++    public void permissionGroupWipe(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group)
++    {
++        commandPayload.getSender().sendMessage(Component.translatable("server.permission.groups.clear", commandPayload.getSender().displayName(), Component.text(group.wipeGroups())));
++    }
++
++    @CommandData(value = "group", permission = "*", runAsync = true)
++    public void group() {throw new ArgumentMissingException();}
++
++    @CommandData(value = "group.add.user", permission = "*", runAsync = true)
++    public void groupAddUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PaperPermissionGroup group)
++    {
++        commandPayload.getSender().sendMessage(executor().setGroup(true, player, group));
++    }
++
++    @CommandData(value = "group.wipe.user", permission = "*", runAsync = true)
++    public void groupWipeUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player)
++    {
++        commandPayload.getSender().sendMessage(Component.translatable("server.permission.groups.clear", player.displayName(), Component.text(player.wipeGroups())));
++    }
++
++    @CommandData(value = "group.remove.user", permission = "*", runAsync = true)
++    public void groupRemoveUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PaperPermissionGroup group)
++    {
++        commandPayload.getSender().sendMessage(executor().setGroup(false, player, group));
++    }
++
++    @CommandData(value = "group.add.group", permission = "*", runAsync = true)
++    public void groupAddGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PaperPermissionGroup group1)
++    {
++        commandPayload.getSender().sendMessage(executor().setGroup(true, group, group1));
++    }
++
++    @CommandData(value = "group.remove.group", permission = "*", runAsync = true)
++    public void groupRemoveGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PaperPermissionGroup group1)
++    {
++        commandPayload.getSender().sendMessage(executor().setGroup(false, group, group1));
++    }
++
++    @CommandData(value = "group.wipe.group", permission = "*", runAsync = true)
++    public void groupWipeGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group)
++    {
++        commandPayload.getSender().sendMessage(Component.translatable("server.permission.permissions.clear", group.displayName(), Component.text(group.wipeGroups())));
++    }
++
++    @CommandData(value = "permissioninfo", aliases = {"peri"}, runAsync = true)
++    public void permissionInfo() {throw new ArgumentMissingException();}
++
++    @CommandData(value = "permissioninfo.user", runAsync = true)
++    public void permissionInfoUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull @ArgumentName("page/permission") Optional<String> data)
++    {
++        commandPayload.getSender().sendMessage(info(player, data.orElse(null)));
++    }
++
++    @CommandData(value = "permissioninfo.group", runAsync = true)
++    public void permissionInfoGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull @ArgumentName("page/permission") Optional<String> data)
++    {
++        commandPayload.getSender().sendMessage(info(group, data.orElse(null)));
++    }
++
++    /**
++     * Generates an information Component based on the provided PaperGroupablePermissionEntry and optional data.
++     *
++     * @param entry The PaperGroupablePermissionEntry for which information is generated.
++     * @param data  Optional data, can be null or a String representation of an integer.
++     *              If null, a default information Component is generated.
++     *              If a valid integer string, information Component is generated based on the parsed integer.
++     *              If an invalid integer string, information Component is generated based on the raw data.
++     * @return A Component representing the generated information.
++     * @throws NullPointerException if entry is null.
++     */
++    private @NotNull Component info(@NotNull PaperGroupablePermissionEntry entry, @Nullable String data)
++    {
++        if (data == null)
++        {
++            return infoComponent(entry, 1);
++        }
++
++        try
++        {
++            return infoComponent(entry, Integer.parseInt(data));
++        }
++        catch (NumberFormatException ignored) {}
++
++        return infoComponent(entry, data);
++    }
++
++    /**
++     * Generates an information {@link Component} displaying details about the permissions of a {@link PaperGroupablePermissionEntry}.
++     *
++     * @param permissionEntry The {@link PaperGroupablePermissionEntry} for which information is displayed.
++     * @param page            The page number for paginating the information (if applicable).
++     * @return A formatted {@link Component} containing information about the permissions of the specified entry.
++     */
++    private @NotNull Component infoComponent(@NotNull PaperGroupablePermissionEntry permissionEntry, int page)
++    {
++        Set<PaperPermission> permissionSet = permissionEntry.getPermissionList();
++        if (permissionSet.isEmpty())
++        {
++            return Component.translatable("server.permission.info.clear", permissionEntry.displayName());
++        }
++
++        Comparator<PaperPermission> comparator = (a, b) -> CharSequence.compare(a.getOwner().getPermissionID(),
++                b.getOwner().getPermissionID());
++
++        PageImplementation pageBuilder = Bukkit.getKissen().getImplementation(PageImplementation.class);
++        List<PaperPermission> sorted = permissionSet.stream().sorted(comparator).toList();
++
++        PageBuilder<PaperPermission> permissions = pageBuilder.createPageBuilder(sorted);
++
++        Component header = permissions.getHeader(permissionEntry.displayName(), page);
++        Component footer = permissions.getFooter(permissionEntry.displayName(), page);
++
++        TextComponent.Builder builder = Component.text().append(header);
++        permissions.getEntries(page).forEach(per ->
++        {
++            TextColor statusColor = per.getValue() ? ThemeProvider.enabled() : ThemeProvider.disabled();
++            Component[] args = {
++                    Component.text(per.getValue() ? "✔" : "❌").color(statusColor),
++                    per.getOwner().displayName().color(ThemeProvider.secondary()),
++                    Component.text(per.getName()).color(ThemeProvider.general())
++            };
++            builder.appendNewline().append(Component.translatable("server.permission.info.compact", args));
++        });
++        builder.appendNewline().append(footer);
++        return builder.asComponent();
++    }
++
++    /**
++     * Generates an information {@link Component} displaying details about a specific permission of a {@link PaperGroupablePermissionEntry}.
++     *
++     * @param permissionEntry The {@link PaperGroupablePermissionEntry} for which information is displayed.
++     * @param permission      The name of the specific permission.
++     * @return A formatted {@link Component} containing information about the specified permission of the entry.
++     */
++    private @NotNull Component infoComponent(@NotNull PaperGroupablePermissionEntry permissionEntry, @NotNull String permission)
++    {
++        return permissionEntry.getPermission(permission).map(paperPermission ->
++        {
++
++            Component header = Component.translatable("server.command.general.header", permissionEntry.displayName());
++            Component footer = Component.translatable("server.command.general.footer", permissionEntry.displayName());
++            TranslatableComponent keyValue = Component.translatable("server.command.general.key.value");
++
++            Component id = Component.translatable("server.general.id").color(ThemeProvider.general());
++            Component owner = Component.translatable("server.permission.owner").color(ThemeProvider.general());
++
++            TextComponent.Builder builder = Component.text().appendNewline().append(header);
++            builder.appendNewline().append(keyValue.arguments(id, Component.text(paperPermission.getName())));
++            builder.appendNewline().append(keyValue.arguments(owner, paperPermission.getOwner().displayName()));
++            builder.appendNewline().append(footer);
++            return builder.asComponent();
++        }).orElseGet(() -> Component.translatable("server.permission.entity.failed", permissionEntry.displayName(),
++                Component.text(permission)));
++    }
++
++    /**
++     * Executes a permission-related operation based on the provided parameters.
++     *
++     * @param entry      The PaperGroupablePermissionEntry to perform the operation on.
++     * @param permission The permission string involved in the operation.
++     * @param action     The PermissionAction indicating the action to be performed.
++     *                   If null, the permission will be set without considering a specific action.
++     * @return A Component representing the result of the permission operation.
++     * @throws NullPointerException if entry, permission, or executor() result in null.
++     */
++    private @NotNull Component execute(@NotNull PaperGroupablePermissionEntry entry, @NotNull String permission, @Nullable PermissionAction action)
++    {
++        PermissionCommandExecutor executor = executor();
++        if (action == null)
++        {
++            return executor.setPermission(entry, permission, null);
++        }
++
++        if (action.equals(PermissionAction.UNSET))
++        {
++            return executor.unsetPermission(entry, permission);
++        }
++
++        return executor.setPermission(entry, permission, Boolean.parseBoolean(action.name()));
++    }
++
++    /**
++     * Retrieves a new instance of PermissionCommandExecutor with the context set to LOCAL.
++     *
++     * @return A new PermissionCommandExecutor with the context set to LOCAL.
++     */
++    private @NotNull PermissionCommandExecutor executor()
++    {
++        return new PermissionCommandExecutor(Context.LOCAL);
++    }
++
++    /**
++     * Enum representing possible actions for permission operations.
++     */
++    public enum PermissionAction
++    {
++        TRUE,
++        FALSE,
++        UNSET
 +    }
 +}
 diff --git a/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java b/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java

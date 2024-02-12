@@ -41,6 +41,11 @@ public interface EventClass
         return false;
     }
 
+    default boolean volatileEvent()
+    {
+        return false;
+    }
+
     default @NotNull String getEventName()
     {
         return getClass().getSimpleName();

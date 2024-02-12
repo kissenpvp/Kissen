@@ -56,22 +56,22 @@ public class KissenConfigurationImplementation implements ConfigurationImplement
     public KissenConfigurationImplementation() {
         pluginSettings = new HashMap<>();
         internalSettings = new HashSet<>();
-        internalSettings.add(new ClientCertificateLocation());
-        internalSettings.add(new ClientCertificatePassword());
-        internalSettings.add(new DatabaseDNS());
-        internalSettings.add(new DefaultColor());
-        internalSettings.add(new DefaultDisabledColor());
-        internalSettings.add(new DefaultEnabledColor());
-        internalSettings.add(new DefaultLanguage());
-        internalSettings.add(new DefaultPrimaryColor());
-        internalSettings.add(new DefaultSecondaryColor());
-        internalSettings.add(new EnableSSLEncryption());
-        internalSettings.add(new HighlightVariables());
-        internalSettings.add(new InsertMissingTranslation());
-        internalSettings.add(new KeepSQLiteFile());
-        internalSettings.add(new ServerCertificateLocation());
-        internalSettings.add(new ServerCertificatePassword());
-        internalSettings.add(new ServerName());
+        registerInternalSetting(new ClientCertificateLocation());
+        registerInternalSetting(new ClientCertificatePassword());
+        registerInternalSetting(new DatabaseDNS());
+        registerInternalSetting(new DefaultColor());
+        registerInternalSetting(new DefaultDisabledColor());
+        registerInternalSetting(new DefaultEnabledColor());
+        registerInternalSetting(new DefaultLanguage());
+        registerInternalSetting(new DefaultPrimaryColor());
+        registerInternalSetting(new DefaultSecondaryColor());
+        registerInternalSetting(new EnableSSLEncryption());
+        registerInternalSetting(new HighlightVariables());
+        registerInternalSetting(new InsertMissingTranslation());
+        registerInternalSetting(new KeepSQLiteFile());
+        registerInternalSetting(new ServerCertificateLocation());
+        registerInternalSetting(new ServerCertificatePassword());
+        registerInternalSetting(new ServerName());
     }
 
     @Override

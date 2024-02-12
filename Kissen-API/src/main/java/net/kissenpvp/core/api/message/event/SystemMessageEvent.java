@@ -21,6 +21,11 @@ public class SystemMessageEvent implements EventClass, Cancellable {
         this.cancelled = false;
     }
 
+    @Override
+    public boolean volatileEvent() {
+        return true;
+    }
+
     public @NotNull Component getComponent() {
         return components;
     }

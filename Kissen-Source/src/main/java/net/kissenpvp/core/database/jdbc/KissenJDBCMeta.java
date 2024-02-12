@@ -18,8 +18,6 @@
 
 package net.kissenpvp.core.database.jdbc;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
@@ -33,14 +31,12 @@ import net.kissenpvp.core.database.KissenBaseMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The {@code KissenMeta} class is an abstract class that provides a common base for classes representing metadata
