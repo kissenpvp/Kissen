@@ -1,0 +1,289 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Mon, 12 Feb 2024 13:39:34 +0100
+Subject: [PATCH] Integrated event system from kissen into paper
+
+Signed-off-by: Ivo Quiring <falk.quiring@gmail.com>
+
+diff --git a/src/main/java/io/papermc/paper/plugin/manager/DummyBukkitPluginLoader.java b/src/main/java/io/papermc/paper/plugin/manager/DummyBukkitPluginLoader.java
+index aef19b44075a3b2e8696315baa89117dd8ebb513..a0b900bcf1baf348f655d55f0ece891400dcfb90 100644
+--- a/src/main/java/io/papermc/paper/plugin/manager/DummyBukkitPluginLoader.java
++++ b/src/main/java/io/papermc/paper/plugin/manager/DummyBukkitPluginLoader.java
+@@ -66,7 +66,7 @@ public class DummyBukkitPluginLoader implements PluginLoader {
+     }
+ 
+     @Override
+-    public @NotNull Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(@NotNull Listener listener, @NotNull Plugin plugin) {
++    public @NotNull Map<Class<? extends net.kissenpvp.core.api.event.EventClass>, Set<RegisteredListener>> createRegisteredListeners(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull Plugin plugin) { // KissenPaper - integrate unified event system
+         return PaperPluginManagerImpl.getInstance().paperEventManager.createRegisteredListeners(listener, plugin);
+     }
+ 
+diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java b/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
+index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..fc456fea5f1210f60d042b11665471b99da45646 100644
+--- a/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
++++ b/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
+@@ -35,15 +35,24 @@ class PaperEventManager {
+     }
+ 
+     // SimplePluginManager
+-    public void callEvent(@NotNull Event event) {
++    public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) { // KissenPaper - integrate unified event system
+         if (event.isAsynchronous() && this.server.isPrimaryThread()) {
+             throw new IllegalStateException(event.getEventName() + " may only be triggered asynchronously.");
+         } else if (!event.isAsynchronous() && !this.server.isPrimaryThread() && !this.server.isStopping()) {
+             throw new IllegalStateException(event.getEventName() + " may only be triggered synchronously.");
+         }
+ 
+-        HandlerList handlers = event.getHandlers();
+-        RegisteredListener[] listeners = handlers.getRegisteredListeners();
++        // KissenPaper start - integrate unified event system
++        HandlerList handlerList = net.kissenpvp.paper.event.KissenEventImplementation.getHandlerList();
++        RegisteredListener[] listeners = handlerList.getRegisteredListeners();
++        if(event instanceof Event bukkitEvent)
++        {
++            handlerList = bukkitEvent.getHandlers();
++            RegisteredListener[] bukkitListeners = handlerList.getRegisteredListeners();
++            listeners = java.util.stream.Stream.concat(Arrays.stream(listeners),
++                    Arrays.stream(bukkitListeners)).toArray(RegisteredListener[]::new);
++        }
++        // KissenPaper end - integrate unified event system
+ 
+         for (RegisteredListener registration : listeners) {
+             if (!registration.getPlugin().isEnabled()) {
+@@ -75,22 +84,22 @@ class PaperEventManager {
+         }
+     }
+ 
+-    public void registerEvents(@NotNull Listener listener, @NotNull Plugin plugin) {
++    public void registerEvents(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull Plugin plugin) { // KissenPaper - integrate unified event system
+         if (!plugin.isEnabled()) {
+             throw new IllegalPluginAccessException("Plugin attempted to register " + listener + " while not enabled");
+         }
+ 
+-        for (Map.Entry<Class<? extends Event>, Set<RegisteredListener>> entry : this.createRegisteredListeners(listener, plugin).entrySet()) {
++        for (Map.Entry<Class<? extends net.kissenpvp.core.api.event.EventClass>, Set<RegisteredListener>> entry : this.createRegisteredListeners(listener, plugin).entrySet()) { // KissenPaper - integrate unified event system
+             this.getEventListeners(this.getRegistrationClass(entry.getKey())).registerAll(entry.getValue());
+         }
+ 
+     }
+ 
+-    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull Listener listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin) {
++    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin) { // KissenPaper - integrate unified event system
+         this.registerEvent(event, listener, priority, executor, plugin, false);
+     }
+ 
+-    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull Listener listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin, boolean ignoreCancelled) {
++    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin, boolean ignoreCancelled) { // KissenPaper - integrate unified event system
+         if (!plugin.isEnabled()) {
+             throw new IllegalPluginAccessException("Plugin attempted to register " + event + " while not enabled");
+         }
+@@ -100,7 +109,7 @@ class PaperEventManager {
+     }
+ 
+     @NotNull
+-    private HandlerList getEventListeners(@NotNull Class<? extends Event> type) {
++    private HandlerList getEventListeners(@NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> type) { // KissenPaper - integrate unified event system
+         try {
+             Method method = this.getRegistrationClass(type).getDeclaredMethod("getHandlerList");
+             method.setAccessible(true);
+@@ -111,11 +120,17 @@ class PaperEventManager {
+     }
+ 
+     @NotNull
+-    private Class<? extends Event> getRegistrationClass(@NotNull Class<? extends Event> clazz) {
++    private Class<? extends net.kissenpvp.core.api.event.EventClass> getRegistrationClass(@NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> clazz) { // KissenPaper - integrate unified event system
+         try {
+             clazz.getDeclaredMethod("getHandlerList");
+             return clazz;
+         } catch (NoSuchMethodException e) {
++            // KissenPaper start - integrate unified event system
++            if(!Listener.class.isAssignableFrom(clazz))
++            {
++                return net.kissenpvp.paper.event.KissenEventImplementation.class;
++            }
++            // KissenPaper end - integrate unified event system
+             if (clazz.getSuperclass() != null
+                 && !clazz.getSuperclass().equals(Event.class)
+                 && Event.class.isAssignableFrom(clazz.getSuperclass())) {
+@@ -128,8 +143,8 @@ class PaperEventManager {
+ 
+     // JavaPluginLoader
+     @NotNull
+-    public Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(@NotNull Listener listener, @NotNull final Plugin plugin) {
+-        Map<Class<? extends Event>, Set<RegisteredListener>> ret = new HashMap<>();
++    public Map<Class<? extends net.kissenpvp.core.api.event.EventClass>, Set<RegisteredListener>> createRegisteredListeners(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull final Plugin plugin) { // KissenPaper - integrate unified event system
++        Map<Class<? extends net.kissenpvp.core.api.event.EventClass>, Set<RegisteredListener>> ret = new HashMap<>();
+ 
+         Set<Method> methods;
+         try {
+@@ -143,6 +158,16 @@ class PaperEventManager {
+             return ret;
+         }
+ 
++        // KissenPaper start - integrate unified event system
++        if(!(listener instanceof Listener))
++        {
++            EventExecutor executor = this::callUnknownEvent;
++            RegisteredListener registeredListener = new RegisteredListener(listener, executor, EventPriority.NORMAL, plugin, false);
++            Set<RegisteredListener> eventSet = ret.computeIfAbsent(net.kissenpvp.paper.event.KissenEventImplementation.class, k -> new HashSet<>());
++            eventSet.add(registeredListener);
++        }
++        // KissenPaper end - integrate unified event system
++
+         for (final Method method : methods) {
+             final EventHandler eh = method.getAnnotation(EventHandler.class);
+             if (eh == null) continue;
+@@ -152,15 +177,15 @@ class PaperEventManager {
+                 continue;
+             }
+             final Class<?> checkClass;
+-            if (method.getParameterTypes().length != 1 || !Event.class.isAssignableFrom(checkClass = method.getParameterTypes()[0])) {
++            if (method.getParameterTypes().length != 1 || !net.kissenpvp.core.api.event.EventClass.class.isAssignableFrom(checkClass = method.getParameterTypes()[0])) { // KissenPaper - integrate unified event system
+                 plugin.getLogger().severe(plugin.getPluginMeta().getDisplayName() + " attempted to register an invalid EventHandler method signature \"" + method.toGenericString() + "\" in " + listener.getClass());
+                 continue;
+             }
+-            final Class<? extends Event> eventClass = checkClass.asSubclass(Event.class);
++            final Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass = checkClass.asSubclass(net.kissenpvp.core.api.event.EventClass.class); // KissenPaper - integrate unified event system
+             method.setAccessible(true);
+             Set<RegisteredListener> eventSet = ret.computeIfAbsent(eventClass, k -> new HashSet<>());
+ 
+-            for (Class<?> clazz = eventClass; Event.class.isAssignableFrom(clazz); clazz = clazz.getSuperclass()) {
++            for (Class<?> clazz = eventClass; net.kissenpvp.core.api.event.EventClass.class.isAssignableFrom(clazz); clazz = clazz.getSuperclass()) { // KissenPaper - integrate unified event system
+                 // This loop checks for extending deprecated events
+                 if (clazz.getAnnotation(Deprecated.class) != null) {
+                     Warning warning = clazz.getAnnotation(Warning.class);
+@@ -191,4 +216,14 @@ class PaperEventManager {
+     public void clearEvents() {
+         HandlerList.unregisterAll();
+     }
++
++    // KissenPaper start - integrate unified event system
++    private <T extends net.kissenpvp.core.api.event.EventClass> void callUnknownEvent(@NotNull net.kissenpvp.core.api.event.EventListener<T> eventListener, @NotNull net.kissenpvp.core.api.event.EventClass eventClass)
++    {
++        try
++        {
++            eventListener.call((T) eventClass);
++        } catch (ClassCastException ignored) {}
++    }
++    // KissenPaper end - integrate unified event system
+ }
+diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
+index dab211c458311869c61779305580a1c7da830f71..87d9a890d2be404f78e1b35a5aaacbf46101eadc 100644
+--- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
++++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
+@@ -122,22 +122,22 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+     // Event manipulation
+ 
+     @Override
+-    public void callEvent(@NotNull Event event) throws IllegalStateException {
++    public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) throws IllegalStateException { // KissenPaper - integrate unified event system
+         this.paperEventManager.callEvent(event);
+     }
+ 
+     @Override
+-    public void registerEvents(@NotNull Listener listener, @NotNull Plugin plugin) {
++    public void registerEvents(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull Plugin plugin) { // KissenPaper - integrate unified event system
+         this.paperEventManager.registerEvents(listener, plugin);
+     }
+ 
+     @Override
+-    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull Listener listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin) {
++    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin) { // KissenPaper - integrate unified event system
+         this.paperEventManager.registerEvent(event, listener, priority, executor, plugin);
+     }
+ 
+     @Override
+-    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull Listener listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin, boolean ignoreCancelled) {
++    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin, boolean ignoreCancelled) { // KissenPaper - integrate unified event system
+         this.paperEventManager.registerEvent(event, listener, priority, executor, plugin, ignoreCancelled);
+     }
+ 
+diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+index db1f1ca137bfe602406ebb41cd61c82c30801bbd..9f62dc952ce4984e45d69c393ad9cc4fde3736e7 100644
+--- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
++++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+@@ -23,7 +23,9 @@ import net.kissenpvp.core.api.base.plugin.KissenPlugin;
+ import net.kissenpvp.core.api.database.meta.ObjectMeta;
+ import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
+ import net.kissenpvp.core.base.KissenCore;
++import net.kissenpvp.core.event.EventImplementation;
+ import net.kissenpvp.paper.api.base.PaperKissen;
++import net.kissenpvp.paper.event.KissenEventImplementation;
+ import org.bukkit.Bukkit;
+ import org.bukkit.craftbukkit.scheduler.CraftScheduler;
+ import org.bukkit.plugin.Plugin;
+@@ -48,6 +50,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+     @Override
+     protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader)
+     {
++        loader.put(EventImplementation.class, new KissenEventImplementation());
+         super.loadImplementations(loader);
+     }
+ 
+diff --git a/src/main/java/net/kissenpvp/paper/event/KissenEventImplementation.java b/src/main/java/net/kissenpvp/paper/event/KissenEventImplementation.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..715d1f9d2a8bcbf2c01ef90c64279d2b12adac17
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/event/KissenEventImplementation.java
+@@ -0,0 +1,29 @@
++package net.kissenpvp.paper.event;
++
++import net.kissenpvp.core.api.event.Cancellable;
++import net.kissenpvp.core.api.event.EventClass;
++import net.kissenpvp.core.event.EventImplementation;
++import org.bukkit.Bukkit;
++import org.bukkit.event.HandlerList;
++import org.jetbrains.annotations.NotNull;
++
++public class KissenEventImplementation implements EventImplementation, EventClass {
++
++    private final static HandlerList HANDLER_LIST = new HandlerList();
++    @Override
++    public boolean call(@NotNull EventClass eventClass) {
++        Bukkit.getPluginManager().callEvent(eventClass);
++
++        if (eventClass instanceof Cancellable cancellable) {
++            return !cancellable.isCancelled();
++        } else if (eventClass instanceof org.bukkit.event.Cancellable cancellable) {
++            return !cancellable.isCancelled();
++        }
++
++        return true;
++    }
++
++    public static HandlerList getHandlerList() {
++        return HANDLER_LIST;
++    }
++}
+diff --git a/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java b/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java
+index 2a7408ed5d9a415333212cadd7fefcd03785afbf..88b9b6502b46741308740e0db25aaaafe7c852a3 100644
+--- a/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java
++++ b/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java
+@@ -2,18 +2,26 @@ package io.papermc.paper.plugin;
+ 
+ import io.papermc.paper.plugin.manager.PaperPluginManagerImpl;
+ import org.bukkit.Bukkit;
++import org.bukkit.Server;
+ import org.bukkit.event.Event;
+ import org.bukkit.event.EventHandler;
+ import org.bukkit.event.Listener;
+ import org.junit.jupiter.api.Assertions;
++import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
++import org.mockito.Mockito;
+ 
+ public class SyntheticEventTest {
+ 
+     @Test
+     public void test() {
++        // KissenPaper start
++        Server server = Mockito.mock(Server.class);
++        Mockito.when(server.isPrimaryThread()).thenReturn(true);
++        // KissenPaper end
++
+         PaperTestPlugin paperTestPlugin = new PaperTestPlugin("synthetictest");
+-        PaperPluginManagerImpl paperPluginManager = new PaperPluginManagerImpl(Bukkit.getServer(), null, null);
++        PaperPluginManagerImpl paperPluginManager = new PaperPluginManagerImpl(server, null, null); // KissenPaper
+ 
+         TestEvent event = new TestEvent(false);
+         Impl impl = new Impl();

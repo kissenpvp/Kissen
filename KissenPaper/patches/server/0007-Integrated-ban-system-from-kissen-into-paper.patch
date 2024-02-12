@@ -1314,7 +1314,7 @@ index 55167ae5fef79f24545df34479443dbb74399a57..fa325b12e4ded7edd98a2a5d9740ccd8
      }
  }
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index 0b60b0ce23e75ccc19b8afcb5a190e73761bf7a8..0272123739ac57d03f50ed1e47373f85310572f5 100644
+index 392e6fc5db4bc634c665718b48a884455a819248..b93e44b8b80e140029e86a3949a217a20e9fd9c0 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 @@ -18,6 +18,7 @@
@@ -1325,15 +1325,15 @@ index 0b60b0ce23e75ccc19b8afcb5a190e73761bf7a8..0272123739ac57d03f50ed1e47373f85
  import net.kissenpvp.core.api.base.Implementation;
  import net.kissenpvp.core.api.base.plugin.KissenPlugin;
  import net.kissenpvp.core.api.database.meta.ObjectMeta;
-@@ -31,6 +32,7 @@ import net.kissenpvp.core.permission.PermissionImplementation;
- import net.kissenpvp.paper.api.base.PaperKissen;
+@@ -33,6 +34,7 @@ import net.kissenpvp.paper.api.base.PaperKissen;
+ import net.kissenpvp.paper.event.KissenEventImplementation;
  import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
  import net.kissenpvp.paper.api.command.PaperCommandImplementation;
 +import net.kissenpvp.paper.ban.KissenPaperBanImplementation;
  import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
  import net.kissenpvp.paper.command.confirmation.KissenPaperConfirmationImplementation;
  import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
-@@ -68,6 +70,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+@@ -71,6 +73,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
          loader.put(PaperPermissionImplementation.class, permissionImplementation);
          loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());
          loader.put(PaperCommandImplementation.class, new KissenPaperCommandImplementation());

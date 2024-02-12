@@ -5,16 +5,18 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index d3948efc1948f2c18e15eb380dba4334b55a82f5..0b60b0ce23e75ccc19b8afcb5a190e73761bf7a8 100644
+index 0ebb88c89869fe0f11050c3be4c33ce3a0660145..392e6fc5db4bc634c665718b48a884455a819248 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -26,9 +26,13 @@ import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
- import net.kissenpvp.core.api.user.UserImplementation;
+@@ -27,10 +27,14 @@ import net.kissenpvp.core.api.user.UserImplementation;
  import net.kissenpvp.core.api.user.rank.RankImplementation;
  import net.kissenpvp.core.base.KissenCore;
+ import net.kissenpvp.core.event.EventImplementation;
 +import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
- import net.kissenpvp.core.permission.PermissionImplementation;
++import net.kissenpvp.core.permission.PermissionImplementation;
  import net.kissenpvp.paper.api.base.PaperKissen;
+ import net.kissenpvp.paper.event.KissenEventImplementation;
+-import net.kissenpvp.core.permission.PermissionImplementation;
  import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
 +import net.kissenpvp.paper.api.command.PaperCommandImplementation;
 +import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
@@ -22,7 +24,7 @@ index d3948efc1948f2c18e15eb380dba4334b55a82f5..0b60b0ce23e75ccc19b8afcb5a190e73
  import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
  import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
  import net.kissenpvp.paper.user.KissenPaperUserImplementation;
-@@ -63,6 +67,8 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+@@ -66,6 +70,8 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
          loader.put(PermissionImplementation.class, permissionImplementation);
          loader.put(PaperPermissionImplementation.class, permissionImplementation);
          loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());

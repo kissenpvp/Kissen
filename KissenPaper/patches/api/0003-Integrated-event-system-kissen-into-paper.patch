@@ -1,0 +1,445 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Mon, 12 Feb 2024 13:37:59 +0100
+Subject: [PATCH] Integrated event system kissen into paper
+
+
+diff --git a/src/main/java/co/aikar/timings/TimedEventExecutor.java b/src/main/java/co/aikar/timings/TimedEventExecutor.java
+index 8f29c1561ba5916cb5634392edd8bd2a5a294a51..153b0fe7b460235d56e100b855203384961fe98b 100644
+--- a/src/main/java/co/aikar/timings/TimedEventExecutor.java
++++ b/src/main/java/co/aikar/timings/TimedEventExecutor.java
+@@ -48,7 +48,7 @@ public class TimedEventExecutor implements EventExecutor {
+      * @param method EventHandler method
+      * @param eventClass Owning class
+      */
+-    public TimedEventExecutor(@NotNull EventExecutor executor, @NotNull Plugin plugin, @Nullable Method method, @NotNull Class<? extends Event> eventClass) {
++    public TimedEventExecutor(@NotNull EventExecutor executor, @NotNull Plugin plugin, @Nullable Method method, @NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass) { // KissenPaper - integrate unified event system
+         this.executor = executor;
+         String id;
+ 
+@@ -72,7 +72,7 @@ public class TimedEventExecutor implements EventExecutor {
+     }
+ 
+     @Override
+-    public void execute(@NotNull Listener listener, @NotNull Event event) throws EventException {
++    public void execute(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull net.kissenpvp.core.api.event.EventClass event) throws EventException { // KissenPaper - integrate unified event system
+         if (event.isAsynchronous() || !Timings.timingsEnabled || !Bukkit.isPrimaryThread()) {
+             executor.execute(listener, event);
+             return;
+diff --git a/src/main/java/com/destroystokyo/paper/event/executor/MethodHandleEventExecutor.java b/src/main/java/com/destroystokyo/paper/event/executor/MethodHandleEventExecutor.java
+index fbebf649e893cf872be9b27091146a7c2f451aca..485b9f8d7984b32b5af5571a7b7436bdc1fd3bf5 100644
+--- a/src/main/java/com/destroystokyo/paper/event/executor/MethodHandleEventExecutor.java
++++ b/src/main/java/com/destroystokyo/paper/event/executor/MethodHandleEventExecutor.java
+@@ -12,17 +12,17 @@ import org.bukkit.plugin.EventExecutor;
+ import org.jetbrains.annotations.NotNull;
+ 
+ public class MethodHandleEventExecutor implements EventExecutor {
+-    private final Class<? extends Event> eventClass;
++    private final Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass;
+     private final MethodHandle handle;
+     private final Method method;
+ 
+-    public MethodHandleEventExecutor(@NotNull Class<? extends Event> eventClass, @NotNull MethodHandle handle) {
++    public MethodHandleEventExecutor(@NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass, @NotNull MethodHandle handle) { // KissenPaper start - integrate unified event system
+         this.eventClass = eventClass;
+         this.handle = handle;
+         this.method = null;
+     }
+ 
+-    public MethodHandleEventExecutor(@NotNull Class<? extends Event> eventClass, @NotNull Method m) {
++    public MethodHandleEventExecutor(@NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass, @NotNull Method m) { // KissenPaper start - integrate unified event system
+         this.eventClass = eventClass;
+         try {
+             m.setAccessible(true);
+@@ -34,7 +34,7 @@ public class MethodHandleEventExecutor implements EventExecutor {
+     }
+ 
+     @Override
+-    public void execute(@NotNull Listener listener, @NotNull Event event) throws EventException {
++    public void execute(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull net.kissenpvp.core.api.event.EventClass event) throws EventException { // KissenPaper - integrate unified event system
+         if (!eventClass.isInstance(event)) return;
+         try {
+             handle.invoke(listener, event);
+diff --git a/src/main/java/com/destroystokyo/paper/event/executor/StaticMethodHandleEventExecutor.java b/src/main/java/com/destroystokyo/paper/event/executor/StaticMethodHandleEventExecutor.java
+index 52da2d040e3b335f9e47bc5dc26e17d9c06d9569..ade27053a08ddead63443eb83712e2661803f9f5 100644
+--- a/src/main/java/com/destroystokyo/paper/event/executor/StaticMethodHandleEventExecutor.java
++++ b/src/main/java/com/destroystokyo/paper/event/executor/StaticMethodHandleEventExecutor.java
+@@ -8,6 +8,7 @@ import java.lang.reflect.Modifier;
+ import com.destroystokyo.paper.util.SneakyThrow;
+ import com.google.common.base.Preconditions;
+ 
++import net.kissenpvp.core.api.event.EventListener;
+ import org.bukkit.event.Event;
+ import org.bukkit.event.EventException;
+ import org.bukkit.event.Listener;
+@@ -15,11 +16,11 @@ import org.bukkit.plugin.EventExecutor;
+ import org.jetbrains.annotations.NotNull;
+ 
+ public class StaticMethodHandleEventExecutor implements EventExecutor {
+-    private final Class<? extends Event> eventClass;
++    private final Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass;
+     private final MethodHandle handle;
+     private final Method method;
+ 
+-    public StaticMethodHandleEventExecutor(@NotNull Class<? extends Event> eventClass, @NotNull Method m) {
++    public StaticMethodHandleEventExecutor(@NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass, @NotNull Method m) { // KissenPaper start - integrate unified event system
+         Preconditions.checkArgument(Modifier.isStatic(m.getModifiers()), "Not a static method: %s", m);
+         Preconditions.checkArgument(eventClass != null, "eventClass is null");
+         this.eventClass = eventClass;
+@@ -33,7 +34,7 @@ public class StaticMethodHandleEventExecutor implements EventExecutor {
+     }
+ 
+     @Override
+-    public void execute(@NotNull Listener listener, @NotNull Event event) throws EventException {
++    public void execute(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull net.kissenpvp.core.api.event.EventClass event) throws EventException { // KissenPaper - integrate unified event system
+         if (!eventClass.isInstance(event)) return;
+         try {
+             handle.invoke(event);
+diff --git a/src/main/java/com/destroystokyo/paper/event/executor/asm/ASMEventExecutorGenerator.java b/src/main/java/com/destroystokyo/paper/event/executor/asm/ASMEventExecutorGenerator.java
+index 084c31af1a7ba32bb4c3dc8f16f67fd09ce0b6a4..55f49c9e9d4d72fc761fcc05ae066cd6a0017a6b 100644
+--- a/src/main/java/com/destroystokyo/paper/event/executor/asm/ASMEventExecutorGenerator.java
++++ b/src/main/java/com/destroystokyo/paper/event/executor/asm/ASMEventExecutorGenerator.java
+@@ -13,7 +13,7 @@ import static org.objectweb.asm.Opcodes.*;
+ 
+ public class ASMEventExecutorGenerator {
+ 
+-    private static final String EXECUTE_DESCRIPTOR = "(Lorg/bukkit/event/Listener;Lorg/bukkit/event/Event;)V";
++    private static final String EXECUTE_DESCRIPTOR = "(Lnet/kissenpvp/core/api/event/EventListener;Lnet/kissenpvp/core/api/event/EventClass;)V"; //"(Lorg/bukkit/event/Listener;Lorg/bukkit/event/Event;)V"; // KissenPaper - integrate unified event system
+ 
+     @NotNull
+     public static byte[] generateEventExecutor(@NotNull Method m, @NotNull String name) {
+diff --git a/src/main/java/com/destroystokyo/paper/exception/ServerEventException.java b/src/main/java/com/destroystokyo/paper/exception/ServerEventException.java
+index 410b24139535cd5d8439ad581c43c61b5757fbf6..c6c91f3bcf1d69074627b022a7974cdae92c9590 100644
+--- a/src/main/java/com/destroystokyo/paper/exception/ServerEventException.java
++++ b/src/main/java/com/destroystokyo/paper/exception/ServerEventException.java
+@@ -11,10 +11,10 @@ import static com.google.common.base.Preconditions.*;
+  */
+ public class ServerEventException extends ServerPluginException {
+ 
+-    private final Listener listener;
+-    private final Event event;
++    private final net.kissenpvp.core.api.event.EventListener<?> listener;
++    private final net.kissenpvp.core.api.event.EventClass event; // KissenPaper - integrate unified event system
+ 
+-    public ServerEventException(String message, Throwable cause, Plugin responsiblePlugin, Listener listener, Event event) {
++    public ServerEventException(String message, Throwable cause, Plugin responsiblePlugin, net.kissenpvp.core.api.event.EventListener<?> listener, net.kissenpvp.core.api.event.EventClass event) { // KissenPaper - integrate unified event system
+         super(message, cause, responsiblePlugin);
+         this.listener = checkNotNull(listener, "listener");
+         this.event = checkNotNull(event, "event");
+@@ -37,7 +37,7 @@ public class ServerEventException extends ServerPluginException {
+      *
+      * @return event listener
+      */
+-    public Listener getListener() {
++    public net.kissenpvp.core.api.event.EventListener<?> /* KissenPaper - integrate unified event system */ getListener() {
+         return listener;
+     }
+ 
+@@ -46,7 +46,7 @@ public class ServerEventException extends ServerPluginException {
+      *
+      * @return event
+      */
+-    public Event getEvent() {
++    public net.kissenpvp.core.api.event.EventClass /* KissenPaper - integrate unified event system */ getEvent() {
+         return event;
+     }
+ }
+diff --git a/src/main/java/org/bukkit/event/Listener.java b/src/main/java/org/bukkit/event/Listener.java
+index ff083e62dadf4ab988f356c5871bbd6365d15b4b..93be5830b2f62a243b3f79c111c63c651819ac96 100644
+--- a/src/main/java/org/bukkit/event/Listener.java
++++ b/src/main/java/org/bukkit/event/Listener.java
+@@ -1,6 +1,13 @@
+ package org.bukkit.event;
+ 
++import net.kissenpvp.core.api.event.EventClass;
++import org.jetbrains.annotations.NotNull;
++
+ /**
+  * Simple interface for tagging all EventListeners
+  */
+-public interface Listener {}
++public interface Listener extends net.kissenpvp.core.api.event.EventListener<net.kissenpvp.core.api.event.EventClass> // KissenPaper - integrate unified event system
++{
++    @Override
++    default void call(@NotNull EventClass event) {} // KissenPaper - integrate unified event system
++}
+diff --git a/src/main/java/org/bukkit/plugin/EventExecutor.java b/src/main/java/org/bukkit/plugin/EventExecutor.java
+index 60e086be70529e0804280b24a2a3e7ae72d8d363..b4f277c3abb0627564644b5fafc22e3997eeab0e 100644
+--- a/src/main/java/org/bukkit/plugin/EventExecutor.java
++++ b/src/main/java/org/bukkit/plugin/EventExecutor.java
+@@ -23,7 +23,7 @@ import com.google.common.base.Preconditions;
+  * Interface which defines the class for event call backs to plugins
+  */
+ public interface EventExecutor {
+-    public void execute(@NotNull Listener listener, @NotNull Event event) throws EventException;
++    public void execute(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull net.kissenpvp.core.api.event.EventClass event) throws EventException; // KissenPaper - integrate unified event system
+ 
+     // Paper start
+     ConcurrentMap<Method, Class<? extends EventExecutor>> eventExecutorMap = new ConcurrentHashMap<Method, Class<? extends EventExecutor>>() {
+@@ -46,7 +46,7 @@ public interface EventExecutor {
+     };
+ 
+     @NotNull
+-    public static EventExecutor create(@NotNull Method m, @NotNull Class<? extends Event> eventClass) {
++    public static EventExecutor create(@NotNull Method m, @NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass) {
+         Preconditions.checkNotNull(m, "Null method");
+         Preconditions.checkArgument(m.getParameterCount() != 0, "Incorrect number of arguments %s", m.getParameterCount());
+         Preconditions.checkArgument(m.getParameterTypes()[0] == eventClass, "First parameter %s doesn't match event class %s", m.getParameterTypes()[0], eventClass);
+@@ -72,8 +72,9 @@ public interface EventExecutor {
+                 // Define a wrapper to conform to bukkit stupidity (passing in events that don't match and wrapper exception)
+                 return new EventExecutor() {
+                     @Override
+-                    public void execute(@NotNull Listener listener, @NotNull Event event) throws EventException {
++                    public void execute(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull net.kissenpvp.core.api.event.EventClass event) throws EventException { // KissenPaper - integrate unified event system
+                         if (!eventClass.isInstance(event)) return;
++                        System.out.println(asmExecutor.getClass() + " " + asmExecutor);
+                         asmExecutor.execute(listener, event);
+                     }
+ 
+diff --git a/src/main/java/org/bukkit/plugin/PluginLoader.java b/src/main/java/org/bukkit/plugin/PluginLoader.java
+index cb530369e667c426c842da356c31304bb5c3ecfa..dde6518d0adc80feec198ef688a879db8171dac7 100644
+--- a/src/main/java/org/bukkit/plugin/PluginLoader.java
++++ b/src/main/java/org/bukkit/plugin/PluginLoader.java
+@@ -58,7 +58,7 @@ public interface PluginLoader {
+      * @return The registered listeners.
+      */
+     @NotNull
+-    public Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(@NotNull Listener listener, @NotNull Plugin plugin);
++    public Map<Class<? extends net.kissenpvp.core.api.event.EventClass>, Set<RegisteredListener>> createRegisteredListeners(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull Plugin plugin);
+ 
+     /**
+      * Enables the specified plugin
+diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
+index 03213fde8315384ec56c16031cfc606ade2e8091..5c7d26c2b55821d7a45704827471d6a30f54fb18 100644
+--- a/src/main/java/org/bukkit/plugin/PluginManager.java
++++ b/src/main/java/org/bukkit/plugin/PluginManager.java
+@@ -110,7 +110,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+      *     <i>Note: This is best-effort basis, and should not be used to test
+      *     synchronized state. This is an indicator for flawed flow logic.</i>
+      */
+-    public void callEvent(@NotNull Event event) throws IllegalStateException;
++    public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) throws IllegalStateException; // KissenPaper - integrate unified event system
+ 
+     /**
+      * Registers all the events in the given listener class
+@@ -118,7 +118,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+      * @param listener Listener to register
+      * @param plugin Plugin to register
+      */
+-    public void registerEvents(@NotNull Listener listener, @NotNull Plugin plugin);
++    public void registerEvents(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull Plugin plugin); // KissenPaper - integrate unified event system
+ 
+     /**
+      * Registers the specified executor to the given event class
+@@ -129,7 +129,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+      * @param executor EventExecutor to register
+      * @param plugin Plugin to register
+      */
+-    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull Listener listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin);
++    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin); // KissenPaper - integrate unified event system
+ 
+     /**
+      * Registers the specified executor to the given event class
+@@ -141,7 +141,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+      * @param plugin Plugin to register
+      * @param ignoreCancelled Whether to pass cancelled events or not
+      */
+-    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull Listener listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin, boolean ignoreCancelled);
++    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin, boolean ignoreCancelled); // KissenPaper - integrate unified event system
+ 
+     /**
+      * Enables the specified plugin
+diff --git a/src/main/java/org/bukkit/plugin/RegisteredListener.java b/src/main/java/org/bukkit/plugin/RegisteredListener.java
+index 3b3d9642a8d63798dc28f2f8df77f0466451cbff..70669177980680c71e0c3c66729326683d63431b 100644
+--- a/src/main/java/org/bukkit/plugin/RegisteredListener.java
++++ b/src/main/java/org/bukkit/plugin/RegisteredListener.java
+@@ -11,13 +11,13 @@ import org.jetbrains.annotations.NotNull;
+  * Stores relevant information for plugin listeners
+  */
+ public class RegisteredListener {
+-    private final Listener listener;
++    private final net.kissenpvp.core.api.event.EventListener<?> listener; // KissenPaper - integrate unified event system
+     private final EventPriority priority;
+     private final Plugin plugin;
+     private final EventExecutor executor;
+     private final boolean ignoreCancelled;
+ 
+-    public RegisteredListener(@NotNull final Listener listener, @NotNull final EventExecutor executor, @NotNull final EventPriority priority, @NotNull final Plugin plugin, final boolean ignoreCancelled) {
++    public RegisteredListener(@NotNull final net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull final EventExecutor executor, @NotNull final EventPriority priority, @NotNull final Plugin plugin, final boolean ignoreCancelled) { // KissenPaper - integrate unified event system
+         this.listener = listener;
+         this.priority = priority;
+         this.plugin = plugin;
+@@ -31,9 +31,9 @@ public class RegisteredListener {
+      * @return Registered Listener
+      */
+     @NotNull
+-    public Listener getListener() {
++    public net.kissenpvp.core.api.event.EventListener<?> getListener() {
+         return listener;
+-    }
++    } // KissenPaper - integrate unified event system
+ 
+     /**
+      * Gets the plugin for this registration
+@@ -61,7 +61,7 @@ public class RegisteredListener {
+      * @param event The event
+      * @throws EventException If an event handler throws an exception.
+      */
+-    public void callEvent(@NotNull final Event event) throws EventException {
++    public void callEvent(@NotNull final net.kissenpvp.core.api.event.EventClass event) throws EventException {
+         if (event instanceof Cancellable) {
+             if (((Cancellable) event).isCancelled() && isIgnoringCancelled()) {
+                 return;
+diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+index fc2dae69165776d08274e34a69962cc70445f411..90687841e78b7dd890a1442a36a006962a287157 100644
+--- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
++++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+@@ -611,7 +611,7 @@ public final class SimplePluginManager implements PluginManager {
+      * @param event Event details
+      */
+     @Override
+-    public void callEvent(@NotNull Event event) {
++    public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) { // KissenPaper - integrate unified event system
+         if (true) {this.paperPluginManager.callEvent(event); return;} // Paper
+         if (event.isAsynchronous()) {
+             if (Thread.holdsLock(this)) {
+@@ -626,7 +626,7 @@ public final class SimplePluginManager implements PluginManager {
+             }
+         }
+ 
+-        fireEvent(event);
++        // fireEvent(event); // KissenPaper - integrate unified event system
+     }
+ 
+     private void fireEvent(@NotNull Event event) {
+@@ -666,20 +666,19 @@ public final class SimplePluginManager implements PluginManager {
+     }
+ 
+     @Override
+-    public void registerEvents(@NotNull Listener listener, @NotNull Plugin plugin) {
++    public void registerEvents(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull Plugin plugin) { // KissenPaper - integrate unified event system
+         if (true) {this.paperPluginManager.registerEvents(listener, plugin); return;} // Paper
+         if (!plugin.isEnabled()) {
+             throw new IllegalPluginAccessException("Plugin attempted to register " + listener + " while not enabled");
+         }
+ 
+-        for (Map.Entry<Class<? extends Event>, Set<RegisteredListener>> entry : plugin.getPluginLoader().createRegisteredListeners(listener, plugin).entrySet()) {
++        for (Map.Entry<Class<? extends net.kissenpvp.core.api.event.EventClass>, Set<RegisteredListener>> entry : plugin.getPluginLoader().createRegisteredListeners(listener, plugin).entrySet()) { // KissenPaper - integrate unified event system
+             getEventListeners(getRegistrationClass(entry.getKey())).registerAll(entry.getValue());
+         }
+-
+     }
+ 
+     @Override
+-    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull Listener listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin) {
++    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin) { // KissenPaper - integrate unified event system
+         registerEvent(event, listener, priority, executor, plugin, false);
+     }
+ 
+@@ -696,7 +695,7 @@ public final class SimplePluginManager implements PluginManager {
+      *     cancelled
+      */
+     @Override
+-    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull Listener listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin, boolean ignoreCancelled) {
++    public void registerEvent(@NotNull Class<? extends Event> event, @NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull EventPriority priority, @NotNull EventExecutor executor, @NotNull Plugin plugin, boolean ignoreCancelled) { // KissenPaper - integrate unified event system
+         Preconditions.checkArgument(listener != null, "Listener cannot be null");
+         Preconditions.checkArgument(priority != null, "Priority cannot be null");
+         Preconditions.checkArgument(executor != null, "Executor cannot be null");
+@@ -716,7 +715,7 @@ public final class SimplePluginManager implements PluginManager {
+     }
+ 
+     @NotNull
+-    private HandlerList getEventListeners(@NotNull Class<? extends Event> type) {
++    private HandlerList getEventListeners(@NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> type) { // KissenPaper - integrate unified event system
+         try {
+             Method method = getRegistrationClass(type).getDeclaredMethod("getHandlerList");
+             method.setAccessible(true);
+@@ -732,7 +731,7 @@ public final class SimplePluginManager implements PluginManager {
+     }
+ 
+     @NotNull
+-    private Class<? extends Event> getRegistrationClass(@NotNull Class<? extends Event> clazz) {
++    private Class<? extends net.kissenpvp.core.api.event.EventClass> getRegistrationClass(@NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> clazz) { // KissenPaper - integrate unified event system
+         try {
+             clazz.getDeclaredMethod("getHandlerList");
+             return clazz;
+diff --git a/src/main/java/org/bukkit/plugin/TimedRegisteredListener.java b/src/main/java/org/bukkit/plugin/TimedRegisteredListener.java
+index 1d76e30b82ca56bb4cf3b9a33f5a129ab829e3f0..19a6cc317451e66fb3c2926a0eb32d10c4fa6427 100644
+--- a/src/main/java/org/bukkit/plugin/TimedRegisteredListener.java
++++ b/src/main/java/org/bukkit/plugin/TimedRegisteredListener.java
+@@ -13,21 +13,21 @@ import org.jetbrains.annotations.Nullable;
+ public class TimedRegisteredListener extends RegisteredListener {
+     private int count;
+     private long totalTime;
+-    private Class<? extends Event> eventClass;
++    private Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass; // KissenPaper - integrate unified event system
+     private boolean multiple = false;
+ 
+-    public TimedRegisteredListener(@NotNull final Listener pluginListener, @NotNull final EventExecutor eventExecutor, @NotNull final EventPriority eventPriority, @NotNull final Plugin registeredPlugin, final boolean listenCancelled) {
++    public TimedRegisteredListener(@NotNull final net.kissenpvp.core.api.event.EventListener<?> pluginListener, @NotNull final EventExecutor eventExecutor, @NotNull final EventPriority eventPriority, @NotNull final Plugin registeredPlugin, final boolean listenCancelled) {
+         super(pluginListener, eventExecutor, eventPriority, registeredPlugin, listenCancelled);
+     }
+ 
+     @Override
+-    public void callEvent(@NotNull Event event) throws EventException {
++    public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) throws EventException { // KissenPaper - integrate unified event system
+         if (event.isAsynchronous()) {
+             super.callEvent(event);
+             return;
+         }
+         count++;
+-        Class<? extends Event> newEventClass = event.getClass();
++        Class<? extends net.kissenpvp.core.api.event.EventClass> newEventClass = event.getClass(); // KissenPaper - integrate unified event system
+         if (this.eventClass == null) {
+             this.eventClass = newEventClass;
+         } else if (!this.eventClass.equals(newEventClass)) {
+@@ -85,7 +85,7 @@ public class TimedRegisteredListener extends RegisteredListener {
+      * @return the event class handled by this RegisteredListener
+      */
+     @Nullable
+-    public Class<? extends Event> getEventClass() {
++    public Class<? extends net.kissenpvp.core.api.event.EventClass> getEventClass() {
+         return eventClass;
+     }
+ 
+diff --git a/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java b/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
+index eaefbb00e9993d54906cc8cf35cf753c0d6c7707..74cfa431c3dfa50594385c96bfdb75d66077ad9d 100644
+--- a/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
++++ b/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
+@@ -228,12 +228,12 @@ public final class JavaPluginLoader implements PluginLoader {
+ 
+     @Override
+     @NotNull
+-    public Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(@NotNull Listener listener, @NotNull final Plugin plugin) {
++    public Map<Class<? extends net.kissenpvp.core.api.event.EventClass>, Set<RegisteredListener>> createRegisteredListeners(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull final Plugin plugin) { // KissenPaper - integrate unified event system
+         Preconditions.checkArgument(plugin != null, "Plugin can not be null");
+         Preconditions.checkArgument(listener != null, "Listener can not be null");
+ 
+         boolean useTimings = server.getPluginManager().useTimings();
+-        Map<Class<? extends Event>, Set<RegisteredListener>> ret = new HashMap<Class<? extends Event>, Set<RegisteredListener>>();
++        Map<Class<? extends net.kissenpvp.core.api.event.EventClass>, Set<RegisteredListener>> ret = new HashMap<Class<? extends net.kissenpvp.core.api.event.EventClass>, Set<RegisteredListener>>(); // KissenPaper - integrate unified event system
+         Set<Method> methods;
+         try {
+             Method[] publicMethods = listener.getClass().getMethods();
+@@ -295,7 +295,7 @@ public final class JavaPluginLoader implements PluginLoader {
+ 
+             EventExecutor executor = new co.aikar.timings.TimedEventExecutor(new EventExecutor() { // Paper
+                 @Override
+-                public void execute(@NotNull Listener listener, @NotNull Event event) throws EventException { // Paper
++                public void execute(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull net.kissenpvp.core.api.event.EventClass event) throws EventException { // Paper // KissenPaper - integrate unified event system
+                     try {
+                         if (!eventClass.isAssignableFrom(event.getClass())) {
+                             return;
+diff --git a/src/test/java/org/bukkit/plugin/TimedRegisteredListenerTest.java b/src/test/java/org/bukkit/plugin/TimedRegisteredListenerTest.java
+index 9ed416ed57676c845833736f93ed6088513c6da4..dc1bfebb0be86276fecf19103cc6f0fa96c57d33 100644
+--- a/src/test/java/org/bukkit/plugin/TimedRegisteredListenerTest.java
++++ b/src/test/java/org/bukkit/plugin/TimedRegisteredListenerTest.java
+@@ -19,7 +19,7 @@ public class TimedRegisteredListenerTest {
+         Listener listener = new Listener() {};
+         EventExecutor executor = new EventExecutor() {
+             @Override
+-            public void execute(Listener listener, Event event) {}
++            public void execute(net.kissenpvp.core.api.event.EventListener<?> listener, net.kissenpvp.core.api.event.EventClass event) {}// KissenPaper end - integrate unified event system
+         };
+         TestPlugin plugin = new TestPlugin("Test");
+ 
