@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Mon, 12 Feb 2024 15:50:50 +0100
+Subject: [PATCH] Integrated localization from kissen into paper
+
+
+diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
+index 4f8debb1666594aa2f49c2b56f6218f71a9bf16c..c4fca36d12396c752b60bd62870576a4eb4bfbb6 100644
+--- a/src/main/java/org/bukkit/plugin/PluginManager.java
++++ b/src/main/java/org/bukkit/plugin/PluginManager.java
+@@ -320,5 +320,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+ 
+     // KissenPaper start
+     void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin);
++
++    void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin);
++
+     // KissenPaper end
+ }
+diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+index 30f795d5c16efe681657236943246dbe57cec063..bf13ca76d7cc1e2c763fe3112f3b9db05d75cf16 100644
+--- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
++++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+@@ -983,5 +983,10 @@ public final class SimplePluginManager implements PluginManager {
+     public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin) {
+         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
+     }
++
++    @Override
++    public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
++    }
+     // KissenPaper start
+ }

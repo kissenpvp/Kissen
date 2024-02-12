@@ -473,10 +473,10 @@ index 9f7ed337463cc9bb370a5541d9de5cd8f9c1a78a..4806c417d46a835380c1cc13a17a76af
          }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
-index 66bdac50130f523f9dc4379b103b7a469f9ca36b..c67f7e1c18d2b3f2863450b4d08c43ecdd5f72a7 100644
+index 66bdac50130f523f9dc4379b103b7a469f9ca36b..3b462b42888f884de8b660ba4e8707a1b37d19a7 100644
 --- a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
 +++ b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
-@@ -150,4 +150,27 @@ public class MinecraftInternalPlugin extends PluginBase {
+@@ -150,4 +150,11 @@ public class MinecraftInternalPlugin extends PluginBase {
          throw new UnsupportedOperationException("Not supported.");
      }
      // Paper end - lifecycle events
@@ -485,30 +485,14 @@ index 66bdac50130f523f9dc4379b103b7a469f9ca36b..c67f7e1c18d2b3f2863450b4d08c43ec
 +    @Override
 +    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
 +        return org.bukkit.Bukkit.getKissen();
-+    }
-+
-+    @Override
-+    public void registerTranslation(@org.jetbrains.annotations.NotNull String key, java.text.@org.jetbrains.annotations.NotNull MessageFormat defaultMessage) {
-+        throw new UnsupportedOperationException("Not supported.");
-+    }
-+
-+    @Override
-+    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting) {
-+        throw new UnsupportedOperationException("Not supported.");
-+    }
-+
-+    @Override
-+    public @org.jetbrains.annotations.NotNull net.kissenpvp.core.api.command.CommandHandler<?, ?> getCommandHandler()
-+    {
-+        throw new UnsupportedOperationException("Not supported.");
 +    }
 +    // KissenPaper end
  }
 diff --git a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
-index 90cf0c702ca2ff9de64d9718ecba5f2d128953a6..6eb4ffd2ab30622ea1ff5002f407bda3650bb307 100644
+index 90cf0c702ca2ff9de64d9718ecba5f2d128953a6..5ff44cd1d49da6f8961cf52713b54c9b37ea5cb7 100644
 --- a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
 +++ b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
-@@ -150,4 +150,27 @@ public class PaperTestPlugin extends PluginBase {
+@@ -150,4 +150,11 @@ public class PaperTestPlugin extends PluginBase {
          throw new UnsupportedOperationException("Not supported.");
      }
      // Paper end - lifecycle events
@@ -517,22 +501,6 @@ index 90cf0c702ca2ff9de64d9718ecba5f2d128953a6..6eb4ffd2ab30622ea1ff5002f407bda3
 +    @Override
 +    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
 +        return org.bukkit.Bukkit.getKissen();
-+    }
-+
-+    @Override
-+    public void registerTranslation(@org.jetbrains.annotations.NotNull String key, java.text.@org.jetbrains.annotations.NotNull MessageFormat defaultMessage) {
-+        throw new UnsupportedOperationException("Not supported.");
-+    }
-+
-+    @Override
-+    public void registerPlayerSetting(@org.jetbrains.annotations.NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting) {
-+        throw new UnsupportedOperationException("Not supported.");
-+    }
-+
-+    @Override
-+    public @org.jetbrains.annotations.NotNull net.kissenpvp.core.api.command.CommandHandler<?, ?> getCommandHandler()
-+    {
-+        throw new UnsupportedOperationException("Not supported.");
 +    }
 +    // KissenPaper end
  }

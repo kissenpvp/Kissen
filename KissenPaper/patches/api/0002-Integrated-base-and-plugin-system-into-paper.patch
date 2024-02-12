@@ -108,10 +108,10 @@ index ef431219fd2bce48bad63b6b92c99d54348d480e..b753260bb333c8909ac2b251c17c4e92
       * Returns the folder that the plugin data's files are located in. The
       * folder may not yet exist.
 diff --git a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-index 34037d3da2c536bac088e0ff629ee8f1daccc65b..75dc116ca7b33c6bee1aaa1e0dd0d3f7d899d38d 100644
+index 34037d3da2c536bac088e0ff629ee8f1daccc65b..350097c726eaf3e900ed4a073d43656cfaf0e95e 100644
 --- a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
 +++ b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-@@ -470,4 +470,27 @@ public abstract class JavaPlugin extends PluginBase {
+@@ -470,4 +470,11 @@ public abstract class JavaPlugin extends PluginBase {
          return this.lifecycleEventManager;
      }
      // Paper end - lifecycle events
@@ -121,29 +121,13 @@ index 34037d3da2c536bac088e0ff629ee8f1daccc65b..75dc116ca7b33c6bee1aaa1e0dd0d3f7
 +    public @NotNull net.kissenpvp.core.api.base.Kissen getKissen() {
 +        return org.bukkit.Bukkit.getKissen();
 +    }
-+
-+    @Override
-+    public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat translationTemplate) {
-+        getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(this, key, translationTemplate);
-+    }
-+
-+    @Override
-+    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting) {
-+        getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(this, playerSetting);
-+    }
-+
-+    @Override
-+    public @NotNull net.kissenpvp.core.api.command.CommandHandler<CommandSender, net.kissenpvp.paper.api.command.KissenCommand> getCommandHandler()
-+    {
-+        return getKissen().getImplementation(net.kissenpvp.paper.api.command.PaperCommandImplementation.class).getPluginHandler(this).orElseThrow();
-+    }
 +    // KissenPaper end
  }
 diff --git a/src/test/java/org/bukkit/plugin/TestPlugin.java b/src/test/java/org/bukkit/plugin/TestPlugin.java
-index affe88cf8e98a787e197936f5fc443464a2343c6..17daf0fef0d684dcd6713478d4c1fcfbbedb1292 100644
+index affe88cf8e98a787e197936f5fc443464a2343c6..22c84be67677cafd38d4fc1d1ea7a4d97b162871 100644
 --- a/src/test/java/org/bukkit/plugin/TestPlugin.java
 +++ b/src/test/java/org/bukkit/plugin/TestPlugin.java
-@@ -140,4 +140,27 @@ public class TestPlugin extends PluginBase {
+@@ -140,4 +140,11 @@ public class TestPlugin extends PluginBase {
          throw new UnsupportedOperationException("Not supported.");
      }
      // Paper end - lifecycle events
@@ -152,22 +136,6 @@ index affe88cf8e98a787e197936f5fc443464a2343c6..17daf0fef0d684dcd6713478d4c1fcfb
 +    @Override
 +    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
 +        return org.bukkit.Bukkit.getKissen();
-+    }
-+
-+    @Override
-+    public void registerTranslation(@org.jetbrains.annotations.NotNull String key, java.text.@org.jetbrains.annotations.NotNull MessageFormat defaultMessage) {
-+        throw new UnsupportedOperationException("Not supported.");
-+    }
-+
-+    @Override
-+    public void registerPlayerSetting(@org.jetbrains.annotations.NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting) {
-+        throw new UnsupportedOperationException("Not supported.");
-+    }
-+
-+    @Override
-+    public @org.jetbrains.annotations.NotNull net.kissenpvp.core.api.command.CommandHandler<?, ?> getCommandHandler()
-+    {
-+        throw new UnsupportedOperationException("Not supported.");
 +    }
 +    // KissenPaper end
  }

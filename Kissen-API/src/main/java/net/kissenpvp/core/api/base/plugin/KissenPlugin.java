@@ -81,11 +81,4 @@ public interface KissenPlugin {
     Kissen getKissen();
 
     boolean isEnabled();
-
-    void registerTranslation(@NotNull String key, @NotNull MessageFormat defaultMessage);
-
-    void registerPlayerSetting(@NotNull PlayerSetting<?> playerSetting);
-
-    @NotNull
-    CommandHandler<?, ?> getCommandHandler();
 }

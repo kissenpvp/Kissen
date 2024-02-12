@@ -942,6 +942,35 @@ index 254a02ddb5dc867c9dd6c2086791f7ab94247fd3..4ad6e71249ea3d808f82a4bce0c47eeb
  
      // Paper start
      @Override
+diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
+index 5c7d26c2b55821d7a45704827471d6a30f54fb18..4f8debb1666594aa2f49c2b56f6218f71a9bf16c 100644
+--- a/src/main/java/org/bukkit/plugin/PluginManager.java
++++ b/src/main/java/org/bukkit/plugin/PluginManager.java
+@@ -317,4 +317,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+     @org.jetbrains.annotations.ApiStatus.Experimental
+     void overridePermissionManager(@NotNull Plugin plugin, @Nullable io.papermc.paper.plugin.PermissionManager permissionManager);
+     // Paper end
++
++    // KissenPaper start
++    void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin);
++    // KissenPaper end
+ }
+diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+index 90687841e78b7dd890a1442a36a006962a287157..30f795d5c16efe681657236943246dbe57cec063 100644
+--- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
++++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+@@ -977,4 +977,11 @@ public final class SimplePluginManager implements PluginManager {
+         this.paperPluginManager.addPermissions(perm);
+     }
+     // Paper end
++
++    // KissenPaper start
++    @Override
++    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin) {
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
++    }
++    // KissenPaper start
+ }
 diff --git a/src/main/java/org/bukkit/profile/PlayerProfile.java b/src/main/java/org/bukkit/profile/PlayerProfile.java
 index d36b3e3c7e53840132011add365ca2a26d799064..50572f51a906c1fdc0788934d3d80c276bacad1b 100644
 --- a/src/main/java/org/bukkit/profile/PlayerProfile.java

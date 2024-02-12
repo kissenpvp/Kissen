@@ -4,6 +4,21 @@ Date: Sun, 24 Sep 2023 13:28:51 +0200
 Subject: [PATCH] Integrated localization from kissen into paper
 
 
+diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
+index 0786c9418a74b183e5946dbc205e71628ca6e647..0f185a8e173414ab6daa593d59e0e0211573a935 100644
+--- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
++++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
+@@ -244,5 +244,10 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+     public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin) {
+         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
+     }
++
++    @Override
++    public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
++    }
+     // KissenPaper start
+ }
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 index e3e4fd170caaf4726c44f303ced029df4427c739..0ebb88c89869fe0f11050c3be4c33ce3a0660145 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java

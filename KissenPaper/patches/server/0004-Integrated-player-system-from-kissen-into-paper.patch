@@ -32,6 +32,22 @@ index daa157eaa021d039f9a092bea0b78f7c1f746e3b..2445edc12487678c2db1f6b274f95a77
 +    }
 +    // KissenPaper end
  }
+diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
+index 87d9a890d2be404f78e1b35a5aaacbf46101eadc..0786c9418a74b183e5946dbc205e71628ca6e647 100644
+--- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
++++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
+@@ -238,4 +238,11 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+     public MutableGraph<String> getInstanceManagerGraph() {
+         return instanceManager.getDependencyGraph();
+     }
++
++    // KissenPaper start
++    @Override
++    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin) {
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
++    }
++    // KissenPaper start
+ }
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java b/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..fe2f7c055e0c21eeb845118d8b8adf4c5badc13a
