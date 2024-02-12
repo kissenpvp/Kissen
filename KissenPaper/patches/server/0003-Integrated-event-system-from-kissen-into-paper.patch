@@ -256,29 +256,24 @@ index 0000000000000000000000000000000000000000..715d1f9d2a8bcbf2c01ef90c64279d2b
 +    }
 +}
 diff --git a/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java b/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java
-index 2a7408ed5d9a415333212cadd7fefcd03785afbf..88b9b6502b46741308740e0db25aaaafe7c852a3 100644
+index 2a7408ed5d9a415333212cadd7fefcd03785afbf..937fd2067273e74fa8a0e0dff2e3b0d52d2f874b 100644
 --- a/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java
 +++ b/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java
-@@ -2,18 +2,26 @@ package io.papermc.paper.plugin;
+@@ -1,7 +1,6 @@
+ package io.papermc.paper.plugin;
  
  import io.papermc.paper.plugin.manager.PaperPluginManagerImpl;
- import org.bukkit.Bukkit;
-+import org.bukkit.Server;
+-import org.bukkit.Bukkit;
  import org.bukkit.event.Event;
  import org.bukkit.event.EventHandler;
  import org.bukkit.event.Listener;
- import org.junit.jupiter.api.Assertions;
-+import org.junit.jupiter.api.BeforeEach;
- import org.junit.jupiter.api.Test;
-+import org.mockito.Mockito;
- 
- public class SyntheticEventTest {
+@@ -12,8 +11,13 @@ public class SyntheticEventTest {
  
      @Test
      public void test() {
 +        // KissenPaper start
-+        Server server = Mockito.mock(Server.class);
-+        Mockito.when(server.isPrimaryThread()).thenReturn(true);
++        org.bukkit.Server server = org.mockito.Mockito.mock(org.bukkit.Server.class);
++        org.mockito.Mockito.when(server.isPrimaryThread()).thenReturn(true);
 +        // KissenPaper end
 +
          PaperTestPlugin paperTestPlugin = new PaperTestPlugin("synthetictest");
