@@ -184,28 +184,42 @@ index 0000000000000000000000000000000000000000..a29d1dac0b3a8737af4e2376ac894bb9
 +
 +}
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 31b9002187aab40abeb6627c0b0d1ee60c575e5b..7d736b586068dac072e32963c6d2c0fd103fc73f 100644
+index 31b9002187aab40abeb6627c0b0d1ee60c575e5b..843968695b50a7ab3c384cd3181e906e525968d3 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -325,5 +325,6 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -325,5 +325,10 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
  
      void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin);
  
-+    @NotNull net.kissenpvp.core.api.command.CommandHandler<org.bukkit.command.CommandSender, ? extends net.kissenpvp.paper.api.command.KissenCommand> getCommandHandler(@NotNull Plugin plugin);
++    void registerCommand(@NotNull Plugin plugin, @NotNull Object... objects);
++
++    void registerExceptionHandler(@NotNull net.kissenpvp.core.api.base.ExceptionHandler<?> exceptionHandler, @NotNull Plugin plugin);
++
++    <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.paper.api.command.PaperArgumentParser<T> parser, @NotNull Plugin plugin);
      // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 3a8ca4bf5c538c793072720159393c5644d42185..4688866ee25c176680ae26c6ba4940189ac52e1b 100644
+index 3a8ca4bf5c538c793072720159393c5644d42185..e5d4f7df94c73cd2f9b700d8dafc91024698d681 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -994,5 +994,10 @@ public final class SimplePluginManager implements PluginManager {
+@@ -994,5 +994,20 @@ public final class SimplePluginManager implements PluginManager {
      public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
      }
 +
 +    @Override
-+    public @NotNull net.kissenpvp.core.api.command.CommandHandler<org.bukkit.command.CommandSender, ? extends net.kissenpvp.paper.api.command.KissenCommand> getCommandHandler(@NotNull Plugin plugin) {
-+        return org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.command.PaperCommandImplementation.class).getPluginHandler(plugin).orElseThrow();
++    public void registerCommand(@NotNull Plugin plugin, @NotNull Object... objects) {
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.command.PaperCommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerCommand(objects));
++    }
++
++    @Override
++    public void registerExceptionHandler(@NotNull net.kissenpvp.core.api.base.ExceptionHandler<?> exceptionHandler, @NotNull Plugin plugin) {
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.command.PaperCommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerExceptionHandler(exceptionHandler));
++    }
++
++    @Override
++    public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.paper.api.command.PaperArgumentParser<T> parser, @NotNull Plugin plugin) {
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.command.PaperCommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
 +    }
      // KissenPaper start
  }
