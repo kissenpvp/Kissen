@@ -1414,10 +1414,10 @@ index 1c1efc5a493b57e2913d40389edc19109dc4bb5c..0abf741e114eefc178db5df8b5612d86
  
      @Override
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 78a12d0a354957d835c0ff9ce729bc593385f7ea..556328c8048d8f23a076100b2f84c564982f35a2 100644
+index 21519967a792b76c61af753a430ad5fa638ec919..96af226e2c613498203304166534ccd8b61b342a 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -163,7 +163,7 @@ public abstract class PlayerList {
+@@ -164,7 +164,7 @@ public abstract class PlayerList {
          server.console = new com.destroystokyo.paper.console.TerminalConsoleCommandSender(); // Paper
          // CraftBukkit end
  
@@ -1426,7 +1426,7 @@ index 78a12d0a354957d835c0ff9ce729bc593385f7ea..556328c8048d8f23a076100b2f84c564
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
          this.ops = /*new ServerOpList(PlayerList.OPLIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserOperatorList(); // KissenPaper
          this.whitelist = /*new UserWhiteList(PlayerList.WHITELIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserWhiteList(); // KissenPaper
-@@ -737,6 +737,8 @@ public abstract class PlayerList {
+@@ -738,6 +738,8 @@ public abstract class PlayerList {
          Player player = entity.getBukkitEntity();
          PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
  
@@ -1434,8 +1434,8 @@ index 78a12d0a354957d835c0ff9ce729bc593385f7ea..556328c8048d8f23a076100b2f84c564
 +        /*
          // Paper start - Fix MC-158900
          UserBanListEntry gameprofilebanentry;
-         if (getBans().isBanned(gameprofile) && (gameprofilebanentry = getBans().get(gameprofile)) != null) {
-@@ -768,6 +770,8 @@ public abstract class PlayerList {
+         if (this.bans.isBanned(gameprofile) && (gameprofilebanentry = this.bans.get(gameprofile)) != null) {
+@@ -769,6 +771,8 @@ public abstract class PlayerList {
                  event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.serverFullMessage)); // Spigot // Paper - Adventure
              }
          }

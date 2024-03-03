@@ -696,10 +696,10 @@ index 24e5993b281448734eb67c7a8439a349bbf9fd72..85db6972a7e56ac72537f3f109129bc0
 +    // KissenPaper end - make player accessible from class children
  }
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 556328c8048d8f23a076100b2f84c564982f35a2..14f072e22987fdb19342fcc3fb4eb34a315eb3cc 100644
+index 96af226e2c613498203304166534ccd8b61b342a..7562e40d8a3a1f9636ea0ce70100d01eed0fb36f 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -1516,7 +1516,11 @@ public abstract class PlayerList {
+@@ -1517,7 +1517,11 @@ public abstract class PlayerList {
          if (advancementdataplayer == null) {
              Path path = this.server.getWorldPath(LevelResource.PLAYER_ADVANCEMENTS_DIR).resolve(uuid + ".json");
  
