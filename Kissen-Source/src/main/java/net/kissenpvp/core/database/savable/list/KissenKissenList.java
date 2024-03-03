@@ -18,6 +18,8 @@
 
 package net.kissenpvp.core.database.savable.list;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import net.kissenpvp.core.api.database.savable.list.KissenList;
 import net.kissenpvp.core.api.database.savable.list.ListAction;
@@ -25,147 +27,157 @@ import net.kissenpvp.core.api.database.savable.list.ListExecution;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T> {
+    private ListAction listAction;
 
-public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T>
-{
-    @Setter private ListAction listAction;
+    public KissenKissenList(int initialCapacity) {
+        super(initialCapacity);
+    }
 
-    @Override public @NotNull Optional<@NotNull ListAction> getListAction()
-    {
+    public KissenKissenList(@NotNull Collection<? extends T> c) {
+        super(c);
+    }
+
+    public KissenKissenList(@NotNull Collection<? extends T> c, ListAction listAction) {
+        super(c);
+        this.listAction = listAction;
+    }
+
+    @Override
+    public @NotNull Optional<@NotNull ListAction> getListAction() {
         return Optional.ofNullable(listAction);
     }
 
-    @Override public T set(int index, T element)
-    {
-        return parseValue(() -> super.set(index, element),
-                () -> getListAction().ifPresent(action -> action.execute(ListExecution.SET, index, element)));
+    @Override
+    public T set(int index, T element) {
+        return parseValue(() -> super.set(index, element), () -> getListAction().ifPresent(action -> action.execute(ListExecution.SET, index, element)));
     }
 
-    @Override public boolean add(T t)
-    {
-        return parseValue(() -> super.add(t),
-                () -> getListAction().ifPresent(action -> action.execute(ListExecution.ADD, t)));
+    @Override
+    public boolean add(T t) {
+        return parseValue(() -> super.add(t), () -> getListAction().ifPresent(action -> action.execute(ListExecution.ADD, t)));
     }
 
-    @Override public void add(int index, T element)
-    {
-        parseValue(() ->
-        {
+    @Override
+    public void add(int index, T element) {
+        parseValue(() -> {
             super.add(index, element);
             return false;
         }, () -> getListAction().ifPresent(action -> action.execute(ListExecution.ADD_INDEX, index, element)));
     }
 
-    @Override public boolean addAll(@NotNull Collection<? extends T> c)
-    {
-        return parseValue(() -> super.addAll(c.stream().toList()),
-                () -> getListAction().ifPresent(action -> action.execute(ListExecution.ADD_ALL, c)));
+    @Override
+    public boolean addAll(@NotNull Collection<? extends T> c) {
+        return parseValue(() -> super.addAll(c.stream().toList()), () -> getListAction().ifPresent(action -> action.execute(ListExecution.ADD_ALL, c)));
     }
 
-    @Override public boolean addAll(int index, @NotNull Collection<? extends T> c)
-    {
-        return parseValue(() -> super.addAll(index, c),
-                () -> getListAction().ifPresent(action -> action.execute(ListExecution.ADD_ALL_INDEX_INCLUDED, index,
-                        c)));
+    @Override
+    public boolean addAll(int index, @NotNull Collection<? extends T> c) {
+        return parseValue(() -> super.addAll(index, c), () -> getListAction().ifPresent(action -> action.execute(ListExecution.ADD_ALL_INDEX_INCLUDED, index, c)));
     }
 
-    @Override public T remove(int index)
-    {
-        return parseValue(() -> super.remove(index),
-                () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE_INDEX, index)));
+    @Override
+    public T remove(int index) {
+        return parseValue(() -> super.remove(index), () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE_INDEX, index)));
     }
 
-    @Override public boolean remove(Object o)
-    {
-        return parseValue(() -> super.remove(o),
-                () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE, o)));
+    @Override
+    public boolean remove(Object o) {
+        return parseValue(() -> super.remove(o), () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE, o)));
     }
 
-    @Override protected void removeRange(int fromIndex, int toIndex)
-    {
-        parseValue(() ->
-        {
+    @Override
+    protected void removeRange(int fromIndex, int toIndex) {
+        parseValue(() -> {
             super.removeRange(fromIndex, toIndex);
             return false;
         }, () -> listAction.execute(ListExecution.REMOVE_RANGE, fromIndex, toIndex));
     }
 
-    @Override public boolean removeAll(@NotNull Collection<?> c)
-    {
-        return parseValue(() -> super.removeAll(c),
-                () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE_ALL, c)));
+    @Override
+    public boolean removeAll(@NotNull Collection<?> c) {
+        return parseValue(() -> super.removeAll(c), () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE_ALL, c)));
     }
 
-    @Override public boolean removeIf(Predicate<? super T> filter)
-    {
-        return parseValue(() -> super.removeIf(filter),
-                () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE_IF, filter)));
+    @Override
+    public boolean removeIf(Predicate<? super T> filter) {
+        return parseValue(() -> super.removeIf(filter), () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE_IF, filter)));
     }
 
-    @Override public boolean retainAll(@NotNull Collection<?> c)
-    {
-        return parseValue(() -> super.retainAll(c),
-                () -> getListAction().ifPresent(action -> action.execute(ListExecution.RETAIN_ALL, c)));
+    @Override
+    public boolean retainAll(@NotNull Collection<?> c) {
+        return parseValue(() -> super.retainAll(c), () -> getListAction().ifPresent(action -> action.execute(ListExecution.RETAIN_ALL, c)));
     }
 
-    @Override public void replaceAll(UnaryOperator<T> operator)
-    {
-        parseValue(() ->
-        {
+    @Override
+    public void replaceAll(UnaryOperator<T> operator) {
+        parseValue(() -> {
             super.replaceAll(operator);
-            return false;
+            return true;
         }, () -> getListAction().ifPresent(action -> action.execute(ListExecution.REPLACE_ALL, operator)));
     }
 
-    @Override public void clear()
-    {
-        super.clear();
-        parseValue(() ->
-        {
+    @Override
+    public void clear() {
+        parseValue(() -> {
             super.clear();
-            return false;
+            return true;
         }, () -> getListAction().ifPresent(action -> action.execute(ListExecution.CLEAR)));
     }
 
-    @Override public boolean[] invert(@NotNull T value)
-    {
-        return !contains(value) ? new boolean[]{
-                true,
-                add(value)} : new boolean[]{
-                false,
-                remove(value)};
+    @Override
+    public boolean[] invert(@NotNull T value) {
+        return !contains(value) ? new boolean[]{true, add(value)} : new boolean[]{false, remove(value)};
     }
 
-    @Override public int replace(@NotNull Predicate<T> predicate, @NotNull T object)
-    {
-        final AtomicInteger count = new AtomicInteger(0);
+    @Override
+    public int replace(@NotNull T object) {
+        return replace(current -> Objects.equals(object, current), object);
+    }
 
-        List<T> newList = new ArrayList<>();
-        this.forEach(entry ->
+    @Override
+    public int replace(@NotNull Predicate<T> predicate, @NotNull T object) {
+
+
+        return parseValue(() -> {
+            AtomicInteger count = new AtomicInteger(0);
+
+            List<T> newList = this.stream().map(entry -> {
+                if (predicate.test(entry)) {
+                    count.incrementAndGet();
+                    return object;
+                }
+                return entry;
+            }).toList();
+
+            super.clear();
+            super.addAll(newList);
+
+            return count.get();
+        }, () -> getListAction().ifPresent(action -> action.execute(ListExecution.REPLACE, predicate, object)));
+    }
+
+    @Override
+    public boolean replaceOrInsert(@NotNull T object) {
+        return replaceOrInsert(current -> Objects.equals(object, current), object);
+    }
+
+    @Override
+    public boolean replaceOrInsert(@NotNull Predicate<T> predicate, @NotNull T object) {
+        if(replace(predicate, object) == 0)
         {
-            if (predicate.test(entry))
-            {
-                newList.add(object);
-                count.addAndGet(1);
-                return;
-            }
-            newList.add(entry);
-        });
-
-        super.clear();
-        super.addAll(newList);
-        return parseValue(count::get, () -> getListAction().ifPresent(action -> action.execute(ListExecution.REPLACE,
-                predicate, object)));
+            return add(object);
+        }
+        return true;
     }
-
 
     /**
      * Invokes a method from the list and returns the type of value given.
@@ -175,15 +187,18 @@ public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T>
      * @param <V>      the type of the return value from the given method.
      * @return the return type of the method given.
      */
-    protected <V> V parseValue(Execute<V> method, Runnable runnable)
-    {
+    protected <V> V parseValue(@NotNull Execute<V> method, Runnable runnable) {
+        List<?> copy = List.copyOf(this);
         V executed = method.execute();
-        getListAction().ifPresent(action -> runnable.run());
+        if(!copy.equals(this))
+        {
+            getListAction().ifPresent(action -> runnable.run());
+        }
         return executed;
     }
 
-    @Override public void clearAndAddAll(@NotNull Collection<T> newList)
-    {
+    @Override
+    public void clearAndAddAll(@NotNull Collection<T> newList) {
         super.clear();
         addAll(newList);
     }
@@ -193,8 +208,7 @@ public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T>
      *
      * @param <T> the type of the return value.
      */
-    protected interface Execute<T> extends Serializable
-    {
+    protected interface Execute<T> extends Serializable {
         T execute();
     }
 }

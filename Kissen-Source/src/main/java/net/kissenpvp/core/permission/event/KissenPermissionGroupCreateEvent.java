@@ -30,10 +30,10 @@ import java.util.Map;
 public class KissenPermissionGroupCreateEvent implements PermissionGroupCreateEvent
 {
     private final String name;
-    @Setter private Map<String, String> data;
+    @Setter private Map<String, Object> data;
     @Setter private boolean cancelled;
 
-    public KissenPermissionGroupCreateEvent(@NotNull String name, @Nullable Map<String, String> data)
+    public KissenPermissionGroupCreateEvent(@NotNull String name, @Nullable Map<String, Object> data)
     {
         this.name = name;
         this.data = data;

@@ -49,7 +49,7 @@ public interface QuerySelect extends QueryComponent<QuerySelect> {
      *
      * @return A 2D array of {@link String}, where each inner array represents rows of the result.
      */
-    @NotNull CompletableFuture<String[][]> execute();
+    @NotNull CompletableFuture<Object[][]> execute();
 
     /**
      * The {@code RootQuerySelect} interface provides a contract for the root of a select query.
@@ -65,7 +65,7 @@ public interface QuerySelect extends QueryComponent<QuerySelect> {
          *
          * @return A 2D array of {@link String}, where each inner array represents rows of the result.
          */
-        @NotNull CompletableFuture<String[][]> execute();
+        @NotNull CompletableFuture<Object[][]> execute();
     }
 
 }

@@ -122,10 +122,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a2c8fa7921cedfaec2829f15ac9a14eb431cc1b3
+index 0000000000000000000000000000000000000000..ebdd79782dabfff47cde7a88cdc279c2d956bcc9
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,509 @@
+@@ -0,0 +1,508 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -197,7 +197,6 @@ index 0000000000000000000000000000000000000000..a2c8fa7921cedfaec2829f15ac9a14eb
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
-+@SuppressWarnings("rawtypes")
 +public class KissenPaperBanImplementation extends KissenBanImplementation<PaperBan, PaperPunishment> implements PaperBanImplementation, KissenImplementation {
 +
 +    @Override
@@ -268,7 +267,7 @@ index 0000000000000000000000000000000000000000..a2c8fa7921cedfaec2829f15ac9a14eb
 +    }
 +
 +    @Override
-+    protected @NotNull PaperBan buildBan(int id, @NotNull Map<String, String> data) throws BackendException {
++    protected @NotNull PaperBan buildBan(int id, @NotNull Map<String, Object> data) throws BackendException {
 +        KissenPaperBan kissenPaperBan = new KissenPaperBan();
 +        kissenPaperBan.setup(String.valueOf(id), data);
 +        return kissenPaperBan;
@@ -276,7 +275,7 @@ index 0000000000000000000000000000000000000000..a2c8fa7921cedfaec2829f15ac9a14eb
 +
 +    @Override
 +    protected @NotNull PaperPunishment translatePunishment(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @NotNull Meta meta) {
-+        return new KissenPaperPunishment(totalID, kissenPunishmentNode, record -> set(totalID, (KissenPunishmentNode) record, meta));
++        return new KissenPaperPunishment(totalID, kissenPunishmentNode, record -> set(totalID, record, meta));
 +    }
 +
 +    @Override
@@ -371,7 +370,7 @@ index 0000000000000000000000000000000000000000..a2c8fa7921cedfaec2829f15ac9a14eb
 +     */
 +    @Contract(pure = true)
 +    private @NotNull Function<SavableMap, PaperBan> banProcessor() {
-+        return savableMap -> createBan(Integer.parseInt(savableMap.getNotNull("id")), savableMap);
++        return savableMap -> createBan(Integer.parseInt(savableMap.getNotNull("id", String.class)), Map.copyOf(savableMap));
 +    }
 +
 +    // Bukkit
@@ -637,7 +636,7 @@ index 0000000000000000000000000000000000000000..a2c8fa7921cedfaec2829f15ac9a14eb
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f3aa1569a7d9afd281d3d2914ba384783a6652f0
+index 0000000000000000000000000000000000000000..2051f43dbc2879fcab1cb9944a58e4014f317432
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java
 @@ -0,0 +1,131 @@
@@ -703,7 +702,7 @@ index 0000000000000000000000000000000000000000..f3aa1569a7d9afd281d3d2914ba38478
 +     * @param kissenPunishmentNode The data container for this punishment.
 +     * @param dataWriter (Nullable) The DataWriter that will be used for updating the punishment data.
 +     */
-+    public KissenPaperPunishment(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @Nullable DataWriter dataWriter) {
++    public KissenPaperPunishment(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @Nullable DataWriter<KissenPunishmentNode> dataWriter) {
 +        super(totalID, kissenPunishmentNode, dataWriter);
 +    }
 +
@@ -1342,18 +1341,31 @@ index 392e6fc5db4bc634c665718b48a884455a819248..b93e44b8b80e140029e86a3949a217a2
          super.loadImplementations(loader);
      }
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 1c1efc5a493b57e2913d40389edc19109dc4bb5c..c33641e0700426b37f6b2a0c30f94e5438aa82e4 100644
+index 1c1efc5a493b57e2913d40389edc19109dc4bb5c..0abf741e114eefc178db5df8b5612d86c2a89337 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-@@ -402,12 +402,55 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -389,9 +389,9 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+      * @see net.kissenpvp.paper.api.ban.PaperPunishment
+      * @see GameProfile
+      */
+-    private boolean loginUser(@org.jetbrains.annotations.NotNull KissenPaperPublicUser kissenPaperPublicUser, @org.jetbrains.annotations.NotNull GameProfile gameProfile) {
++    private boolean loginUser(@org.jetbrains.annotations.NotNull KissenPaperPublicUser user, @org.jetbrains.annotations.NotNull GameProfile gameProfile) {
+         try {
+-            if(!Bukkit.getKissen().getImplementation(KissenUserImplementation.class).loadUser(kissenPaperPublicUser))
++            if(!Bukkit.getKissen().getImplementation(KissenUserImplementation.class).loadUser(user))
+             {
+                 disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
+                 return false;
+@@ -402,12 +402,56 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                  disconnect(Component.translatable("multiplayer.disconnect.not_whitelisted"));
                  return false;
              }
 +
 +            net.kissenpvp.paper.api.ban.PaperBanImplementation banImplementation = org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class);
-+            net.kissenpvp.paper.api.ban.PaperPunishment paperPunishment = banImplementation.getLatestPunishment(kissenPaperPublicUser.get("total_id").map(java.util.UUID::fromString).orElse(gameProfile.getId()), net.kissenpvp.core.api.ban.BanType.BAN).orElse(null);
++            java.util.UUID totalId = user.get("total_id", java.util.UUID.class).orElse(gameProfile.getId());
++            net.kissenpvp.paper.api.ban.PaperPunishment paperPunishment = banImplementation.getLatestPunishment(totalId, net.kissenpvp.core.api.ban.BanType.BAN).orElse(null);
 +            if (paperPunishment != null) {
-+                disconnect(io.papermc.paper.adventure.PaperAdventure.asVanilla(paperPunishment.getPunishmentText(getLocale(kissenPaperPublicUser))));
++                disconnect(io.papermc.paper.adventure.PaperAdventure.asVanilla(paperPunishment.getPunishmentText(getLocale(user))));
 +                return false;
 +            }
 +
@@ -1374,24 +1386,24 @@ index 1c1efc5a493b57e2913d40389edc19109dc4bb5c..c33641e0700426b37f6b2a0c30f94e54
 +     * <p>The method interacts with the LocalizationImplementation to obtain locale strings
 +     * and convert them to Java Locale objects.</p>
 +     *
-+     * @param kissenPaperPublicUser The KissenPaperPublicUser object from which the locale is retrieved.
++     * @param user The {@link net.kissenpvp.core.api.user.User} object from which the locale is retrieved.
 +     *                              This parameter must be of type KissenPaperPublicUser and cannot be null.
 +     *
 +     * @return The Locale object corresponding to the user's forced locale, or their standard locale,
 +     *         or the default locale as defined by the LocalizationImplementation API.
 +     *         The result will not be null.
 +     *
-+     * @throws NullPointerException if kissenPaperPublicUser is null.
++     * @throws NullPointerException if user is null.
 +     *
 +     * @see net.kissenpvp.core.api.message.localization.LocalizationImplementation
 +     * @see java.util.Locale
 +     * @see java.util.Optional
 +     */
-+    private @org.jetbrains.annotations.NotNull java.util.Locale getLocale(@org.jetbrains.annotations.NotNull KissenPaperPublicUser kissenPaperPublicUser) {
++    private @org.jetbrains.annotations.NotNull java.util.Locale getLocale(@org.jetbrains.annotations.NotNull KissenPaperPublicUser user) {
 +        net.kissenpvp.core.api.message.localization.LocalizationImplementation localizationImplementation = Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class);
 +
-+        java.util.Optional<java.util.Locale> forcedLocale = kissenPaperPublicUser.get("forced_locale").map(localizationImplementation::getLocale);
-+        java.util.Optional<java.util.Locale> locale = kissenPaperPublicUser.get("locale").map(localizationImplementation::getLocale);
++        java.util.Optional<java.util.Locale> forcedLocale = user.get("forced_locale", String.class).map(localizationImplementation::getLocale);
++        java.util.Optional<java.util.Locale> locale = user.get("locale", String.class).map(localizationImplementation::getLocale);
 +        java.util.Locale defaultLocale = localizationImplementation.getDefaultLocale();
 +
 +        return forcedLocale.orElse(locale.orElse(defaultLocale));
@@ -1402,7 +1414,7 @@ index 1c1efc5a493b57e2913d40389edc19109dc4bb5c..c33641e0700426b37f6b2a0c30f94e54
  
      @Override
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 13d348ec03d03df2b37aea884360632148ebb292..faf74a5bd85b00b5d789fafe1dd30577576b6ea1 100644
+index 78a12d0a354957d835c0ff9ce729bc593385f7ea..556328c8048d8f23a076100b2f84c564982f35a2 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -163,7 +163,7 @@ public abstract class PlayerList {
@@ -1414,7 +1426,7 @@ index 13d348ec03d03df2b37aea884360632148ebb292..faf74a5bd85b00b5d789fafe1dd30577
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
          this.ops = /*new ServerOpList(PlayerList.OPLIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserOperatorList(); // KissenPaper
          this.whitelist = /*new UserWhiteList(PlayerList.WHITELIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserWhiteList(); // KissenPaper
-@@ -731,6 +731,8 @@ public abstract class PlayerList {
+@@ -737,6 +737,8 @@ public abstract class PlayerList {
          Player player = entity.getBukkitEntity();
          PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
  
@@ -1423,7 +1435,7 @@ index 13d348ec03d03df2b37aea884360632148ebb292..faf74a5bd85b00b5d789fafe1dd30577
          // Paper start - Fix MC-158900
          UserBanListEntry gameprofilebanentry;
          if (getBans().isBanned(gameprofile) && (gameprofilebanentry = getBans().get(gameprofile)) != null) {
-@@ -762,6 +764,8 @@ public abstract class PlayerList {
+@@ -768,6 +770,8 @@ public abstract class PlayerList {
                  event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.serverFullMessage)); // Spigot // Paper - Adventure
              }
          }

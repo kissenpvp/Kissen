@@ -46,7 +46,7 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
     }
 
     public KissenPublicUser(@NotNull SavableMap savableMap) throws BackendException {
-        this(UUID.fromString(savableMap.getNotNull("id")), savableMap.getNotNull("name"), savableMap);
+        this(savableMap.getNotNull("id", UUID.class), savableMap.getNotNull("name", String.class), Map.copyOf(savableMap));
     }
 
     /**
@@ -55,14 +55,14 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
      * @param name of the player this class should represent, null if it's just an abstraction.
      * @param uuid of the player this class should represent, null if it's just an abstraction.
      */
-    public KissenPublicUser(@Nullable UUID uuid, @Nullable String name, @Nullable Map<String, String> data) throws BackendException {
+    public KissenPublicUser(@Nullable UUID uuid, @Nullable String name, @Nullable Map<String, Object> data) throws BackendException {
         super(uuid, name, data);
 
         if (name != null && uuid != null) {
-            if (!getNotNull("name").equals(name)) {
+            if (!getNotNull("name", String.class).equals(name)) {
                 if (containsKey("name")) {
-                    ((KissenUserImplementation) KissenCore.getInstance().getImplementation(UserImplementation.class)).getCachedProfiles().removeIf(userInfoNode -> userInfoNode.name().equals(getNotNull("name")));
-                    KissenCore.getInstance().getLogger().debug("The user '{}' has changed their name from '{}' to '{}'.", getRawID(), getNotNull("name"), name);
+                    ((KissenUserImplementation) KissenCore.getInstance().getImplementation(UserImplementation.class)).getCachedProfiles().removeIf(userInfoNode -> userInfoNode.name().equals(getNotNull("name", String.class)));
+                    KissenCore.getInstance().getLogger().debug("The user '{}' has changed their name from '{}' to '{}'.", getRawID(), getNotNull("name", String.class), name);
                 }
 
                 set("name", name);
@@ -76,18 +76,18 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
     }
 
     @Override
-    protected @NotNull Map<String, String> getDefaultData(@NotNull UUID uuid, String name) {
-        Map<String, String> data = new HashMap<>();
+    protected @NotNull Map<String, Object> getDefaultData(@NotNull UUID uuid, String name) {
+        Map<String, Object> data = new HashMap<>();
         data.put("name", name);
-        data.put("total_id", uuid.toString());
+        data.put("total_id", uuid);
         return data;
     }
 
     @Override
-    public void setup(@NotNull String id, @Nullable Map<String, String> meta) throws SavableInitializeException, BackendException {
+    public void setup(@NotNull String id, @Nullable Map<String, Object> meta) throws SavableInitializeException, BackendException {
         super.setup(id, meta);
 
-        UserInfoNode user = new UserInfoNode(UUID.fromString(id), getNotNull("name"));
+        UserInfoNode user = new UserInfoNode(UUID.fromString(id), getNotNull("name", String.class));
         KissenCore.getInstance().getImplementation(KissenUserImplementation.class).cacheProfile(user);
     }
 
@@ -104,16 +104,16 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
     }
 
     @Override
-    public void set(@NotNull String key, @Nullable String value) {
+    public <X> @Nullable Object set(@NotNull String key, @Nullable X value) {
         String defaultLanguage = KissenCore.getInstance()
                 .getImplementation(LocalizationImplementation.class)
                 .getDefaultLocale()
                 .toString().toLowerCase();
         if (key.equals("locale") && Objects.equals(value, defaultLanguage)) {
             delete(key); // delete if default language is updated
-            return;
+            return value; //TODO actual return value
         }
-        super.set(key, value);
+        return super.set(key, value);
     }
 
     /**
@@ -173,7 +173,7 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
         if (value.equals(host) && !key.equals(getRawID())) {
             SavableMap savableMap = data.get(getSaveID() + key);
 
-            UUID targetID = UUID.fromString(savableMap.get("total_id").orElse(key));
+            UUID targetID = savableMap.getNotNull("total_id", UUID.class);
             if (!targetID.equals(totalID)) {
                 try {
                     ((KissenUserImplementation) KissenCore.getInstance()

@@ -63,9 +63,9 @@ public interface PermissionGroupCreateEvent extends EventClass, Cancellable
 {
     @NotNull String getName();
 
-    @Nullable Map<String, String> getData();
+    @Nullable Map<String, Object> getData();
 
-    void setData(@Nullable Map<String, String> data);
+    void setData(@Nullable Map<String, Object> data);
 
     @Override
     default boolean isAsynchronous() {

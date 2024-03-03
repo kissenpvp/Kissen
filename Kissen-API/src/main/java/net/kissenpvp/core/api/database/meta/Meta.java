@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.api.database.meta;
 
+import com.google.gson.Gson;
 import net.kissenpvp.core.api.base.Kissen;
 import org.jetbrains.annotations.NotNull;
 
@@ -157,4 +158,7 @@ public interface Meta extends MetaReader, MetaWriter {
      * @throws NullPointerException If the ID column is {@code null}.
      */
     @NotNull String getTotalIDColumn();
+
+    @NotNull
+    Gson getGson();
 }

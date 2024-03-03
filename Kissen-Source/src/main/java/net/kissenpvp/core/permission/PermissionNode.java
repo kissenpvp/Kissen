@@ -43,8 +43,8 @@ import java.util.Objects;
  *  <li>{@code temporalNode}: a {@code NotNull TemporalNode} object representing the temporal aspect associated with the permission entity.</li>
  * </ul>
  */
-public record KissenPermissionNode(@NotNull String name, @NotNull String owner, @NotNull Container<@NotNull Boolean> value,
-                                   @NotNull Map<String, String> additionalData, @NotNull TemporalMeasureNode temporalMeasureNode)
+public record PermissionNode(@NotNull String name, @NotNull String owner, @NotNull Container<@NotNull Boolean> value,
+                             @NotNull Map<String, String> additionalData, @NotNull TemporalMeasureNode temporalMeasureNode)
 {
     /**
      * This constructor creates a new instance of {@code KissenPermissionNode} using an instance of {@code Permission}.
@@ -52,7 +52,7 @@ public record KissenPermissionNode(@NotNull String name, @NotNull String owner, 
      * @param permission a {@code Permission} object that contains {@code name}, {@code owner}, {@code value}, and {@code definedOptions}.
      * @throws NullPointerException if {@code permission} is {@code null}.
      */
-    public KissenPermissionNode(@NotNull Permission permission) {
+    public PermissionNode(@NotNull Permission permission) {
         this(permission.getName(), permission.getOwner(), permission.getValue(), permission.getDefinedOptions(), permission);
     }
 
@@ -66,7 +66,7 @@ public record KissenPermissionNode(@NotNull String name, @NotNull String owner, 
      * @param temporalMeasureNode a {@code TemporalNode} object representing the temporal aspect associated with the permission.
      * @throws NullPointerException if any of {@code name}, {@code owner}, {@code additionalData} or {@code temporalNode} is {@code null}.
      */
-    public KissenPermissionNode(@NotNull String name, @NotNull PermissionEntry<?> owner, boolean value, @NotNull Map<String, String> additionalData, @NotNull TemporalMeasureNode temporalMeasureNode) {
+    public PermissionNode(@NotNull String name, @NotNull PermissionEntry<?> owner, boolean value, @NotNull Map<String, String> additionalData, @NotNull TemporalMeasureNode temporalMeasureNode) {
         this(name, owner.getPermissionID(), new Container<>(value), additionalData, temporalMeasureNode);
     }
 
@@ -80,7 +80,7 @@ public record KissenPermissionNode(@NotNull String name, @NotNull String owner, 
      * @param temporalObject a {@code TemporalObject} object representing the temporal aspect associated with the permission. It will be converted into a {@code TemporalNode} object.
      * @throws NullPointerException if any of {@code name}, {@code owner}, {@code additionalData} or {@code temporalObject} is {@code null}.
      */
-    public KissenPermissionNode(@NotNull String name, @NotNull PermissionEntry<?> owner, boolean value, @NotNull Map<String, String> additionalData, @NotNull TemporalObject temporalObject) {
+    public PermissionNode(@NotNull String name, @NotNull PermissionEntry<?> owner, boolean value, @NotNull Map<String, String> additionalData, @NotNull TemporalObject temporalObject) {
         this(name, owner.getPermissionID(), new Container<>(value), additionalData, new TemporalMeasureNode(temporalObject));
     }
 
@@ -92,7 +92,7 @@ public record KissenPermissionNode(@NotNull String name, @NotNull String owner, 
      * @param value the value of the permission, represented as a boolean.
      * @param temporalObject a {@code TemporalObject} object representing the temporal aspect associated with the permission. It will be converted into a {@code TemporalNode} object.
      */
-    public KissenPermissionNode(String name, PermissionEntry<?> owner, boolean value, @NotNull TemporalObject temporalObject) {
+    public PermissionNode(String name, PermissionEntry<?> owner, boolean value, @NotNull TemporalObject temporalObject) {
         this(name, owner, value, new HashMap<>(), temporalObject);
     }
 
@@ -104,7 +104,7 @@ public record KissenPermissionNode(@NotNull String name, @NotNull String owner, 
      * @param value the value of the permission, represented as a boolean.
      * @param temporalMeasureNode a {@code TemporalNode} object representing the temporal aspect associated with the permission.
      */
-    public KissenPermissionNode(String name, PermissionEntry<?> owner, boolean value, @NotNull TemporalMeasureNode temporalMeasureNode) {
+    public PermissionNode(String name, PermissionEntry<?> owner, boolean value, @NotNull TemporalMeasureNode temporalMeasureNode) {
         this(name, owner.getPermissionID(), new Container<>(value), new HashMap<>(), temporalMeasureNode);
     }
 
@@ -116,7 +116,7 @@ public record KissenPermissionNode(@NotNull String name, @NotNull String owner, 
      * @param value the value of the permission, represented as a boolean.
      * @param kissenAccurateDuration the duration of the period, represented as a {@code Nullable PeriodDuration}.
      */
-    public KissenPermissionNode(String name, PermissionEntry<?> owner, boolean value, @Nullable KissenAccurateDuration kissenAccurateDuration) {
+    public PermissionNode(String name, PermissionEntry<?> owner, boolean value, @Nullable KissenAccurateDuration kissenAccurateDuration) {
         this(name, owner.getPermissionID(), new Container<>(value), new HashMap<>(), new TemporalMeasureNode(System.currentTimeMillis(), kissenAccurateDuration));
     }
 
@@ -126,7 +126,7 @@ public record KissenPermissionNode(@NotNull String name, @NotNull String owner, 
         {
             return true;
         }
-        if (!(o instanceof KissenPermissionNode that))
+        if (!(o instanceof PermissionNode that))
         {
             return false;
         }

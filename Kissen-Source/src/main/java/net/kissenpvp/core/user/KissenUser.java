@@ -21,7 +21,6 @@ package net.kissenpvp.core.user;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
-import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.user.User;
@@ -42,7 +41,7 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
         this(uuid, name, null);
     }
 
-    public KissenUser(@Nullable UUID uuid, @Nullable String name, @Nullable Map<String, String> data) throws BackendException {
+    public KissenUser(@Nullable UUID uuid, @Nullable String name, @Nullable Map<String, Object> data) throws BackendException {
         if (uuid != null) {
             try {
                 setup(uuid.toString(), data);
@@ -75,7 +74,7 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
         super.permissionUpdate();
     }
 
-    protected @NotNull @Unmodifiable Map<String, String> getDefaultData(UUID uuid, String name) {
+    protected @NotNull @Unmodifiable Map<String, Object> getDefaultData(UUID uuid, String name) {
         return Collections.unmodifiableMap(new HashMap<>());
     }
 
@@ -119,7 +118,7 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
     }
 
     /**
-     * Writes the online expire the in the database.
+     * Writes the online expiry the in the database.
      * Most likely this is called when the user quits.
      */
     protected void writeOnlineTimeData() {
@@ -129,7 +128,7 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
 
             long onlineTime = 0;
             if (containsKey("online_time")) {
-                onlineTime = Long.parseLong(getNotNull("online_time"));
+                onlineTime = getNotNull("online_time", Long.class);
             }
 
             set("online_time", String.valueOf(onlineTime + (System.currentTimeMillis() - ((long) getStorage().get("time_joined")))));

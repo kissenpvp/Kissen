@@ -20,6 +20,7 @@ package net.kissenpvp.core.user;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
@@ -61,10 +62,13 @@ import java.util.stream.Stream;
  * <p>
  * In the implementation of the UserImplementation interface, this class provides some basic concrete functionality and leaves the rest to its subclasses. It is a way of enforcing a certain structure on the user-related classes in the system.
  */
+@Slf4j
 public abstract class KissenUserImplementation implements UserImplementation {
 
-    @Getter private final Set<User> onlineUserSet;
-    @Getter(AccessLevel.PROTECTED) private final Set<UserInfoNode> cachedProfiles;
+    @Getter
+    private final Set<User> onlineUserSet;
+    @Getter(AccessLevel.PROTECTED)
+    private final Set<UserInfoNode> cachedProfiles;
     private final Set<RegisteredPlayerSetting> pluginSettings;
     private final Set<PlayerSetting<?>> internalSettings;
     private final ScheduledExecutorService tickExecutor;
@@ -103,7 +107,9 @@ public abstract class KissenUserImplementation implements UserImplementation {
     @Override
     public boolean postStart() {
 
-        fetchUserProfiles();
+        cachedProfiles.clear();
+        cachedProfiles.addAll(fetchUserProfiles());
+        KissenCore.getInstance().getLogger().info("Successfully loaded {} user profile(s) from the database.", cachedProfiles.size());
 
         Class<KissenConfirmationImplementation> clazz = KissenConfirmationImplementation.class;
         KissenConfirmationImplementation confirmation = KissenCore.getInstance().getImplementation(clazz);
@@ -111,7 +117,11 @@ public abstract class KissenUserImplementation implements UserImplementation {
         Runnable runnable = () -> {
             getOnlineUser().stream().filter(userEntry -> userEntry.getStorage().containsKey("tick")).forEach(user -> {
                 KissenUser<? extends Permission> casted = (KissenUser<? extends Permission>) user;
-                casted.tick();
+                try {
+                    casted.tick();
+                } catch (Exception exception) {
+                    log.error("An exception was caught executing the tick of user {}.", user.getRawID(), exception);
+                }
             });
             confirmation.cleanUp();
         };
@@ -132,12 +142,9 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
     @Override
     public @NotNull User getUser(@NotNull String name) throws BackendException {
-        return getOnlineUser().stream().filter(user -> user.getNotNull("name").equals(name)).findFirst().orElseGet(() -> {
-            try {
-                return getUserMeta().select(Column.TOTAL_ID).where(Column.KEY, "name", FilterType.EXACT_MATCH).and(Column.VALUE, name, FilterType.EXACT_MATCH).execute().thenApply(data -> getUser(UUID.fromString(data[0][0].substring(getUserSaveID().length())))).join();
-            } catch (ArrayIndexOutOfBoundsException | BackendException backendException) {
-                throw new BackendException(backendException);
-            }
+        return getOnlineUser().stream().filter(user -> user.getNotNull("name", String.class).equals(name)).findFirst().orElseGet(() -> {
+           //TODO
+            throw new BackendException();
         });
     }
 
@@ -207,7 +214,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
             permission = String.format("%s.setting.%s", prefix, playerSetting.getKey());
         }
 
-        if (permission!=null) {
+        if (permission != null) {
             PermissionImplementation<?> permissionImplementation = KissenCore.getInstance().getImplementation(PermissionImplementation.class);
             permissionImplementation.addPermission(permission);
         }
@@ -252,17 +259,16 @@ public abstract class KissenUserImplementation implements UserImplementation {
      *
      * @throws IllegalStateException if an error occurs while fetching the user profiles from the backend data source
      */
-    private void fetchUserProfiles() {
-        cachedProfiles.clear();
+    private @NotNull @Unmodifiable Set<UserInfoNode> fetchUserProfiles() {
+        Set<UserInfoNode> userInfos = new HashSet<>();
         QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "name", FilterType.EXACT_MATCH);
-        querySelect.execute().thenAccept(data -> {
-            for (String[] user : data) {
-                UUID uuid = UUID.fromString(user[0].substring(getUserSaveID().length()));
-                String name = user[1];
-                cachedProfiles.add(new UserInfoNode(uuid, name));
-            }
-            KissenCore.getInstance().getLogger().info("Successfully loaded {} user profile(s) from the database.", cachedProfiles.size());
-        }).join();
+        Object[][] data = querySelect.execute().join();
+        for (Object[] user : data) {
+            UUID uuid = UUID.fromString(user[0].toString().substring(getUserSaveID().length()));
+            String name = user[1].toString();
+            userInfos.add(new UserInfoNode(uuid, name));
+        }
+        return userInfos;
     }
 
     /**

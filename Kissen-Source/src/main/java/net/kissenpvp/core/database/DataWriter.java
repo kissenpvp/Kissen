@@ -19,6 +19,22 @@
 package net.kissenpvp.core.database;
 
 
-public interface DataWriter {
-    void update(Record record);
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+public interface DataWriter<T extends Record> {
+
+    String IMMUTABLE = "This object is immutable";
+
+    static void validate(@NotNull DataWriter<?> dataWriter) {
+        validate(dataWriter, new UnsupportedOperationException(IMMUTABLE));
+    }
+
+    static <T extends RuntimeException> void validate(@Nullable DataWriter<?> dataWriter, @NotNull T runtimeException) {
+        if (dataWriter==null) {
+            throw runtimeException;
+        }
+    }
+
+    void update(T record);
 }

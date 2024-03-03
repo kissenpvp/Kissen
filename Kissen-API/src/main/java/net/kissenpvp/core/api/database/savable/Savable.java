@@ -163,52 +163,7 @@ public interface Savable extends SavableMap {
      */
     @NotNull String[] getKeys();
 
-    /**
-     * Sets up the savable object with the provided ID and optional meta data. The ID is transformed into
-     * {@link #getSaveID()} + {@link #getRawID()} to uniquely identify the object within the table, allowing
-     * multiple saveables of different types with the same ID to coexist without conflicts.
-     *
-     * <p>The setup process initializes the savable object with the necessary information, ensuring that it is
-     * properly configured and ready to interact with the table. The provided ID, along with any additional meta
-     * data, is used to establish the object's identity and load any relevant data from the table or other sources.</p>
-     *
-     * <p>Example usage:</p>
-     *
-     * <pre>
-     * {@code
-     * // Assuming the object represents a rank
-     * String id = "player";
-     * Map<String, String> meta = new HashMap<>();
-     * meta.put("name", "Player");
-     * meta.put("prefix", "Player |");
-     * . . .
-     * rank.setup(id, meta);
-     * System.out.println(rank.getId()); //Output: rankplayer (getSaveID + getRawID)
-     * }
-     * </pre>
-     *
-     * <p>The ID and meta data parameters play a crucial role in initializing the savable object. The ID is transformed
-     * into a composite value using {@link #getSaveID()} and {@link #getRawID()} to ensure uniqueness and compatibility
-     * with other saveables. The meta data, if provided, can be used to inject previously loaded information or serve as
-     * a starting point for retrieving additional data.</p>
-     *
-     * <p>If any key from the {@link #getKeys()} method is missing in the table or the given start data, a
-     * {@link SavableInitializeException} is thrown, indicating that the object could not be properly initialized due
-     * to missing or incorrect information.</p>
-     *
-     * <p>This method should be called during the setup phase to configure the savable object with the necessary ID
-     * and meta data. It may throw a {@link SavableInitializeException} if initialization fails.</p>
-     *
-     * @param id   the ID of the savable, which will be transformed into {@link #getSaveID()} + {@link #getRawID()}
-     * @param meta the previously loaded data that can be given and will be injected when this savable is not existing,
-     *             or null if the savable should load its data independently
-     * @throws SavableInitializeException if a key from the {@link #getKeys()} method is missing in the table or the
-     *                                    given start data
-     * @see #getSaveID()
-     * @see #getRawID()
-     * @see #getKeys()
-     */
-    void setup(@NotNull String id, @Nullable Map<String, String> meta) throws SavableInitializeException, BackendException;
+    void setup(@NotNull String id, @Nullable Map<String, Object> meta) throws SavableInitializeException, BackendException;
 
     /**
      * Retrieves the storage map associated with the savable object. This map serves as a cache for storing

@@ -31,9 +31,9 @@ import java.util.List;
 
 public class KissenComment implements Comment {
     private final CommentNode commentNode;
-    private final DataWriter dataWriter;
+    private final DataWriter<CommentNode> dataWriter;
 
-    public KissenComment(@NotNull CommentNode commentNode, @Nullable DataWriter dataWriter) {
+    public KissenComment(@NotNull CommentNode commentNode, @Nullable DataWriter<CommentNode> dataWriter) {
         this.commentNode = commentNode;
         this.dataWriter = dataWriter;
         Component component = null;

@@ -24,11 +24,12 @@ import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.permission.event.PermissionOptionDeleteEvent;
 import org.jetbrains.annotations.NotNull;
 
+@Getter
 public class KissenPermissionOptionDeleteEvent implements PermissionOptionDeleteEvent
 {
-    @Getter private final Permission permission;
-    @Getter private final String key, option;
-    @Getter @Setter private boolean cancelled;
+    private final Permission permission;
+    private final String key, option;
+    @Setter private boolean cancelled;
 
     public KissenPermissionOptionDeleteEvent(@NotNull Permission permission, @NotNull String key, @NotNull String option)
     {

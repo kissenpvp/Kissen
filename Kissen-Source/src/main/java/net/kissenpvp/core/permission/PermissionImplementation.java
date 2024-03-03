@@ -34,7 +34,7 @@ public interface PermissionImplementation<T extends Permission> extends Implemen
 
     void addPermission(@NotNull String permission);
 
-    @NotNull PermissionGroup<?> create(@NotNull String name, @Nullable Map<String, String> data) throws EventCancelledException;
+    @NotNull PermissionGroup<?> create(@NotNull String name, @Nullable Map<String, Object> data) throws EventCancelledException;
 
     @NotNull Optional<PermissionGroup<?>> getPermissionGroupSavable(@NotNull String name);
 

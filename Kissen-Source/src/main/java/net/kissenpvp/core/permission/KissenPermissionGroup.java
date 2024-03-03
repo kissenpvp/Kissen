@@ -61,7 +61,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
     public @NotNull @Unmodifiable Set<String> getOwnMember()
     {
         UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
-        Set<String> member = new HashSet<>(getListNotNull("group_member"));
+        Set<String> member = new HashSet<>(getListNotNull("group_member", String.class));
 
         // add users with rank called like this group to members
         Predicate<User> matches = user -> user.getPlayerClient().getRank().getSource().getName().equals(getPermissionID());
@@ -95,7 +95,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
             }
         }
 
-        if (getListNotNull("group_member").contains(groupablePermissionEntry.getPermissionID()))
+        if (getListNotNull("group_member", String.class).contains(groupablePermissionEntry.getPermissionID()))
         {
             return false;
         }
@@ -103,7 +103,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
         GroupMemberAddEvent groupMemberAddEvent = new KissenGroupMemberAddEvent(this, groupablePermissionEntry);
         if(KissenCore.getInstance().getImplementation(EventImplementation.class).call(groupMemberAddEvent))
         {
-            return getListNotNull("group_member").add(groupMemberAddEvent.getPermissionEntry().getPermissionID());
+            return getListNotNull("group_member", String.class).add(groupMemberAddEvent.getPermissionEntry().getPermissionID());
         }
         return false;
     }
@@ -121,14 +121,14 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
 
     private boolean removeInternalMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry)
     {
-        if (!containsList("group_member") || !getListNotNull("group_member").contains(groupablePermissionEntry.getPermissionID()))
+        if (!containsList("group_member") || !getListNotNull("group_member", String.class).contains(groupablePermissionEntry.getPermissionID()))
         {
             return false;
         }
         KissenGroupMemberRemoveEvent kissenGroupMemberRemoveEvent = new KissenGroupMemberRemoveEvent(this, groupablePermissionEntry);
         if(KissenCore.getInstance().getImplementation(EventImplementation.class).call(kissenGroupMemberRemoveEvent))
         {
-            return getListNotNull("group_member").remove(groupablePermissionEntry.getPermissionID());
+            return getListNotNull("group_member", String.class).remove(groupablePermissionEntry.getPermissionID());
         }
         return false;
     }

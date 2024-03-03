@@ -19,30 +19,27 @@
 package net.kissenpvp.core.database.savable;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.savable.SavableMap;
+import net.kissenpvp.core.api.database.savable.list.KissenList;
 import net.kissenpvp.core.api.database.savable.list.ListAction;
-import net.kissenpvp.core.api.database.savable.list.SavableList;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.database.savable.list.KissenSavableList;
+import net.kissenpvp.core.database.savable.list.KissenKissenList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 
 
+@Setter
 @Getter
-public class KissenSavableMap extends HashMap<String, String> implements SavableMap {
+@NoArgsConstructor
+public class KissenSavableMap extends HashMap<String, Object> implements SavableMap {
 
-    private Map<String, ArrayList<String>> stringArrayListMap;
-    @Setter
     private String id;
-
-    public KissenSavableMap() {
-        this(null, null);
-    }
 
     /**
      * This constructor defines the meta in which the data is saved.
@@ -73,7 +70,7 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
      * @param id   The ID of the savable object.
      * @param meta The meta in which everything should be saved.
      */
-    public KissenSavableMap(@NotNull Map<String, String> data, @NotNull String id, @NotNull ObjectMeta meta) {
+    public KissenSavableMap(@NotNull Map<String, Object> data, @NotNull String id, @NotNull ObjectMeta meta) {
         setData(data, id);
     }
 
@@ -83,178 +80,169 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
      * @param data the new data.
      * @param id   the sender of the object.
      */
-    protected void setData(@NotNull Map<String, String> data, @NotNull String id) {
+    protected void setData(@NotNull Map<String, Object> data, @NotNull String id) {
         this.clear();
         super.putAll(data);
 
         this.id = id;
-        stringArrayListMap = new HashMap<>();
-        if (data instanceof KissenSavableMap kissenSavableMap) {
-            stringArrayListMap.putAll(kissenSavableMap.stringArrayListMap);
-        }
     }
 
     @Override
     public void putAll(@NotNull SavableMap savableMap) {
-        savableMap.keySet().forEach(super::remove);
         super.putAll(savableMap);
-        if (savableMap instanceof KissenSavableMap kissenSavableMap) {
-            kissenSavableMap.stringArrayListMap.keySet().forEach(stringArrayListMap::remove);
-            stringArrayListMap.putAll(kissenSavableMap.stringArrayListMap);
-        }
     }
 
     @Override
-    public void set(@NotNull String key, @Nullable String value) {
-        if (get(key).isEmpty() || !Objects.equals(get(key).get(), value)) {
-            try {
-                getMeta().setString(getId(), key, value);
-                if (value == null) {
-                    remove(key);
-                    return;
-                }
-                put(key, value);
-            } catch (BackendException backendException) {
-                KissenCore.getInstance()
-                        .getLogger()
-                        .error("An error occurred when updating a value in the savable entry {}.", getId(), backendException);
+    public <T> @Nullable Object set(@NotNull String key, @Nullable T value) {
+
+        Object returnValue;
+        if (value == null) {
+            if (Objects.nonNull(returnValue = remove(key))) {
+                getMeta().delete(key);
             }
+            return returnValue;
         }
+
+        returnValue = put(key, value);
+        if (!Objects.equals(returnValue, value)) {
+            getMeta().setObject(getId(), key, value);
+        }
+        return returnValue;
     }
 
     @Override
-    public void setIfAbsent(@NotNull String key, @NotNull String value) {
+    public <T> void setIfAbsent(@NotNull String key, @NotNull T value) {
         if (!containsKey(key)) {
             set(key, value);
         }
     }
 
     @Override
-    public void delete(@NotNull String key) {
-        if(containsKey(key))
-        {
-            set(key, null);
-        }
+    public @Nullable Object delete(@NotNull String key) {
+        return set(key, null);
     }
 
     @Override
-    public @NotNull Optional<String> get(@NotNull String key) {
-        return Optional.ofNullable(super.get(key));
+    public @NotNull <T> Optional<T> get(@NotNull String key, @NotNull Class<T> clazz) {
+        return Optional.ofNullable(super.get(key)).map(data -> (T) data);
     }
 
     @Override
-    public @NotNull String getNotNull(@NotNull String key) {
-        return get(key).orElseThrow(NullPointerException::new);
+    public <T> @NotNull T getNotNull(@NotNull String key, @NotNull Class<T> type) throws NoSuchFieldError {
+        return get(key, type).orElseThrow();
     }
 
     @Override
     public boolean containsList(@NotNull String key) {
-        return getList(key).isPresent();
+        return getList(key, List.class).isPresent();
     }
 
     @Override
-    public @NotNull Optional<SavableList> getList(@NotNull String key) {
-        if (this.stringArrayListMap.containsKey("_" + key)) {
-            SavableList kissenList = new KissenSavableList();
-            kissenList.addAll(stringArrayListMap.get("_" + key));
-            kissenList.setListAction((ListAction) (listExecution, values) -> setList(key, kissenList));
-            return Optional.of(kissenList);
+    public <T> @NotNull Optional<KissenList<T>> getList(@NotNull String key, @NotNull Class<T> type) {
+        if (containsKey(key)) {
+            try {
+                Object obj = super.get(key);
+                if (obj != null && obj.getClass().isArray()) {
+                    obj = Arrays.stream(((Object[]) obj)).toList();
+                }
+
+                if (!(obj instanceof Collection<?> collection)) {
+                    throw new IllegalArgumentException(); //Type not matching todo
+                }
+                KissenList<T> kissenList = new KissenKissenList<>();
+                kissenList.addAll((Collection<? extends T>) collection);
+
+                kissenList.setListAction((ListAction) (listExecution, values) -> setList(key, kissenList));
+                return Optional.of(kissenList);
+            } catch (ClassCastException ignored) {
+            }
         }
         return Optional.empty();
     }
 
     @Override
-    public @NotNull SavableList getListNotNull(@NotNull String key) {
-        SavableList kissenList = new KissenSavableList();
-        if (containsList(key)) {
-            kissenList.addAll(stringArrayListMap.get("_" + key));
+    public <T> @NotNull KissenList<T> getListNotNull(@NotNull String key, @NotNull Class<T> type) {
+        return getList(key, type).orElseGet(() -> {
+            KissenList<T> kissenList = new KissenKissenList<>();
+            kissenList.setListAction(((listExecution, values) -> setList(key, kissenList)));
+            return kissenList;
+        });
+    }
+
+    @Override
+    public <T> @Nullable Object putList(@NotNull String key, @Nullable Collection<T> value) {
+
+        Object current =  super.get(key);
+        if (value == null) {
+            remove(key);
+            return current;
         }
 
-        kissenList.setListAction((ListAction) (listExecution, values) -> setList(key, kissenList));
-        return kissenList;
+        put(key, value);
+        return current;
     }
 
     @Override
-    public @NotNull SavableList putList(@NotNull String key, @Nullable List<String> value) {
-        stringArrayListMap.remove("_" + key);
-        if (value != null) {
-            stringArrayListMap.put("_" + key, new ArrayList<>(value));
+    public @Nullable @Unmodifiable <T> List<T> putListValue(@NotNull String key, @NotNull T value) {
+        List<T> current = (List<T>) super.get(key);
+        getList(key, value.getClass()).ifPresentOrElse(list -> {
+            KissenList<T> casted = (KissenList<T>) list;
+            casted.add(value);
+        }, () -> putList(key, Collections.singletonList(value)));
+        return List.copyOf(current);
+    }
+
+    @Override
+    public <T> @Nullable @Unmodifiable Object putListIfAbsent(@NotNull String key, @NotNull Collection<T> value) {
+        if (!containsList(key)) {
+            return putList(key, value);
         }
-        return getListNotNull(key);
+        return List.copyOf(getListNotNull(key, value.getClass()));
     }
 
     @Override
-    public @NotNull SavableList putListValue(@NotNull String key, @NotNull String value) {
-        if (getList(key).isPresent()) {
-            List<String> list = stringArrayListMap.get("_" + key);
-            list.add(value);
-            return putList(key, list);
+    public <T> @Nullable Object setList(@NotNull String key, @Nullable Collection<T> value) {
+        Object list = putList(key, value);
+        if (!Objects.equals(list, value)) {
+            getMeta().setCollection(getId(), key, value == null ? null : List.copyOf(value));
         }
-        return putList(key, Collections.singletonList(value));
+        return list;
     }
 
     @Override
-    public @NotNull SavableList putListIfAbsent(@NotNull String key, @NotNull List<String> value) {
-        if (getList(key).isEmpty()) {
-            putList(key, value);
+    public <T> @Nullable Object setListIfAbsent(@NotNull String key, @NotNull Collection<T> value) {
+        if (!containsList(key)) {
+            return setList(key, value);
         }
-        return getListNotNull(key);
+        return super.get(key);
     }
 
     @Override
-    public @NotNull SavableList setList(@NotNull String key, @Nullable List<String> value) {
-        try {
-            if (value == null) {
-                if (getList(key).isPresent()) {
-                    removeList(key);
-                    getMeta().delete(this.getId(), "_" + key);
-                }
-            } else {
-                putList(key, value);
-                getMeta().setStringList(getId(), "_" + key, value);
-            }
-            return getListNotNull(key);
-        } catch (BackendException backendException) {
-            KissenCore.getInstance()
-                    .getLogger()
-                    .error("An error occurred when updating a value in the savable entry {}.", getId(), backendException);
-            throw new IllegalStateException(backendException);
-        }
-    }
-
-    @Override
-    public @NotNull SavableList setListIfAbsent(@NotNull String key, @NotNull List<String> value) {
-        return containsList(key) ? setList(key, value) : getListNotNull(key);
-    }
-
-    @Override
-    public @NotNull SavableList setListValue(@NotNull String key, @NotNull String value) {
+    public <T> @Nullable @Unmodifiable List<T> setListValue(@NotNull String key, @NotNull T value) {
         if (containsList(key)) {
             return putListValue(key, value);
         }
-        return setListIfAbsent(key, Collections.singletonList(value));
+        return (List<T>) setListIfAbsent(key, Collections.singletonList(value));
     }
 
     @Override
-    public void removeList(@NotNull String key) {
-        putList(key, null);
+    public boolean removeList(@NotNull String key) {
+        return Objects.nonNull(putList(key, null));
     }
 
     @Override
-    public void removeListValue(@NotNull String key, @NotNull String value) {
-        if (containsList(key)) {
-            this.stringArrayListMap.get("_" + key).remove(value);
-        }
+    public <T> boolean removeListValue(@NotNull String key, @NotNull T value) {
+        return getList(key, value.getClass()).map(content -> content.remove(value)).orElse(false);
     }
 
     @Override
-    public void deleteList(@NotNull String key) {
-        setList(key, null);
+    public boolean deleteList(@NotNull String key) {
+        return Objects.nonNull(setList(key, null));
     }
 
     @Override
-    public void deleteListValue(@NotNull String key, @NotNull String value) {
-        setListIfAbsent(key, new ArrayList<>()).remove(value);
+    public <T> boolean deleteListValue(@NotNull String key, @NotNull T value) {
+        return getList(key, value.getClass()).map(data -> data.remove(value)).orElse(false);
     }
 
     @Override
@@ -263,12 +251,20 @@ public class KissenSavableMap extends HashMap<String, String> implements Savable
     }
 
     public @NotNull ObjectMeta getMeta() {
-        return KissenCore.getInstance().getPublicMeta(); //todo choosable
+        return KissenCore.getInstance().getPublicMeta(); //todo choose
     }
 
     @Override
-    public int hashCode()
-    {
-        return Objects.hash(super.hashCode(), getStringArrayListMap(), getId());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        KissenSavableMap that = (KissenSavableMap) o;
+        return Objects.equals(getId(), that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), getId());
     }
 }

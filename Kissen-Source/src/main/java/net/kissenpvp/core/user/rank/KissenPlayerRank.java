@@ -36,12 +36,12 @@ import java.util.Objects;
 public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject implements PlayerRank<T> {
 
     private final @Getter
-    @NotNull KissenPlayerRankNode kissenPlayerRankNode;
-    private final @Nullable DataWriter dataWriter;
+    @NotNull PlayerRankNode playerRankNode;
+    private final @Nullable DataWriter<PlayerRankNode> dataWriter;
 
-    public KissenPlayerRank(@NotNull KissenPlayerRankNode kissenPlayerRankNode, @Nullable DataWriter dataWriter) {
-        super(kissenPlayerRankNode.temporalMeasureNode());
-        this.kissenPlayerRankNode = kissenPlayerRankNode;
+    public KissenPlayerRank(@NotNull PlayerRankNode playerRankNode, @Nullable DataWriter<PlayerRankNode> dataWriter) {
+        super(playerRankNode.temporalMeasureNode());
+        this.playerRankNode = playerRankNode;
         this.dataWriter = dataWriter;
     }
 
@@ -53,14 +53,14 @@ public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject imple
 
     @Override
     public @NotNull String getID() {
-        return kissenPlayerRankNode.id();
+        return playerRankNode.id();
     }
 
     @Override
     public @NotNull T getSource()
     {
         RankImplementation<T> rankImplementation = KissenCore.getInstance().getImplementation(RankImplementation.class);
-        return rankImplementation.getRank(kissenPlayerRankNode.rankID()).orElseThrow(NullPointerException::new);
+        return rankImplementation.getRank(playerRankNode.rankID()).orElseThrow(NullPointerException::new);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject imple
         }
 
         rewriteEnd(end);
-        dataWriter.update(kissenPlayerRankNode);
+        dataWriter.update(playerRankNode);
     }
 
     @Override
@@ -94,12 +94,12 @@ public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject imple
         if (!(o instanceof KissenPlayerRank<?> that)) {
             return false;
         }
-        return kissenPlayerRankNode.id().equals(that.kissenPlayerRankNode.id());
+        return playerRankNode.id().equals(that.playerRankNode.id());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getKissenPlayerRankNode(), getSource().hashCode());
+        return Objects.hash(getPlayerRankNode(), getSource().hashCode());
     }
 }

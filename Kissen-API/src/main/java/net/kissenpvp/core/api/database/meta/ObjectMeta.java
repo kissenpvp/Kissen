@@ -21,11 +21,9 @@ package net.kissenpvp.core.api.database.meta;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -73,7 +71,7 @@ public interface ObjectMeta extends Meta {
      * @param id   the ID of the object to which the data will be added.
      * @param data a map containing the data to be added to the object.
      */
-    void add(@NotNull String id, @NotNull Map<@NotNull String, @NotNull String> data) throws BackendException;
+    void insertJsonMap(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException;
 
     /**
      * Retrieves the data associated with the object identified by the specified total ID.

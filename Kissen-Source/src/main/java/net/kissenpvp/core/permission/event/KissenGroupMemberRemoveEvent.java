@@ -25,11 +25,12 @@ import net.kissenpvp.core.api.permission.PermissionGroup;
 import net.kissenpvp.core.api.permission.event.GroupMemberRemoveEvent;
 import org.jetbrains.annotations.NotNull;
 
+@Getter
 public class KissenGroupMemberRemoveEvent implements GroupMemberRemoveEvent
 {
-    @Getter private final PermissionGroup<?> permissionGroup;
-    @Getter private final GroupablePermissionEntry<?> permissionEntry;
-    @Getter @Setter private boolean cancelled;
+    private final PermissionGroup<?> permissionGroup;
+    private final GroupablePermissionEntry<?> permissionEntry;
+    @Setter private boolean cancelled;
 
     public KissenGroupMemberRemoveEvent(@NotNull PermissionGroup<?> permissionGroup, @NotNull GroupablePermissionEntry<?> permissionEntry)
     {

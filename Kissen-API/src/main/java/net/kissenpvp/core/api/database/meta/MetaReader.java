@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.api.database.meta;
 
-import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.queryapi.*;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
@@ -26,8 +25,7 @@ import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Optional;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -54,662 +52,739 @@ import java.util.concurrent.CompletableFuture;
  * @see MetaWriter
  */
 public interface MetaReader extends Serializable {
-    /**
-     * Pulls a previously saved meta value from the table and returns it.
-     *
-     * <p>
-     * This method retrieves the value associated with the specified {@code totalID} and {@code key}
-     * from the meta in the table. If a value is found, it is returned as an {@link Optional}.
-     * If no value is found, the {@link Optional} will be empty.
-     * </p>
-     *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system, this method's execution time may vary.
-     * Consider the potential resource implications when calling this method and ensure proper resource management.
-     * </p>
-     *
-     * @param totalID The ID, which is located under the IDIdentifier.
-     * @param key     Under MySQL, it refers to the column, and under files, it serves as the suffix used to
-     *                recognize the value.
-     * @return The value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
-     */
-    @NotNull CompletableFuture<String> getString(@NotNull String totalID, @NotNull String key) throws BackendException;
 
     /**
-     * Retrieves a previously saved string value associated with the specified {@code key}.
-     *
+     * Asynchronously retrieves a {@link String} value associated with the specified total ID and key.
      * <p>
-     * This method retrieves the string value associated with the specified {@code key} from the meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * The {@code getString} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link String} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this
-     * method and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param key The key referring to the column under MySQL, or serving as the suffix used to recognize the value
-     *            under files.
-     * @return The string value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String totalID = "exampleTotalID";
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<String> futureResult = someMeta.getString(totalID, key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param totalID the total ID associated with the value to be retrieved
+     * @param key     the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link String} value,
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getString(String)
+     * @see MetaWriter#setString(String, String, String)
+     * @see MetaWriter#setString(String, String)
+     */
+    @NotNull
+    CompletableFuture<String> getString(@NotNull String totalID, @NotNull String key);
+
+    /**
+     * Asynchronously retrieves a {@link String} value associated with the specified key.
+     *
+     * <p>The {@code getString} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link String} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<String> futureResult = someMeta.getString(key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link String} value,
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getString(String, String)
+     * @see MetaWriter#setString(String, String)
      * @see MetaWriter#setString(String, String, String)
      */
-    @NotNull CompletableFuture<String> getString(@NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<String> getString(@NotNull String key);
 
     /**
-     * Retrieves a previously saved long value associated with the specified {@code totalID} and {@code key}.
+     * Asynchronously retrieves a {@link Long} value associated with the specified total ID and key.
      *
-     * <p>
-     * This method retrieves the long value associated with the specified {@code totalID} and {@code key} from
-     * the meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getLong} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Long} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this
-     * method and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param totalID The ID located under the IDIdentifier.
-     * @param key     The key referring to the column under MySQL, or serving as the suffix used to recognize the
-     *                value under files.
-     * @return The long value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String totalID = "exampleTotalID";
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Long> futureResult = someMeta.getLong(totalID, key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param totalID the total ID associated with the value to be retrieved
+     * @param key     the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Long} value,
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getLong(String)
+     * @see MetaWriter#setLong(String, long)
+     * @see MetaWriter#setLong(String, String, long)
      */
-    @NotNull CompletableFuture<Long> getLong(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Long> getLong(@NotNull String totalID, @NotNull String key);
 
     /**
-     * Retrieves a previously saved long value associated with the specified {@code key}.
+     * Asynchronously retrieves a {@link Long} value associated with the specified key.
      *
-     * <p>
-     * This method retrieves the long value associated with the specified {@code key} from the meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getLong} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Long} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param key The key referring to the column under MySQL, or serving as the suffix used to recognize the value
-     *            under files.
-     * @return The long value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Long> futureResult = someMeta.getLong(key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Long} value,
+     * or exceptionally with a {@link Exception} if an error occurs
      * @see #getLong(String, String)
+     * @see MetaWriter#setLong(String, long)
+     * @see MetaWriter#setLong(String, String, long)
      */
-    @NotNull CompletableFuture<Long> getLong(@NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Long> getLong(@NotNull String key);
 
     /**
-     * Retrieves a previously saved double value associated with the specified {@code totalID} and {@code key}.
+     * Asynchronously retrieves a {@link Double} value associated with the specified total ID and key.
      *
-     * <p>
-     * This method retrieves the double value associated with the specified {@code totalID} and {@code key} from the
-     * meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getDouble} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Double} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param totalID The ID located under the IDIdentifier.
-     * @param key     The key referring to the column under MySQL, or serving as the suffix used to recognize the
-     *                value under files.
-     * @return The double value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String totalID = "exampleTotalID";
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Double> futureResult = someMeta.getDouble(totalID, key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param totalID the total ID associated with the value to be retrieved
+     * @param key     the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Double} value,
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getDouble(String)
+     * @see MetaWriter#setDouble(String, double)
+     * @see MetaWriter#setDouble(String, String, double)
      */
-    @NotNull CompletableFuture<Double> getDouble(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Double> getDouble(@NotNull String totalID, @NotNull String key);
 
     /**
-     * Retrieves a previously saved double value associated with the specified {@code key}.
+     * Asynchronously retrieves a {@link Double} value associated with the specified key.
      *
-     * <p>
-     * This method retrieves the double value associated with the specified {@code key} from the meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getDouble} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Double} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param key The key referring to the column under MySQL, or serving as the suffix used to recognize the value
-     *            under files.
-     * @return The double value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Double> futureResult = someMeta.getDouble(key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Double} value,
+     * or exceptionally with a {@link Exception} if an error occurs
      * @see #getDouble(String, String)
+     * @see MetaWriter#setDouble(String, double)
+     * @see MetaWriter#setDouble(String, String, double)
      */
-    @NotNull CompletableFuture<Double> getDouble(@NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Double> getDouble(@NotNull String key);
 
     /**
-     * Retrieves a previously saved float value associated with the specified {@code totalID} and {@code key}.
+     * Asynchronously retrieves a {@link Float} value associated with the specified total ID and key.
      *
-     * <p>
-     * This method retrieves the float value associated with the specified {@code totalID} and {@code key} from the
-     * meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getFloat} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Float} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param totalID The ID located under the IDIdentifier.
-     * @param key     The key referring to the column under MySQL, or serving as the suffix used to recognize the
-     *                value under files.
-     * @return The float value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String totalID = "exampleTotalID";
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Float> futureResult = someMeta.getFloat(totalID, key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param totalID the total ID associated with the value to be retrieved
+     * @param key     the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Float} value,
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getFloat(String)
+     * @see MetaWriter#setFloat(String, float)
+     * @see MetaWriter#setFloat(String, String, float)
      */
-    @NotNull CompletableFuture<Float> getFloat(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Float> getFloat(@NotNull String totalID, @NotNull String key);
 
     /**
-     * Retrieves a previously saved float value associated with the specified {@code key}.
+     * Asynchronously retrieves a {@link Float} value associated with the specified key.
      *
-     * <p>
-     * This method retrieves the float value associated with the specified {@code key} from the meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getFloat} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Float} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param key The key referring to the column under MySQL, or serving as the suffix used to recognize the value
-     *            under files.
-     * @return The float value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Float> futureResult = someMeta.getFloat(key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Float} value,
+     * or exceptionally with a {@link Exception} if an error occurs
      * @see #getFloat(String, String)
+     * @see MetaWriter#setFloat(String, float)
+     * @see MetaWriter#setFloat(String, String, float)
      */
-    @NotNull CompletableFuture<Float> getFloat(@NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Float> getFloat(@NotNull String key);
 
     /**
-     * Retrieves a previously saved integer value associated with the specified {@code totalID} and {@code key}.
+     * Asynchronously retrieves an {@link Integer} value associated with the specified total ID and key.
      *
-     * <p>
-     * This method retrieves the integer value associated with the specified {@code totalID} and {@code key} from the
-     * meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getInt} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Integer} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param totalID The ID located under the IDIdentifier.
-     * @param key     The key referring to the column under MySQL, or serving as the suffix used to recognize the
-     *                value under files.
-     * @return The integer value that was found if present, or an empty {@link Optional} if no value was
-     * found.
-     * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String totalID = "exampleTotalID";
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Integer> futureResult = someMeta.getInt(totalID, key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param totalID the total ID associated with the value to be retrieved
+     * @param key     the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Integer} value,
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getInt(String)
+     * @see MetaWriter#setInt(String, int)
+     * @see MetaWriter#setInt(String, String, int)
      */
-    @NotNull CompletableFuture<Integer> getInt(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Integer> getInt(@NotNull String totalID, @NotNull String key);
 
     /**
-     * Retrieves a previously saved integer value associated with the specified {@code key}.
+     * Asynchronously retrieves an {@link Integer} value associated with the specified key.
      *
-     * <p>
-     * This method retrieves the integer value associated with the specified {@code key} from the meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getInt} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Integer} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param key The key referring to the column under MySQL, or serving as the suffix used to recognize the value
-     *            under files.
-     * @return The integer value that was found if present, or an empty {@link Optional} if no value was
-     * found.
-     * @throws NullPointerException if {@code key} is {@code null}.
-     * @see #getInt(String, String)
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Integer> futureResult = someMeta.getInt(key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Integer} value,
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getFloat(String, String)
+     * @see MetaWriter#setInt(String, int)
+     * @see MetaWriter#setInt(String, String, int)
      */
-    @NotNull CompletableFuture<Integer> getInt(@NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Integer> getInt(@NotNull String key);
 
     /**
-     * Retrieves a previously saved short value associated with the specified {@code totalID} and {@code key}.
+     * Asynchronously retrieves a {@link Short} value associated with the specified total ID and key.
      *
-     * <p>
-     * This method retrieves the short value associated with the specified {@code totalID} and {@code key} from the
-     * meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getShort} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Short} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param totalID The ID located under the IDIdentifier.
-     * @param key     The key referring to the column under MySQL, or serving as the suffix used to recognize the
-     *                value under files.
-     * @return The short value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String totalID = "exampleTotalID";
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Short> futureResult = someMeta.getShort(totalID, key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param totalID the total ID associated with the value to be retrieved
+     * @param key     the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Short} value,
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getShort(String)
+     * @see MetaWriter#setShort(String, short)
+     * @see MetaWriter#setShort(String, String, short)
      */
-    @NotNull CompletableFuture<Short> getShort(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Short> getShort(@NotNull String totalID, @NotNull String key);
 
     /**
-     * Retrieves a previously saved short value associated with the specified {@code key}.
+     * Asynchronously retrieves a {@link Short} value associated with the specified key.
      *
-     * <p>
-     * This method retrieves the short value associated with the specified {@code key} from the meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getShort} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Short} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param key The key referring to the column under MySQL, or serving as the suffix used to recognize the value
-     *            under files.
-     * @return The short value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Short> futureResult = someMeta.getShort(key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Short} value,
+     * or exceptionally with a {@link Exception} if an error occurs
      * @see #getShort(String, String)
+     * @see MetaWriter#setShort(String, short)
+     * @see MetaWriter#setShort(String, String, short)
      */
-    @NotNull CompletableFuture<Short> getShort(@NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Short> getShort(@NotNull String key);
 
     /**
-     * Retrieves a previously saved byte value associated with the specified {@code totalID} and {@code key}.
+     * Asynchronously retrieves a {@link Byte} value associated with the specified total ID and key.
      *
-     * <p>
-     * This method retrieves the byte value associated with the specified {@code totalID} and {@code key} from the
-     * meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getByte} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Byte} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param totalID The ID located under the IDIdentifier.
-     * @param key     The key referring to the column under MySQL, or serving as the suffix used to recognize the
-     *                value under files.
-     * @return The byte value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String totalID = "exampleTotalID";
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Byte> futureResult = someMeta.getByte(totalID, key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param totalID the total ID associated with the value to be retrieved
+     * @param key     the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Byte} value,
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getByte(String)
+     * @see MetaWriter#setByte(String, byte)
+     * @see MetaWriter#setByte(String, String, byte)
      */
-    @NotNull CompletableFuture<Byte> getByte(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Byte> getByte(@NotNull String totalID, @NotNull String key);
 
     /**
-     * Retrieves a previously saved byte value associated with the specified {@code key}.
+     * Asynchronously retrieves a {@link Byte} value associated with the specified key.
      *
-     * <p>
-     * This method retrieves the byte value associated with the specified {@code key} from the meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getByte} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Byte} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param key The key referring to the column under MySQL, or serving as the suffix used to recognize the value
-     *            under files.
-     * @return The byte value that was found if present, or an empty {@link Optional} if no value was found.
-     * @throws NullPointerException if {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Byte> futureResult = someMeta.getByte(key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Byte} value,
+     * or exceptionally with a {@link Exception} if an error occurs
      * @see #getByte(String, String)
+     * @see MetaWriter#setByte(String, byte)
+     * @see MetaWriter#setByte(String, String, byte)
      */
-    @NotNull CompletableFuture<Byte> getByte(@NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Byte> getByte(@NotNull String key);
 
     /**
-     * Retrieves a previously saved boolean value associated with the specified {@code totalID} and {@code key}.
+     * Asynchronously retrieves a {@link Boolean} value associated with the specified total ID and key.
      *
-     * <p>
-     * This method retrieves the boolean value associated with the specified {@code totalID} and {@code key} from the
-     * meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getBoolean} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Boolean} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param totalID The ID located under the IDIdentifier.
-     * @param key     The key referring to the column under MySQL, or serving as the suffix used to recognize the
-     *                value under files.
-     * @return The boolean value that was found if present, or an empty {@link Optional} if no value was
-     * found.
-     * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String totalID = "exampleTotalID";
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Boolean> futureResult = someMeta.getBoolean(totalID, key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param totalID the total ID associated with the value to be retrieved
+     * @param key     the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Boolean} value,
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getBoolean(String)
+     * @see MetaWriter#setBoolean(String, boolean)
+     * @see MetaWriter#setBoolean(String, String, boolean)
      */
-    @NotNull CompletableFuture<Boolean> getBoolean(@NotNull String totalID, @NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Boolean> getBoolean(@NotNull String totalID, @NotNull String key);
 
     /**
-     * Retrieves a previously saved boolean value associated with the specified {@code key}.
+     * Asynchronously retrieves a {@link Boolean} value associated with the specified key.
      *
-     * <p>
-     * This method retrieves the boolean value associated with the specified {@code key} from the meta in the table.
-     * If a value is found, it is returned as an {@link Optional}. If no value is found, the
-     * {@link Optional} will be empty.
-     * </p>
+     * <p>The {@code getBoolean} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Boolean} value when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: This method operates synchronously and may consume system resources while waiting for the database
-     * retrieval process to complete.
-     * Depending on factors such as the size of the meta and the performance characteristics of the underlying
-     * database system,
-     * this method's execution time may vary. Consider the potential resource implications when calling this method
-     * and ensure proper resource management.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param key The key referring to the column under MySQL, or serving as the suffix used to recognize the value
-     *            under files.
-     * @return The boolean value that was found if present, or an empty {@link Optional} if no value was
-     * found.
-     * @throws NullPointerException if {@code key} is {@code null}.
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     *
+     * CompletableFuture<Boolean> futureResult = someMeta.getBoolean(key);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved value: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving value: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the value to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Boolean} value,
+     * or exceptionally with a {@link Exception} if an error occurs
      * @see #getBoolean(String, String)
+     * @see MetaWriter#setBoolean(String, boolean)
+     * @see MetaWriter#setBoolean(String, String, boolean)
      */
-    @NotNull CompletableFuture<Boolean> getBoolean(@NotNull String key) throws BackendException;
+    @NotNull
+    CompletableFuture<Boolean> getBoolean(@NotNull String key);
 
     /**
-     * Retrieves a previously saved meta list from the table and returns it.
+     * Asynchronously retrieves a {@link Collection} of objects of type {@code T} associated with the specified total ID and key.
      *
-     * <p>
-     * This method retrieves a list of previously saved values associated with the specified {@code totalID} and
-     * {@code key}
-     * from the meta in the table. The retrieved values are returned as an unmodifiable {@link List} of
-     * strings.
-     * If no values are found, an empty list of strings will be returned.
-     * </p>
+     * <p>The {@code getCollection} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Collection} when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: The behavior and resource implications of this method can vary depending on the implementation.
-     * Implementations should ensure that the returned list is unmodifiable to maintain immutability and consistency.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param totalID The ID, which is located under the IDIdentifier.
-     * @param key     Under MySQL, it refers to the column, and under files, it serves as the suffix used to
-     *                recognize the value.
-     * @return The values that were found if any, or an empty unmodifiable list of strings if no values were found.
-     * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}.
-     * @see MetaWriter#setStringList(String, String, List)
-     * @see MetaWriter#setStringList(String, List)
-     * @see #getStringList(String)
+     * <pre>
+     * {@code
+     * String totalID = "exampleTotalID";
+     * String key = "exampleKey";
+     * Class<String> recordType = String.class;
+     *
+     * CompletableFuture<Collection<String>> futureResult = someMeta.getCollection(totalID, key, recordType);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved collection: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving collection: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param totalID the total ID associated with the collection to be retrieved
+     * @param key     the key associated with the collection to be retrieved
+     * @param record  the class type of the elements in the collection
+     * @param <T>     the type of elements in the collection
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Collection} of type {@code T},
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getCollection(String, Class)
+     * @see MetaWriter#setCollection(String, Collection)
+     * @see MetaWriter#setCollection(String, String, Collection)
      */
-    @NotNull CompletableFuture<List<String>> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException;
+    <T> @NotNull CompletableFuture<Collection<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record);
 
     /**
-     * Retrieves a previously saved meta list from the table and returns it.
+     * Asynchronously retrieves a {@link Collection} of objects of type {@code T} associated with the specified key.
      *
-     * <p>
-     * This method retrieves a list of previously saved values associated with the specified {@code key}
-     * from the meta in the table. The retrieved values are returned as an unmodifiable {@link List} of
-     * strings.
-     * If no values are found, an empty list of strings will be returned.
-     * </p>
+     * <p>The {@code getCollection} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * {@link Collection} when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: The behavior and resource implications of this method can vary depending on the implementation.
-     * Implementations should ensure that the returned list is unmodifiable to maintain immutability and consistency.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param key Under MySQL, it refers to the column, and under files, it serves as the suffix used to recognize
-     *            the value.
-     * @return The values that were found if any, or an empty unmodifiable list of strings if no values were found.
-     * @throws NullPointerException if {@code key} is {@code null}.
-     * @throws BackendException     if a database access error occurs.
-     * @see MetaWriter#setStringList(String, String, List)
-     * @see MetaWriter#setStringList(String, List)
-     * @see #getStringList(String, String)
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     * Class<String> recordType = String.class;
+     *
+     * CompletableFuture<Collection<String>> futureResult = someMeta.getCollection(key, recordType);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved collection: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving collection: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param key   the key associated with the collection to be retrieved
+     * @param type  the class type of the elements in the collection
+     * @param <T>   the type of elements in the collection
+     * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Collection} of type {@code T},
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getCollection(String, String, Class)
+     * @see MetaWriter#setCollection(String, Collection)
+     * @see MetaWriter#setCollection(String, String, Collection)
      */
-    @NotNull CompletableFuture<List<String>> getStringList(@NotNull String key) throws BackendException;
+    <T> @NotNull CompletableFuture<Collection<T>> getCollection(@NotNull String key, @NotNull Class<T> type);
 
     /**
-     * Retrieves a list of records of the specified type associated with the meta in the table.
+     * Asynchronously retrieves an object of type {@code T} associated with the specified total ID and key.
      *
-     * <p>
-     * This method retrieves a list of records of the given type associated with the specified {@code totalID} and
-     * {@code key}
-     * from the meta in the table. The type of the records to retrieve is specified by the {@code record} parameter,
-     * which should be a subclass of {@link Record}.
-     * The retrieved records are returned as an unmodifiable {@link List}.
-     * If no records are found, an empty list will be returned.
-     * </p>
+     * <p>The {@code getObject} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * object of type {@code T} when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: The {@link #getStringList(String, String)} method is used internally to retrieve the meta value as a
-     * list of strings.
-     * Depending on the implementation of {@link #getStringList(String, String)}, the behavior and resource
-     * implications of that method apply here as well.
-     * It is recommended to refer to the Javadoc of {@link #getStringList(String, String)} for more details on its
-     * usage and considerations.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * @param totalID The ID, which is located under the IDIdentifier.
-     * @param key     Under MySQL, it refers to the column, and under files, it serves as the suffix used to
-     *                recognize the value.
-     * @param record  The class of the {@link Record} to retrieve.
-     * @param <T>     The type of record to return, which should be a subclass of {@link Record}.
-     * @return A list of the given records if found, or an empty unmodifiable list if no records were found.
-     * @throws NullPointerException if {@code totalID}, {@code key}, or {@code record} is {@code null}.
-     * @see MetaWriter#setRecordList(String, String, List)
-     * @see MetaWriter#setRecordList(String, List)
-     * @see MetaWriter#setRecord(String, String, Record)
-     * @see MetaWriter#setRecord(String, Record)
-     * @see #getString(String, String)
-     * @see #getString(String)
-     * @see #getRecordList(String, Class)
-     * @see #getRecord(String, String, Class)
-     * @see #getRecord(String, Class)
-     * @see DataImplementation#toJson(Record)
+     * <pre>
+     * {@code
+     * String totalID = "exampleTotalID";
+     * String key = "exampleKey";
+     * Class<String> objectType = String.class;
+     *
+     * CompletableFuture<String> futureResult = someMeta.getObject(totalID, key, objectType);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved object: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving object: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param totalID the total ID associated with the object to be retrieved
+     * @param key     the key associated with the object to be retrieved
+     * @param type    the class type of the object to be retrieved
+     * @param <T>     the type of the object to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved object of type {@code T},
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getObject(String, Class)
+     * @see MetaWriter#setObject(String, Object)
+     * @see MetaWriter#setObject(String, String, Object)
      */
-    <T extends Record> @NotNull CompletableFuture<List<T>> getRecordList(@NotNull String totalID, @NotNull String key,
-                                                                    @NotNull Class<T> record) throws BackendException;
+    <T> @NotNull CompletableFuture<T> getObject(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type);
 
     /**
-     * Retrieves a record of type {@link Record} from the meta associated with the specified {@code key}.
+     * Asynchronously retrieves an object of type {@code T} associated with the specified key.
      *
-     * <p>
-     * This method retrieves a record of type {@link Record} from the meta using the provided {@code key} as the
-     * identifier.
-     * The {@code record} parameter specifies the class type of the record to be retrieved.
-     * It internally utilizes the {@link #getString(String, String)} method to retrieve the JSON string
-     * representation of the record from the meta.
-     * The JSON string is then deserialized into an instance of the specified record class using the
-     * {@link DataImplementation#fromJson(String, Class)} method.
-     * </p>
+     * <p>The {@code getObject} method returns a {@link CompletableFuture} that will be completed with the retrieved
+     * object of type {@code T} when the operation is successful. If the operation encounters an error, the
+     * {@link CompletableFuture} will be completed exceptionally with a {@link Exception}.</p>
      *
-     * <p>
-     * Note: Retrieving and deserializing the record can involve performance considerations depending on the size and
-     * complexity of the record and the underlying database implementation.
-     * It is important to be mindful of the potential impact on resource usage and response time when using this method.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * <p>
-     * Note: The returned record is wrapped in an {@link Optional} to indicate the possibility of a null result.
-     * If no record is found in the meta, an empty {@link Optional} will be returned.
-     * </p>
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     * Class<String> objectType = String.class;
      *
-     * @param key    Under MySQL, it refers to the column, and under files, it serves as the suffix used to recognize
-     *               the value.
-     * @param record The class type of the record to be retrieved.
-     * @param <T>    The type parameter representing the record type that extends {@link Record}.
-     * @return An {@link Optional} containing the retrieved record, or an empty {@link Optional} if no record is found.
-     * @throws NullPointerException if {@code key} or {@code record} is {@code null}.
-     * @throws BackendException     if a database access error occurs.
-     * @see MetaWriter#setRecordList(String, String, List)
-     * @see MetaWriter#setRecordList(String, List)
-     * @see MetaWriter#setRecord(String, String, Record)
-     * @see MetaWriter#setRecord(String, Record)
-     * @see #getString(String, String)
-     * @see #getString(String)
-     * @see #getRecordList(String, String, Class)
-     * @see #getRecord(String, String, Class)
-     * @see #getRecord(String, Class)
-     * @see DataImplementation#toJson(Record)
+     * CompletableFuture<String> futureResult = someMeta.getObject(key, objectType);
+     *
+     * // Asynchronously handle the result when it becomes available
+     * futureResult.thenAccept(result -> System.out.println("Retrieved object: " + result))
+     *             .exceptionally(ex -> {
+     *                 System.err.println("Error retrieving object: " + ex.getMessage());
+     *                 return null;
+     *             });
+     * }
+     * </pre>
+     *
+     * @param key  the key associated with the object to be retrieved
+     * @param type the class type of the object to be retrieved
+     * @param <T>  the type of the object to be retrieved
+     * @return a {@link CompletableFuture} that will be completed with the retrieved object of type {@code T},
+     * or exceptionally with a {@link Exception} if an error occurs
+     * @see #getObject(String, String, Class)
+     * @see MetaWriter#setObject(String, Object)
+     * @see MetaWriter#setObject(String, String, Object)
      */
-    <T extends Record> @NotNull CompletableFuture<List<T>> getRecordList(@NotNull String key, @NotNull Class<T> record) throws BackendException;
+    <T> @NotNull CompletableFuture<T> getObject(@NotNull String key, @NotNull Class<T> type);
 
     /**
-     * Retrieves a record of type {@link Record} from the meta associated with the specified {@code totalID} and
-     * {@code key}.
+     * Creates and returns a root query select with the specified columns.
      *
-     * <p>
-     * This method retrieves a record of type {@link Record} from the meta using the provided {@code totalID} and
-     * {@code key} as identifiers.
-     * The {@code record} parameter specifies the class type of the record to be retrieved.
-     * It internally utilizes the {@link #getString(String, String)} method to retrieve the JSON string
-     * representation of the record from the meta.
-     * The JSON string is then deserialized into an instance of the specified record class using the
-     * {@link DataImplementation#fromJson(String, Class)} method.
-     * </p>
+     * <p>The {@code select} method returns a {@link QuerySelect.RootQuerySelect} that can be further configured with the
+     * provided {@link Column} instances. It allows selecting data from the underlying data store based on the specified columns.</p>
      *
-     * <p>
-     * Note: Retrieving and deserializing the record can involve performance considerations depending on the size and
-     * complexity of the record and the underlying database implementation.
-     * It is important to be mindful of the potential impact on resource usage and response time when using this method.
-     * </p>
+     * <p>Example usage:</p>
      *
-     * <p>
-     * Note: The returned record is wrapped in an {@link Optional} to indicate the possibility of a null result.
-     * If no record is found in the meta, an empty {@link Optional} will be returned.
-     * </p>
+     * <pre>
+     * {@code
+     * Column column1 = new SomeColumn();
+     * Column column2 = new AnotherColumn();
      *
-     * @param totalID The ID, which is located under the IDIdentifier.
-     * @param key     Under MySQL, it refers to the column, and under files, it serves as the suffix used to
-     *                recognize the value.
-     * @param record  The class type of the record to be retrieved.
-     * @param <T>     The type parameter representing the record type that extends {@link Record}.
-     * @return An {@link Optional} containing the retrieved record, or an empty {@link Optional} if no record is found.
-     * @throws NullPointerException if {@code totalID}, {@code key}, or {@code record} is {@code null}.
-     * @see MetaWriter#setRecordList(String, String, List)
-     * @see MetaWriter#setRecordList(String, List)
-     * @see MetaWriter#setRecord(String, String, Record)
-     * @see MetaWriter#setRecord(String, Record)
-     * @see #getString(String, String)
-     * @see #getString(String)
-     * @see #getRecordList(String, String, Class)
-     * @see #getRecordList(String, Class)
-     * @see #getRecord(String, Class)
-     * @see DataImplementation#toJson(Record)
+     * QuerySelect.RootQuerySelect rootQuerySelect = someQueryManager.select(column1, column2);
+     *
+     * // Configure and execute the select operation
+     * // (Additional columns or configuration can be applied to rootQuerySelect)
+     * rootQuerySelect.execute();
+     * }
+     * </pre>
+     *
+     * @param columns the columns to be selected in the root query select
+     * @return a {@link QuerySelect.RootQuerySelect} configured with the specified columns
      */
-    <T extends Record> @NotNull CompletableFuture<T> getRecord(@NotNull String totalID, @NotNull String key,
-                                                                @NotNull Class<T> record) throws BackendException;
-
-    /**
-     * Retrieves a record of type {@link Record} from the meta associated with the specified {@code key}.
-     *
-     * <p>
-     * This method retrieves a record of type {@link Record} from the meta using the provided {@code key} as the
-     * identifier.
-     * The {@code record} parameter specifies the class type of the record to be retrieved.
-     * It internally utilizes the {@link #getString(String, String)} method to retrieve the JSON string
-     * representation of the record from the meta.
-     * The JSON string is then deserialized into an instance of the specified record class using the
-     * {@link DataImplementation#fromJson(String, Class)} method.
-     * </p>
-     *
-     * <p>
-     * Note: Retrieving and deserializing the record can involve performance considerations depending on the size and
-     * complexity of the record and the underlying database implementation.
-     * It is important to be mindful of the potential impact on resource usage and response time when using this method.
-     * </p>
-     *
-     * <p>
-     * Note: The returned record is wrapped in an {@link Optional} to indicate the possibility of a null result.
-     * If no record is found in the meta, an empty {@link Optional} will be returned.
-     * </p>
-     *
-     * @param key    Under MySQL, it refers to the column, and under files, it serves as the suffix used to recognize
-     *               the value.
-     * @param record The class type of the record to be retrieved.
-     * @param <T>    The type parameter representing the record type that extends {@link Record}.
-     * @return An {@link Optional} containing the retrieved record, or an empty {@link Optional} if no record is found.
-     * @throws NullPointerException if {@code key} or {@code record} is {@code null}.
-     * @throws BackendException     if a database access error occurs.
-     * @see MetaWriter#setRecordList(String, String, List)
-     * @see MetaWriter#setRecordList(String, List)
-     * @see MetaWriter#setRecord(String, String, Record)
-     * @see MetaWriter#setRecord(String, Record)
-     * @see #getString(String, String)
-     * @see #getString(String)
-     * @see #getRecordList(String, String, Class)
-     * @see #getRecordList(String, Class)
-     * @see #getRecord(String, String, Class)
-     * @see DataImplementation#toJson(Record)
-     */
-    <T extends Record> @NotNull CompletableFuture<T> getRecord(@NotNull String key, @NotNull Class<T> record) throws BackendException;
-
-    @NotNull QueryUpdate.RootQueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective);
-
-    @NotNull QuerySelect.RootQuerySelect select(@NotNull Column... columns);
+    @NotNull
+    QuerySelect.RootQuerySelect select(@NotNull Column... columns);
 }

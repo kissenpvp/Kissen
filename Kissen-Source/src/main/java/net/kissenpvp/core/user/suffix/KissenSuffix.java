@@ -33,9 +33,9 @@ import java.util.Objects;
 public class KissenSuffix extends KissenTemporalObject implements Suffix
 {
     private final SuffixNode suffixNode;
-    private final DataWriter dataWriter;
+    private final DataWriter<SuffixNode> dataWriter;
 
-    public KissenSuffix(@NotNull SuffixNode suffixNode, @Nullable DataWriter dataWriter)
+    public KissenSuffix(@NotNull SuffixNode suffixNode, @Nullable DataWriter<SuffixNode> dataWriter)
     {
         super(suffixNode.temporalMeasureNode());
         this.suffixNode = suffixNode;
@@ -49,25 +49,20 @@ public class KissenSuffix extends KissenTemporalObject implements Suffix
 
     @Override public @NotNull Component getContent()
     {
-        return JSONComponentSerializer.json().deserialize(suffixNode.content());
+        return JSONComponentSerializer.json().deserialize(suffixNode.content().toString());
     }
 
-    @Override public boolean equals(Object o)
-    {
-        if (this == o)
-        {
-            return true;
-        }
-        if (!(o instanceof KissenSuffix that))
-        {
-            return false;
-        }
-        return Objects.equals(suffixNode.name(), that.suffixNode.name());
+    @Override
+    public boolean equals(Object o) {
+        if (this==o) return true;
+        if (o==null || getClass()!=o.getClass()) return false;
+        KissenSuffix that = (KissenSuffix) o;
+        return Objects.equals(suffixNode, that.suffixNode);
     }
 
-    @Override public int hashCode()
-    {
-        return Objects.hash(suffixNode);
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(suffixNode);
     }
 
     @Override

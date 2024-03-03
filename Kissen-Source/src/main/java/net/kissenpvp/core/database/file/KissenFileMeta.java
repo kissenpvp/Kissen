@@ -38,7 +38,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -60,26 +59,12 @@ public class KissenFileMeta extends KissenBaseMeta implements Meta {
     }
 
     @Override
-    public void setString(@NotNull String totalID, @NotNull String key, @Nullable String value) throws BackendException {
+    protected void setJson(@NotNull String totalID, @NotNull String key, @Nullable String value) {
         writeFileContent(Stream.concat(getFileData().stream().filter(data -> !data.startsWith(totalID + "." + key + ":")), Stream.of(totalID + "." + key + ":" + value)).toList());
     }
 
     @Override
-    public void setStringList(@NotNull String totalID, @NotNull String key, @Nullable List<String> value) throws BackendException {
-        if (value == null) {
-            setString(totalID, key, null);
-            return;
-        }
-        setString(totalID, key, value.toString());
-    }
-
-    @Override
-    public @NotNull CompletableFuture<List<String>> getStringList(@NotNull String totalID, @NotNull String key) throws BackendException {
-        return getString(totalID, key).thenApply(string -> Arrays.asList(string.substring(1, string.length() - 1).split(", ")));
-    }
-
-    @Override
-    public @NotNull CompletableFuture<String[][]> execute(@NotNull QuerySelect querySelect) throws BackendException {
+    public @NotNull CompletableFuture<Object[][]> execute(@NotNull QuerySelect querySelect) throws BackendException {
         return CompletableFuture.supplyAsync(() ->
         {
             List<String[]> selected = new ArrayList<>();

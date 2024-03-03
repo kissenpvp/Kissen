@@ -24,13 +24,14 @@ import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.permission.event.PermissionOptionSetEvent;
 import org.jetbrains.annotations.NotNull;
 
+@Getter
 public class KissenPermissionOptionSetEvent implements PermissionOptionSetEvent
 {
-    @Getter private final Permission permission;
-    @Getter private final boolean override;
-    @Getter private final String key;
-    @Getter @Setter private String data;
-    @Getter @Setter boolean cancelled;
+    private final Permission permission;
+    private final boolean override;
+    private final String key;
+    @Setter private String data;
+    @Setter boolean cancelled;
 
     public KissenPermissionOptionSetEvent(@NotNull Permission permission, boolean override, @NotNull String key, @NotNull String option)
     {

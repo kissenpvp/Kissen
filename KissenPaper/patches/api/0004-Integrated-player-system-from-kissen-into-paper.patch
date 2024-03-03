@@ -719,17 +719,23 @@ index 0000000000000000000000000000000000000000..f4003d7ada0ed5573ad4d3d6e0b25aec
 +} // LuckPerms, I know where you live
 diff --git a/src/main/java/net/kissenpvp/paper/api/user/event/VisualChangeEvent.java b/src/main/java/net/kissenpvp/paper/api/user/event/VisualChangeEvent.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..1c8930ab609ef6f71e3cf5b17006ceac38d57c02
+index 0000000000000000000000000000000000000000..e34d618d6ab7df107adabb2c649b675d2087a496
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/user/event/VisualChangeEvent.java
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,13 @@
 +package net.kissenpvp.paper.api.user.event;
 +
 +import net.kissenpvp.core.api.event.EventClass;
 +import org.bukkit.entity.Player;
 +import org.jetbrains.annotations.NotNull;
 +
-+public record VisualChangeEvent(@NotNull Player player) implements EventClass {}
++public record VisualChangeEvent(@NotNull Player player) implements EventClass
++{
++    @Override
++    public boolean volatileEvent() {
++        return true;
++    }
++}
 diff --git a/src/main/java/net/kissenpvp/paper/api/user/rank/PaperPlayerRank.java b/src/main/java/net/kissenpvp/paper/api/user/rank/PaperPlayerRank.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..ba0970a4eba9afafe7919fbb0318777590f70e67

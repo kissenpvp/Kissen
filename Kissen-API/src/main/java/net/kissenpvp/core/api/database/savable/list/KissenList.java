@@ -119,6 +119,8 @@ public interface KissenList<T> extends List<T>
      */
     boolean[] invert(@NotNull T value);
 
+    int replace(@NotNull T object);
+
     /**
      * Replaces values in the list based on the specified predicate.
      *
@@ -153,6 +155,10 @@ public interface KissenList<T> extends List<T>
      * @see List#set(int, Object)
      */
     int replace(@NotNull Predicate<T> predicate, @NotNull T object);
+
+    boolean replaceOrInsert(@NotNull T object);
+
+    boolean replaceOrInsert(@NotNull Predicate<T> predicate, @NotNull T object);
 
     /**
      * Clears the current elements in the list and adds all elements from the specified collection.

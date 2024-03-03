@@ -42,20 +42,20 @@ import java.util.Objects;
 
 public class KissenPermission extends KissenTemporalObject implements Permission {
 
-    protected final KissenPermissionNode kissenPermissionNode;
+    protected final PermissionNode permissionNode;
     protected final PermissionEntry<? extends Permission> permissionEntry;
-    protected final DataWriter dataWriter;
+    protected final DataWriter<PermissionNode> dataWriter;
 
-    public KissenPermission(@NotNull KissenPermissionNode kissenPermissionNode, @NotNull PermissionEntry<? extends Permission> permissionEntry, @Nullable DataWriter dataWriter) {
-        super(kissenPermissionNode.temporalMeasureNode());
-        this.kissenPermissionNode = kissenPermissionNode;
+    public KissenPermission(@NotNull PermissionNode permissionNode, @NotNull PermissionEntry<? extends Permission> permissionEntry, @Nullable DataWriter<PermissionNode> dataWriter) {
+        super(permissionNode.temporalMeasureNode());
+        this.permissionNode = permissionNode;
         this.permissionEntry = permissionEntry;
         this.dataWriter = dataWriter;
     }
 
     @Override
     public @NotNull String getName() {
-        return kissenPermissionNode.name();
+        return permissionNode.name();
     }
 
     @Override
@@ -65,7 +65,7 @@ public class KissenPermission extends KissenTemporalObject implements Permission
 
     @Override
     public boolean getValue() {
-        return kissenPermissionNode.value().getValue();
+        return permissionNode.value().getValue();
     }
 
     @Override
@@ -76,8 +76,8 @@ public class KissenPermission extends KissenTemporalObject implements Permission
 
         KissenPermissionValueUpdateEvent kissenPermissionValueUpdateEvent = new KissenPermissionValueUpdateEvent(this, value);
         if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(kissenPermissionValueUpdateEvent) && getValue() != kissenPermissionValueUpdateEvent.isValue()) {
-            kissenPermissionNode.value().setValue(kissenPermissionValueUpdateEvent.isValue());
-            dataWriter.update(kissenPermissionNode);
+            permissionNode.value().setValue(kissenPermissionValueUpdateEvent.isValue());
+            dataWriter.update(permissionNode);
             return;
         }
         throw new EventCancelledException();
@@ -88,11 +88,11 @@ public class KissenPermission extends KissenTemporalObject implements Permission
         if (dataWriter == null) {
             throw new EventCancelledException("This object is immutable.", new IllegalStateException());
         }
-        KissenPermissionOptionSetEvent kissenPermissionOptionSetEvent = new KissenPermissionOptionSetEvent(this, kissenPermissionNode.additionalData().containsKey(key), key, data);
+        KissenPermissionOptionSetEvent kissenPermissionOptionSetEvent = new KissenPermissionOptionSetEvent(this, permissionNode.additionalData().containsKey(key), key, data);
         if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(kissenPermissionOptionSetEvent)) {
-            kissenPermissionNode.additionalData().remove(kissenPermissionOptionSetEvent.getKey());
-            kissenPermissionNode.additionalData().put(kissenPermissionOptionSetEvent.getKey(), kissenPermissionOptionSetEvent.getData());
-            dataWriter.update(kissenPermissionNode);
+            permissionNode.additionalData().remove(kissenPermissionOptionSetEvent.getKey());
+            permissionNode.additionalData().put(kissenPermissionOptionSetEvent.getKey(), kissenPermissionOptionSetEvent.getData());
+            dataWriter.update(permissionNode);
             return;
         }
         throw new EventCancelledException();
@@ -104,11 +104,11 @@ public class KissenPermission extends KissenTemporalObject implements Permission
             throw new EventCancelledException("This object is immutable.", new IllegalStateException());
         }
 
-        if (kissenPermissionNode.additionalData().containsKey(key)) {
+        if (permissionNode.additionalData().containsKey(key)) {
             KissenPermissionOptionDeleteEvent kissenPermissionOptionDeleteEvent = new KissenPermissionOptionDeleteEvent(this, key, Objects.requireNonNull(getOption(key)));
             if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(kissenPermissionOptionDeleteEvent)) {
-                kissenPermissionNode.additionalData().remove(key);
-                dataWriter.update(kissenPermissionNode);
+                permissionNode.additionalData().remove(key);
+                dataWriter.update(permissionNode);
                 return true;
             }
             throw new EventCancelledException();
@@ -119,12 +119,12 @@ public class KissenPermission extends KissenTemporalObject implements Permission
 
     @Override
     public @Nullable String getOption(@NotNull String key) {
-        return kissenPermissionNode.additionalData().get(key);
+        return permissionNode.additionalData().get(key);
     }
 
     @Override
     public @Unmodifiable @NotNull Map<String, String> getDefinedOptions() {
-        return Collections.unmodifiableMap(kissenPermissionNode.additionalData());
+        return Collections.unmodifiableMap(permissionNode.additionalData());
     }
 
     @Override
@@ -136,7 +136,7 @@ public class KissenPermission extends KissenTemporalObject implements Permission
         PermissionEndUpdateEvent permissionEndUpdateEvent = new KissenPermissionEndUpdateEvent(this, end);
         if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(permissionEndUpdateEvent)) {
             rewriteEnd(permissionEndUpdateEvent.getEnd().orElse(null));
-            dataWriter.update(kissenPermissionNode);
+            dataWriter.update(permissionNode);
             return;
         }
         throw new EventCancelledException();
@@ -148,8 +148,8 @@ public class KissenPermission extends KissenTemporalObject implements Permission
         return getValue() && super.isValid();
     }
 
-    public @NotNull KissenPermissionNode getKissenPermissionNode() {
-        return kissenPermissionNode;
+    public @NotNull PermissionNode getKissenPermissionNode() {
+        return permissionNode;
     }
 
     public @Nullable DataWriter getDataWriter() {

@@ -13,9 +13,9 @@ class TestPermissionEntry extends KissenPermissionEntry<TestPermission>
 {
 
     @Override
-    protected @org.jetbrains.annotations.NotNull TestPermission translatePermission(@org.jetbrains.annotations.NotNull KissenPermissionNode kissenPermissionNode, @org.jetbrains.annotations.Nullable DataWriter dataWriter)
+    protected @org.jetbrains.annotations.NotNull TestPermission translatePermission(@org.jetbrains.annotations.NotNull PermissionNode permissionNode, @org.jetbrains.annotations.Nullable DataWriter dataWriter)
     {
-        return new TestPermission(kissenPermissionNode, this);
+        return new TestPermission(permissionNode, this);
     }
 
     @Override

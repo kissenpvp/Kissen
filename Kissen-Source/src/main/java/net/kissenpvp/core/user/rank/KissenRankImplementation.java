@@ -26,11 +26,11 @@ import net.kissenpvp.core.api.user.rank.RankImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.awt.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -68,7 +68,7 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
     }
 
     @Override
-    public @NotNull T createRank(@NotNull String name, @NotNull Map<String, String> data) {
+    public @NotNull T createRank(@NotNull String name, @NotNull Map<String, Object> data) {
         T rank = setup(name, data);
         cachedRankIdSet.removeIf(currentRank -> currentRank.equals(rank));
         cachedRankIdSet.add(rank);
@@ -77,12 +77,12 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
 
     @Override
     public @NotNull T createRank(@NotNull String name, int priority, @NotNull TextColor chatColor, @NotNull Component prefix, @Nullable Component suffix) {
-        final Map<String, String> data = new HashMap<>();
-        data.put("priority", String.valueOf(priority));
-        data.put("chat_color", chatColor.asHexString());
-        data.put("prefix", JSONComponentSerializer.json().serialize(prefix));
+        final Map<String, Object> data = new HashMap<>();
+        data.put("priority", priority);
+        data.put("chat_color", chatColor);
+        data.put("prefix", prefix);
         if (suffix != null) {
-            data.put("suffix", JSONComponentSerializer.json().serialize(suffix));
+            data.put("suffix", suffix);
         }
         return createRank(name, data);
     }
@@ -119,7 +119,7 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
         Map<String, SavableMap> data = getMeta().getData(getSavableType()).join();
         for(SavableMap savableMap : data.values())
         {
-            cachedRankIdSet.add(setup(savableMap.getNotNull("id"), savableMap));
+            cachedRankIdSet.add(setup(savableMap.getNotNull("id", String.class), Map.copyOf(savableMap)));
         }
         KissenCore.getInstance().getLogger().info("Successfully loaded {} rank(s) from the database.", cachedRankIdSet.size());
     }
@@ -132,7 +132,7 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
      * @param data A Map containing key-value pairs of data associated with the rank.
      * @return An initialized rank object of type T.
      */
-    protected @NotNull T setup(@NotNull String name, @NotNull Map<String, String> data)
+    protected @NotNull T setup(@NotNull String name, @NotNull Map<String, Object> data)
     {
         Savable savable = getSavableType();
         savable.setup(name, data);

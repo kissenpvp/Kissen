@@ -5,8 +5,8 @@ import net.kissenpvp.core.api.permission.PermissionEntry;
 
 public class TestPermission extends KissenPermission
 {
-    public TestPermission(KissenPermissionNode kissenPermissionNode, PermissionEntry<? extends Permission> permissionEntry)
+    public TestPermission(PermissionNode permissionNode, PermissionEntry<? extends Permission> permissionEntry)
     {
-        super(kissenPermissionNode, permissionEntry, (record) -> {}); // no data persistence
+        super(permissionNode, permissionEntry, (record) -> {}); // no data persistence
     }
 }

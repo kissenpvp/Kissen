@@ -21,4 +21,9 @@ public class KissenRankSetEvent<T extends Rank, V> implements RankSetEvent<T, V>
         this.old = old;
         this.updated = updated;
     }
+
+    @Override
+    public boolean volatileEvent() {
+        return true;
+    }
 }

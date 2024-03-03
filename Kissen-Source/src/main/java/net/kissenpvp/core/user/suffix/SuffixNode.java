@@ -18,6 +18,8 @@
 
 package net.kissenpvp.core.user.suffix;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import net.kissenpvp.core.time.TemporalMeasureNode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
@@ -26,39 +28,27 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 
-public record SuffixNode(@NotNull String name, @NotNull String content, @NotNull TemporalMeasureNode temporalMeasureNode)
-{
+public record SuffixNode(@NotNull String name, @NotNull JsonElement content,
+                         @NotNull TemporalMeasureNode temporalMeasureNode) {
 
-    public SuffixNode(@NotNull String name, @NotNull Component content, @NotNull TemporalMeasureNode temporalMeasureNode)
-    {
-        this(name, JSONComponentSerializer.json().serialize(content), temporalMeasureNode);
+    public SuffixNode(@NotNull String name, @NotNull Component content, @NotNull TemporalMeasureNode temporalMeasureNode) {
+        this(name, JsonParser.parseString(JSONComponentSerializer.json().serialize(content)), temporalMeasureNode);
     }
 
-    public SuffixNode(@NotNull String name, @NotNull Component content)
-    {
+    public SuffixNode(@NotNull String name, @NotNull Component content) {
         this(name, content, new TemporalMeasureNode());
     }
 
-    @Override public String content()
-    {
-        return content;
+    @Override
+    public boolean equals(Object o) {
+        if (this==o) return true;
+        if (o==null || getClass()!=o.getClass()) return false;
+        SuffixNode that = (SuffixNode) o;
+        return Objects.equals(name, that.name);
     }
 
-    @Override public boolean equals(Object o)
-    {
-        if (this == o)
-        {
-            return true;
-        }
-        if (!(o instanceof SuffixNode that))
-        {
-            return false;
-        }
-        return name.equals(that.name);
-    }
-
-    @Override public int hashCode()
-    {
+    @Override
+    public int hashCode() {
         return Objects.hash(name);
     }
 }

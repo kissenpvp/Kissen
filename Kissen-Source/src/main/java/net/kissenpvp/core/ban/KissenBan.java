@@ -55,7 +55,7 @@ public abstract class KissenBan extends KissenSavable implements Ban {
 
     @Override
     public @NotNull String getName() {
-        return getNotNull("name");
+        return getNotNull("name", String.class);
     }
 
     @Override
@@ -72,7 +72,7 @@ public abstract class KissenBan extends KissenSavable implements Ban {
 
     @Override
     public @NotNull BanType getBanType() {
-        return BanType.valueOf(getNotNull("ban_type"));
+        return BanType.valueOf(getNotNull("ban_type", String.class));
     }
 
     @Override
@@ -89,7 +89,7 @@ public abstract class KissenBan extends KissenSavable implements Ban {
 
     @Override
     public @NotNull Optional<AccurateDuration> getAccurateDuration() {
-        return get("duration").map(val -> KissenCore.getInstance().getImplementation(TimeImplementation.class).millis(Long.parseLong(val)));
+        return get("duration", Long.class).map(val -> KissenCore.getInstance().getImplementation(TimeImplementation.class).millis(val));
     }
 
     @Override

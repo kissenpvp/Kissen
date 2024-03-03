@@ -41,7 +41,7 @@ public abstract class KissenQuerySelect extends KissenQueryComponent<QuerySelect
         public KissenRootQuerySelect(@NotNull Column... columns) {
             this.setQueryComponent(new KissenQuerySelect(columns) {
                 @Override
-                public @NotNull CompletableFuture<String[][]> execute() {
+                public @NotNull CompletableFuture<Object[][]> execute() {
                     return KissenRootQuerySelect.this.execute();
                 }
             });

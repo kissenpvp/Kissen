@@ -19,7 +19,6 @@
 package net.kissenpvp.core.permission;
 
 import lombok.Getter;
-import net.kissenpvp.core.api.database.savable.list.SavableList;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
 import net.kissenpvp.core.api.permission.Permission;
@@ -49,7 +48,7 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
     {
         Optional<T> currentPermission = getOwnPermission(permission);
         return currentPermission.map(current -> setPermission(current, value)).orElseGet(
-                () -> setPermission(new KissenPermissionNode(permission, this, value, new TemporalMeasureNode())));
+                () -> setPermission(new PermissionNode(permission, this, value, new TemporalMeasureNode())));
     }
 
     @Override
@@ -109,8 +108,8 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
     }
 
     @Override
-    public @NotNull SavableList putList(@NotNull String key, @Nullable List<String> value) {
-        SavableList result = super.putList(key, value);
+    public <X> @Nullable Object putList(@NotNull String key, @Nullable Collection<X> value) {
+        Object result = super.putList(key, value);
         if (key.equals("permission_group_list")) {
             permissionUpdate();
         }

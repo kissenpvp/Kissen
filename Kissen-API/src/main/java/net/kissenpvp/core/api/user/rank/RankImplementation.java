@@ -35,7 +35,7 @@ public interface RankImplementation<T extends Rank> extends Implementation
 
     @NotNull Optional<T> getRank(@NotNull String name);
 
-    @NotNull T createRank(@NotNull String name, @NotNull Map<String, String> data);
+    @NotNull T createRank(@NotNull String name, @NotNull Map<String, Object> data);
 
     @NotNull T createRank(@NotNull String name, int priority, @NotNull TextColor chatColor, @NotNull Component prefix, @Nullable Component suffix);
 

@@ -22,17 +22,18 @@ import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
-import net.kissenpvp.core.api.database.savable.list.SavableList;
 import net.kissenpvp.core.api.networking.socket.DataPackage;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.event.SavableDeletedEvent;
 import net.kissenpvp.core.event.EventImplementation;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -60,51 +61,36 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
     }
 
     @Override
-    public void setup(@NotNull String id, @Nullable Map<@NotNull String, @NotNull String> meta) throws SavableInitializeException, BackendException {
+    public void setup(@NotNull String id, @Nullable Map<@NotNull String, @NotNull Object> meta) throws SavableInitializeException, BackendException {
+        super.setId(id);
+        internalSetup(id, meta == null ? getMeta().getData(this.getDatabaseID()).handle((savableMap, throwable) -> {
 
-        try
-        {
-            super.setId(id);
-            internalSetup(id, meta != null ? meta : getMeta().getData(this.getDatabaseID()).handle((savableMap, throwable) ->
-            {
-                if (savableMap == null)
-                {
-                    return new KissenSavableMap(this.getDatabaseID(), getMeta());
-                }
-                return savableMap.serializeSavable();
-            }).join());
-        }
-        catch (InterruptedException | ExecutionException backendException)
-        {
-            throw new BackendException(backendException);
-        }
+            if (savableMap == null) {
+                return new KissenSavableMap(this.getDatabaseID(), getMeta());
+            }
+
+            return savableMap.serializeSavable();
+        }).join() : meta);
     }
 
-    private void internalSetup(@NotNull String id, @NotNull Map<@NotNull String, @NotNull String> meta) throws InterruptedException, ExecutionException
-    {
-        if (this.getKeys().length > 0)
-        {
-            if (!Stream.of(this.getKeys()).allMatch(meta::containsKey))
-            {
+    private void internalSetup(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> meta) {
+        if (this.getKeys().length > 0) {
+            if (!Stream.of(this.getKeys()).allMatch(meta::containsKey)) {
                 throw new SavableInitializeException();
             }
         }
 
         boolean justCreated = false;
-        if (!meta.containsKey("id"))
-        {
-            this.getMeta().purge(this.getDatabaseID()); // delete data from previously created objects
-            Map<String, String> newMeta = new HashMap<>(meta);
-            newMeta.put("id", this.getRawID());
-            getMeta().add(this.getDatabaseID(), newMeta);
-            meta = newMeta;
+        if (!meta.containsKey("id")) {
+            this.getMeta().purge(this.getDatabaseID()); // delete data from invalid objects
+            meta = new KissenSavableMap(meta, super.getId(), getMeta());
+            meta.put("id", super.getId());
+            getMeta().insertJsonMap(getDatabaseID(), meta);
             justCreated = true;
         }
-        super.setId(meta.get("id")); //correct capitalization.
         setData(meta, getRawID());
 
-        if (justCreated)
-        {
+        if (justCreated) {
             //TODO
             //sendData(KissenCore.getInstance().getImplementation(NetworkImplementation.class).createPackage("create_savable", getSerializableSavableHandler(), getRawID(), new HashMap<>(meta)));
         }
@@ -116,8 +102,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
     }
 
     @Override
-    public String getId()
-    {
+    public String getId() {
         return getDatabaseID();
     }
 
@@ -131,27 +116,16 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
     }
 
     @Override
-    public void set(@NotNull String key, @Nullable String value) {
+    public <T> @Nullable Object set(@NotNull String key, @Nullable T value) {
 
-        if(Arrays.asList(getKeys()).contains(key) && value == null)
-        {
+        if (Arrays.asList(getKeys()).contains(key) && value == null) {
             throw new IllegalArgumentException(String.format("The key '%s' cannot be assigned a null value. Please provide a non-null value.", key));
         }
 
-        super.set(key, value);
+        return super.set(key, value);
         //TODO
         //sendData(KissenCore.getInstance().getImplementation(NetworkImplementation.class).createPackage("meta_update_entry", getSerializableSavableHandler(), key, value));
     }
-
-    @Override
-    public @NotNull SavableList setList(@NotNull String key, @Nullable List<String> value) {
-        SavableList savableList = super.setList(key, value);
-        /*sendData(KissenCore.getInstance().getImplementation(NetworkImplementation.class).createPackage(
-                "meta_update_list", getSerializableSavableHandler(), key, value == null ? null :
-                        new ArrayList<>(value)));*/
-        return savableList;
-    }
-
 
     @Override
     public int delete() throws BackendException {
@@ -187,16 +161,13 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
      * Deletes the object without sending a {@link DataPackage} to the other servers.
      */
     public int softDelete() throws BackendException {
-        AtomicInteger count = new AtomicInteger(size());
-        getStringArrayListMap().forEach((key, value) -> count.addAndGet(value.size()));
-
-        getStringArrayListMap().clear();
+        int count = size();
         clear();
 
         this.getMeta().purge(this.getDatabaseID());
         KissenCore.getInstance().getImplementation(EventImplementation.class).call(new SavableDeletedEvent(this));
         KissenCore.getInstance().getImplementation(StorageImplementation.class).dropStorage(getDatabaseID());
-        return count.get();
+        return count;
     }
 
     /**

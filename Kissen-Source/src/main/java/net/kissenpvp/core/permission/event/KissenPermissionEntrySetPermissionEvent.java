@@ -23,11 +23,12 @@ import lombok.Setter;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.permission.event.PermissionEntrySetPermissionEvent;
 
+@Getter
 public class KissenPermissionEntrySetPermissionEvent implements PermissionEntrySetPermissionEvent
 {
-    @Getter private final Permission permission;
-    @Getter private final boolean override;
-    @Getter @Setter private boolean cancelled;
+    private final Permission permission;
+    private final boolean override;
+    @Setter private boolean cancelled;
 
     public KissenPermissionEntrySetPermissionEvent(Permission permission, boolean override)
     {

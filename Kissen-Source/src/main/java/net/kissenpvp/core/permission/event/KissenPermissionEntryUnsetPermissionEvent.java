@@ -24,10 +24,11 @@ import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.permission.event.PermissionEntryUnsetPermissionEvent;
 import org.jetbrains.annotations.NotNull;
 
+@Getter
 public class KissenPermissionEntryUnsetPermissionEvent implements PermissionEntryUnsetPermissionEvent
 {
-    @Getter private final Permission permission;
-    @Getter @Setter private boolean cancelled;
+    private final Permission permission;
+    @Setter private boolean cancelled;
 
     public KissenPermissionEntryUnsetPermissionEvent(@NotNull Permission permission)
     {

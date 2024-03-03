@@ -24,10 +24,11 @@ import net.kissenpvp.core.api.permission.PermissionEntry;
 import net.kissenpvp.core.api.permission.event.PermissionEntryClearEvent;
 import org.jetbrains.annotations.NotNull;
 
+@Getter
 public class KissenPermissionEntryClearEvent implements PermissionEntryClearEvent
 {
-    @Getter private final PermissionEntry<?> permissionEntry;
-    @Getter @Setter private boolean cancelled;
+    private final PermissionEntry<?> permissionEntry;
+    @Setter private boolean cancelled;
 
     public KissenPermissionEntryClearEvent(@NotNull PermissionEntry<?> permissionEntry)
     {

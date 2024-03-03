@@ -54,45 +54,33 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
     }
 
     @Override
-    public void setString(@NotNull String totalID, @NotNull String key, @Nullable String value) {
+    protected void setJson(@NotNull String totalID, @NotNull String key, @Nullable String value) {
         insert(totalID, key, value);
     }
 
     @Override
-    protected @NotNull CompletableFuture<String[][]> execute(@NotNull QuerySelect querySelect) throws BackendException
-    {
-        return CompletableFuture.supplyAsync(() ->
-        {
-            FindIterable<Document> documents = getCollection().find(
-                    Filters.and(decodeFilterQueries(querySelect.getFilterQueries())));
+    protected @NotNull CompletableFuture<Object[][]> execute(@NotNull QuerySelect querySelect) throws BackendException {
+        return CompletableFuture.supplyAsync(() -> {
+            FindIterable<Document> documents = getCollection().find(Filters.and(decodeFilterQueries(querySelect.getFilterQueries())));
             List<String[]> data = new ArrayList<>();
-            for (Document element : documents)
-            {
+            for (Document element : documents) {
                 String[] result = new String[querySelect.getColumns().length];
-                for (int i = 0; i < result.length; i++)
-                {
+                for (int i = 0; i < result.length; i++) {
                     String column = getColumn(querySelect.getColumns()[i]);
                     result[i] = element.getString(column);
                 }
                 data.add(result);
             }
 
-            KissenCore.getInstance().getLogger().debug("Fetch columns {} filtered with {}.",
-                    Arrays.toString(Arrays.stream(querySelect.getColumns()).map(Enum::name).toArray()), Arrays.toString(
-                            Arrays.stream(querySelect.getFilterQueries()).map(
-                                    filterQuery -> String.format("%s = %s [%s]", filterQuery.getColumn().name(),
-                                            filterQuery.getValue(), filterQuery.getFilterType().name())).toArray()));
+            KissenCore.getInstance().getLogger().debug("Fetch columns {} filtered with {}.", Arrays.toString(Arrays.stream(querySelect.getColumns()).map(Enum::name).toArray()), Arrays.toString(Arrays.stream(querySelect.getFilterQueries()).map(filterQuery -> String.format("%s = %s [%s]", filterQuery.getColumn().name(), filterQuery.getValue(), filterQuery.getFilterType().name())).toArray()));
 
             return data.toArray(new String[0][]);
         });
     }
 
     @Override
-    protected @NotNull CompletableFuture<Long> execute(@NotNull QueryUpdate queryUpdate) throws BackendException
-    {
-        return CompletableFuture.supplyAsync(
-                () -> getCollection().updateMany(Filters.and(decodeFilterQueries(queryUpdate.getFilterQueries())),
-                        Updates.combine(decodeUpdateDirectives(queryUpdate.getColumns()))).getModifiedCount());
+    protected @NotNull CompletableFuture<Long> execute(@NotNull QueryUpdate queryUpdate) throws BackendException {
+        return CompletableFuture.supplyAsync(() -> getCollection().updateMany(Filters.and(decodeFilterQueries(queryUpdate.getFilterQueries())), Updates.combine(decodeUpdateDirectives(queryUpdate.getColumns()))).getModifiedCount());
     }
 
     @NotNull
@@ -118,7 +106,7 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
                 case STARTS_WITH -> Filters.regex(getColumn(filterQuery.getColumn()), "^" + filterQuery.getValue());
             };
 
-            if (currentOperator != filterQuery.getFilterOperator() && !currentOperatorFilters.isEmpty()) {
+            if (currentOperator!=filterQuery.getFilterOperator() && !currentOperatorFilters.isEmpty()) {
                 switch (currentOperator) {
                     case AND -> filters.add(Filters.and(currentOperatorFilters));
                     case OR -> filters.add(Filters.or(currentOperatorFilters));
@@ -142,9 +130,9 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
 
     protected abstract @NotNull MongoCollection<Document> getCollection();
 
-    private void insert(@NotNull String totalID, @NotNull String key, @Nullable Object value) {
+    private void insert(@NotNull String totalID, @NotNull String key, @Nullable String value) {
 
-        if (value == null) {
+        if (value==null) {
             wipe(totalID, key);
             return;
         }
@@ -154,8 +142,7 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
         document.append(getKeyColumn(), key);
         document.append(getValueColumn(), value);
 
-        getCollection().updateOne(Filters.and(Filters.eq(getTotalIDColumn(), totalID), Filters.eq(getKeyColumn(), key)),
-                new Document("$set", document), new UpdateOptions().upsert(true));
+        getCollection().updateOne(Filters.and(Filters.eq(getTotalIDColumn(), totalID), Filters.eq(getKeyColumn(), key)), new Document("$set", document), new UpdateOptions().upsert(true));
 
 
         KissenCore.getInstance().getLogger().debug("Set {} to {} from id {}.", key, value, totalID);

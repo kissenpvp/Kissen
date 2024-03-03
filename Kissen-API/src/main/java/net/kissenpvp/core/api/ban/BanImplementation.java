@@ -90,7 +90,7 @@ public interface BanImplementation<B extends Ban, P extends Punishment<?>> exten
      * @throws NullPointerException if the data map is null.
      * @see Ban
      */
-    @NotNull B createBan(int id, @NotNull Map<String, String> data) throws BackendException;
+    @NotNull B createBan(int id, @NotNull Map<String, Object> data) throws BackendException;
 
     @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType) throws BackendException;
 

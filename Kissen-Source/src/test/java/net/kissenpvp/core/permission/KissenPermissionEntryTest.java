@@ -22,7 +22,7 @@ class KissenPermissionEntryTest extends Test {
     @Contract(pure = true, value = "_ -> new")
     private static @NotNull TestPermission testPermission(@NotNull String permission) {
         TemporalMeasureNode temporal = new TemporalMeasureNode();
-        KissenPermissionNode node = new KissenPermissionNode(permission, testPermissionEntry, true, temporal);
+        PermissionNode node = new PermissionNode(permission, testPermissionEntry, true, temporal);
         return new TestPermission(node, testPermissionEntry);
     }
 

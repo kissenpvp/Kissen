@@ -25,13 +25,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 
-public record KissenPlayerRankNode(@NotNull String id, @NotNull String rankID, @NotNull TemporalMeasureNode temporalMeasureNode)
+public record PlayerRankNode(@NotNull String id, @NotNull String rankID, @NotNull TemporalMeasureNode temporalMeasureNode)
 {
-    public KissenPlayerRankNode(@NotNull String id, @NotNull String rankID) {
+    public PlayerRankNode(@NotNull String id, @NotNull String rankID) {
         this(id, rankID, new TemporalMeasureNode());
     }
 
-    public KissenPlayerRankNode(@NotNull String id, @NotNull String rankID, @NotNull TemporalObject temporalObject) {
+    public PlayerRankNode(@NotNull String id, @NotNull String rankID, @NotNull TemporalObject temporalObject) {
         this(id, rankID, new TemporalMeasureNode(temporalObject));
     }
 
@@ -41,7 +41,7 @@ public record KissenPlayerRankNode(@NotNull String id, @NotNull String rankID, @
         {
             return true;
         }
-        if (!(o instanceof KissenPlayerRankNode that))
+        if (!(o instanceof PlayerRankNode that))
         {
             return false;
         }

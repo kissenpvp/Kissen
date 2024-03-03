@@ -89,7 +89,7 @@ public class KissenBoundPlayerSetting<T> extends KissenUserSetting<T> implements
     @Override
     public @NotNull T getValue() {
         T defaultValue = getUserSetting().getDefaultValue(user.getPlayerClient());
-        Optional<String> value = getUser().get("setting_" + getUserSetting().getKey());
+        Optional<String> value = getUser().get("setting_" + getUserSetting().getKey(), String.class);
         return value.map(currentValue -> getUserSetting().deserialize(currentValue)).orElse(defaultValue);
     }
 

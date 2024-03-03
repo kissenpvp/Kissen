@@ -23,11 +23,9 @@ import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class KissenObjectFileMeta extends KissenFileMeta implements ObjectMeta {
@@ -38,7 +36,7 @@ public class KissenObjectFileMeta extends KissenFileMeta implements ObjectMeta {
     }
 
     @Override
-    public void add(@NotNull String id, @NotNull Map<String, String> data) throws BackendException {
+    public void insertJsonMap(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException {
 
     }
 

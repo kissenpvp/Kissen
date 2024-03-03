@@ -1,0 +1,85 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Sun, 3 Mar 2024 09:32:59 +0100
+Subject: [PATCH] Integrated Advancementsystem into paper
+
+
+diff --git a/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementImplementation.java b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementImplementation.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..fbd29a4956a61bbe02b780a79321efab467d9a1d
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementImplementation.java
+@@ -0,0 +1,9 @@
++package net.kissenpvp.paper.api.advancement;
++
++import net.kissenpvp.core.api.base.Implementation;
++
++public interface AdvancementImplementation extends Implementation {
++
++
++
++}
+diff --git a/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementProgression.java b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementProgression.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..27a3caff45788b7d572c23de3ae7c06ea8836acf
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementProgression.java
+@@ -0,0 +1,29 @@
++package net.kissenpvp.paper.api.advancement;
++
++import org.bukkit.entity.Player;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
++
++import java.util.Set;
++import java.util.UUID;
++
++public interface AdvancementProgression  {
++
++    @NotNull
++    @Unmodifiable
++    Set<UUID> getPlayer();
++
++    @NotNull
++    @Unmodifiable
++    Set<Player> getConnectedPlayers();
++
++    boolean hasProgress();
++
++    float getPercent();
++
++    boolean contains(@NotNull Player player);
++
++    boolean attachPlayer(@NotNull Player... player);
++
++    boolean detachPlayer(@NotNull Player... player);
++}
+diff --git a/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementTab.java b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementTab.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d358cafbe3d9fc1706495ce514869798b562e537
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementTab.java
+@@ -0,0 +1,23 @@
++package net.kissenpvp.paper.api.advancement;
++
++import org.bukkit.NamespacedKey;
++import org.bukkit.advancement.Advancement;
++import org.bukkit.plugin.Plugin;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
++
++import java.util.Map;
++
++public interface AdvancementTab {
++
++    @NotNull
++    @Unmodifiable
++    Map<NamespacedKey, Advancement> getAdvancements();
++
++    @NotNull
++    Plugin getPlugin();
++
++    @NotNull
++    NamespacedKey getNamespace();
++
++}
