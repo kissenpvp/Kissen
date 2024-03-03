@@ -1,8 +1,9 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ivo Quiring <falk.quiring@gmail.com>
 Date: Sun, 3 Mar 2024 09:34:37 +0100
-Subject: [PATCH] Integrated Advancementsystem into paper
+Subject: [PATCH] Integrated Advancement system into paper
 
+Signed-off-by: Ivo Quiring <falk.quiring@gmail.com>
 
 diff --git a/src/main/java/net/kissenpvp/paper/advancement/KissenAdvancementTab.java b/src/main/java/net/kissenpvp/paper/advancement/KissenAdvancementTab.java
 new file mode 100644
@@ -106,7 +107,7 @@ index 0000000000000000000000000000000000000000..547616f495455f3f83f9d1f166d54c07
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/advancement/KissenPaperAdvancementImplementation.java b/src/main/java/net/kissenpvp/paper/advancement/KissenPaperAdvancementImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0c301bb192ad51c32d504aae21b0e7594238e255
+index 0000000000000000000000000000000000000000..364bc737875a090ad710fe18fccd9059db8e3719
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/advancement/KissenPaperAdvancementImplementation.java
 @@ -0,0 +1,104 @@
@@ -211,7 +212,7 @@ index 0000000000000000000000000000000000000000..0c301bb192ad51c32d504aae21b0e759
 +
 +    private @NotNull @Unmodifiable Set<AdvancementProgressionNode> fetchProgressions() {
 +        Meta privateMeta = Bukkit.getKissen().getPrivateMeta();
-+        return Set.copyOf(privateMeta.getCollection(KEY, AdvancementProgressionNode.class).exceptionally(throwable -> Collections.emptyList()).join());
++        return Set.copyOf(privateMeta.getCollection(KEY, AdvancementProgressionNode.class).join());
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java b/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java
