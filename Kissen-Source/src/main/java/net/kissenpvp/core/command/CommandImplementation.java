@@ -21,7 +21,6 @@ package net.kissenpvp.core.command;
 import lombok.Getter;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.command.ArgumentParser;
-import net.kissenpvp.core.api.command.CommandHandler;
 import net.kissenpvp.core.api.command.exception.deserialization.TemporaryDeserializationException;
 import net.kissenpvp.core.api.command.handler.BackendExceptionHandler;
 import net.kissenpvp.core.api.command.handler.DateTimeParseExceptionHandler;
@@ -87,7 +86,7 @@ public abstract class CommandImplementation<S extends ServerEntity> implements K
         // Handler
         getInternalHandler().registerExceptionHandler(new BackendExceptionHandler<>());
         getInternalHandler().registerExceptionHandler(new NumberFormatExceptionHandler<>());
-        getInternalHandler().registerExceptionHandler(new CommandExceptionHandler<>());
+        getInternalHandler().registerExceptionHandler(new CommandSystemExceptionHandler<>());
         getInternalHandler().registerExceptionHandler(new InvocationTargetExceptionHandler<>());
         getInternalHandler().registerExceptionHandler(new DateTimeParseExceptionHandler<>());
         getInternalHandler().registerExceptionHandler(new NullPointerExceptionHandler<>());

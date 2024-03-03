@@ -19,7 +19,7 @@
 package net.kissenpvp.core.command.executor;
 
 import net.kissenpvp.core.api.command.CommandPayload;
-import net.kissenpvp.core.api.command.exception.CommandException;
+import net.kissenpvp.core.api.command.exception.CommandSystemException;
 import net.kissenpvp.core.api.command.exception.type.IllegalParameterException;
 import net.kissenpvp.core.api.command.exception.type.IllegalReturnValueException;
 import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
@@ -99,7 +99,7 @@ public class KissenPaperCompleteExecutor<S extends ServerEntity> implements TabC
         }
         catch (Exception exception)
         {
-            throw new CommandException(String.format(
+            throw new CommandSystemException(String.format(
                     "An error occurred while processing the tab request for command '%s'.",
                     context.getLabel()), exception);
         }

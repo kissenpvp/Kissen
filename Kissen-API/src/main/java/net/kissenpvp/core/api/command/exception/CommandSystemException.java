@@ -20,16 +20,17 @@ package net.kissenpvp.core.api.command.exception;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ArgumentParserAbsentException extends CommandSystemException {
+public class CommandSystemException extends RuntimeException {
 
-    private final Class<?> argument;
-
-    public ArgumentParserAbsentException(@NotNull Class<?> argument) {
-        super(String.format("The argument '%s' does not have a valid parser.", argument.getName()), new IllegalStateException());
-        this.argument = argument;
+    public CommandSystemException(String message) {
+        super(message);
     }
 
-    public Class<?> getArgument() {
-        return argument;
+    public CommandSystemException(@NotNull String message, @NotNull Throwable cause) {
+        super(message, cause);
+    }
+
+    public CommandSystemException(@NotNull Throwable cause) {
+        super(cause);
     }
 }

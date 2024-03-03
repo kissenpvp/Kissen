@@ -18,10 +18,10 @@
 
 package net.kissenpvp.core.api.command.exception.deserialization;
 
-import net.kissenpvp.core.api.command.exception.CommandException;
+import net.kissenpvp.core.api.command.exception.CommandSystemException;
 import org.jetbrains.annotations.NotNull;
 
-public class DeserializationException extends CommandException {
+public class DeserializationException extends CommandSystemException {
 
     public DeserializationException(@NotNull Throwable cause) {
         super(cause);

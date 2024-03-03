@@ -20,7 +20,7 @@ package net.kissenpvp.core.command.executor;
 
 import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
-import net.kissenpvp.core.api.command.exception.CommandException;
+import net.kissenpvp.core.api.command.exception.CommandSystemException;
 import net.kissenpvp.core.api.command.executor.CommandExecutor;
 import net.kissenpvp.core.api.networking.client.entitiy.MessageReceiver;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
@@ -119,7 +119,7 @@ public abstract class KissenCommandExecutor<S extends ServerEntity> implements C
 
             if (!handleThrowable(context, throwable))
             {
-                throw new CommandException(throwable);
+                throw new CommandSystemException(throwable);
             }
             return false;
         }
