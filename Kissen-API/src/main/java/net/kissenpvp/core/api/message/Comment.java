@@ -23,6 +23,7 @@ import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface Comment {
@@ -38,7 +39,7 @@ public interface Comment {
 
     void setText(@NotNull Component component);
 
-    long getTimeStamp();
+    @NotNull Instant getTimeStamp();
 
     boolean hasBeenEdited();
 

@@ -20,8 +20,7 @@ package net.kissenpvp.core.api.database.meta;
 
 import net.kissenpvp.core.api.database.queryapi.*;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
-import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
-import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.savable.list.KissenList;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
@@ -649,7 +648,7 @@ public interface MetaReader extends Serializable {
      * @see MetaWriter#setCollection(String, Collection)
      * @see MetaWriter#setCollection(String, String, Collection)
      */
-    <T> @NotNull CompletableFuture<Collection<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record);
+    <T> @NotNull CompletableFuture<KissenList<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record);
 
     /**
      * Asynchronously retrieves a {@link Collection} of objects of type {@code T} associated with the specified key.
@@ -676,16 +675,16 @@ public interface MetaReader extends Serializable {
      * }
      * </pre>
      *
-     * @param key   the key associated with the collection to be retrieved
-     * @param type  the class type of the elements in the collection
-     * @param <T>   the type of elements in the collection
+     * @param key  the key associated with the collection to be retrieved
+     * @param type the class type of the elements in the collection
+     * @param <T>  the type of elements in the collection
      * @return a {@link CompletableFuture} that will be completed with the retrieved {@link Collection} of type {@code T},
      * or exceptionally with a {@link Exception} if an error occurs
      * @see #getCollection(String, String, Class)
      * @see MetaWriter#setCollection(String, Collection)
      * @see MetaWriter#setCollection(String, String, Collection)
      */
-    <T> @NotNull CompletableFuture<Collection<T>> getCollection(@NotNull String key, @NotNull Class<T> type);
+    <T> @NotNull CompletableFuture<KissenList<T>> getCollection(@NotNull String key, @NotNull Class<T> type);
 
     /**
      * Asynchronously retrieves an object of type {@code T} associated with the specified total ID and key.

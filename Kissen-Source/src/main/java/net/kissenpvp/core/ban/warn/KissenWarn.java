@@ -20,7 +20,7 @@ public class KissenWarn<T extends Ban> extends KissenTemporalObject implements W
 
     public KissenWarn(@NotNull WarnNode warnNode)
     {
-        super(warnNode.temporalMeasureNode());
+        super(warnNode.temporalMeasure());
         this.warnNode = warnNode;
     }
 
@@ -39,7 +39,7 @@ public class KissenWarn<T extends Ban> extends KissenTemporalObject implements W
     @Override
     public @NotNull Optional<Component> getReason()
     {
-        return Optional.ofNullable(warnNode.reason()).map(JSONComponentSerializer.json()::deserialize);
+        return Optional.ofNullable(warnNode.reason());
     }
 
     @Override

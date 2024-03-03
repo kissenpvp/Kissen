@@ -26,7 +26,7 @@ public interface DataWriter<T extends Record> {
 
     String IMMUTABLE = "This object is immutable";
 
-    static void validate(@NotNull DataWriter<?> dataWriter) {
+    static void validate(@Nullable DataWriter<?> dataWriter) {
         validate(dataWriter, new UnsupportedOperationException(IMMUTABLE));
     }
 

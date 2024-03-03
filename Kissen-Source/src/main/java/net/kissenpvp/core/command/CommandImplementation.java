@@ -91,6 +91,7 @@ public abstract class CommandImplementation<S extends ServerEntity> implements K
         getInternalHandler().registerExceptionHandler(new DateTimeParseExceptionHandler<>());
         getInternalHandler().registerExceptionHandler(new NullPointerExceptionHandler<>());
         getInternalHandler().registerExceptionHandler(new InvalidColorExceptionHandler<>());
+        getInternalHandler().registerExceptionHandler(new OperationExceptionHandler<>());
     }
 
     @Override

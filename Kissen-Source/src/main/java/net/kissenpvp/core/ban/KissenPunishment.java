@@ -39,11 +39,11 @@ import net.kissenpvp.core.database.DataWriter;
 import net.kissenpvp.core.event.EventImplementation;
 import net.kissenpvp.core.message.CommentNode;
 import net.kissenpvp.core.message.KissenComment;
+import net.kissenpvp.core.time.KissenAccurateDuration;
 import net.kissenpvp.core.time.KissenTemporalObject;
 import net.kissenpvp.core.user.KissenUserImplementation;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -53,18 +53,17 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public abstract class KissenPunishment<T> extends KissenTemporalObject implements Punishment<T> {
 
     private final UUID totalID;
-    private final KissenPunishmentNode kissenPunishmentNode;
+    private final KissenPunishmentNode punishmentNode;
     private final DataWriter<KissenPunishmentNode> dataWriter;
 
-    public KissenPunishment(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @Nullable DataWriter<KissenPunishmentNode> dataWriter) {
-        super(kissenPunishmentNode.temporalMeasureNode());
+    public KissenPunishment(@NotNull UUID totalID, @NotNull KissenPunishmentNode punishmentNode, @Nullable DataWriter<KissenPunishmentNode> dataWriter) {
+        super(punishmentNode.temporalMeasure());
         this.totalID = totalID;
-        this.kissenPunishmentNode = kissenPunishmentNode;
+        this.punishmentNode = punishmentNode;
         this.dataWriter = dataWriter;
     }
 
@@ -75,37 +74,37 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public @NotNull String getID() {
-        return kissenPunishmentNode.id();
+        return punishmentNode.id();
     }
 
     @Override
     public @NotNull String getName() {
-        return kissenPunishmentNode.banName();
+        return punishmentNode.banName();
     }
 
     @Override
     public @NotNull String getBanOperator() {
 
-        String data = kissenPunishmentNode.operator();
+        String data = punishmentNode.operator();
         if (data.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}")) {
             return KissenCore.getInstance().getImplementation(UserImplementation.class).getCachedUserProfile(UUID.fromString(data)).map(UserInfo::getName).orElse(data);
         }
-        return kissenPunishmentNode.operator();
+        return punishmentNode.operator();
     }
 
     @Override
     public @NotNull BanType getBanType() {
-        return kissenPunishmentNode.banType();
+        return punishmentNode.banType();
     }
 
     @Override
     public @NotNull Optional<Component> getCause() {
-        return kissenPunishmentNode.cause().toOptional().map(text -> JSONComponentSerializer.json().deserialize(text));
+        return punishmentNode.cause().toOptional();
     }
 
     @Override
     public void setCause(@Nullable Component cause) throws EventCancelledException {
-        if (dataWriter==null) {
+        if (dataWriter == null) {
             throw new EventCancelledException();
         }
 
@@ -114,18 +113,18 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
             throw new EventCancelledException(punishmentAlterCauseEvent);
         }
 
-        kissenPunishmentNode.cause().setValue(punishmentAlterCauseEvent.getUpdatedCause().map(component -> JSONComponentSerializer.json().serialize(component)).orElse(null));
-        dataWriter.update(kissenPunishmentNode);
+        punishmentNode.cause().setValue(punishmentAlterCauseEvent.getUpdatedCause().orElse(null));
+        dataWriter.update(punishmentNode);
     }
 
     @Override
     public @NotNull @Unmodifiable List<Comment> getComments() {
-        return kissenPunishmentNode.comments().stream().map(node -> new KissenComment(node, record -> dataWriter.update(kissenPunishmentNode))).map(kissenComment -> (Comment) kissenComment).toList();
+        return punishmentNode.comments().stream().map(node -> new KissenComment(node, record -> dataWriter.update(punishmentNode))).map(kissenComment -> (Comment) kissenComment).toList();
     }
 
     @Override
     public @NotNull Comment addComment(@NotNull ServerEntity sender, @NotNull Component comment) throws EventCancelledException {
-        if (dataWriter==null) {
+        if (dataWriter == null) {
             throw new EventCancelledException();
         }
 
@@ -133,19 +132,19 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
         KissenComment currentComment = new KissenComment(tempCommentNode.get(), (record) -> tempCommentNode.set(record));
 
         PunishmentCommentEvent<?> punishmentCommentEvent = new PunishmentCommentEvent<>(this, currentComment);
-        if (tempCommentNode.get()==null || !KissenCore.getInstance().getImplementation(EventImplementation.class).call(punishmentCommentEvent)) {
+        if (tempCommentNode.get() == null || !KissenCore.getInstance().getImplementation(EventImplementation.class).call(punishmentCommentEvent)) {
             throw new EventCancelledException(punishmentCommentEvent);
         }
 
-        kissenPunishmentNode.comments().add(tempCommentNode.get());
-        dataWriter.update(kissenPunishmentNode);
-        return new KissenComment(tempCommentNode.get(), record -> dataWriter.update(kissenPunishmentNode));
+        punishmentNode.comments().add(tempCommentNode.get());
+        dataWriter.update(punishmentNode);
+        return new KissenComment(tempCommentNode.get(), record -> dataWriter.update(punishmentNode));
     }
 
 
     @Override
     public void setEnd(@Nullable Instant end) throws EventCancelledException {
-        if (dataWriter==null) {
+        if (dataWriter == null) {
             throw new EventCancelledException();
         }
 
@@ -155,7 +154,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
         }
 
         rewriteEnd(punishmentAlterEndEvent.getUpdatedEnd().orElse(null));
-        dataWriter.update(kissenPunishmentNode);
+        dataWriter.update(punishmentNode);
     }
 
     @Override
@@ -213,9 +212,9 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
      */
     private @NotNull CommentNode constructComment(@NotNull ServerEntity sender, @NotNull Component comment) {
         String id = KissenCore.getInstance().getImplementation(DataImplementation.class).generateID();
-        long timeStamp = System.currentTimeMillis();
-        UUID senderUUID = sender instanceof PlayerClient<?, ?, ?> playerClient ? playerClient.getUniqueId():null;
-        return new CommentNode(id, comment, senderUUID, timeStamp);
+        UUID senderUUID = sender instanceof PlayerClient<?, ?, ?> playerClient ? playerClient.getUniqueId() : null;
+
+        return new CommentNode(id, comment, senderUUID, Instant.now());
     }
 
     @Override

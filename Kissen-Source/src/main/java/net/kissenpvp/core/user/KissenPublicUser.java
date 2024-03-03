@@ -25,7 +25,6 @@ import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 import net.kissenpvp.core.api.permission.Permission;
 import net.kissenpvp.core.api.user.User;
-import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,15 +58,41 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
         super(uuid, name, data);
 
         if (name != null && uuid != null) {
-            if (!getNotNull("name", String.class).equals(name)) {
-                if (containsKey("name")) {
-                    ((KissenUserImplementation) KissenCore.getInstance().getImplementation(UserImplementation.class)).getCachedProfiles().removeIf(userInfoNode -> userInfoNode.name().equals(getNotNull("name", String.class)));
-                    KissenCore.getInstance().getLogger().debug("The user '{}' has changed their name from '{}' to '{}'.", getRawID(), getNotNull("name", String.class), name);
-                }
-
-                set("name", name);
+            String currentName = getNotNull("name", String.class);
+            if (!Objects.equals(currentName, name)) {
+                updateName(name, currentName);
             }
         }
+    }
+
+    /**
+     * Updates the name of the user and logs the change.
+     *
+     * <p>The {@code updateName} method is used to update the name of the user to the specified name.
+     * It also logs the name change, and removes the cached profiles with the previous name.</p>
+     *
+     * @param name the new name for the user
+     * @param currentName the current name of the user
+     * @throws NullPointerException if the specified new name is `null`
+     */
+    private void updateName(@NotNull String name, String currentName) {
+        String message = "The user '{}' has changed their name from '{}' to '{}'.";
+        KissenCore.getInstance().getLogger().debug(message, getRawID(), getNotNull("name", String.class), name);
+
+        getImplementation().getCachedProfiles().removeIf(cached -> Objects.equals(currentName, cached.name()));
+        set("name", name);
+    }
+
+    /**
+     * Retrieves and returns the {@link KissenUserImplementation} from the KissenCore instance.
+     *
+     * <p>The {@code getImplementation} method is used to obtain the implementation of the {@link KissenUserImplementation}
+     * from the KissenCore instance, allowing access to functionality provided by the user implementation.</p>
+     *
+     * @return the {@link KissenUserImplementation} instance
+     */
+    private @NotNull KissenUserImplementation getImplementation() {
+        return KissenCore.getInstance().getImplementation(KissenUserImplementation.class);
     }
 
     @Override
@@ -87,28 +112,23 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
     public void setup(@NotNull String id, @Nullable Map<String, Object> meta) throws SavableInitializeException, BackendException {
         super.setup(id, meta);
 
-        UserInfoNode user = new UserInfoNode(UUID.fromString(id), getNotNull("name", String.class));
-        KissenCore.getInstance().getImplementation(KissenUserImplementation.class).cacheProfile(user);
+        getImplementation().cacheProfile(new UserInfoNode(UUID.fromString(id), getNotNull("name", String.class)));
     }
 
     @Override
     public final @NotNull ObjectMeta getMeta() {
-        return ((KissenUserImplementation) KissenCore.getInstance()
-                .getImplementation(UserImplementation.class)).getUserMeta();
+        return getImplementation().getUserMeta();
     }
 
     @Override
     public final @NotNull String getSaveID() {
-        return ((KissenUserImplementation) KissenCore.getInstance()
-                .getImplementation(UserImplementation.class)).getUserSaveID();
+        return getImplementation().getUserSaveID();
     }
 
     @Override
     public <X> @Nullable Object set(@NotNull String key, @Nullable X value) {
-        String defaultLanguage = KissenCore.getInstance()
-                .getImplementation(LocalizationImplementation.class)
-                .getDefaultLocale()
-                .toString().toLowerCase();
+        LocalizationImplementation locale = KissenCore.getInstance().getImplementation(LocalizationImplementation.class);
+        String defaultLanguage = locale.getDefaultLocale().toString().toLowerCase();
         if (key.equals("locale") && Objects.equals(value, defaultLanguage)) {
             delete(key); // delete if default language is updated
             return value; //TODO actual return value
@@ -176,12 +196,9 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
             UUID targetID = savableMap.getNotNull("total_id", UUID.class);
             if (!targetID.equals(totalID)) {
                 try {
-                    ((KissenUserImplementation) KissenCore.getInstance()
-                            .getImplementation(UserImplementation.class)).rewriteTotalID(targetID, totalID);
+                    getImplementation().rewriteTotalID(targetID, totalID);
                 } catch (Exception exception) {
-                    KissenCore.getInstance()
-                            .getLogger()
-                            .error("Could not update the totalId from '{}' to '{}'", targetID, totalID, exception);
+                    KissenCore.getInstance().getLogger().error("Could not update the totalId from '{}' to '{}'", targetID, totalID, exception);
                 }
             }
         }

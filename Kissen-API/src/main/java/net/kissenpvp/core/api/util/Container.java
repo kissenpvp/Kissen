@@ -18,13 +18,14 @@
 
 package net.kissenpvp.core.api.util;
 
-import org.jetbrains.annotations.NotNull;
 
-import java.io.Serializable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Optional;
 
 
-public class Container<T extends Serializable> implements Serializable
+public class Container<T>
 {
     private T value;
 
@@ -33,18 +34,16 @@ public class Container<T extends Serializable> implements Serializable
         this.value = value;
     }
 
-    public T getValue()
-    {
-        return value;
-    }
-
-    public void setValue(T value)
-    {
-        this.value = value;
-    }
-
     public @NotNull Optional<T> toOptional()
     {
         return Optional.ofNullable(getValue());
+    }
+
+    public @Nullable T getValue() {
+        return value;
+    }
+
+    public void setValue(@Nullable T value) {
+        this.value = value;
     }
 }

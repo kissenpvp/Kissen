@@ -27,11 +27,14 @@ import net.kissenpvp.core.api.util.Container;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.message.CommentNode;
 import net.kissenpvp.core.time.TemporalMeasureNode;
+import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The {@link KissenPunishmentNode} record encapsulates all the information necessary to deal with the punishments in the form of ban.
@@ -51,11 +54,38 @@ import java.util.List;
  * @see NotNull
  */
 public record KissenPunishmentNode(@NotNull String id, @NotNull String banName, @NotNull String operator,
-                                   @NotNull BanType banType, @NotNull Container<String> cause,
-                                   @NotNull List<CommentNode> comments, @NotNull TemporalMeasureNode temporalMeasureNode)
+                                   @NotNull BanType banType, @NotNull Container<Component> cause,
+                                   @NotNull List<CommentNode> comments, @NotNull TemporalMeasureNode temporalMeasure)
 {
 
-    public KissenPunishmentNode(@NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable String reason) {
+    public KissenPunishmentNode(@NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable Component reason) {
         this(KissenCore.getInstance().getImplementation(DataImplementation.class).generateID(), ban.getName(), banOperator instanceof PlayerClient<?,?,?> playerClient ? playerClient.getUniqueId().toString() : banOperator.getName(), ban.getBanType(), new Container<>(reason), new ArrayList<>(), new TemporalMeasureNode(System.currentTimeMillis(), ban.getAccurateDuration().orElse(null)));
+    }
+
+    @Contract(pure = true)
+    @Override
+    public @NotNull String toString() {
+        return "KissenPunishmentNode{" +
+                "id='" + id + '\'' +
+                ", banName='" + banName + '\'' +
+                ", operator='" + operator + '\'' +
+                ", banType=" + banType +
+                ", cause=" + cause +
+                ", comments=" + comments +
+                ", temporalMeasure=" + temporalMeasure +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        KissenPunishmentNode that = (KissenPunishmentNode) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }

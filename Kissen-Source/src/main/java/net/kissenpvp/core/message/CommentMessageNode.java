@@ -18,6 +18,9 @@
 
 package net.kissenpvp.core.message;
 
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
-public record CommentMessageNode(@NotNull String message, long timeStamp) {}
+import java.time.Instant;
+
+public record CommentMessageNode(@NotNull Component message, @NotNull Instant timeStamp) {}

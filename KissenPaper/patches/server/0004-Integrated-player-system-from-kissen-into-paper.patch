@@ -47,494 +47,6 @@ index 6f194869251e6eed67264152f7c36daa43757094..f97d54d30e952c6d501f28ce48fd8991
 +    }
 +    // KissenPaper start
  }
-diff --git a/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java b/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..fe2f7c055e0c21eeb845118d8b8adf4c5badc13a
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java
-@@ -0,0 +1,268 @@
-+package net.kissenpvp.paper.ban.command;
-+
-+import net.kissenpvp.core.api.ban.Ban;
-+import net.kissenpvp.core.api.ban.BanType;
-+import net.kissenpvp.core.api.command.CommandPayload;
-+import net.kissenpvp.core.api.message.ThemeProvider;
-+import net.kissenpvp.core.api.time.AccurateDuration;
-+import net.kissenpvp.core.api.util.PageBuilder;
-+import net.kissenpvp.core.api.util.PageImplementation;
-+import net.kissenpvp.core.util.KissenPageBuilder;
-+import net.kissenpvp.paper.api.ban.PaperBan;
-+import net.kissenpvp.paper.api.ban.PaperBanImplementation;
-+import net.kissenpvp.paper.api.ban.PaperPunishment;
-+import net.kyori.adventure.text.Component;
-+import net.kyori.adventure.text.TextComponent;
-+import net.kyori.adventure.text.TranslatableComponent;
-+import net.kyori.adventure.text.event.ClickEvent;
-+import net.kyori.adventure.text.event.HoverEvent;
-+import net.kyori.adventure.text.format.TextColor;
-+import org.bukkit.Bukkit;
-+import org.bukkit.OfflinePlayer;
-+import org.bukkit.command.CommandSender;
-+import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Nullable;
-+
-+import java.time.ZoneId;
-+import java.time.format.DateTimeFormatter;
-+import java.time.format.FormatStyle;
-+import java.util.Comparator;
-+import java.util.List;
-+
-+/**
-+ * Utility class for providing messages related to the ban command.
-+ */
-+public class BanCommandMessages
-+{
-+    /**
-+     * Retrieves a paginated list of ban IDs along with associated information for the specified page.
-+     *
-+     * @param payload The command payload containing information about the sender and context.
-+     * @param page The page number to retrieve ban IDs for.
-+     * @return A formatted Component containing the paginated ban IDs and associated information.
-+     *         If no ban IDs are found, a message indicating their absence is returned.
-+     * @throws IllegalArgumentException if the payload or any of its required components are null.
-+     * @throws UnsupportedOperationException if the ban system implementation is not available.
-+     */
-+    public @NotNull Component getBanIDList(@NotNull CommandPayload<CommandSender> payload, final int page)
-+    {
-+        PageImplementation pageImplementation = Bukkit.getKissen().getImplementation(PageImplementation.class);
-+        PaperBanImplementation banSystem = Bukkit.getKissen().getImplementation(PaperBanImplementation.class);
-+
-+        List<PaperBan> sorted = banSystem.getBanSet().stream().sorted(Comparator.comparingInt(Ban::getID)).toList();
-+        if (sorted.isEmpty())
-+        {
-+            return Component.text("Gibt keine ban ids");
-+        }
-+        PageBuilder<PaperBan> banIDPageBuilder = pageImplementation.createPageBuilder(sorted);
-+
-+        Component header = banIDPageBuilder.getHeader(Component.text("BanIDs"), page);
-+        Component footer = banIDPageBuilder.getFooter(Component.text("BanIDs"), page);
-+
-+        TextComponent.Builder builder = Component.text().append(header);
-+        for (PaperBan currentBan : banIDPageBuilder.getEntries(page))
-+        {
-+            Component[] args = {
-+                    Component.text(currentBan.getID()),
-+                    Component.text(currentBan.getName(), ThemeProvider.general()),
-+                    Component.text(currentBan.getBanType().toString(), ThemeProvider.secondary())
-+            };
-+            Component time = currentBan.getAccurateDuration().map(AccurateDuration::toComponent).orElse(
-+                    Component.translatable("mco.configure.world.subscription.unknown")).color(ThemeProvider.general());
-+            builder.appendNewline().append(Component.translatable("server.ban.banid.compact", args).hoverEvent(
-+                    HoverEvent.showText(payload.getSender().getTheme().style(time))));
-+        }
-+
-+        builder.appendNewline().append(footer);
-+        return builder.asComponent();
-+    }
-+
-+    /**
-+     * Retrieves a paginated history of punishments for the specified player.
-+     *
-+     * @param payload The command payload containing information about the sender and context.
-+     * @param player The player for whom to retrieve the punishment history.
-+     * @param page The page number to retrieve the punishment history for.
-+     * @return A formatted Component containing the paginated punishment history for the player.
-+     *         If the player has no history, a message indicating the absence of history is returned.
-+     * @throws IllegalArgumentException if the payload, player, or any of their required components are null.
-+     */
-+    public @NotNull Component getHistory(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer player, int page)
-+    {
-+        List<PaperPunishment> playerHistory = player.getPunishmentHistory();
-+        if (playerHistory.isEmpty())
-+        {
-+            return Component.translatable("server.ban.history.empty", player.displayName());
-+        }
-+        PageBuilder<PaperPunishment> pageBuilder = new KissenPageBuilder<>(playerHistory);
-+
-+        Component header = pageBuilder.getHeader(player.displayName(), page);
-+        Component footer = pageBuilder.getFooter(player.displayName(), page);
-+
-+        TextComponent.Builder builder = Component.text().append(header);
-+        builder.append(compactHistory(payload, pageBuilder.getEntries(page)));
-+
-+        return builder.appendNewline().append(footer).asComponent();
-+    }
-+
-+    /**
-+     * This method is responsible for building the information of a punishment given on a server.
-+     * The necessary parameters are a payload and a specific instance of a PaperPunishment.
-+     * <p>
-+     * The method first checks if the punishment is still valid. Depending on the validity, it sets the text color of the punishment name to either
-+     * enabled or disabled using the ThemeProvider class.
-+     * It then creates a header and footer for the punishment information with the punishment name in the appropriate color.
-+     * Next, it creates Component instances for the punishment details including: ID, operator, start date, predicted end date, and actual end date.
-+     * It then sets up a builder object to start constructing the punishment information block.
-+     * The constructed information block consists of key-value pairs of punishment detail labels and their corresponding values.
-+     * For each detail, it appends a new line with translated key-value pairs to the message.
-+     * In the case of a cause for the punishment being present, it includes this in the message as well.
-+     * This method also formats the start, predicted end, and the actual end dates according to a specific date format style.
-+     * If the punishment doesn't have an end (is permanent), it reflects this in the result as well.
-+     * Finally, this method appends the footer to the information block and returns the constructed Component.
-+     *
-+     * @param payload         the CommandPayload that contains the context for this command execution.
-+     *                        It contains information about the command sender and any possible arguments used in the command.
-+     * @param paperPunishment the instance of the PaperPunishment class which contains the information of the punishment.
-+     *                        It includes details such as the ID, the operator who imposed the punishment, the start and end of the punishment, and the reason for the punishment if applicable.
-+     * @return a Component that contains the punishment information block to be displayed to the command sender.
-+     * @throws NullPointerException if either payload or paperPunishment is null.
-+     */
-+    public @NotNull Component punishmentInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull PaperPunishment paperPunishment)
-+    {
-+        TextColor isValidColor = paperPunishment.isValid() ? ThemeProvider.enabled() : ThemeProvider.disabled();
-+        Component header = Component.translatable("server.command.general.header",
-+                Component.text(paperPunishment.getName()).color(isValidColor));
-+        Component footer = Component.translatable("server.command.general.footer",
-+                Component.text(paperPunishment.getName()).color(isValidColor));
-+
-+        Component id = Component.translatable("server.general.id").color(ThemeProvider.general());
-+        Component by = Component.translatable("server.ban.punishment.operator").color(ThemeProvider.general());
-+        Component start = Component.translatable("server.ban.punishment.start").color(ThemeProvider.general());
-+        Component predictedEnd = Component.translatable("server.ban.punishment.predicted.end").color(
-+                ThemeProvider.general());
-+        Component end = Component.translatable("server.ban.punishment.actual.end").color(ThemeProvider.general());
-+
-+        TranslatableComponent banInfo = Component.translatable("server.command.general.key.value");
-+
-+        TextComponent.Builder builder = Component.text().append(header);
-+        builder.appendNewline().append(banInfo.arguments(id, constructCopyable(paperPunishment.getID())));
-+        builder.appendNewline().append(banInfo.arguments(by, Component.text(paperPunishment.getBanOperator())));
-+        paperPunishment.getCause().ifPresent(cause -> builder.appendNewline().append(
-+                banInfo.arguments(Component.translatable("server.ban.punishment.cause").color(ThemeProvider.general()),
-+                        cause)));
-+
-+        DateTimeFormatter formatter = payload.getSender().getFormatter(FormatStyle.SHORT);
-+        builder.appendNewline().append(
-+                banInfo.arguments(start, Component.text(formatter.format(paperPunishment.getStart()))));
-+        builder.appendNewline().append(banInfo.arguments(predictedEnd, paperPunishment.endComponent(formatter)));
-+        if (!paperPunishment.getEnd().equals(paperPunishment.getPredictedEnd()))
-+        {
-+            Component date = paperPunishment.endComponent(payload.getSender().getFormatter(FormatStyle.SHORT));
-+            builder.appendNewline().append(banInfo.arguments(end, date));
-+        }
-+
-+        builder.appendNewline().append(footer);
-+        return builder.asComponent();
-+    }
-+
-+    /**
-+     * This method builds a compact history of punishments based on a provided list of PaperPunishment instances.
-+     * This version of punishment history is intended to provide a brief snapshot of several punishments with their essential information in a compact format.
-+     * <p>
-+     * The method first sets up a DateTimeFormatter that formats dates in a localized short style,
-+     * using the locale of the command sender and the system default timezone.
-+     * It then creates an empty Component builder that will be used to build the result history block.
-+     * It then traverses the list of punishments, and for each punishment:
-+     * It figures out the status color based on whether the punishment is still valid.
-+     * It builds an array of arguments containing essential information of the punishment formatted as Components.
-+     * These arguments include: ID, name, operating user, ban type, total ID, start date, end date (or "permanent" if not applicable)
-+     * and a validity status ('✔' if valid, '❌' if not).
-+     * These arguments are then appended to the builder with a new line and a translatable history entry string.
-+     * After traversing all punishments, this method calls asComponent() on the builder to build the compact punishment history,
-+     * which is then returned as a Component.
-+     *
-+     * @param payload           the CommandPayload that contains the context for this command execution.
-+     *                          It contains information about the command sender and any possible arguments used in the command.
-+     * @param punishmentHistory a List of PaperPunishment instances that represent the punishment history for a user/server.
-+     * @return a Component that represents a compact history of paper punishments in the form of key-value pairs.
-+     * @throws NullPointerException if either payload or punishmentHistory is null.
-+     */
-+    private @NotNull Component compactHistory(@NotNull CommandPayload<CommandSender> payload, @NotNull List<PaperPunishment> punishmentHistory)
-+    {
-+        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(
-+                ZoneId.systemDefault()).withLocale(payload.getSender().getCurrentLocale());
-+        TextComponent.Builder component = Component.text();
-+        for (PaperPunishment paperPunishment : punishmentHistory)
-+        {
-+            TextColor statusColor = paperPunishment.isValid() ? ThemeProvider.enabled() : ThemeProvider.disabled();
-+            Component[] arguments = {
-+                    Component.text(paperPunishment.getID()).hoverEvent(
-+                            HoverEvent.showText(Component.translatable("server.general.show.more"))).clickEvent(
-+                            ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,
-+                                    "/baninfo " + paperPunishment.getID())),
-+                    Component.text(paperPunishment.getName()).color(ThemeProvider.general()),
-+                    Component.text(paperPunishment.getBanOperator()).color(ThemeProvider.secondary()),
-+                    Component.text(paperPunishment.getBanType().toString()).color(ThemeProvider.secondary()),
-+                    Component.text(paperPunishment.getTotalID().toString()).color(ThemeProvider.secondary()),
-+                    Component.text(formatter.format(paperPunishment.getStart())).color(ThemeProvider.secondary()),
-+                    paperPunishment.endComponent(payload.getSender().getFormatter(FormatStyle.SHORT)),
-+                    Component.text(paperPunishment.isValid() ? "✔" : "❌").color(statusColor)
-+            };
-+            component.appendNewline().append(Component.translatable("server.ban.punishment.compact", arguments));
-+        }
-+
-+        return component.asComponent();
-+    }
-+
-+    /**
-+     * Obtain the punished message for a given display name, ban type, and reason component.
-+     *
-+     * @param displayName     The display name of the punished player.
-+     * @param banType         The type of punishment (BAN, MUTE, KICK).
-+     * @param reasonComponent The reason for the punishment (optional).
-+     * @return The punished message as a Component object.
-+     * @throws NullPointerException if display name or ban type is null.
-+     */
-+    public @NotNull Component punishComponent(@NotNull Component displayName, @NotNull BanType banType, @Nullable Component reasonComponent)
-+    {
-+        StringBuilder translationKey = new StringBuilder("server.ban.player.");
-+        switch (banType)
-+        {
-+            case BAN -> translationKey.append("banned");
-+            case MUTE -> translationKey.append("muted");
-+            case KICK -> translationKey.append("kicked");
-+        }
-+
-+        if (reasonComponent != null)
-+        {
-+            return Component.translatable(translationKey.append(".reason").toString(), displayName, reasonComponent);
-+        }
-+        return Component.translatable(translationKey.toString(), displayName);
-+    }
-+
-+    /**
-+     * This method is responsible for constructing a clickable text component that,
-+     * when clicked, copies the provided text to the clipboard.
-+     * On hovering over this component, a tooltip saying "copy to clipboard" is shown.
-+     * <p>
-+     * The method first calls Component.text() to convert the raw string into a Component.
-+     * It then sets up a clickEvent for this Component using ClickEvent.copyToClipboard().
-+     * This click event will copy the provided raw string to the user's clipboard when the Component is clicked.
-+     * Further, it sets up a hover event for this Component using HoverEvent.showText() to show a tooltip when the user hovers over this Component.
-+     * The text of the tooltip is set to "copy to clipboard".
-+     * This method could be used to construct clickable and copyable command outputs, URLs, token strings, etc
-+     * for an interactive and user-friendly experience.
-+     *
-+     * @param text the raw string that will be converted into a Component,
-+     *             and also the string that will be copied to the clipboard when the user clicks the resulting Component.
-+     * @return a Component that, when clicked, copies the provided string to the clipboard and shows a tooltip on hover.
-+     * @throws NullPointerException if text is null.
-+     */
-+    private @NotNull Component constructCopyable(@NotNull String text)
-+    {
-+        return Component.text(text).clickEvent(ClickEvent.copyToClipboard(text)).hoverEvent(
-+                HoverEvent.showText(Component.text("copy to clipboard")));
-+    }
-+
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java b/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..55167ae5fef79f24545df34479443dbb74399a57
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/ban/command/PaperPunishmentParser.java
-@@ -0,0 +1,19 @@
-+package net.kissenpvp.paper.ban.command;
-+
-+import net.kissenpvp.paper.api.ban.PaperPunishment;
-+import net.kissenpvp.paper.api.command.PaperArgumentParser;
-+import org.jetbrains.annotations.NotNull;
-+
-+public class PaperPunishmentParser implements PaperArgumentParser<PaperPunishment>
-+{
-+    @Override public @NotNull String serialize(@NotNull PaperPunishment object)
-+    {
-+        return object.getID();
-+    }
-+
-+    @Override public @NotNull PaperPunishment deserialize(@NotNull String input)
-+    {
-+        //TODO
-+        return null;
-+    }
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/ban/warn/KissenPaperWarn.java b/src/main/java/net/kissenpvp/paper/ban/warn/KissenPaperWarn.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..7d98f28dda2e3cee101c5b056287f6efd9358cd2
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/ban/warn/KissenPaperWarn.java
-@@ -0,0 +1,15 @@
-+package net.kissenpvp.paper.ban.warn;
-+
-+import net.kissenpvp.core.ban.warn.KissenWarn;
-+import net.kissenpvp.core.ban.warn.WarnNode;
-+import net.kissenpvp.paper.api.ban.PaperBan;
-+import net.kissenpvp.paper.api.ban.warn.PaperWarn;
-+import org.jetbrains.annotations.NotNull;
-+
-+public class KissenPaperWarn extends KissenWarn<PaperBan> implements PaperWarn
-+{
-+    public KissenPaperWarn(@NotNull WarnNode warnNode)
-+    {
-+        super(warnNode);
-+    }
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/ban/warn/command/WarnCommand.java b/src/main/java/net/kissenpvp/paper/ban/warn/command/WarnCommand.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..d551170c651ca89bd89756ff4241f32af1f6baae
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/ban/warn/command/WarnCommand.java
-@@ -0,0 +1,162 @@
-+package net.kissenpvp.paper.ban.warn.command;
-+
-+import net.kissenpvp.core.api.command.CommandPayload;
-+import net.kissenpvp.core.api.command.annotations.ArgumentName;
-+import net.kissenpvp.core.api.command.annotations.CommandData;
-+import net.kissenpvp.core.api.command.annotations.Optional;
-+import net.kissenpvp.core.api.message.ThemeProvider;
-+import net.kissenpvp.core.api.time.TemporalObject;
-+import net.kissenpvp.core.api.util.PageBuilder;
-+import net.kissenpvp.core.api.util.PageImplementation;
-+import net.kissenpvp.paper.api.ban.PaperBan;
-+import net.kissenpvp.paper.api.ban.warn.PaperWarn;
-+import net.kissenpvp.paper.ban.command.BanCommand;
-+import net.kyori.adventure.text.Component;
-+import net.kyori.adventure.text.TextComponent;
-+import net.kyori.adventure.text.event.ClickEvent;
-+import net.kyori.adventure.text.format.TextColor;
-+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-+import org.bukkit.Bukkit;
-+import org.bukkit.OfflinePlayer;
-+import org.bukkit.command.CommandSender;
-+import org.jetbrains.annotations.Contract;
-+import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Nullable;
-+
-+import java.time.Duration;
-+import java.time.format.FormatStyle;
-+import java.util.ArrayList;
-+import java.util.Collections;
-+import java.util.List;
-+
-+public class WarnCommand
-+{
-+
-+    /**
-+     * Executes the "warn" command to warn a specific user to refrain from inappropriate behavior.
-+     *
-+     * @param payload     The command payload containing the command sender.
-+     * @param player      The player to be warned.
-+     * @param paperBan    The PaperBan instance for warning the player.
-+     * @param reasonArray (Optional) The reason for the warning.
-+     */
-+    @CommandData(value = "warn", description = "This command is used to warn a specific user to refrain from inappropriate behavior.")
-+    public void warn(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer player, @NotNull PaperBan paperBan, @NotNull @Optional @ArgumentName("reason") String[] reasonArray)
-+    {
-+        java.util.Optional<Component> transformedReason = getReason(reasonArray);
-+        List<PaperWarn> currentWarns = player.getWarnHistory().stream().filter(TemporalObject::isValid).toList();
-+
-+        Runnable runnable = () ->
-+        {
-+            player.warn(paperBan, payload.getSender(), transformedReason.orElse(null));
-+            payload.getSender().sendMessage(warnMessage(player.displayName(), Component.text(currentWarns.size() + 1),
-+                    transformedReason.orElse(null)));
-+        };
-+
-+        if (currentWarns.size() > 1)
-+        {
-+            Component[] args = {
-+                    player.displayName(),
-+                    Component.text(currentWarns.size()),
-+                    getClickable("gui.yes", "/confirm"),
-+                    getClickable("gui.no", "/cancel")
-+            };
-+            payload.getSender().sendMessage(Component.translatable("server.ban.warn.ban", args));
-+
-+            Runnable ban = () -> new BanCommand().ban(payload, player, paperBan, reasonArray);
-+            payload.confirmRequest(Duration.ofSeconds(30), ban, runnable, runnable, false);
-+            return;
-+        }
-+        runnable.run();
-+    }
-+
-+    @CommandData("warnhistory")
-+    public void warnHistory(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer player, @NotNull java.util.Optional<Integer> page)
-+    {
-+        List<PaperWarn> paperWarns = new ArrayList<>(player.getWarnHistory());
-+        if (paperWarns.isEmpty())
-+        {
-+            payload.getSender().sendMessage(Component.text("no warns"));
-+            return;
-+        }
-+        Collections.reverse(paperWarns);
-+        PageBuilder<PaperWarn> warnPages = Bukkit.getKissen().getImplementation(
-+                PageImplementation.class).createPageBuilder(paperWarns);
-+
-+
-+        TextComponent.Builder builder = Component.text().append(
-+                warnPages.getHeader(player.displayName(), page.orElse(1)));
-+
-+
-+        for (PaperWarn warn : warnPages.getEntries(page.orElse(1)))
-+        {
-+            TextColor statusColor = warn.isValid() ? ThemeProvider.enabled() : ThemeProvider.disabled();
-+
-+            Component unknown = Component.text("commands.banlist.entry.unknown");
-+            Component banid = warn.getBan().map(ban -> (Component) Component.text(ban.getName())).orElse(unknown);
-+            String time = payload.getSender().getFormatter(FormatStyle.MEDIUM).format(warn.getStart());
-+
-+            Component[] arguments = {
-+                    Component.text(warn.isValid() ? "✔" : "❌").color(statusColor),
-+                    banid.color(ThemeProvider.general()),
-+                    Component.text(time).color(ThemeProvider.secondary())
-+            };
-+
-+            builder.appendNewline().append(Component.translatable("server.ban.compact", arguments));
-+        }
-+        builder.appendNewline().append(warnPages.getFooter(player.displayName(), page.orElse(1)));
-+        payload.getSender().sendMessage(builder.asComponent());
-+    }
-+
-+    @CommandData(value = "warnreset", aliases = "resetwarn")
-+    public void warnClear(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer player)
-+    {
-+        Runnable clearWarns = () ->
-+        {
-+            player.clearActiveWarns();
-+            payload.getSender().sendMessage(Component.translatable("server.ban.warn.clear", player.displayName()));
-+        };
-+        payload.confirmRequest(clearWarns);
-+    }
-+
-+    /**
-+     * Obtains the warned message with the given components.
-+     *
-+     * @param displayName     The display name component.
-+     * @param warningCount    The warning count component.
-+     * @param reasonComponent The optional reason component.
-+     * @return The warned message component.
-+     */
-+    private @NotNull Component warnMessage(@NotNull Component displayName, @NotNull Component warningCount, @Nullable Component reasonComponent)
-+    {
-+        if (reasonComponent == null)
-+        {
-+            return Component.translatable("server.ban.player.warned", displayName, warningCount);
-+        }
-+        return Component.translatable("server.ban.player.warned.cause", displayName, warningCount, reasonComponent);
-+    }
-+
-+    /**
-+     * Retrieves the reason as a {@link Component} object.
-+     *
-+     * @param reason the array of strings representing the reason
-+     * @return the reason as a Component object, or null if the reason is empty
-+     */
-+    private @NotNull java.util.Optional<Component> getReason(@NotNull String @NotNull [] reason)
-+    {
-+        if (reason.length != 0)
-+        {
-+            return java.util.Optional.of(
-+                    LegacyComponentSerializer.legacyAmpersand().deserialize(String.join(" ", reason).strip()));
-+        }
-+        return java.util.Optional.empty();
-+    }
-+
-+    @Contract(pure = true, value = "_, _ -> new")
-+    private @NotNull Component getClickable(@NotNull String translationKey, @NotNull String command)
-+    {
-+        TextColor color = command.equals("/confirm") ? ThemeProvider.enabled() : ThemeProvider.disabled();
-+        Component confirm = Component.translatable(translationKey, color).clickEvent(ClickEvent.runCommand(command));
-+        return Component.text("[", color).append(confirm).append(Component.text("]", color));
-+    }
-+}
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 index 9f62dc952ce4984e45d69c393ad9cc4fde3736e7..e3e4fd170caaf4726c44f303ced029df4427c739 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
@@ -569,6 +81,235 @@ index 9f62dc952ce4984e45d69c393ad9cc4fde3736e7..e3e4fd170caaf4726c44f303ced029df
          super.loadImplementations(loader);
      }
  
+diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperInternalCommandHandler.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperInternalCommandHandler.java
+deleted file mode 100644
+index 466f4168cf90923e692ad0dc4a062e4d2f8825f9..0000000000000000000000000000000000000000
+--- a/src/main/java/net/kissenpvp/paper/command/KissenPaperInternalCommandHandler.java
++++ /dev/null
+@@ -1,39 +0,0 @@
+-package net.kissenpvp.paper.command;
+-
+-import net.kissenpvp.core.command.handler.InternalCommandHandler;
+-import net.kissenpvp.paper.command.command.system.KissenPaperCommand;
+-import org.bukkit.Bukkit;
+-import org.bukkit.command.CommandSender;
+-import org.bukkit.craftbukkit.CraftServer;
+-import org.jetbrains.annotations.NotNull;
+-
+-public class KissenPaperInternalCommandHandler extends InternalCommandHandler<CommandSender, KissenPaperCommand>
+-{
+-    @Override
+-    protected void registerCommand(@NotNull KissenPaperCommand command)
+-    {
+-        if(Bukkit.getCommandMap().register("kissenpaper", command))
+-        {
+-            ((CraftServer) Bukkit.getServer()).syncCommands();
+-        }
+-    }
+-
+-    @Override
+-    protected @NotNull KissenPaperCommand buildCommand(@NotNull String name)
+-    {
+-        String rootName = name.split("\\.")[0];
+-        KissenPaperCommand command = getCommand(rootName).orElseGet(() ->
+-        {
+-            KissenPaperCommand kissenCommand = new KissenPaperCommand(rootName, 0, this);
+-            getCommands().add(kissenCommand);
+-            return kissenCommand;
+-        });
+-
+-        if (!name.equals(rootName))
+-        {
+-            command = (KissenPaperCommand) command.createRecursive(name);
+-            getCommands().add(command);
+-        }
+-        return command;
+-    }
+-}
+diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperPluginHandler.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperPluginHandler.java
+deleted file mode 100644
+index 8439a8f619b889999ec3d19f3db49c82da561d77..0000000000000000000000000000000000000000
+--- a/src/main/java/net/kissenpvp/paper/command/KissenPaperPluginHandler.java
++++ /dev/null
+@@ -1,50 +0,0 @@
+-package net.kissenpvp.paper.command;
+-
+-import net.kissenpvp.core.api.base.plugin.KissenPlugin;
+-import net.kissenpvp.core.api.command.executor.CommandExecutor;
+-import net.kissenpvp.core.command.handler.PluginCommandHandler;
+-import net.kissenpvp.paper.command.command.plugin.KissenPaperPluginCommand;
+-import org.bukkit.Bukkit;
+-import org.bukkit.command.CommandSender;
+-import org.bukkit.craftbukkit.CraftServer;
+-import org.bukkit.plugin.Plugin;
+-import org.jetbrains.annotations.NotNull;
+-
+-import java.lang.reflect.Method;
+-import java.util.Objects;
+-
+-public class KissenPaperPluginHandler extends PluginCommandHandler<CommandSender, KissenPaperPluginCommand>
+-{
+-    public KissenPaperPluginHandler(@NotNull KissenPlugin plugin)
+-    {
+-        super(plugin);
+-    }
+-
+-    @Override
+-    protected void registerCommand(@NotNull KissenPaperPluginCommand command)
+-    {
+-        if(Bukkit.getCommandMap().register(getPlugin().getName(), command))
+-        {
+-            ((CraftServer) Bukkit.getServer()).syncCommands();
+-        }
+-    }
+-
+-    @Override
+-    protected @NotNull KissenPaperPluginCommand buildCommand(@NotNull String name)
+-    {
+-        String rootName = name.split("\\.")[0];
+-        KissenPaperPluginCommand command = getCommand(rootName).orElseGet(() ->
+-        {
+-            KissenPaperPluginCommand kissenCommand = new KissenPaperPluginCommand((Plugin) getPlugin(), rootName, 0, this);
+-            getCommands().add(kissenCommand);
+-            return kissenCommand;
+-        });
+-
+-        if (!Objects.equals(name, rootName))
+-        {
+-            command = (KissenPaperPluginCommand) command.createRecursive(name);
+-            getCommands().add(command);
+-        }
+-        return command;
+-    }
+-}
+diff --git a/src/main/java/net/kissenpvp/paper/command/PaperCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/PaperCommandImplementation.java
+deleted file mode 100644
+index a2bfb1547286a1817305196df63cf5479662eb88..0000000000000000000000000000000000000000
+--- a/src/main/java/net/kissenpvp/paper/command/PaperCommandImplementation.java
++++ /dev/null
+@@ -1,122 +0,0 @@
+-/*
+- * Copyright (C) 2023 KissenPvP
+- *
+- * This program is licensed under the Apache License, Version 2.0.
+- *
+- * This software may be redistributed and/or modified under the terms
+- * of the Apache License as published by the Apache Software Foundation,
+- * either version 2 of the License, or (at your option) any later version.
+- *
+- * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+- * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
+- * License, Version 2.0 for the specific language governing permissions
+- * and limitations under the License.
+- *
+- * You should have received a copy of the Apache License, Version 2.0
+- * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
+- */
+-
+-package net.kissenpvp.paper.command;
+-
+-import net.kissenpvp.core.api.base.plugin.KissenPlugin;
+-import net.kissenpvp.core.api.command.CommandHandler;
+-import net.kissenpvp.core.command.CommandImplementation;
+-import net.kissenpvp.core.command.TargetValidator;
+-import net.kissenpvp.core.command.argument.MethodEvaluator;
+-import net.kissenpvp.core.command.handler.InternalCommandHandler;
+-import net.kissenpvp.core.command.handler.PluginCommandHandler;
+-import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
+-import net.kissenpvp.paper.api.command.KissenCommand;
+-import net.kissenpvp.paper.command.handler.CompletionExceptionHandler;
+-import net.kissenpvp.paper.command.handler.PlayerExceptionHandler;
+-import net.kissenpvp.paper.command.handler.ProfileNotFoundExceptionHandler;
+-import net.kissenpvp.paper.command.parser.OfflinePlayerParser;
+-import net.kissenpvp.paper.command.parser.PlayerParser;
+-import net.kyori.adventure.text.Component;
+-import net.kyori.adventure.text.minimessage.MiniMessage;
+-import org.bukkit.Bukkit;
+-import org.bukkit.OfflinePlayer;
+-import org.bukkit.command.CommandSender;
+-import org.bukkit.entity.Player;
+-import org.jetbrains.annotations.NotNull;
+-
+-import java.text.MessageFormat;
+-import java.util.Optional;
+-
+-/**
+- * Represents a Kissen Paper command implementation that extends the functionality of the Kissen command framework
+- * and is compatible with the Paper server platform.
+- * <p>
+- * This class extends {@link CommandImplementation} and implements the {@link net.kissenpvp.paper.api.command.PaperCommandImplementation} interface
+- * to provide specialized command handling and execution functionality tailored for the Paper server platform.
+- * It integrates seamlessly with the Kissen command framework and enhances it with Paper-specific features.
+- */
+-public class PaperCommandImplementation extends CommandImplementation<CommandSender> implements net.kissenpvp.paper.api.command.PaperCommandImplementation
+-{
+-
+-
+-    /**
+-     * Constructs a new instance of {@link PaperCommandImplementation}.
+-     * <p>
+-     * This constructor initializes the {@link MethodEvaluator} and {@link TargetValidator} instances used by this
+-     * Kissen Paper command implementation for evaluating command methods and validating command execution targets.
+-     */
+-    public PaperCommandImplementation()
+-    {
+-        super();
+-
+-        // Advanced
+-        getInternalHandler().registerParser(Player.class, new PlayerParser());
+-        getInternalHandler().registerParser(OfflinePlayer.class, new OfflinePlayerParser());
+-
+-        //Exception handler
+-        getInternalHandler().registerExceptionHandler(new PlayerExceptionHandler());
+-        getInternalHandler().registerExceptionHandler(new CompletionExceptionHandler());
+-        getInternalHandler().registerExceptionHandler(new ProfileNotFoundExceptionHandler());
+-    }
+-
+-    @Override
+-    public boolean start()
+-    {
+-        KissenLocalizationImplementation kissenLocalizationImplementation = Bukkit.getKissen().getImplementation(
+-                KissenLocalizationImplementation.class);
+-        kissenLocalizationImplementation.register("server.command.mojang.profile.invalid",
+-                new MessageFormat("Mojangs repository does not contain the specified profile."));
+-        kissenLocalizationImplementation.register("server.command.player.offline",
+-                new MessageFormat("The player {0} seems to be offline."));
+-        kissenLocalizationImplementation.register("server.command.failed",
+-                new MessageFormat(MiniMessage.miniMessage().serialize(Component.translatable("commands.help.failed"))));
+-
+-        kissenLocalizationImplementation.register("server.command.general.header",
+-                new MessageFormat("===== [ {0} ] ====="));
+-        kissenLocalizationImplementation.register("server.command.general.header.paged",
+-                new MessageFormat("===== [ {0} ({1}/{2}) ] ====="));
+-        kissenLocalizationImplementation.register("server.command.general.footer",
+-                new MessageFormat("===== [ {0} ] ====="));
+-        kissenLocalizationImplementation.register("server.command.general.footer.paged",
+-                new MessageFormat("===== [ {0} ({1}/{2}) ] ====="));
+-
+-        kissenLocalizationImplementation.register("server.command.general.key.value", new MessageFormat("{0}: {1}"));
+-
+-        return super.start();
+-    }
+-
+-    @Override
+-    protected InternalCommandHandler<CommandSender, ?> constructInternalHandler()
+-    {
+-        return new KissenPaperInternalCommandHandler();
+-    }
+-
+-    @Override
+-    protected @NotNull PluginCommandHandler<CommandSender, ?> constructHandler(@NotNull KissenPlugin kissenPlugin)
+-    {
+-        return new KissenPaperPluginHandler(kissenPlugin);
+-    }
+-
+-
+-    @Override
+-    public @NotNull Optional<CommandHandler<CommandSender, KissenCommand>> getPluginHandler(@NotNull KissenPlugin kissenPlugin)
+-    {
+-        return getHandler().stream().filter(handler -> handler.getPlugin().equals(kissenPlugin)).map(handler -> (CommandHandler<CommandSender, KissenCommand>) handler).findFirst();
+-    }
+-}
 diff --git a/src/main/java/net/kissenpvp/paper/entity/KissenPaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/entity/KissenPaperOnlinePlayerClient.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..de1b3676b9fed8b0dc5b5507e9582332f0f99cc0
@@ -692,10 +433,10 @@ index 0000000000000000000000000000000000000000..de1b3676b9fed8b0dc5b5507e9582332
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/entity/KissenPaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b122416a414cd75134eb0be4ebb2095738a52e64
+index 0000000000000000000000000000000000000000..48f5e30a9c2269a50decd24ab41fdef55586b24c
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/entity/KissenPaperPlayerClient.java
-@@ -0,0 +1,245 @@
+@@ -0,0 +1,244 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -885,7 +626,7 @@ index 0000000000000000000000000000000000000000..b122416a414cd75134eb0be4ebb20957
 +    public void clearActiveWarns()
 +    {
 +        List<WarnNode> nodes = new ArrayList<>(getUser().getListNotNull("warn_list", WarnNode.class));
-+        nodes.forEach(warn -> warn.temporalMeasureNode().end().setValue(System.currentTimeMillis()));
++        nodes.forEach(warn -> warn.temporalMeasure().end().setValue(System.currentTimeMillis()));
 +        getUser().setList("warn_list", nodes);
 +    }
 +
@@ -919,8 +660,7 @@ index 0000000000000000000000000000000000000000..b122416a414cd75134eb0be4ebb20957
 +        AccurateDuration duration = new KissenAccurateDuration(Period.ofWeeks(1));
 +        TemporalMeasureNode temporalMeasureNode = new TemporalMeasureNode(duration);
 +
-+        String parsedReason = reason != null ? JSONComponentSerializer.json().serialize(reason) : null;
-+        WarnNode node = new WarnNode(ban.getID(), warnOperator.getName(), parsedReason, temporalMeasureNode);
++        WarnNode node = new WarnNode(ban.getID(), warnOperator.getName(), reason, temporalMeasureNode);
 +        nodes.add(node);
 +        return transformWarn().apply(node);
 +    }
@@ -1063,10 +803,10 @@ index 0000000000000000000000000000000000000000..1c3d7977d447f1beb6ae470bde9f190f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a190cf86ca70534c77b117929ecb70c426c3f090
+index 0000000000000000000000000000000000000000..b139462f6e3ffaca0b5d13e3e3149d90ecc4d0c8
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
-@@ -0,0 +1,245 @@
+@@ -0,0 +1,244 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1256,7 +996,7 @@ index 0000000000000000000000000000000000000000..a190cf86ca70534c77b117929ecb70c4
 +    public void clearActiveWarns()
 +    {
 +        List<WarnNode> nodes = new ArrayList<>(getUser().getListNotNull("warn_list", WarnNode.class));
-+        nodes.forEach(warn -> warn.temporalMeasureNode().end().setValue(System.currentTimeMillis()));
++        nodes.forEach(warn -> warn.temporalMeasure().end().setValue(System.currentTimeMillis()));
 +        getUser().setList("warn_list", nodes);
 +    }
 +
@@ -1290,8 +1030,7 @@ index 0000000000000000000000000000000000000000..a190cf86ca70534c77b117929ecb70c4
 +        AccurateDuration duration = new KissenAccurateDuration(Period.ofWeeks(1));
 +        TemporalMeasureNode temporalMeasureNode = new TemporalMeasureNode(duration);
 +
-+        String parsedReason = reason != null ? JSONComponentSerializer.json().serialize(reason) : null;
-+        WarnNode node = new WarnNode(ban.getID(), warnOperator.getName(), parsedReason, temporalMeasureNode);
++        WarnNode node = new WarnNode(ban.getID(), warnOperator.getName(), reason, temporalMeasureNode);
 +        nodes.add(node);
 +        return transformWarn().apply(node);
 +    }
@@ -2217,7 +1956,7 @@ index 0000000000000000000000000000000000000000..318e2520843c49567887703a254e03a8
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java b/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java
-index 4b96b6a41ca3ba9c0fce327cabcb02dcd10d6e6d..59063943235780b39c4128751dd68e70f143fb84 100644
+index 4b96b6a41ca3ba9c0fce327cabcb02dcd10d6e6d..6a42898142a3a92c0ffe07c88cc4d056bcaf5964 100644
 --- a/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java
 +++ b/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java
 @@ -20,7 +20,6 @@ import net.kyori.adventure.text.format.TextColor;
@@ -2228,6 +1967,34 @@ index 4b96b6a41ca3ba9c0fce327cabcb02dcd10d6e6d..59063943235780b39c4128751dd68e70
  import org.jetbrains.annotations.NotNull;
  import org.jetbrains.annotations.Nullable;
  
+@@ -40,8 +39,11 @@ public class PermissionCommand
+     @CommandData(value = "permission.user", permission = "*", runAsync = true)
+     public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value)
+     {
+-        commandPayload.confirmRequest(() -> commandPayload.getSender().sendMessage(
+-                execute(player, permission.permission(), value.orElse(null))));
++        commandPayload.confirmRequest(() ->
++        {
++            Component response = execute(player, permission.permission(), value.orElse(null));
++            commandPayload.getSender().sendMessage(response);
++        }).send();
+     }
+ 
+     @CommandData(value = "permission.user.wipe", permission = "*", runAsync = true)
+@@ -53,8 +55,11 @@ public class PermissionCommand
+     @CommandData(value = "permission.group", permission = "*", runAsync = true)
+     public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value)
+     {
+-        commandPayload.confirmRequest(() -> commandPayload.getSender().sendMessage(
+-                execute(group, permission.permission(), value.orElse(null))));
++        commandPayload.confirmRequest(() ->
++        {
++            Component response = execute(group, permission.permission(), value.orElse(null));
++            commandPayload.getSender().sendMessage(response);
++        }).send();
+     }
+ 
+     @CommandData(value = "permission.group.create", permission = "*", runAsync = true)
 diff --git a/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommandExecutor.java b/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommandExecutor.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..d7ba9e479bc17461f8ef36b1e6330fdf963c806e
@@ -4753,7 +4520,7 @@ index 0000000000000000000000000000000000000000..1fa9a490165d87b19312001931bb3dd5
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/suffix/SuffixCommand.java b/src/main/java/net/kissenpvp/paper/user/suffix/SuffixCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8f1bd1b7a6f528191d9fc7ac50a95ceb527ec7fe
+index 0000000000000000000000000000000000000000..ba3a05bd5f97af18c06bd81670a64eed0544c678
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/suffix/SuffixCommand.java
 @@ -0,0 +1,96 @@
@@ -4812,7 +4579,7 @@ index 0000000000000000000000000000000000000000..8f1bd1b7a6f528191d9fc7ac50a95ceb
 +
 +        if (offlinePlayer.getSuffix(name).filter(TemporalObject::isValid).isPresent())
 +        {
-+            payload.confirmRequest(setSuffix);
++            payload.confirmRequest(setSuffix).send();
 +            return;
 +        }
 +        setSuffix.run();

@@ -76,16 +76,16 @@ public abstract class KissenConfirmationImplementation implements KissenImplemen
         };
     }
 
-    public boolean requestConfirmation(@Nullable KissenPlugin plugin, @NotNull ServerEntity sender, @NotNull Instant time, @NotNull Runnable runnable, @NotNull Runnable onCancel, @NotNull Runnable onTime)
+    public boolean requestConfirmation(@NotNull ConfirmationNode node, @NotNull ServerEntity sender)
     {
         if (sender instanceof PlayerClient<?, ?, ?> player)
         {
-            return requestPlayerConfirmation(plugin, player, time, runnable, onCancel, onTime);
+            return requestPlayerConfirmation(node, player);
         }
         return false;
     }
 
-    private boolean requestPlayerConfirmation(@Nullable KissenPlugin plugin, @NotNull PlayerClient<?, ?, ?> player, @NotNull Instant time, @NotNull Runnable runnable, @NotNull Runnable onCancel, @NotNull Runnable onTime)
+    private boolean requestPlayerConfirmation(@NotNull ConfirmationNode node, @NotNull PlayerClient<?, ?, ?> player)
     {
         Predicate<Confirmation> is = task -> task instanceof PlayerConfirmationNode confirm && confirm.equals(player);
         if (confirmations.stream().anyMatch(is))
@@ -93,8 +93,7 @@ public abstract class KissenConfirmationImplementation implements KissenImplemen
             return false;
         }
 
-        ConfirmationNode confirm = new ConfirmationNode(plugin, time, runnable, onCancel, onTime);
-        PlayerConfirmationNode playerConfirm = new PlayerConfirmationNode(player.getUniqueId(), confirm);
+        PlayerConfirmationNode playerConfirm = new PlayerConfirmationNode(player.getUniqueId(), node);
         return confirmations.add(playerConfirm);
     }
 

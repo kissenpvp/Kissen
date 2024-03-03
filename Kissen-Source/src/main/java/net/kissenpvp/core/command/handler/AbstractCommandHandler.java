@@ -25,7 +25,8 @@ import java.util.*;
 
 @Getter
 public abstract class AbstractCommandHandler<S extends ServerEntity, C extends CommandHolder<S, ? extends C>> implements CommandHandler<S, C> {
-    @Getter(AccessLevel.PROTECTED) private final Set<C> commands;
+    @Getter(AccessLevel.PROTECTED)
+    private final Set<C> commands;
     private final Map<Class<?>, ArgumentParser<?, S>> parser;
     private final Set<ExceptionHandler<?>> exceptionHandler;
     private final MethodEvaluator<S> evaluator;
@@ -86,35 +87,39 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
 
     private void injectMethod(@NotNull Object instance, @NotNull Method method) {
         CommandData commandData = method.getAnnotation(CommandData.class);
-        if (commandData!=null) {
+        if (commandData != null) {
             C command = buildCommand(commandData.value());
             CommandExecutor<S> executor = new KissenCommandExecutor<>(this, instance, method) {
                 @Override
                 protected boolean handleThrowable(@NotNull CommandPayload<S> commandPayload, @NotNull Throwable throwable) {
-                    return AbstractCommandHandler.this.handleThrowable(commandPayload, throwable);
+                    do
+                    {
+                        if (AbstractCommandHandler.this.handleThrowable(commandPayload, throwable)) {
+                            return true;
+                        }
+                    } while((throwable = throwable.getCause()) != null);
+                    return false;
                 }
             };
             command.initCommand(commandData, executor);
             addPermissions(command);
 
-            if (command.getPosition()==0) {
+            if (command.getPosition() == 0) {
                 registerCommand(command);
             }
             return;
         }
 
         TabCompleter tabCompleter = method.getAnnotation(TabCompleter.class);
-        if (tabCompleter!=null) {
+        if (tabCompleter != null) {
             KissenPaperCompleteExecutor<S> executor = new KissenPaperCompleteExecutor<>(instance, method);
             buildCommand(tabCompleter.value()).initCompleter(executor);
         }
     }
 
     private void addPermissions(@NotNull C command) {
-        if(command.getPermission() != null)
-        {
-            for(String permission : command.getPermission().split(";"))
-            {
+        if (command.getPermission() != null) {
+            for (String permission : command.getPermission().split(";")) {
                 PermissionImplementation<?> implementation = KissenCore.getInstance().getImplementation(PermissionImplementation.class);
                 implementation.addPermission(permission);
             }

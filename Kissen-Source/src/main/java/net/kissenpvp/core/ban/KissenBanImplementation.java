@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.ban;
 
-import com.google.gson.reflect.TypeToken;
 import net.kissenpvp.core.api.ban.*;
 import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
@@ -27,23 +26,21 @@ import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
+import net.kissenpvp.core.api.database.savable.list.KissenList;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TemporalObject;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.lang.reflect.Type;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -129,9 +126,9 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     public @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration) throws BackendException {
         Map<String, Object> data = new HashMap<>();
         data.put("name", name);
-        data.put("ban_type", banType.name());
+        data.put("ban_type", banType);
         if (accurateDuration != null) {
-            data.put("duration", String.valueOf(accurateDuration.getMillis()));
+            data.put("duration", accurateDuration);
         }
         return createBan(id, data);
     }
@@ -188,7 +185,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @throws BackendException if there is an error in the backend operation
      */
     protected @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason, @NotNull Meta meta) throws BackendException {
-        KissenPunishmentNode kissenPunishmentNode = constructPunishmentNode(ban, banOperator, Optional.ofNullable(reason).map(component -> JSONComponentSerializer.json().serialize(component)).orElse(null));
+        KissenPunishmentNode kissenPunishmentNode = constructPunishmentNode(ban, banOperator, reason);
         set(totalID, kissenPunishmentNode, meta);
 
         P punishment = translatePunishment(totalID, kissenPunishmentNode, meta);
@@ -233,17 +230,40 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @throws BackendException If an error occurs while accessing the backend.
      */
     protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID, @NotNull Meta meta) throws BackendException {
-        StorageImplementation storageImplementation = KissenCore.getInstance().getImplementation(StorageImplementation.class);
+        StorageImplementation storage = KissenCore.getInstance().getImplementation(StorageImplementation.class);
+        Map<String, Object> cache = storage.getStorage(STORAGE_KEY, Duration.ofHours(1));
+        Object[] keyArguments = {totalID};
+        return (Set<P>) cache.computeIfAbsent(TOTAL_ID_KEY.format(keyArguments), (k) -> cacheId(totalID, meta));
+    }
 
-        String key = TOTAL_ID_KEY.format(new Object[]{totalID});
-        Map<String, Object> cache = storageImplementation.getStorage(STORAGE_KEY, Duration.ofHours(1));
-        if (!cache.containsKey(key)) {
-            Function<Collection<KissenPunishmentNode>, Set<P>> f = transform(totalID, meta);
-            CompletableFuture<Collection<KissenPunishmentNode>> future = meta.getCollection("punishment", totalID.toString(), KissenPunishmentNode.class);
-            cache.put(key, future.thenApply(transform(totalID, meta)).exceptionally(throwable -> Collections.emptySet()).join());
-        }
-
-        return (Set<P>) cache.get(key);
+    /**
+     * Caches and retrieves a set of {@code P} objects associated with the specified {@link UUID} and {@link Meta}.
+     *
+     * <p>The {@code cacheId} method utilizes the provided {@link Meta} to fetch a collection of punishment data
+     * associated with the given {@link UUID}. It then transforms the data into a set of {@code P} objects and returns
+     * an unmodifiable set of these objects.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * // Example: Caching and retrieving punishment data for a specific UUID and Meta
+     * UUID playerId = // specify UUID
+     * Meta meta = // specify Meta
+     * Set<P> punishmentSet = cacheId(playerId, meta);
+     * }
+     * </pre>
+     *
+     * @param totalID the {@link UUID} associated with the punishment data
+     * @param meta    the {@link Meta} containing information about the data retrieval
+     * @return an unmodifiable set of {@code P} objects associated with the specified {@link UUID} and {@link Meta}
+     * @throws NullPointerException if the specified {@link UUID} or {@link Meta} is `null`
+     */
+    private @NotNull @Unmodifiable Set<P> cacheId(@NotNull UUID totalID, @NotNull Meta meta) {
+        return meta.getCollection("punishment", totalID.toString(), KissenPunishmentNode.class).thenApply(data -> {
+            Stream<KissenPunishmentNode> nodeStream = data.stream();
+            return nodeStream.map(transform(totalID, meta)).collect(Collectors.toUnmodifiableSet());
+        }).join();
     }
 
     /**
@@ -270,22 +290,30 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * Sets a KissenPunishmentNode in the metadata for a given totalID.
      * If a KissenPunishmentNode with the same ID already exists, it is replaced.
      *
-     * @param totalID              the UUID representing the totalID for which the KissenPunishmentNode should be set
-     * @param kissenPunishmentNode the KissenPunishmentNode to be set
-     * @param meta                 the Meta data object
+     * @param totalID        the UUID representing the totalID for which the KissenPunishmentNode should be set
+     * @param punishmentNode the KissenPunishmentNode to be set
+     * @param meta           the Meta data object
      * @throws BackendException if there is an error accessing the backend
      */
-    protected void set(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @NotNull Meta meta) throws BackendException {
+    protected void set(@NotNull UUID totalID, @NotNull KissenPunishmentNode punishmentNode, @NotNull Meta meta) throws BackendException {
+        Function<KissenList<KissenPunishmentNode>, Boolean> insert = list -> list.replaceOrInsert(punishmentNode);
+        if (meta.getCollection("punishment", totalID.toString(), KissenPunishmentNode.class).thenApply(insert).join()) {
+            invalidateCache(totalID);
+        }
+    }
 
-        CompletableFuture<Collection<KissenPunishmentNode>> nodeCollection = meta.getCollection("punishment", totalID.toString(), KissenPunishmentNode.class);
-        List<KissenPunishmentNode> punishmentRecordList = nodeCollection.exceptionally((throwable -> new ArrayList<>())).thenApply(ArrayList::new).join();
-
-        punishmentRecordList.removeIf(node -> node.id().equals(kissenPunishmentNode.id()));
-        punishmentRecordList.add(kissenPunishmentNode);
-
-        KissenCore.getInstance().getImplementation(StorageImplementation.class).getStorage(STORAGE_KEY).remove(TOTAL_ID_KEY.format(new Object[]{totalID}));
-
-        meta.setCollection("punishment", totalID.toString(), punishmentRecordList);
+    /**
+     * Invalidates the cache for the specified {@link UUID} by removing the corresponding entry from the storage.
+     *
+     * <p>The {@code invalidateCache} method is responsible for removing the cache entry associated with the provided {@link UUID}
+     * from the storage. This is useful when the cached data becomes outdated or needs to be refreshed.</p>
+     *
+     * @param totalID the {@link UUID} for which the cache needs to be invalidated
+     * @throws NullPointerException if the specified {@link UUID} is `null`
+     */
+    private void invalidateCache(@NotNull UUID totalID) {
+        StorageImplementation storage = KissenCore.getInstance().getImplementation(StorageImplementation.class);
+        storage.getStorage(STORAGE_KEY).remove(TOTAL_ID_KEY.format(new Object[]{totalID}));
     }
 
     /**
@@ -322,7 +350,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @param reason      the reason for the ban (can be null)
      * @return the constructed punishment node
      */
-    protected @NotNull KissenPunishmentNode constructPunishmentNode(@NotNull B ban, @NotNull ServerEntity banOperator, @Nullable String reason) {
+    protected @NotNull KissenPunishmentNode constructPunishmentNode(@NotNull B ban, @NotNull ServerEntity banOperator, @Nullable Component reason) {
         return new KissenPunishmentNode(ban, banOperator, reason);
     }
 
@@ -379,8 +407,20 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      */
     protected abstract @NotNull P translatePunishment(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @NotNull Meta meta);
 
+    /**
+     * Creates and returns a {@link Function} that transforms a {@link KissenPunishmentNode} into a {@code P} object
+     * using the specified {@link UUID} and {@link Meta}.
+     *
+     * <p>The {@code transform} method generates a {@link Function} that takes a {@link KissenPunishmentNode} as input
+     * and applies the transformation using the provided {@link UUID} and {@link Meta} to create a {@code P} object.</p>
+     *
+     * @param totalID the {@link UUID} associated with the punishment data
+     * @param meta    the {@link Meta} containing information about the data transformation
+     * @return a {@link Function} transforming {@link KissenPunishmentNode} into {@code P} objects
+     * @throws NullPointerException if the specified {@link UUID} or {@link Meta} is `null`
+     */
     @Contract(pure = true, value = "_, _ -> new")
-    private @NotNull Function<Collection<KissenPunishmentNode>, Set<P>> transform(@NotNull UUID totalID, @NotNull Meta meta) {
-        return obj -> obj.stream().map(node -> translatePunishment(totalID, node, meta)).collect(Collectors.toSet());
+    private @NotNull Function<KissenPunishmentNode, P> transform(@NotNull UUID totalID, @NotNull Meta meta) {
+        return node -> translatePunishment(totalID, node, meta);
     }
 }

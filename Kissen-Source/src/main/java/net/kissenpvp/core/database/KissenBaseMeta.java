@@ -27,14 +27,17 @@ import net.kissenpvp.core.api.database.queryapi.*;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.savable.list.KissenList;
 import net.kissenpvp.core.database.queryapi.KissenQuerySelect;
 import net.kissenpvp.core.database.queryapi.KissenQueryUpdate;
+import net.kissenpvp.core.database.savable.list.KissenKissenList;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor
@@ -282,12 +285,21 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull <T> CompletableFuture<Collection<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type) throws BackendException {
-        return getObject(totalID, key, Object[].class).thenApply(data -> Arrays.stream((T[]) data).toList());
+    public @NotNull <T> CompletableFuture<KissenList<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type) throws BackendException {
+        return getObject(totalID, key, Object[].class).handle((data, throwable) ->
+        {
+            KissenList<T> kissenList = new KissenKissenList<>();
+            if(Objects.nonNull(data))
+            {
+                kissenList.addAll(Arrays.stream((T[]) data).toList());
+            }
+            kissenList.setListAction((o1, o2) -> setCollection(totalID, key, kissenList));
+            return kissenList;
+        });
     }
 
     @Override
-    public @NotNull <T> CompletableFuture<Collection<T>> getCollection(@NotNull String key, @NotNull Class<T> type) throws BackendException {
+    public @NotNull <T> CompletableFuture<KissenList<T>> getCollection(@NotNull String key, @NotNull Class<T> type) throws BackendException {
         return getCollection(UNDEFINED, key, type);
     }
 
@@ -323,7 +335,7 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     protected @Nullable String serialize(@Nullable Object object) {
-        if (object == null) {
+        if (object == null || (object instanceof Collection<?> collection && collection.isEmpty())) {
             return null;
         }
 
@@ -340,7 +352,6 @@ public abstract class KissenBaseMeta implements Meta {
 
         private static <T> @NotNull InternalWrapper wrap(@NotNull T object) {
             if (object instanceof Collection<?> collection) {
-
                 String typeName = collection.stream().findFirst().orElseThrow().getClass().getName();
                 return new InternalWrapper(ARRAY_PATTERN.formatted(typeName), collection.toArray(Object[]::new));
             }

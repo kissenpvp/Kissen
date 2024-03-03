@@ -37,7 +37,7 @@ public class KissenSuffix extends KissenTemporalObject implements Suffix
 
     public KissenSuffix(@NotNull SuffixNode suffixNode, @Nullable DataWriter<SuffixNode> dataWriter)
     {
-        super(suffixNode.temporalMeasureNode());
+        super(suffixNode.temporalMeasure());
         this.suffixNode = suffixNode;
         this.dataWriter = dataWriter;
     }
@@ -49,7 +49,7 @@ public class KissenSuffix extends KissenTemporalObject implements Suffix
 
     @Override public @NotNull Component getContent()
     {
-        return JSONComponentSerializer.json().deserialize(suffixNode.content().toString());
+        return suffixNode.content();
     }
 
     @Override

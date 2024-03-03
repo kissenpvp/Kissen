@@ -18,22 +18,15 @@
 
 package net.kissenpvp.core.user.suffix;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import net.kissenpvp.core.time.TemporalMeasureNode;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
 
-public record SuffixNode(@NotNull String name, @NotNull JsonElement content,
-                         @NotNull TemporalMeasureNode temporalMeasureNode) {
-
-    public SuffixNode(@NotNull String name, @NotNull Component content, @NotNull TemporalMeasureNode temporalMeasureNode) {
-        this(name, JsonParser.parseString(JSONComponentSerializer.json().serialize(content)), temporalMeasureNode);
-    }
+public record SuffixNode(@NotNull String name, @NotNull Component content,
+                         @NotNull TemporalMeasureNode temporalMeasure) {
 
     public SuffixNode(@NotNull String name, @NotNull Component content) {
         this(name, content, new TemporalMeasureNode());

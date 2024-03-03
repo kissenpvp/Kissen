@@ -21,13 +21,13 @@ package net.kissenpvp.core.command;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
-import net.kissenpvp.core.api.command.ArgumentParser;
-import net.kissenpvp.core.api.command.CommandHandler;
-import net.kissenpvp.core.api.command.CommandTarget;
+import net.kissenpvp.core.api.command.*;
+import net.kissenpvp.core.api.command.exception.OperationException;
 import net.kissenpvp.core.api.networking.client.entitiy.MessageReceiver;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.permission.PermissionEntry;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.command.confirmation.ConfirmationNode;
 import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
 import net.kissenpvp.core.command.handler.AbstractCommandHandler;
 import net.kissenpvp.core.command.handler.PluginCommandHandler;
@@ -38,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Array;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.function.Consumer;
 
 /**
  * The {@code KissenPaperCommandPayload} class represents the payload associated with a command execution in the KissenPvP plugin for the Paper platform.
@@ -54,8 +55,7 @@ import java.time.Instant;
  */
 @RequiredArgsConstructor
 @Getter
-public abstract class KissenCommandPayload<S extends ServerEntity> implements net.kissenpvp.core.api.command.CommandPayload<S>
-{
+public abstract class KissenCommandPayload<S extends ServerEntity> implements net.kissenpvp.core.api.command.CommandPayload<S> {
 
     private final String label;
     private final S sender;
@@ -66,59 +66,47 @@ public abstract class KissenCommandPayload<S extends ServerEntity> implements ne
     protected abstract @NotNull CommandHandler<S, ?> getHandler();
 
     @Override
-    public @NotNull String getLabel()
-    {
+    public @NotNull String getLabel() {
         return label;
     }
 
     @Override
-    public @NotNull S getSender()
-    {
+    public @NotNull S getSender() {
         return sender;
     }
 
     @Override
-    public @NotNull CommandTarget getTarget()
-    {
+    public @NotNull CommandTarget getTarget() {
         return target;
     }
 
     @Override
-    public @NotNull String[] getArguments()
-    {
+    public @NotNull String[] getArguments() {
         return args;
     }
 
     @Override
-    public <T> @NotNull T[] getArgument(int from, int to, @NotNull Class<T> type) throws ArrayIndexOutOfBoundsException
-    {
+    public <T> @NotNull T[] getArgument(int from, int to, @NotNull Class<T> type) throws ArrayIndexOutOfBoundsException {
 
         CommandImplementation<S> command = KissenCore.getInstance().getImplementation(CommandImplementation.class);
-
 
 
         final ArgumentParser<?, ?> adapter = ((AbstractCommandHandler<S, ?>) getHandler()).getParser().get(type);
         final T[] instance = (T[]) Array.newInstance(type, to - from);
 
-        for (int i = from; i <= to; i++)
-        {
-            instance[i - from] = (T) command.deserialize(getArgument(i).orElseThrow(IllegalArgumentException::new),
-                    adapter);
+        for (int i = from; i <= to; i++) {
+            instance[i - from] = (T) command.deserialize(getArgument(i).orElseThrow(IllegalArgumentException::new), adapter);
         }
 
         return instance;
     }
 
     @Override
-    public boolean validate(@NotNull ServerEntity serverEntity)
-    {
+    public boolean validate(@NotNull ServerEntity serverEntity) {
 
-        if (getCommandHolder().getCommandInfo().map(CommandInfo::isPermissionRequired).orElse(true) && serverEntity instanceof PermissionEntry<?> permissionEntry)
-        {
+        if (getCommandHolder().getCommandInfo().map(CommandInfo::isPermissionRequired).orElse(true) && serverEntity instanceof PermissionEntry<?> permissionEntry) {
 
-            if (!permissionEntry.hasPermission(getCommandHolder().getCommandInfo().map(CommandInfo::getPermission).orElse(
-                    "kissen.command" + getLabel())))
-            {
+            if (!permissionEntry.hasPermission(getCommandHolder().getCommandInfo().map(CommandInfo::getPermission).orElse("kissen.command" + getLabel()))) {
                 return false;
             }
         }
@@ -128,80 +116,46 @@ public abstract class KissenCommandPayload<S extends ServerEntity> implements ne
     }
 
     @Override
-    public boolean confirmRequest(@NotNull Runnable runnable)
-    {
-        return confirmRequest(runnable, defaultRunnable());
-    }
-
-    @Override
-    public boolean confirmRequest(@NotNull Runnable runnable, @NotNull Runnable cancel)
-    {
-        return confirmRequest(runnable, cancel, defaultRunnable());
-    }
-
-    @Override
-    public boolean confirmRequest(@NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut)
-    {
-        return confirmRequest(runnable, cancel, timeRunOut, true);
-    }
-
-    @Override
-    public boolean confirmRequest(@NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut, boolean sendMessage)
-    {
-        return confirmRequest(Duration.ofSeconds(30), runnable, cancel, timeRunOut, sendMessage);
-    }
-
-    @Override
-    public boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable)
-    {
-        return confirmRequest(duration, runnable, defaultRunnable());
-    }
-
-    @Override
-    public boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable, @NotNull Runnable cancel)
-    {
-        return confirmRequest(duration, runnable, cancel, defaultRunnable());
-    }
-
-    @Override
-    public boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut)
-    {
-        return confirmRequest(duration, runnable, cancel, timeRunOut, true);
-    }
-
-    @Override
-    public boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut, boolean sendMessage)
-    {
-        if (getTarget().equals(CommandTarget.SYSTEM))
-        {
-            runnable.run();
-            return true; // TODO implement confirmation for console as well
-        }
-        Class<KissenConfirmationImplementation> confirmClass = KissenConfirmationImplementation.class;
-        KissenConfirmationImplementation implementation = KissenCore.getInstance().getImplementation(confirmClass);
-        Instant now = Instant.now();
+    public @NotNull Builder confirmRequest(@NotNull Runnable runnable) {
 
         KissenPlugin plugin = null;
-        if (getCommandHolder() instanceof PluginCommandHandler<?, ?> pluginHandler)
-        {
+        if (getCommandHolder() instanceof PluginCommandHandler<?, ?> pluginHandler) {
             plugin = pluginHandler.getPlugin();
         }
 
-        if (implementation.requestConfirmation(plugin, getSender(), now.plus(duration), runnable, cancel, timeRunOut))
-        {
-            if (sendMessage)
-            {
-                Component time = Component.text(duration.toSecondsPart());
-                sendInternalMessage(Component.translatable("server.command.confirm.required", time));
-            }
-            return true;
-        }
+        Builder builder = new BuilderImplementation(plugin, request());
+        builder.setDuration(Duration.ofSeconds(30));
+        builder.setRunnable(runnable);
+        builder.onCancel(defaultRunnable());
+        builder.onTime(defaultRunnable());
+        builder.suppressMessage(false);
+        return builder;
+    }
 
-        if (sendMessage)
-        {
-            sendInternalMessage(Component.translatable("server.command.confirm.already.request"));
-        }
-        return false;
+    @Contract(pure = true, value = "-> new")
+    private @NotNull Consumer<BuilderImplementation> request() {
+        return (builder) -> {
+            if (getTarget().equals(CommandTarget.SYSTEM)) {
+                builder.runnable.run();
+                return; // TODO implement confirmation for console as well
+            }
+            Class<KissenConfirmationImplementation> confirmClass = KissenConfirmationImplementation.class;
+            KissenConfirmationImplementation implementation = KissenCore.getInstance().getImplementation(confirmClass);
+
+            ConfirmationNode node = builder.toNode();
+            if (implementation.requestConfirmation(node, getSender())) {
+                if (!builder.isSuppressMessage()) {
+                    Component time = Component.text(builder.getDuration().toSecondsPart());
+                    sendInternalMessage(Component.translatable("server.command.confirm.required", time));
+                }
+                return;
+            }
+
+            if (!builder.isSuppressMessage()) {
+                throw new OperationException(Component.translatable("server.command.confirm.already.request"));
+            }
+            throw new OperationException();
+        };
     }
 
     /**
@@ -226,16 +180,60 @@ public abstract class KissenCommandPayload<S extends ServerEntity> implements ne
      * @see #getSender()
      */
     @Contract(pure = true, value = "-> new")
-    private @NotNull Runnable defaultRunnable()
-    {
+    private @NotNull Runnable defaultRunnable() {
         return () -> sendInternalMessage(Component.translatable("server.command.confirm.cancel"));
     }
 
-    private void sendInternalMessage(@NotNull Component component)
-    {
-        if (getSender() instanceof MessageReceiver messageReceiver)
-        {
+    private void sendInternalMessage(@NotNull Component component) {
+        if (getSender() instanceof MessageReceiver messageReceiver) {
             messageReceiver.getKyoriAudience().sendMessage(component);
+        }
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    static class BuilderImplementation implements Builder {
+
+        private final KissenPlugin plugin;
+        private final Consumer<BuilderImplementation> send;
+        protected Duration duration;
+        protected Runnable runnable;
+        protected Runnable cancel;
+        protected Runnable timeRunOut;
+        protected boolean suppressMessage;
+
+        public @NotNull Builder setDuration(Duration duration) {
+            this.duration = duration;
+            return this;
+        }
+
+        public @NotNull Builder setRunnable(Runnable runnable) {
+            this.runnable = runnable;
+            return this;
+        }
+
+        public @NotNull Builder onCancel(Runnable cancel) {
+            this.cancel = cancel;
+            return this;
+        }
+
+        public @NotNull Builder onTime(Runnable timeRunOut) {
+            this.timeRunOut = timeRunOut;
+            return this;
+        }
+
+        public @NotNull Builder suppressMessage(boolean suppressMessage) {
+            this.suppressMessage = suppressMessage;
+            return this;
+        }
+
+        @Override
+        public void send() {
+            getSend().accept(this);
+        }
+
+        private @NotNull ConfirmationNode toNode() {
+            return new ConfirmationNode(plugin, Instant.now().plus(duration), runnable, cancel, timeRunOut);
         }
     }
 }

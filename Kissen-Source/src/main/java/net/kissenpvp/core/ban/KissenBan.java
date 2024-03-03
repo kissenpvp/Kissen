@@ -72,7 +72,7 @@ public abstract class KissenBan extends KissenSavable implements Ban {
 
     @Override
     public @NotNull BanType getBanType() {
-        return BanType.valueOf(getNotNull("ban_type", String.class));
+        return getNotNull("ban_type", BanType.class);
     }
 
     @Override
@@ -84,12 +84,12 @@ public abstract class KissenBan extends KissenSavable implements Ban {
             throw new EventCancelledException(banAlterTypeEvent);
         }
 
-        set("ban_type", banType.name());
+        set("ban_type", banType);
     }
 
     @Override
     public @NotNull Optional<AccurateDuration> getAccurateDuration() {
-        return get("duration", Long.class).map(val -> KissenCore.getInstance().getImplementation(TimeImplementation.class).millis(val));
+        return get("duration", AccurateDuration.class);
     }
 
     @Override
@@ -101,10 +101,7 @@ public abstract class KissenBan extends KissenSavable implements Ban {
             throw new EventCancelledException(banAlterDurationEvent);
         }
 
-        set("duration", Optional.ofNullable(duration)
-                .map(AccurateDuration::getMillis)
-                .map(String::valueOf)
-                .orElse(null));
+        set("duration",duration);
     }
 
     @Override

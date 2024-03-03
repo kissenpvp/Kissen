@@ -62,19 +62,20 @@ public interface CommandPayload<S extends ServerEntity>
 
     boolean validate(@NotNull ServerEntity serverEntity);
 
-    boolean confirmRequest(@NotNull Runnable runnable);
+    @NotNull Builder confirmRequest(@NotNull Runnable runnable);
 
-    boolean confirmRequest(@NotNull Runnable runnable, @NotNull Runnable cancel);
+    interface Builder
+    {
+        @NotNull Builder setDuration(Duration duration);
 
-    boolean confirmRequest(@NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut);
+        @NotNull Builder setRunnable(Runnable runnable);
 
-    boolean confirmRequest(@NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut, boolean sendMessage);
+        @NotNull Builder onCancel(Runnable cancel);
 
-    boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable);
+        @NotNull Builder onTime(Runnable timeRunOut);
 
-    boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable, @NotNull Runnable cancel);
+        @NotNull Builder suppressMessage(boolean suppressMessage);
 
-    boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut);
-
-    boolean confirmRequest(@NotNull Duration duration, @NotNull Runnable runnable, @NotNull Runnable cancel, @NotNull Runnable timeRunOut, boolean sendMessage);
+        void send();
+    }
 }

@@ -22,12 +22,13 @@ import net.kissenpvp.core.api.message.Comment;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.database.DataWriter;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class KissenComment implements Comment {
     private final CommentNode commentNode;
@@ -51,15 +52,12 @@ public class KissenComment implements Comment {
 
     @Override
     public @Unmodifiable @NotNull List<Component> getEdits() {
-        return commentNode.messages()
-                .stream()
-                .map(message -> JSONComponentSerializer.json().deserialize(message.message()))
-                .toList();
+        return commentNode.messages().stream().flatMap(message -> Stream.of(message.message())).toList();
     }
 
     @Override
     public @NotNull Component getText() {
-        return JSONComponentSerializer.json().deserialize(commentNode.messages().get(commentNode.messages().size() - 1).message());
+        return commentNode.messages().get(commentNode.messages().size() - 1).message();
     }
 
     @Override
@@ -69,16 +67,14 @@ public class KissenComment implements Comment {
 
     @Override
     public void setText(@NotNull Component component) {
-        if (dataWriter == null) {
-            throw new UnsupportedOperationException("This object is immutable.");
-        }
+        DataWriter.validate(dataWriter);
 
-        commentNode.messages().add(new CommentMessageNode(JSONComponentSerializer.json().serialize(component), System.currentTimeMillis()));
+        commentNode.messages().add(new CommentMessageNode(component, Instant.now()));
         dataWriter.update(commentNode);
     }
 
     @Override
-    public long getTimeStamp() {
+    public @NotNull Instant getTimeStamp() {
         return commentNode.timeStamp();
     }
 
@@ -89,14 +85,13 @@ public class KissenComment implements Comment {
 
     @Override
     public boolean hasBeenDeleted() {
-        return commentNode.hasBeenDeleted().getValue();
+        return commentNode.hasBeenDeleted().toOptional().orElse(false);
     }
 
     @Override
     public void setDeleted(boolean deleted) {
-        if (dataWriter == null) {
-            throw new UnsupportedOperationException("This object is immutable.");
-        }
+        DataWriter.validate(dataWriter);
+
         commentNode.hasBeenDeleted().setValue(deleted);
         dataWriter.update(commentNode);
     }

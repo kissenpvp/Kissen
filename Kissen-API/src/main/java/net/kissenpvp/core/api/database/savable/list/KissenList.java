@@ -119,6 +119,27 @@ public interface KissenList<T> extends List<T>
      */
     boolean[] invert(@NotNull T value);
 
+    /**
+     * Replaces occurrences of the specified object in the list and returns the number of replacements made.
+     *
+     * <p>The {@code replace} method is used to replace all occurrences of the specified object in the list
+     * and returns the count of replacements made. If the object is not present in the list, the count is zero.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * // Example: Replacing occurrences of a specific object
+     * T someObject = // specify object
+     * int replacements = replace(someObject);
+     * System.out.println("Number of Replacements: " + replacements);
+     * }
+     * </pre>
+     *
+     * @param object the object to be replaced in the list
+     * @return the number of replacements made
+     * @throws NullPointerException if the specified object is `null`
+     */
     int replace(@NotNull T object);
 
     /**
@@ -156,8 +177,61 @@ public interface KissenList<T> extends List<T>
      */
     int replace(@NotNull Predicate<T> predicate, @NotNull T object);
 
+    /**
+     * Replaces or inserts the specified object in the list and returns whether the list has been altered.
+     *
+     * <p>The {@code replaceOrInsert} method is used to either replace an existing object in the list with the specified one
+     * or insert the object into the list if it does not exist. The method returns {@code true} if the list has been altered,
+     * indicating a successful replacement or insertion, and {@code false} otherwise.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * // Example 1: Replacing or inserting a specific object
+     * T someObject = // specify object
+     * boolean altered = replaceOrInsert(someObject);
+     * System.out.println("List Altered: " + altered);
+     *
+     * // Example 2: Replacing or inserting based on a predicate
+     * Predicate<T> condition = // specify predicate
+     * T anotherObject = // specify object
+     * boolean alteredWithPredicate = replaceOrInsert(condition, anotherObject);
+     * System.out.println("List Altered with Predicate: " + alteredWithPredicate);
+     * }
+     * </pre>
+     *
+     * @param object the object to be replaced or inserted in the list
+     * @return {@code true} if the list has been altered, {@code false} otherwise
+     * @throws NullPointerException if the specified object is `null`
+     */
     boolean replaceOrInsert(@NotNull T object);
 
+    /**
+     * Replaces or inserts the specified object in the list based on the provided predicate
+     * and returns whether the list has been altered.
+     *
+     * <p>The {@code replaceOrInsert} method with a predicate is used to replace an existing object in the list with the specified one
+     * if the predicate is satisfied, or insert the object into the list if no matching object is found. The method returns
+     * {@code true} if the list has been altered, indicating a successful replacement or insertion, and {@code false} otherwise.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * // Example: Replacing or inserting based on a predicate
+     * Predicate<T> condition = // specify predicate
+     * T object = // specify object
+     * boolean altered = replaceOrInsert(condition, object);
+     * System.out.println("List Altered: " + altered);
+     * }
+     * </pre>
+     *
+     * @param predicate the predicate to determine if an object should be replaced
+     * @param object the object to be replaced or inserted in the list
+     * @return {@code true} if the list has been altered, {@code false} otherwise
+     * @throws NullPointerException if the specified predicate or object is `null`
+     */
     boolean replaceOrInsert(@NotNull Predicate<T> predicate, @NotNull T object);
 
     /**
