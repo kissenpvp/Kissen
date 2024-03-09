@@ -35,6 +35,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -99,9 +100,7 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
 
     @NotNull Optional<Suffix> getSelectedSuffix();
 
-    long getOnlineTime();
-
-    long getLastPlayed();
+    @NotNull AccurateDuration getOnlineTime();
 
     @NotNull User getUser();
 

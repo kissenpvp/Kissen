@@ -15,7 +15,7 @@
  * You should have received a copy of the Apache License, Version 2.0
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
-package net.kissenpvp.core.api.database.savable.list;
+package net.kissenpvp.core.api.database.meta.list;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -86,7 +86,7 @@ import java.util.function.Predicate;
  * @see List
  * @see Collection
  */
-public interface KissenList<T> extends List<T>
+public interface MetaList<T> extends List<T>
 {
 
     /**
@@ -286,7 +286,7 @@ public interface KissenList<T> extends List<T>
      * @see ListAction
      * @see Optional
      */
-    @NotNull Optional<ListAction> getListAction();
+    @NotNull Optional<ListAction<T>> getListAction();
 
     /**
      * Sets the action that should be executed when changing something in the list.
@@ -328,7 +328,7 @@ public interface KissenList<T> extends List<T>
      *
      * @param listAction the new action to apply, or null to indicate no specific action should be executed
      * @see ListAction
-     * @see ListExecution
+     * @see ListAction.ListExecutionType
      * @see #getListAction()
      * @see List#add(Object)
      * @see List#remove(Object)
@@ -338,5 +338,5 @@ public interface KissenList<T> extends List<T>
      * @see List#removeAll(Collection)
      * @see List#retainAll(Collection)
      */
-    void setListAction(@Nullable ListAction listAction);
+    void setListAction(@Nullable ListAction<T> listAction);
 }

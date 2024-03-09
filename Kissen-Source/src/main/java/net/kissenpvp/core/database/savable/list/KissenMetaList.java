@@ -21,49 +21,48 @@ package net.kissenpvp.core.database.savable.list;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import net.kissenpvp.core.api.database.savable.list.KissenList;
-import net.kissenpvp.core.api.database.savable.list.ListAction;
-import net.kissenpvp.core.api.database.savable.list.ListExecution;
+import net.kissenpvp.core.api.database.meta.list.MetaList;
+import net.kissenpvp.core.api.database.meta.list.ListAction;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T> {
-    private ListAction listAction;
+public class KissenMetaList<T> extends ArrayList<T> implements MetaList<T> {
+    private ListAction<T> listAction;
 
-    public KissenKissenList(int initialCapacity) {
+    public KissenMetaList(int initialCapacity) {
         super(initialCapacity);
     }
 
-    public KissenKissenList(@NotNull Collection<? extends T> c) {
+    public KissenMetaList(@NotNull Collection<? extends T> c) {
         super(c);
     }
 
-    public KissenKissenList(@NotNull Collection<? extends T> c, ListAction listAction) {
+    public KissenMetaList(@NotNull Collection<? extends T> c, ListAction<T> listAction) {
         super(c);
         this.listAction = listAction;
     }
 
     @Override
-    public @NotNull Optional<@NotNull ListAction> getListAction() {
+    public @NotNull Optional<@NotNull ListAction<T>> getListAction() {
         return Optional.ofNullable(listAction);
     }
 
     @Override
     public T set(int index, T element) {
-        return parseValue(() -> super.set(index, element), () -> getListAction().ifPresent(action -> action.execute(ListExecution.SET, index, element)));
+        return parseValue(() -> super.set(index, element), ListAction.ListExecutionType.SET);
     }
 
     @Override
     public boolean add(T t) {
-        return parseValue(() -> super.add(t), () -> getListAction().ifPresent(action -> action.execute(ListExecution.ADD, t)));
+        return parseValue(() -> super.add(t), ListAction.ListExecutionType.ADD);
     }
 
     @Override
@@ -71,27 +70,27 @@ public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T> {
         parseValue(() -> {
             super.add(index, element);
             return false;
-        }, () -> getListAction().ifPresent(action -> action.execute(ListExecution.ADD_INDEX, index, element)));
+        }, ListAction.ListExecutionType.ADD_INDEX);
     }
 
     @Override
     public boolean addAll(@NotNull Collection<? extends T> c) {
-        return parseValue(() -> super.addAll(c.stream().toList()), () -> getListAction().ifPresent(action -> action.execute(ListExecution.ADD_ALL, c)));
+        return parseValue(() -> super.addAll(c.stream().toList()), ListAction.ListExecutionType.ADD_ALL);
     }
 
     @Override
     public boolean addAll(int index, @NotNull Collection<? extends T> c) {
-        return parseValue(() -> super.addAll(index, c), () -> getListAction().ifPresent(action -> action.execute(ListExecution.ADD_ALL_INDEX_INCLUDED, index, c)));
+        return parseValue(() -> super.addAll(index, c), ListAction.ListExecutionType.ADD_ALL_INDEX_INCLUDED);
     }
 
     @Override
     public T remove(int index) {
-        return parseValue(() -> super.remove(index), () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE_INDEX, index)));
+        return parseValue(() -> super.remove(index), ListAction.ListExecutionType.REMOVE_INDEX);
     }
 
     @Override
     public boolean remove(Object o) {
-        return parseValue(() -> super.remove(o), () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE, o)));
+        return parseValue(() -> super.remove(o), ListAction.ListExecutionType.REMOVE);
     }
 
     @Override
@@ -99,22 +98,22 @@ public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T> {
         parseValue(() -> {
             super.removeRange(fromIndex, toIndex);
             return false;
-        }, () -> listAction.execute(ListExecution.REMOVE_RANGE, fromIndex, toIndex));
+        }, ListAction.ListExecutionType.REMOVE_RANGE);
     }
 
     @Override
     public boolean removeAll(@NotNull Collection<?> c) {
-        return parseValue(() -> super.removeAll(c), () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE_ALL, c)));
+        return parseValue(() -> super.removeAll(c), ListAction.ListExecutionType.REMOVE_ALL);
     }
 
     @Override
     public boolean removeIf(Predicate<? super T> filter) {
-        return parseValue(() -> super.removeIf(filter), () -> getListAction().ifPresent(action -> action.execute(ListExecution.REMOVE_IF, filter)));
+        return parseValue(() -> super.removeIf(filter), ListAction.ListExecutionType.REMOVE_IF);
     }
 
     @Override
     public boolean retainAll(@NotNull Collection<?> c) {
-        return parseValue(() -> super.retainAll(c), () -> getListAction().ifPresent(action -> action.execute(ListExecution.RETAIN_ALL, c)));
+        return parseValue(() -> super.retainAll(c), ListAction.ListExecutionType.RETAIN_ALL);
     }
 
     @Override
@@ -122,7 +121,7 @@ public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T> {
         parseValue(() -> {
             super.replaceAll(operator);
             return true;
-        }, () -> getListAction().ifPresent(action -> action.execute(ListExecution.REPLACE_ALL, operator)));
+        }, ListAction.ListExecutionType.REPLACE_ALL);
     }
 
     @Override
@@ -130,7 +129,7 @@ public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T> {
         parseValue(() -> {
             super.clear();
             return true;
-        }, () -> getListAction().ifPresent(action -> action.execute(ListExecution.CLEAR)));
+        }, ListAction.ListExecutionType.CLEAR);
     }
 
     @Override
@@ -145,8 +144,6 @@ public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T> {
 
     @Override
     public int replace(@NotNull Predicate<T> predicate, @NotNull T object) {
-
-
         return parseValue(() -> {
             AtomicInteger count = new AtomicInteger(0);
 
@@ -162,7 +159,7 @@ public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T> {
             super.addAll(newList);
 
             return count.get();
-        }, () -> getListAction().ifPresent(action -> action.execute(ListExecution.REPLACE, predicate, object)));
+        }, ListAction.ListExecutionType.REPLACE);
     }
 
     @Override
@@ -183,17 +180,13 @@ public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T> {
      * Invokes a method from the list and returns the type of value given.
      *
      * @param method   to execute.
-     * @param runnable to execute when running this.
      * @param <V>      the type of the return value from the given method.
      * @return the return type of the method given.
      */
-    protected <V> V parseValue(@NotNull Execute<V> method, Runnable runnable) {
-        List<?> copy = List.copyOf(this);
-        V executed = method.execute();
-        if(!copy.equals(this))
-        {
-            getListAction().ifPresent(action -> runnable.run());
-        }
+    protected <V> V parseValue(@NotNull Supplier<V> method, @NotNull ListAction.ListExecutionType type) {
+        List<T> copy = List.copyOf(this);
+        V executed = method.get();
+        getListAction().ifPresent(action -> action.execute(type, copy, List.copyOf(this)));
         return executed;
     }
 
@@ -201,14 +194,5 @@ public class KissenKissenList<T> extends ArrayList<T> implements KissenList<T> {
     public void clearAndAddAll(@NotNull Collection<T> newList) {
         super.clear();
         addAll(newList);
-    }
-
-    /**
-     * An {@link Serializable} interface which is there to parse the right return value, when executing something.
-     *
-     * @param <T> the type of the return value.
-     */
-    protected interface Execute<T> extends Serializable {
-        T execute();
     }
 }

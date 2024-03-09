@@ -41,6 +41,7 @@ import net.kissenpvp.core.config.KissenConfigurationImplementation;
 import net.kissenpvp.core.database.KissenDataImplementation;
 import net.kissenpvp.core.database.KissenDatabaseImplementation;
 import net.kissenpvp.core.database.savable.KissenStorageImplementation;
+import net.kissenpvp.core.database.settings.DatabaseDNS;
 import net.kissenpvp.core.message.KissenChatImplementation;
 import net.kissenpvp.core.message.KissenMessageImplementation;
 import net.kissenpvp.core.networking.KissenAPIRequestImplementation;
@@ -80,10 +81,8 @@ public abstract class KissenCore implements Kissen {
     /**
      * Starts the Kissen system by loading plugin implementations, initializing serializers, and invoking necessary operations.
      * This method is called to initialize and bootstrap the Kissen system within the KissenPlugin framework.
-     *
-     * @param clazz The Class object representing the main class of the KissenPlugin. Must not be null.
      */
-    public void initialize(@NotNull Class<?> clazz)
+    public void initialize()
     {
         try
         {
@@ -111,7 +110,6 @@ public abstract class KissenCore implements Kissen {
     {
         loader.put(APIRequestImplementation.class, new KissenAPIRequestImplementation());
         loader.put(ChatImplementation.class, new KissenChatImplementation());
-        loader.put(ConfigurationImplementation.class, new KissenConfigurationImplementation());
         loader.put(DataImplementation.class, new KissenDataImplementation());
         loader.put(DatabaseImplementation.class, new KissenDatabaseImplementation());
         loader.put(PageImplementation.class, new KissenPageImplementation());
@@ -156,13 +154,12 @@ public abstract class KissenCore implements Kissen {
         getLogger().debug("Scan for class scanner entries.");
 
         File file = new File("kissen.properties");
-        getImplementation(KissenConfigurationImplementation.class).loadInternalConfiguration(file);
+        KissenConfigurationImplementation config = getImplementation(KissenConfigurationImplementation.class);
+        config.loadInternalConfiguration(file);
 
         getLogger().debug("Enable locale system and load Languages.");
 
-        publicMeta = getImplementation(KissenDatabaseImplementation.class).connectDatabase().createObjectMeta(
-                "kissen_public_meta");
-
+        setupDatabase(config, getImplementation(DatabaseImplementation.class));
         getLogger().debug("## Start ##");
 
         runOperation(OperationState.PRE);
@@ -171,6 +168,11 @@ public abstract class KissenCore implements Kissen {
 
         runOperation(OperationState.START);
         runOperation(OperationState.POST);
+    }
+
+    protected void setupDatabase(@NotNull ConfigurationImplementation config, @NotNull DatabaseImplementation database) {
+        String connectionString = config.getSetting(DatabaseDNS.class);
+        publicMeta = database.connectDatabase("public", connectionString).createObjectMeta("kissen_public_meta");
     }
 
     public <T extends Implementation> @NotNull T getImplementation(@NotNull Class<T> implementation) {

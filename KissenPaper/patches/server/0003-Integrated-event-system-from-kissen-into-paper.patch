@@ -206,23 +206,33 @@ index 6b4ff21d64771486cf452d33c6a44a21dab2ff16..6f194869251e6eed67264152f7c36daa
      }
  
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index db1f1ca137bfe602406ebb41cd61c82c30801bbd..9f62dc952ce4984e45d69c393ad9cc4fde3736e7 100644
+index 1195119d0ef03942c8f8625aa33a3a267160d318..fc5c9b3c92740996b54b89133eea5486d49d2c2f 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -23,7 +23,9 @@ import net.kissenpvp.core.api.base.plugin.KissenPlugin;
+@@ -25,7 +25,9 @@ import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
  import net.kissenpvp.core.api.database.meta.ObjectMeta;
  import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
  import net.kissenpvp.core.base.KissenCore;
 +import net.kissenpvp.core.event.EventImplementation;
  import net.kissenpvp.paper.api.base.PaperKissen;
++<<<<<<< HEAD
+ import net.kissenpvp.paper.database.KissenPaperConfigurationImplementation;
+ import net.kissenpvp.paper.database.PrivateDatabaseDNS;
+ import net.kissenpvp.paper.database.UsePrivate;
+@@ -39,6 +41,9 @@ import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplement
+ import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
+ import net.kissenpvp.paper.user.KissenPaperUserImplementation;
+ import net.kissenpvp.paper.user.rank.KissenPaperRankImplementation;
++=======
 +import net.kissenpvp.paper.event.KissenEventImplementation;
++>>>>>>> ff6499c85 (Integrated event system from kissen into paper)
  import org.bukkit.Bukkit;
  import org.bukkit.craftbukkit.scheduler.CraftScheduler;
  import org.bukkit.plugin.Plugin;
-@@ -48,6 +50,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
-     @Override
-     protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader)
-     {
+@@ -79,6 +84,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+         loader.put(BanImplementation.class, new KissenPaperBanImplementation());
+         loader.put(KissenConfirmationImplementation.class, new KissenPaperConfirmationImplementation());
+         loader.put(KissenPaperAdvancementImplementation.class, new KissenPaperAdvancementImplementation());
 +        loader.put(EventImplementation.class, new KissenEventImplementation());
          super.loadImplementations(loader);
      }

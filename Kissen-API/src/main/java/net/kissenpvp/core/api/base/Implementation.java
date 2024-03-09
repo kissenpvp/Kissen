@@ -213,8 +213,4 @@ public interface Implementation {
         // Implement the necessary logic for stopping the component
         // Perform cleanup, release resources, and handle any exceptions gracefully
     }
-
-    default boolean prepareReload() {
-        return true;
-    }
 }

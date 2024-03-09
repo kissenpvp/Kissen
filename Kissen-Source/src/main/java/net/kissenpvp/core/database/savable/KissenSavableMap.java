@@ -23,10 +23,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.savable.SavableMap;
-import net.kissenpvp.core.api.database.savable.list.KissenList;
-import net.kissenpvp.core.api.database.savable.list.ListAction;
+import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.database.savable.list.KissenKissenList;
+import net.kissenpvp.core.database.savable.list.KissenMetaList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -34,6 +33,33 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.*;
 
 
+/**
+ * Represents a KissenSavableMap, which extends {@link HashMap} and implements {@link SavableMap}.
+ *
+ * <p>The KissenSavableMap class provides a convenient way to manage key-value pairs and supports serialization and persistence through the {@link SavableMap} interface.
+ * It is designed to store its values in a database, making it suitable for scenarios where persistent storage is required.</p>
+ *
+ * <p>The class includes standard JavaBean annotations such as {@link Setter}, {@link Getter}, and {@link NoArgsConstructor} for enhanced functionality.</p>
+ *
+ * <p>This class supports the concept of a unique identifier ({@code id}) associated with each instance, allowing for easy identification and retrieval from the database.</p>
+ *
+ * <p>Example usage:</p>
+ *
+ * <pre>
+ * {@code
+ * KissenSavableMap savableMap = new KissenSavableMap();
+ * savableMap.setId("exampleId");
+ * savableMap.put("key1", "value1"); // not stored in database
+ * savableMap.set("key2", 42); // stored in database
+ * }
+ * </pre>
+ *
+ * @see HashMap
+ * @see SavableMap
+ * @see Setter
+ * @see Getter
+ * @see NoArgsConstructor
+ */
 @Setter
 @Getter
 @NoArgsConstructor
@@ -42,43 +68,49 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     private String id;
 
     /**
-     * This constructor defines the meta in which the data is saved.
-     * And the sender behind which the individual key is located.
+     * Constructs a new KissenSavableMap using the data from the specified KissenSavableMap.
      *
-     * @param savableMap to create a copy.
+     * <p>The constructor creates a new instance of KissenSavableMap and initializes it with the data and ID from the provided KissenSavableMap.
+     * If the source map is a {@link KissenSavable}, the database ID is used; otherwise, the regular ID is used.</p>
+     *
+     * @param savableMap the source KissenSavableMap to copy data from
      */
     public KissenSavableMap(@NotNull KissenSavableMap savableMap) {
         setData(savableMap, savableMap instanceof KissenSavable kissenSavable ? kissenSavable.getDatabaseID() : savableMap.getId());
     }
 
     /**
-     * This constructor defines the meta in which the data is saved.
-     * And the sender behind which the individual key is located.
+     * Constructs a new KissenSavableMap with the specified ID and ObjectMeta.
      *
-     * @param id   The sender of the savable object.
-     * @param meta The meta in which everything should be saved.
+     * <p>The constructor creates a new instance of KissenSavableMap with an empty data map, setting the provided ID and ObjectMeta.</p>
+     *
+     * @param id   the ID to associate with the new KissenSavableMap
+     * @param meta the ObjectMeta to associate with the new KissenSavableMap
      */
     public KissenSavableMap(@NotNull String id, @NotNull ObjectMeta meta) {
         this(new HashMap<>(), id, meta);
     }
 
     /**
-     * This constructor defines the meta in which the data is saved.
-     * And the ID behind which the individual key is located.
+     * Constructs a new KissenSavableMap with the specified data, ID, and ObjectMeta.
      *
-     * @param data An already existing value which is included in this list.
-     * @param id   The ID of the savable object.
-     * @param meta The meta in which everything should be saved.
+     * <p>The constructor creates a new instance of KissenSavableMap and initializes it with the provided data map, ID, and ObjectMeta.</p>
+     *
+     * @param data the data map to initialize the new KissenSavableMap with
+     * @param id   the ID to associate with the new KissenSavableMap
+     * @param meta the ObjectMeta to associate with the new KissenSavableMap
      */
     public KissenSavableMap(@NotNull Map<String, Object> data, @NotNull String id, @NotNull ObjectMeta meta) {
         setData(data, id);
     }
 
     /**
-     * Resets the data of the options.
+     * Sets the data of this KissenSavableMap with the specified data map and ID.
      *
-     * @param data the new data.
-     * @param id   the sender of the object.
+     * <p>The {@code setData} method clears the existing data, puts all entries from the provided map, and sets the ID.</p>
+     *
+     * @param data the data map to set for this KissenSavableMap
+     * @param id   the ID to set for this KissenSavableMap
      */
     protected void setData(@NotNull Map<String, Object> data, @NotNull String id) {
         this.clear();
@@ -138,35 +170,16 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     }
 
     @Override
-    public <T> @NotNull Optional<KissenList<T>> getList(@NotNull String key, @NotNull Class<T> type) {
+    public <T> @NotNull Optional<MetaList<T>> getList(@NotNull String key, @NotNull Class<T> type) {
         if (containsKey(key)) {
-            try {
-                Object obj = super.get(key);
-                if (obj != null && obj.getClass().isArray()) {
-                    obj = Arrays.stream(((Object[]) obj)).toList();
-                }
-
-                if (!(obj instanceof Collection<?> collection)) {
-                    throw new IllegalArgumentException(); //Type not matching todo
-                }
-                KissenList<T> kissenList = new KissenKissenList<>();
-                kissenList.addAll((Collection<? extends T>) collection);
-
-                kissenList.setListAction((ListAction) (listExecution, values) -> setList(key, kissenList));
-                return Optional.of(kissenList);
-            } catch (ClassCastException ignored) {
-            }
+            return Optional.of(getList(key));
         }
         return Optional.empty();
     }
 
     @Override
-    public <T> @NotNull KissenList<T> getListNotNull(@NotNull String key, @NotNull Class<T> type) {
-        return getList(key, type).orElseGet(() -> {
-            KissenList<T> kissenList = new KissenKissenList<>();
-            kissenList.setListAction(((listExecution, values) -> setList(key, kissenList)));
-            return kissenList;
-        });
+    public <T> @NotNull MetaList<T> getListNotNull(@NotNull String key, @NotNull Class<T> type) {
+        return getList(key, type).orElseGet(() -> getList(key));
     }
 
     @Override
@@ -186,7 +199,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     public @Nullable @Unmodifiable <T> List<T> putListValue(@NotNull String key, @NotNull T value) {
         List<T> current = (List<T>) super.get(key);
         getList(key, value.getClass()).ifPresentOrElse(list -> {
-            KissenList<T> casted = (KissenList<T>) list;
+            MetaList<T> casted = (MetaList<T>) list;
             casted.add(value);
         }, () -> putList(key, Collections.singletonList(value)));
         return List.copyOf(current);
@@ -203,9 +216,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     @Override
     public <T> @Nullable Object setList(@NotNull String key, @Nullable Collection<T> value) {
         Object list = putList(key, value);
-        if (!Objects.equals(list, value)) {
-            getMeta().setCollection(getId(), key, value == null ? null : List.copyOf(value));
-        }
+        getMeta().setCollection(getId(), key, value);
         return list;
     }
 
@@ -251,7 +262,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     }
 
     public @NotNull ObjectMeta getMeta() {
-        return KissenCore.getInstance().getPublicMeta(); //todo choose
+        return KissenCore.getInstance().getPublicMeta();
     }
 
     @Override
@@ -266,5 +277,43 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), getId());
+    }
+
+    /**
+     * Retrieves a {@link MetaList} associated with the specified key from this map.
+     *
+     * <p>The {@code getList} method retrieves a {@link MetaList} associated with the specified key from this map.
+     * It creates a new instance of {@link KissenMetaList} and populates it with elements from the stored object,
+     * if the object associated with the key is not null and is of a valid type (array or Collection).</p>
+     *
+     * <p>If the stored object is an array, it is converted to a {@link List} using the {@link Arrays#stream(Object[])} method.</p>
+     * <p>If the stored object is not a {@link Collection}, an {@link IllegalArgumentException} is thrown.</p>
+     * <p>The created {@link MetaList} has a list action set, which will update the stored value in the database when the list is modified.</p>
+     *
+     * @param key the key associated with the desired {@link MetaList}
+     * @param <T> the type of elements in the {@link MetaList}
+     * @return a {@link MetaList} associated with the specified key, or an empty list if the key is not present
+     * @throws IllegalArgumentException if the stored object is not a {@link Collection}
+     * @see MetaList
+     * @see KissenMetaList
+     * @see #setList(String, Collection)
+     */
+    private <T> @NotNull MetaList<T> getList(@NotNull String key) {
+        MetaList<T> metaList = new KissenMetaList<>();
+        Object obj = super.get(key);
+        if(obj != null)
+        {
+            if (obj.getClass().isArray()) {
+                obj = Arrays.stream(((Object[]) obj)).toList();
+            }
+
+            if (!(obj instanceof Collection<?> collection)) {
+                throw new IllegalArgumentException(); //Type not matching todo
+            }
+            metaList.addAll((Collection<? extends T>) collection);
+        }
+
+        metaList.setListAction((listExecution, before, after) -> setList(key, metaList));
+        return metaList;
     }
 }

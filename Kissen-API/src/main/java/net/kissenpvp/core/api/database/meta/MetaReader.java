@@ -20,7 +20,7 @@ package net.kissenpvp.core.api.database.meta;
 
 import net.kissenpvp.core.api.database.queryapi.*;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
-import net.kissenpvp.core.api.database.savable.list.KissenList;
+import net.kissenpvp.core.api.database.meta.list.MetaList;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
@@ -648,7 +648,7 @@ public interface MetaReader extends Serializable {
      * @see MetaWriter#setCollection(String, Collection)
      * @see MetaWriter#setCollection(String, String, Collection)
      */
-    <T> @NotNull CompletableFuture<KissenList<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record);
+    <T> @NotNull CompletableFuture<MetaList<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> record);
 
     /**
      * Asynchronously retrieves a {@link Collection} of objects of type {@code T} associated with the specified key.
@@ -684,7 +684,7 @@ public interface MetaReader extends Serializable {
      * @see MetaWriter#setCollection(String, Collection)
      * @see MetaWriter#setCollection(String, String, Collection)
      */
-    <T> @NotNull CompletableFuture<KissenList<T>> getCollection(@NotNull String key, @NotNull Class<T> type);
+    <T> @NotNull CompletableFuture<MetaList<T>> getCollection(@NotNull String key, @NotNull Class<T> type);
 
     /**
      * Asynchronously retrieves an object of type {@code T} associated with the specified total ID and key.

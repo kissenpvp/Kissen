@@ -19,8 +19,7 @@
 package net.kissenpvp.core.api.database.savable;
 
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
-import net.kissenpvp.core.api.database.savable.list.KissenList;
-import net.kissenpvp.core.api.database.savable.list.SavableList;
+import net.kissenpvp.core.api.database.meta.list.MetaList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -32,40 +31,28 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * The `SavableMap` interface extends the standard `Map` interface and provides additional functionality for
+ * The {@code SavableMap} interface extends the standard {@link Map} interface and provides additional functionality for
  * a map-based data structure that can be saved and synchronized with a database.
- *
- * <p>The `SavableMap` interface inherits all the methods from the `Map` interface, allowing key-value pairs to
- * be stored and retrieved. In addition, it extends the `Cloneable` and `Serializable` interfaces to support
- * cloning and serialization capabilities.</p>
+ * <p>
+ * It is designed to be used as a map-like data structure that can be saved and
+ * synchronized with a database. It allows key-value pairs to be stored and retrieved using the methods defined
+ * in the {@link Map} interface. Additionally, it provides methods for saving, synchronizing, and managing the map data.
+ * <p>
+ * It's important to note that the {@code SavableMap} interface does not define the underlying database or storage
+ * mechanism. It serves as a contract for a map-based data structure that can be saved and synchronized, and the
+ * specific implementation may vary depending on the database or storage technology used.
  *
  * <p>Example usage:</p>
  *
  * <pre>
  * {@code
  * SavableMap savableMap = new SomeSavableMapImplementation();
- * savableMap.put("key1", "value1");
- * savableMap.put("key2", "value2");
- * String value = savableMap.get("key1");
- * System.out.println(value); // Output: "value1"
+ * savableMap.put("key1", "value1"); // not stored in database
+ * savableMap.set("key2", "value2"); // stored in database
+ * Optional<String> value = savableMap.get("key1");
+ * System.out.println(value.get()); // Output: "value1"
  * }
  * </pre>
- *
- * <p>The `SavableMap` interface is designed to be used as a map-like data structure that can be saved and
- * synchronized with a database. It allows key-value pairs to be stored and retrieved using the methods defined
- * in the `Map` interface. Additionally, it provides methods for saving, synchronizing, and managing the map data.</p>
- *
- * <p>Implementations of the `SavableMap` interface should provide implementations for all the methods defined in
- * the `Map` interface. They should also support the cloning and serialization capabilities provided by the
- * `Cloneable` and `Serializable` interfaces.</p>
- *
- * <p>It's important to note that the `SavableMap` interface does not define the underlying database or storage
- * mechanism. It serves as a contract for a map-based data structure that can be saved and synchronized, and the
- * specific implementation may vary depending on the database or storage technology used.</p>
- *
- * <p>This interface should be implemented by classes that represent map-based data structures that can be saved
- * and synchronized with a database. It extends the `Map` interface and provides additional functionality for
- * managing the map data.</p>
  *
  * @see Map
  * @see Cloneable
@@ -106,15 +93,62 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      */
     void putAll(@NotNull SavableMap savableMap);
 
+    /**
+     * Associates the specified value with the specified key in this map and saves the value within the database.
+     *
+     * <p>The {@code set} method associates the specified value with the specified key in this map.
+     * If the map previously contained a mapping for the key, the old value is replaced.
+     * The method returns the previous value associated with the key, or {@code null} if there was no mapping for the key.
+     * If the implementation allows {@code null} values, a {@code null} return indicates that the key did not previously exist in the map.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     * Object previousValue = someSavableMap.set(key, "newValue");
+     * }
+     * </pre>
+     *
+     * @param key   the key with which the specified value is to be associated
+     * @param value the value to be associated with the specified key
+     * @param <T>   the type of the value
+     * @return the previous value associated with the specified key, or {@code null} if there was no mapping for the key
+     * @throws NullPointerException if the specified key is {@code null}
+     * @see #setIfAbsent(String, Object) 
+     * @see #delete(String) 
+     */
     <T> @Nullable Object set(@NotNull String key, @Nullable T value);
 
-
+    /**
+     * Associates the specified value with the specified key in this map if the key is not already associated with a value and
+     * saves the value within the database.
+     *
+     * <p>The {@code setIfAbsent} method associates the specified value with the specified key in this map only if the key is not already associated with a value.
+     * If the map previously contained a mapping for the key, the existing value is retained, and the method has no effect.
+     * If the implementation allows {@code null} values, the specified value may be {@code null}.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     * someSavableMap.setIfAbsent(key, "initialValue");
+     * }
+     * </pre>
+     *
+     * @param key   the key with which the specified value is to be associated
+     * @param value the value to be associated with the specified key
+     * @param <T>   the type of the value
+     * @throws NullPointerException if the specified key or value is {@code null}
+     * @see #set(String, Object) 
+     */
     <T> void setIfAbsent(@NotNull String key, @NotNull T value);
 
     /**
-     * Removes the value associated with the given key from the table.
+     * Removes the value associated with the given key and deletes it from the database.
      *
-     * <p>The `delete()` method removes the value associated with the given key from the table. If the key exists
+     * <p>The {@code delete} method removes the value associated with the given key and deletes it from the database. If the key exists
      * in the table, the method deletes the corresponding entry and removes the association between the key and
      * the value. If the key is not present in the table, the method does nothing and returns.</p>
      *
@@ -136,8 +170,8 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * }
      * </pre>
      *
-     * <p>It's important to note that the `delete()` method removes the entry associated with the given key from
-     * the table. Depending on the implementation, this may involve deleting the corresponding row in the database
+     * <p>It's important to note that the {@code delete} method removes the entry associated with the given key and deletes it from the database.
+     * Depending on the implementation, this may involve deleting the corresponding row in the database
      * or performing other storage-specific operations.</p>
      *
      * @param key the key of the object to be deleted
@@ -146,11 +180,57 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      */
     @Nullable Object delete(@NotNull String key);
 
+    /**
+     * Retrieves the value associated with the specified key in this map, casting it to the specified class type.
+     *
+     * <p>The {@code get} method retrieves the value associated with the specified key in this map and casts it to the specified class type.
+     * The method returns an {@link Optional} containing the casted value if the key is present, or an empty {@link Optional} if the key is not present or the value cannot be casted.
+     * If a {@link ClassCastException} occurs during casting, it is thrown by this method.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     * Optional<String> value = someSavableMap.get(key, String.class);
+     * }
+     * </pre>
+     *
+     * @param key   the key whose associated value is to be retrieved
+     * @param clazz the class type to cast the value to
+     * @param <T>   the type of the value
+     * @return an {@link Optional} containing the cast value if present, or an empty {@link Optional} if not present or cannot be casted
+     * @throws NullPointerException   if the specified key or class is {@code null}
+     * @throws ClassCastException     if the value cannot be cast to the specified class type
+     */
+    <T> @NotNull Optional<T> get(@NotNull String key, @NotNull Class<T> clazz) throws ClassCastException;
 
-    <T> @NotNull Optional<T> get(@NotNull String key, @NotNull Class<T> clazz);
-
-
-    <T> @NotNull T getNotNull(@NotNull String key, @NotNull Class<T> record) throws NoSuchFieldError;
+    /**
+     * Retrieves the value associated with the specified key in this map, casting it to the specified class type.
+     *
+     * <p>The {@code getNotNull} method retrieves the value associated with the specified key in this map and casts it to the specified class type.
+     * If the key is present and the value can be casted, the method returns the casted value.
+     * If the key is not present or the value cannot be casted, a {@link NoSuchFieldError} is thrown.
+     * If a {@link ClassCastException} occurs during casting, it is thrown by this method.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * String key = "exampleKey";
+     * String value = someSavableMap.getNotNull(key, String.class);
+     * }
+     * </pre>
+     *
+     * @param key    the key whose associated value is to be retrieved
+     * @param record the class type to cast the value to
+     * @param <T>    the type of the value
+     * @return the cast value associated with the specified key
+     * @throws NullPointerException   if the specified key or class is {@code null}
+     * @throws ClassCastException     if the value cannot be cast to the specified class type
+     * @throws NoSuchFieldError       if the key is not present
+     */
+    <T> @NotNull T getNotNull(@NotNull String key, @NotNull Class<T> record) throws ClassCastException, NoSuchFieldError;
 
     /**
      * Checks if a list exists in the table associated with the given key.
@@ -181,7 +261,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      */
     boolean containsList(@NotNull String key);
 
-    @NotNull <T> Optional<KissenList<T>> getList(@NotNull String key, Class<T> type);
+    @NotNull <T> Optional<MetaList<T>> getList(@NotNull String key, Class<T> type);
 
     /**
      * Retrieves a List of Strings from the table associated with the specified key.
@@ -214,9 +294,9 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * @param key the key of the list to retrieve
      * @return the List of Strings associated with the key, if it exists, or a new empty list if it doesn't
      * @throws NullPointerException if the specified key is `null`
-     * @see SavableList
+     * @see MetaList
      */
-    @NotNull <T> KissenList<T> getListNotNull(@NotNull String key, @NotNull Class<T> type);
+    @NotNull <T> MetaList<T> getListNotNull(@NotNull String key, @NotNull Class<T> type);
 
     /**
      * Inserts a List of Strings into the table associated with the specified key. The list will not be saved

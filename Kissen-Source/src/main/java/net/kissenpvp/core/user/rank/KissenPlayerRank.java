@@ -65,10 +65,7 @@ public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject imple
 
     @Override
     public void setEnd(@Nullable Instant end) throws EventCancelledException {
-        if(dataWriter == null)
-        {
-            throw new EventCancelledException();
-        }
+        DataWriter.validate(dataWriter, new EventCancelledException());
 
         rewriteEnd(end);
         dataWriter.update(playerRankNode);

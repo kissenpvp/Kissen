@@ -26,8 +26,7 @@ import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
-import net.kissenpvp.core.api.database.savable.list.KissenList;
-import net.kissenpvp.core.api.database.savable.list.SavableRecordList;
+import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.message.Theme;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
@@ -46,6 +45,7 @@ import net.kissenpvp.core.api.user.usersetttings.BoundPlayerSetting;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.DataWriter;
 import net.kissenpvp.core.message.PlayerTheme;
+import net.kissenpvp.core.time.KissenAccurateDuration;
 import net.kissenpvp.core.user.rank.KissenPlayerRank;
 import net.kissenpvp.core.user.rank.PlayerRankNode;
 import net.kissenpvp.core.user.suffix.KissenSuffix;
@@ -74,8 +74,8 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     @Override
     public @NotNull @Unmodifiable List<R> getRankHistory() {
         Comparator<R> sort = Comparator.comparing(PlayerRank::getStart);
-        Function<KissenList<PlayerRankNode>, List<R>> listFunction = rankNodes -> rankNodes.stream().map(this::translateRank).sorted(sort).toList();
-        Optional<KissenList<PlayerRankNode>> playerRankNodes = getUser().getList("rank_list", PlayerRankNode.class);
+        Function<MetaList<PlayerRankNode>, List<R>> listFunction = rankNodes -> rankNodes.stream().map(this::translateRank).sorted(sort).toList();
+        Optional<MetaList<PlayerRankNode>> playerRankNodes = getUser().getList("rank_list", PlayerRankNode.class);
         return playerRankNodes.map(listFunction).orElse(Collections.emptyList());
     }
 
@@ -138,13 +138,8 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     @Override
-    public long getOnlineTime() {
+    public @NotNull AccurateDuration getOnlineTime() {
         return getOnlineTime(getUser());
-    }
-
-    @Override
-    public long getLastPlayed() {
-        return getLastPlayed(getUser());
     }
 
     @Override
@@ -268,22 +263,6 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return rankNode;
     }
 
-    /**
-     * Returns a {@link DataWriter} instance that writes changes to the user's rank_list. The {@link DataWriter} instance
-     * returned by this method takes a {@link Record} argument and updates or adds the given record to the user's rank_list.
-     * The returned {@link DataWriter} instance is used to write data changes for a given record in the {@link KissenCore} plugin.
-     * It first checks if the given record already exists in the user's rank_list using the {@link SavableRecordList#contains(Object)}
-     * method. If the record exists, it replaces it with the new record using the {@link SavableRecordList#replaceRecord(Predicate, Record)}
-     * method, where the first parameter is a {@link Predicate} that tests whether a given element should be replaced, and the second
-     * parameter is the new record. Otherwise, it adds the new record to the user's rank_list using the {@link SavableRecordList#add(Object)}
-     * method.
-     *
-     * @return a {@link DataWriter} instance that writes changes to the user's rank_list.
-     * @throws NullPointerException if the user's rank_list does not exist.
-     * @see DataWriter
-     * @see Record
-     * @see SavableRecordList
-     */
     protected @NotNull DataWriter<PlayerRankNode> rankDataWriter() {
         return this::setRankNode;
     }
@@ -331,15 +310,25 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         }
     }
 
-    public long getOnlineTime(@NotNull User user) {
-        long onlineTime = user.get("online_time", Long.class).orElse(0L);
-        long timeJoined = (long) user.getStorage().get("time_joined");
-        return isConnected() ? onlineTime + (System.currentTimeMillis() - timeJoined) : onlineTime;
+    public @NotNull AccurateDuration getOnlineTime(@NotNull User user) {
+
+        KissenAccurateDuration defaultDuration = new KissenAccurateDuration(0);
+        KissenAccurateDuration onlineTime = user.get("online_time", KissenAccurateDuration.class).orElse(defaultDuration);
+
+        if (isConnected()) {
+            //Duration onlineSince = Duration.between(Instant.now(), Instant.now()); //TODO
+            //return new KissenAccurateDuration(onlineTime.milliseconds() + onlineSince.toMillis());
+        }
+        return onlineTime;
     }
 
-    public long getLastPlayed(@NotNull User user) {
-        long lastPlayed = user.get("last_played", Long.class).orElse(0L);
-        return isConnected() ? System.currentTimeMillis() : lastPlayed;
+    public @NotNull Optional<Instant> getLastPlayed(@NotNull User user) {
+        if(isConnected())
+        {
+            return Optional.of(Instant.now());
+        }
+
+        return user.get("last_played", Instant.class);
     }
 
     private @NotNull Optional<TextColor> getLastColor(@NotNull Component component) {

@@ -38,6 +38,16 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
         this.evaluator = new MethodEvaluator<>(this::getParser);
     }
 
+    public void unregister()
+    {
+        for (C command : getCommands()) {
+            if(command.getPosition() == 0)
+            {
+                unregisterCommand(command);
+            }
+        }
+    }
+
     public @NotNull @Unmodifiable Set<ExceptionHandler<?>> getExceptionHandler() {
         return Collections.unmodifiableSet(exceptionHandler);
     }
@@ -84,6 +94,8 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
     protected abstract @NotNull C buildCommand(@NotNull String name);
 
     protected abstract @NotNull String getHandlerName();
+
+    protected abstract void unregisterCommand(@NotNull C command);
 
     private void injectMethod(@NotNull Object instance, @NotNull Method method) {
         CommandData commandData = method.getAnnotation(CommandData.class);

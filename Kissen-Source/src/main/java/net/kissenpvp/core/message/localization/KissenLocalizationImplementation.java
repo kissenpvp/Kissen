@@ -34,6 +34,7 @@ import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
 import net.kyori.adventure.translation.Translator;
 import org.intellij.lang.annotations.Subst;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -62,7 +63,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class KissenLocalizationImplementation implements LocalizationImplementation, KissenImplementation {
 
-    private final Set<LocaleData> localeDataSet;
+    private static final String SYSTEM = "$system";
+
+    private final Set<LocaleData> localeDataList;
     private final Set<Locale> globallyKnown;
 
     /**
@@ -80,19 +83,18 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
      * and it prepares the data structures to manage and handle translations and localization for plugins.
      */
     public KissenLocalizationImplementation() {
-        this.localeDataSet = new HashSet<>();
+        this.localeDataList = new HashSet<>();
         this.globallyKnown = new HashSet<>();
     }
 
     @Override
     public boolean preStart() {
-        localeDataSet.add(new LocaleData("$system", new File("lang"), createTranslationRegistry("system", "systemtranslations")));
+        localeDataList.add(new LocaleData(SYSTEM, new File("lang"), createTranslationRegistry("system", "systemtranslations")));
         return LocalizationImplementation.super.preStart();
     }
 
     @Override
-    public boolean postStart()
-    {
+    public boolean postStart() {
         register("server.general.id", new MessageFormat("ID"));
         register("server.general.show.more", new MessageFormat("Show more..."));
         register("server.general.duration", new MessageFormat("{0} years, {1} days, {2} hours, {3} minutes and {4} seconds"));
@@ -102,24 +104,16 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
     @Override
     public void setupComplete() {
         try {
-            loadFiles(getData("$system"));
+            loadFiles(getData(SYSTEM));
         } catch (IOException ioException) {
-            KissenCore.getInstance()
-                    .getLogger()
-                    .error("The system was unable to load its translation files.", ioException);
+            KissenCore.getInstance().getLogger().error("The system was unable to load its translation files.", ioException);
         }
     }
 
     @Override
     public void stop() {
-        clearData();
-        LocalizationImplementation.super.stop();
-    }
-
-    @Override
-    public boolean prepareReload() {
-        clearData();
-        return LocalizationImplementation.super.prepareReload();
+        clearData(getData(SYSTEM));
+        globallyKnown.clear();
     }
 
     @Override
@@ -132,15 +126,22 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
         try {
             loadFiles(getData(kissenPlugin.getName()));
         } catch (IOException ioException) {
-            KissenCore.getInstance()
-                    .getLogger()
-                    .error("The system was unable to create or load the translation files for plugin '{}'.", kissenPlugin.getName(), ioException);
+            String message = "The system was unable to create or load the translation files for plugin {}.";
+            KissenCore.getInstance().getLogger().error(message, kissenPlugin.getName(), ioException);
         }
     }
 
     @Override
+    public void postDisable(@NotNull KissenPlugin kissenPlugin) {
+        LocaleData localeData = getData(kissenPlugin.getName());
+        clearData(localeData);
+        String message = "All {} messages have been unregistered from plugin {}.";
+        KissenCore.getInstance().getLogger().debug(message, localeData.data().size(), kissenPlugin.getName());
+    }
+
+    @Override
     public @Unmodifiable @NotNull Set<Locale> getAvailableLocales(@NotNull KissenPlugin kissenPlugin) {
-        return Collections.unmodifiableSet(getData(kissenPlugin.getName()).installed);
+        return Collections.unmodifiableSet(getData(kissenPlugin.getName()).installed());
     }
 
     @Override
@@ -194,7 +195,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
      * @throws NullPointerException     If either the key or locale parameter is null.
      */
     public @NotNull Component translate(@NotNull String key, @NotNull Locale locale, @NotNull String... var) {
-        return translate("$system", key, locale, var);
+        return translate(SYSTEM, key, locale, var);
     }
 
     /**
@@ -217,12 +218,9 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
      * @throws IllegalArgumentException or other RuntimeExceptions if the <code>checkKey(namespace, key).translate(key, locale)</code> returns an untranslated key or error occurs during the deserialization of MiniMessage.
      */
     private @NotNull Component translate(@NotNull String namespace, @NotNull String key, @NotNull Locale locale, @NotNull String... var) {
-        Component component = MiniMessage.miniMessage()
-                .deserialize(Objects.requireNonNull(checkKey(namespace, key).translate(key, locale)).format(var));
+        Component component = MiniMessage.miniMessage().deserialize(Objects.requireNonNull(checkKey(namespace, key).translate(key, locale)).format(var));
         if (component instanceof TranslatableComponent translatable) {
-            return Component.translatable(translatable.key(), Arrays.stream(var)
-                    .map(Component::text)
-                    .toList());
+            return Component.translatable(translatable.key(), Arrays.stream(var).map(Component::text).toList());
         }
         return component;
     }
@@ -241,12 +239,12 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
      * @throws NullPointerException     If either the translatableComponent or locale parameter is null.
      */
     public @NotNull Component translate(@NotNull TranslatableComponent translatableComponent, @NotNull Locale locale) {
-        return Objects.requireNonNull(checkKey("$system", translatableComponent.key()).translate(translatableComponent, locale));
+        return Objects.requireNonNull(checkKey(SYSTEM, translatableComponent.key()).translate(translatableComponent, locale));
     }
 
     /**
      * Registers a new translation entry with the provided key and default message.
-     * This method retrieves the LocaleData associated with the "$system" plugin identifier using the getData method.
+     * This method retrieves the LocaleData associated with the SYSTEM plugin identifier using the getData method.
      * It then adds the provided translation key and default message to the LocaleData's translation data Map.
      * After that, it registers the translation entry in the associated TranslationRegistry with the default locale.
      *
@@ -255,7 +253,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
      * @throws NullPointerException If either the key or defaultMessage parameter is null.
      */
     public void register(@NotNull String key, @NotNull MessageFormat defaultMessage) {
-        LocaleData localeData = getData("$system");
+        LocaleData localeData = getData(SYSTEM);
         localeData.data().put(key, defaultMessage);
     }
 
@@ -291,7 +289,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
      */
     private void initializePlugin(@NotNull KissenPlugin kissenPlugin) {
         @Subst("plugin") String namespace = kissenPlugin.getName().toLowerCase();
-        localeDataSet.add(new LocaleData(kissenPlugin.getName(), new File(kissenPlugin.getDataFolder(), "lang"), createTranslationRegistry(namespace, "translations")));
+        localeDataList.add(new LocaleData(kissenPlugin.getName(), new File(kissenPlugin.getDataFolder(), "lang"), createTranslationRegistry(namespace, "translations")));
     }
 
     /**
@@ -311,19 +309,10 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
         return translationRegistry;
     }
 
-    /**
-     * Clears the data associated with the TranslationRegistries and the global translation settings.
-     * This method removes all the TranslationRegistries' sources from the GlobalTranslator,
-     * clears the globallyKnown keys, and clears the localeDataSet.
-     * After calling this method, all the existing translation data and settings will be removed,
-     * and the TranslationRegistries will no longer be used for translation.
-     */
-    private void clearData() {
-        for (LocaleData localeData : localeDataSet) {
-            GlobalTranslator.translator().removeSource(localeData.translationRegistry);
-        }
-        globallyKnown.clear();
-        localeDataSet.clear();
+    private void clearData(@NotNull LocaleData localeData) {
+        localeData.data().keySet().forEach(localeData.translationRegistry()::unregister);
+        GlobalTranslator.translator().removeSource(localeData.translationRegistry());
+        localeDataList.remove(localeData);
     }
 
     /**
@@ -346,10 +335,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
                 }
             }
 
-            Arrays.stream(Objects.requireNonNull(directory.listFiles(file -> file.isFile() && file.getName()
-                    .toLowerCase()
-                    .endsWith(".json"))
-            )).forEach(file -> registerFile(localeData, file));
+            Arrays.stream(Objects.requireNonNull(directory.listFiles(file -> file.isFile() && file.getName().toLowerCase().endsWith(".json")))).forEach(file -> registerFile(localeData, file));
 
             if (!localeData.installed().contains(getDefaultLocale())) {
                 writeDefaultLocaleFile(localeData, new File(directory, getDefaultLocale() + ".json"));
@@ -369,9 +355,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
      * @throws NullPointerException If either the localeData or file parameter is null.
      */
     private void registerFile(@NotNull LocaleData localeData, @NotNull File file) {
-        loadJsonFromFile(file).ifPresent(jsonObject ->
-                registerJson(localeData, jsonObject, file.getName()
-                        .substring(0, file.getName().length() - 5)));
+        loadJsonFromFile(file).ifPresent(jsonObject -> registerJson(localeData, jsonObject, file.getName().substring(0, file.getName().length() - 5)));
     }
 
     /**
@@ -389,9 +373,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
                 return Optional.ofNullable(JsonParser.parseReader(bufferedReader).getAsJsonObject());
             }
         } catch (IOException | JsonIOException | JsonSyntaxException exception) {
-            KissenCore.getInstance()
-                    .getLogger()
-                    .error("An error occurred when reading language file '{}'", file.getAbsolutePath(), exception);
+            KissenCore.getInstance().getLogger().error("An error occurred when reading language file '{}'", file.getAbsolutePath(), exception);
         }
         return Optional.empty();
     }
@@ -415,24 +397,14 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
         jsonObject.asMap().forEach((key, value) -> stringStringMap.put(key, new MessageFormat(value.getAsString())));
 
         AtomicBoolean rewrite = new AtomicBoolean(false);
-        localeData.data()
-                .keySet()
-                .stream()
-                .filter(translation -> !stringStringMap.containsKey(translation))
-                .forEach(translation ->
-                {
-                    rewrite.set(true);
-                    MessageFormat defaultMessage = localeData.data().get(translation);
-                    KissenCore.getInstance()
-                            .getLogger()
-                            .warn("The translation '{}' was not found in the file for locale '{}' from plugin '{}'. It will be set to the default message: '{}'.", translation, locale, localeData.translationRegistry.name()
-                                    .namespace(), defaultMessage.toPattern());
-                    jsonObject.addProperty(translation, defaultMessage.toPattern());
-                    stringStringMap.put(translation, defaultMessage);
-                });
-        if (rewrite.get() && KissenCore.getInstance()
-                .getImplementation(ConfigurationImplementation.class)
-                .getSetting(InsertMissingTranslation.class)) {
+        localeData.data().keySet().stream().filter(translation -> !stringStringMap.containsKey(translation)).forEach(translation -> {
+            rewrite.set(true);
+            MessageFormat defaultMessage = localeData.data().get(translation);
+            KissenCore.getInstance().getLogger().warn("The translation '{}' was not found in the file for locale '{}' from plugin '{}'. It will be set to the default message: '{}'.", translation, locale, localeData.translationRegistry.name().namespace(), defaultMessage.toPattern());
+            jsonObject.addProperty(translation, defaultMessage.toPattern());
+            stringStringMap.put(translation, defaultMessage);
+        });
+        if (rewrite.get() && KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(InsertMissingTranslation.class)) {
             try {
                 writeJson(jsonObject, new File(localeData.directory(), locale + ".json"));
             } catch (IOException e) {
@@ -441,18 +413,15 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
         }
 
         Locale parsedLocale = getInternalLocale(locale).orElseGet(() -> buildLocale(locale));
-        if (!localeData.installed().contains(parsedLocale))
-        {
+        if (!localeData.installed().contains(parsedLocale)) {
             localeData.installed().add(parsedLocale);
-            KissenCore.getInstance().getLogger().info("Found and registered locale '{}' from '{}'.",
-                    parsedLocale.getDisplayName(), localeData.translationRegistry.name());
+            KissenCore.getInstance().getLogger().info("Found and registered locale '{}' from '{}'.", parsedLocale.getDisplayName(), localeData.translationRegistry.name());
         }
 
         localeData.translationRegistry().registerAll(Objects.requireNonNull(parsedLocale), stringStringMap);
     }
 
-    private @NotNull Locale buildLocale(@NotNull String locale)
-    {
+    private @NotNull Locale buildLocale(@NotNull String locale) {
         Locale parseLocale = Translator.parseLocale(locale.toLowerCase()); //convert I guess
         globallyKnown.add(parseLocale);
         assert parseLocale != null;
@@ -508,10 +477,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
      * @throws NullPointerException  If the provided id is null.
      */
     private @NotNull LocaleData getData(@NotNull String id) {
-        return localeDataSet.stream()
-                .filter(plugin -> plugin.name().equals(id))
-                .findFirst()
-                .orElseThrow(IllegalStateException::new);
+        return localeDataList.stream().filter(plugin -> plugin.name().equals(id)).findFirst().orElseThrow(IllegalStateException::new);
     }
 
     /**
@@ -557,6 +523,31 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
          */
         private LocaleData(@NotNull String name, @NotNull File directory, @NotNull TranslationRegistry translationRegistry) {
             this(name, directory, translationRegistry, new HashMap<>(), new HashSet<>());
+        }
+
+        @Contract(pure = true)
+        @Override
+        public @NotNull String toString() {
+            return "LocaleData{" +
+                    "name='" + name + '\'' +
+                    ", directory=" + directory +
+                    ", translationRegistry=" + translationRegistry +
+                    ", data=" + data +
+                    ", installed=" + installed +
+                    '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            LocaleData that = (LocaleData) o;
+            return Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(name);
         }
     }
 }

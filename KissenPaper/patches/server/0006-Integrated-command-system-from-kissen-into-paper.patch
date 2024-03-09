@@ -30,16 +30,19 @@ index 7a1110f4c2491fb87575fbcf92380a0e15ef17a6..bc65a18d043d7d67e51ccfa9c0861d12
      // KissenPaper start
  }
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index 0ebb88c89869fe0f11050c3be4c33ce3a0660145..392e6fc5db4bc634c665718b48a884455a819248 100644
+index 316180e676430f6d06e1d15fd80d7875c25f202d..974a978b1e10fc1ebfb25733861d73169f2a10d5 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -27,10 +27,14 @@ import net.kissenpvp.core.api.user.UserImplementation;
+@@ -29,13 +29,17 @@ import net.kissenpvp.core.api.user.UserImplementation;
  import net.kissenpvp.core.api.user.rank.RankImplementation;
  import net.kissenpvp.core.base.KissenCore;
  import net.kissenpvp.core.event.EventImplementation;
 +import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
 +import net.kissenpvp.core.permission.PermissionImplementation;
  import net.kissenpvp.paper.api.base.PaperKissen;
+ import net.kissenpvp.paper.database.KissenPaperConfigurationImplementation;
+ import net.kissenpvp.paper.database.PrivateDatabaseDNS;
+ import net.kissenpvp.paper.database.UsePrivate;
  import net.kissenpvp.paper.event.KissenEventImplementation;
 -import net.kissenpvp.core.permission.PermissionImplementation;
  import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
@@ -49,7 +52,7 @@ index 0ebb88c89869fe0f11050c3be4c33ce3a0660145..392e6fc5db4bc634c665718b48a88445
  import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
  import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
  import net.kissenpvp.paper.user.KissenPaperUserImplementation;
-@@ -66,6 +70,8 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+@@ -76,6 +80,8 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
          loader.put(PermissionImplementation.class, permissionImplementation);
          loader.put(PaperPermissionImplementation.class, permissionImplementation);
          loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());
@@ -187,15 +190,16 @@ index 0000000000000000000000000000000000000000..912fcb3baa6abf5fe787e9440dd07cfc
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperInternalCommandHandler.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperInternalCommandHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..466f4168cf90923e692ad0dc4a062e4d2f8825f9
+index 0000000000000000000000000000000000000000..e4c227cbafb759f581d371ebd228cf221da51b61
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/KissenPaperInternalCommandHandler.java
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,49 @@
 +package net.kissenpvp.paper.command;
 +
 +import net.kissenpvp.core.command.handler.InternalCommandHandler;
 +import net.kissenpvp.paper.command.command.system.KissenPaperCommand;
 +import org.bukkit.Bukkit;
++import org.bukkit.command.Command;
 +import org.bukkit.command.CommandSender;
 +import org.bukkit.craftbukkit.CraftServer;
 +import org.jetbrains.annotations.NotNull;
@@ -206,6 +210,15 @@ index 0000000000000000000000000000000000000000..466f4168cf90923e692ad0dc4a062e4d
 +    protected void registerCommand(@NotNull KissenPaperCommand command)
 +    {
 +        if(Bukkit.getCommandMap().register("kissenpaper", command))
++        {
++            ((CraftServer) Bukkit.getServer()).syncCommands();
++        }
++    }
++
++    @Override
++    protected void unregisterCommand(@NotNull KissenPaperCommand command) {
++        Command loaded = Bukkit.getCommandMap().getCommand(command.getName());
++        if(loaded != null && loaded.unregister(Bukkit.getCommandMap()))
 +        {
 +            ((CraftServer) Bukkit.getServer()).syncCommands();
 +        }
@@ -232,16 +245,17 @@ index 0000000000000000000000000000000000000000..466f4168cf90923e692ad0dc4a062e4d
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/KissenPaperPluginHandler.java b/src/main/java/net/kissenpvp/paper/command/KissenPaperPluginHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..4f9635caaa321bbc3dcbd0903a2859a6dd990056
+index 0000000000000000000000000000000000000000..6262d4d139326dc2372576d37dad6b6564747290
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/KissenPaperPluginHandler.java
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,58 @@
 +package net.kissenpvp.paper.command;
 +
 +import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 +import net.kissenpvp.core.command.handler.PluginCommandHandler;
 +import net.kissenpvp.paper.command.command.plugin.KissenPaperPluginCommand;
 +import org.bukkit.Bukkit;
++import org.bukkit.command.Command;
 +import org.bukkit.command.CommandSender;
 +import org.bukkit.craftbukkit.CraftServer;
 +import org.bukkit.plugin.Plugin;
@@ -260,6 +274,15 @@ index 0000000000000000000000000000000000000000..4f9635caaa321bbc3dcbd0903a2859a6
 +    protected void registerCommand(@NotNull KissenPaperPluginCommand command)
 +    {
 +        if(Bukkit.getCommandMap().register(getPlugin().getName(), command))
++        {
++            ((CraftServer) Bukkit.getServer()).syncCommands();
++        }
++    }
++
++    @Override
++    protected void unregisterCommand(@NotNull KissenPaperPluginCommand command) {
++        Command loaded = Bukkit.getCommandMap().getCommand(command.getName());
++        if(loaded != null && loaded.unregister(Bukkit.getCommandMap()))
 +        {
 +            ((CraftServer) Bukkit.getServer()).syncCommands();
 +        }
@@ -1424,7 +1447,7 @@ index b7f338e982d0dcab99137ab6dc200b82ac6b7cba..c41f51fc6b65c3e027296bfcd1c75500
              if (event.message() != null) {
                  commandlistenerwrapper.sendFailure(io.papermc.paper.adventure.PaperAdventure.asVanilla(event.message()), false);
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 4806c417d46a835380c1cc13a17a76afa743b6f2..3431c05a5fdd51e19cf68459b54e51478a4116ba 100644
+index c65ad124e3e9d1b4f2a6fe763d521103e8bbe5e1..dd1c39d145269fcf818c7d128ab066b72e90dc62 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -1006,18 +1006,26 @@ public final class CraftServer implements Server {

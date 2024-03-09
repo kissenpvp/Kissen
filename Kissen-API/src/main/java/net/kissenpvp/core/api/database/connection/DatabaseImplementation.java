@@ -28,11 +28,16 @@ public interface DatabaseImplementation extends Implementation {
 
     @NotNull DatabaseConnection[] getConnections();
 
+    <T extends DatabaseConnection> @NotNull T getPrimaryConnection();
+
+    @NotNull DatabaseConnection connectDatabase(@NotNull String id, @NotNull String connectionString);
+
     boolean registerDatabaseDriver(@NotNull Class<? extends DatabaseConnection> databaseConnection);
 
     @NotNull DatabaseConnection createConnection(@NotNull String connectionID, @NotNull String connectionString);
 
-    @NotNull <T extends DatabaseConnection> Optional<T> getConnection(@NotNull Class<T> type, @NotNull String connectionID);
+    @NotNull <T extends DatabaseConnection> Optional<T> getConnection(@NotNull String connectionID, @NotNull Class<T> type);
+    @NotNull  Optional<? extends DatabaseConnection> getConnection(@NotNull String connectionID);
 
-    <T extends DatabaseConnection> void close(@NotNull Class<T> type, @NotNull String connectionID) throws BackendException;
+    <T extends DatabaseConnection> void close(@NotNull String connectionID) throws BackendException;
 }

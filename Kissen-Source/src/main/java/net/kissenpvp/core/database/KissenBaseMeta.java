@@ -27,10 +27,10 @@ import net.kissenpvp.core.api.database.queryapi.*;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
-import net.kissenpvp.core.api.database.savable.list.KissenList;
+import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.database.queryapi.KissenQuerySelect;
 import net.kissenpvp.core.database.queryapi.KissenQueryUpdate;
-import net.kissenpvp.core.database.savable.list.KissenKissenList;
+import net.kissenpvp.core.database.savable.list.KissenMetaList;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -285,21 +285,21 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull <T> CompletableFuture<KissenList<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type) throws BackendException {
+    public @NotNull <T> CompletableFuture<MetaList<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type) throws BackendException {
         return getObject(totalID, key, Object[].class).handle((data, throwable) ->
         {
-            KissenList<T> kissenList = new KissenKissenList<>();
+            MetaList<T> metaList = new KissenMetaList<>();
             if(Objects.nonNull(data))
             {
-                kissenList.addAll(Arrays.stream((T[]) data).toList());
+                metaList.addAll(Arrays.stream((T[]) data).toList());
             }
-            kissenList.setListAction((o1, o2) -> setCollection(totalID, key, kissenList));
-            return kissenList;
+            metaList.setListAction((o1, o2, o3) -> setCollection(totalID, key, metaList));
+            return metaList;
         });
     }
 
     @Override
-    public @NotNull <T> CompletableFuture<KissenList<T>> getCollection(@NotNull String key, @NotNull Class<T> type) throws BackendException {
+    public @NotNull <T> CompletableFuture<MetaList<T>> getCollection(@NotNull String key, @NotNull Class<T> type) throws BackendException {
         return getCollection(UNDEFINED, key, type);
     }
 

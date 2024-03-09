@@ -78,21 +78,8 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
     private void updateName(@NotNull String name, String currentName) {
         String message = "The user '{}' has changed their name from '{}' to '{}'.";
         KissenCore.getInstance().getLogger().debug(message, getRawID(), getNotNull("name", String.class), name);
-
         getImplementation().getCachedProfiles().removeIf(cached -> Objects.equals(currentName, cached.name()));
         set("name", name);
-    }
-
-    /**
-     * Retrieves and returns the {@link KissenUserImplementation} from the KissenCore instance.
-     *
-     * <p>The {@code getImplementation} method is used to obtain the implementation of the {@link KissenUserImplementation}
-     * from the KissenCore instance, allowing access to functionality provided by the user implementation.</p>
-     *
-     * @return the {@link KissenUserImplementation} instance
-     */
-    private @NotNull KissenUserImplementation getImplementation() {
-        return KissenCore.getInstance().getImplementation(KissenUserImplementation.class);
     }
 
     @Override
@@ -111,7 +98,6 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
     @Override
     public void setup(@NotNull String id, @Nullable Map<String, Object> meta) throws SavableInitializeException, BackendException {
         super.setup(id, meta);
-
         getImplementation().cacheProfile(new UserInfoNode(UUID.fromString(id), getNotNull("name", String.class)));
     }
 

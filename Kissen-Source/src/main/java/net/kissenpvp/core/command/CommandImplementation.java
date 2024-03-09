@@ -105,10 +105,33 @@ public abstract class CommandImplementation<S extends ServerEntity> implements K
     }
 
     @Override
-    public void load(@NotNull KissenPlugin kissenPlugin)
+    public void enable(@NotNull KissenPlugin kissenPlugin)
     {
+        if(getHandler().stream().anyMatch(handler -> Objects.equals(handler.getPlugin(), kissenPlugin)))
+        {
+            String errorMessage = "Plugin %s already has a command handler registered.";
+            throw new IllegalStateException(errorMessage.formatted(kissenPlugin));
+        }
         KissenCore.getInstance().getLogger().info("Register command handler for {}.", kissenPlugin.getName());
         registerHandler(kissenPlugin);
+    }
+
+    @Override
+    public void stop() {
+        getInternalHandler().unregister();
+    }
+
+    @Override
+    public void postDisable(@NotNull KissenPlugin kissenPlugin) {
+        this.handler.removeIf(handler ->
+        {
+            if(handler.getPlugin().equals(kissenPlugin))
+            {
+                handler.unregister();
+                return true;
+            }
+            return false;
+        });
     }
 
     protected void registerHandler(@NotNull KissenPlugin kissenPlugin)

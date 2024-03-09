@@ -34,10 +34,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 
 public class KissenDatabaseImplementation implements DatabaseImplementation {
@@ -50,14 +47,13 @@ public class KissenDatabaseImplementation implements DatabaseImplementation {
         this.connectionClasses = new HashSet<>();
     }
 
-    public @NotNull DatabaseConnection connectDatabase() {
+    public @NotNull DatabaseConnection connectDatabase(@NotNull String id, @NotNull String connectionString) {
         DatabaseImplementation databaseImplementation = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
         databaseImplementation.registerDatabaseDriver(KissenMySQLDatabaseConnection.class);
         databaseImplementation.registerDatabaseDriver(KissenSQLiteDatabaseConnection.class);
         databaseImplementation.registerDatabaseDriver(KissenMongoDatabaseConnection.class);
 
-        String connectionQuery = KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DatabaseDNS.class);
-        DatabaseConnection databaseConnection = databaseImplementation.createConnection("public", connectionQuery);
+        DatabaseConnection databaseConnection = databaseImplementation.createConnection(id, connectionString);
         if(!(databaseConnection instanceof KissenSQLiteDatabaseConnection) && !KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(KeepSQLiteFile.class))
         {
             deleteObsoleteDatabaseFiles();
@@ -66,17 +62,14 @@ public class KissenDatabaseImplementation implements DatabaseImplementation {
         return databaseConnection;
     }
 
-    private void deleteObsoleteDatabaseFiles() {
-        File[] files = Paths.get("").toAbsolutePath().toFile().listFiles((curr, s) -> s.endsWith(".db"));
-        if(files != null)
-        {
-            Arrays.stream(files).filter(file -> !file.delete()).forEach(file -> KissenCore.getInstance().getLogger().error("The system was unable to delete the file {}.", file));
-        }
-    }
-
     @Override
     public @NotNull DatabaseConnection[] getConnections() {
         return databaseConnections.toArray(new DatabaseConnection[0]);
+    }
+
+    @Override
+    public @NotNull DatabaseConnection getPrimaryConnection() {
+        return getConnection("public").orElseThrow();
     }
 
     @Override
@@ -111,15 +104,24 @@ public class KissenDatabaseImplementation implements DatabaseImplementation {
     }
 
     @Override
-    public @NotNull <T extends DatabaseConnection> Optional<T> getConnection(@NotNull Class<T> type, @NotNull String connectionID) {
-        return (Optional<T>) databaseConnections.stream().filter(databaseConnection -> type.equals(databaseConnection.getClass())).filter(databaseConnection -> databaseConnection.getConnectionID().equals(connectionID)).findFirst();
+    public @NotNull <T extends DatabaseConnection> Optional<T> getConnection(@NotNull String connectionID, @NotNull Class<T> type) throws ClassCastException {
+        return (Optional<T>) getConnection(connectionID);
+    }
+
+    public @NotNull Optional<? extends DatabaseConnection> getConnection(@NotNull String connectionID) {
+        return databaseConnections.stream().filter(databaseConnection -> databaseConnection.getConnectionID().equals(connectionID)).findFirst();
     }
 
     @Override
-    public <T extends DatabaseConnection> void close(@NotNull Class<T> type, @NotNull String connectionID) throws BackendException {
-        Optional<T> connection = getConnection(type, connectionID);
-        if (connection.isPresent()) {
-            connection.get().disconnect();
+    public <T extends DatabaseConnection> void close(@NotNull String connectionID) throws BackendException {
+        getConnection(connectionID).ifPresent(DatabaseConnection::disconnect);
+    }
+
+    private void deleteObsoleteDatabaseFiles() {
+        File[] files = Paths.get("").toAbsolutePath().toFile().listFiles((curr, s) -> s.endsWith(".db"));
+        if(files != null)
+        {
+            Arrays.stream(files).filter(file -> !file.delete()).forEach(file -> KissenCore.getInstance().getLogger().error("The system was unable to delete the file {}.", file));
         }
     }
 }

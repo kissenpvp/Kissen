@@ -20,13 +20,14 @@ package net.kissenpvp.core.ban;
 
 import net.kissenpvp.core.api.ban.*;
 import net.kissenpvp.core.api.database.StorageImplementation;
+import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
-import net.kissenpvp.core.api.database.savable.list.KissenList;
+import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TemporalObject;
@@ -58,6 +59,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
     private static final String STORAGE_KEY = "ban_storage";
     private static final MessageFormat TOTAL_ID_KEY = new MessageFormat("ban_{0}");
     private final Set<B> cachedBans;
+    private ObjectMeta banMeta;
 
     /**
      * Initializes a new instance of the KissenBanImplementation class.
@@ -65,6 +67,13 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      */
     public KissenBanImplementation() {
         this.cachedBans = new HashSet<>();
+    }
+
+    @Override
+    public boolean preStart() {
+        DatabaseImplementation database = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
+        banMeta = database.getPrimaryConnection().createObjectMeta("kissen_ban_table");
+        return BanImplementation.super.preStart();
     }
 
     @Override
@@ -90,12 +99,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
 
     @Override
     public boolean postStart() {
-        try {
-            cachedBans.addAll(fetchBanSet());
-        } catch (BackendException backendException) {
-            KissenCore.getInstance().getLogger().error("An error occurred when loading bans from the backend. The server will shutdown to prevent further damages to the data.");
-            return false;
-        }
+        cachedBans.addAll(fetchBanSet());
         return BanImplementation.super.postStart();
     }
 
@@ -296,7 +300,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      * @throws BackendException if there is an error accessing the backend
      */
     protected void set(@NotNull UUID totalID, @NotNull KissenPunishmentNode punishmentNode, @NotNull Meta meta) throws BackendException {
-        Function<KissenList<KissenPunishmentNode>, Boolean> insert = list -> list.replaceOrInsert(punishmentNode);
+        Function<MetaList<KissenPunishmentNode>, Boolean> insert = list -> list.replaceOrInsert(punishmentNode);
         if (meta.getCollection("punishment", totalID.toString(), KissenPunishmentNode.class).thenApply(insert).join()) {
             invalidateCache(totalID);
         }
@@ -386,7 +390,10 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      *
      * @return The meta information as an instance of the Meta class.
      */
-    protected abstract @NotNull @Unmodifiable ObjectMeta getMeta();
+    protected @NotNull @Unmodifiable ObjectMeta getMeta()
+    {
+        return banMeta;
+    }
 
     /**
      * Constructs a ban object with the specified id and data.

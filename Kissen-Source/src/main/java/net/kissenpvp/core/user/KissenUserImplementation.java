@@ -22,6 +22,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
+import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
@@ -66,12 +67,20 @@ import java.util.stream.Stream;
 public abstract class KissenUserImplementation implements UserImplementation {
 
     @Getter
-    private final Set<User> onlineUserSet;
+    private final static Set<User> onlineUserSet;
     @Getter(AccessLevel.PROTECTED)
     private final Set<UserInfoNode> cachedProfiles;
     private final Set<RegisteredPlayerSetting> pluginSettings;
     private final Set<PlayerSetting<?>> internalSettings;
     private final ScheduledExecutorService tickExecutor;
+
+    static {
+        onlineUserSet = new HashSet<>(); // persist when reloading
+    }
+
+    @Getter
+    private ObjectMeta userMeta;
+
 
     /**
      * Initializes the KissenUserImplementation instance.
@@ -84,11 +93,17 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * The 'userPlayerSettings' is meant to hold the settings data of the player.
      */
     public KissenUserImplementation() {
-        this.onlineUserSet = new HashSet<>();
         this.cachedProfiles = new HashSet<>();
         this.pluginSettings = new HashSet<>();
         this.internalSettings = new HashSet<>();
         this.tickExecutor = Executors.newScheduledThreadPool(1);
+    }
+
+    @Override
+    public boolean preStart() {
+        DatabaseImplementation database = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
+        userMeta = database.getPrimaryConnection().createObjectMeta("kissen_user_table");
+        return UserImplementation.super.preStart();
     }
 
     @Override
@@ -131,19 +146,24 @@ public abstract class KissenUserImplementation implements UserImplementation {
     }
 
     @Override
+    public void stop() {
+        this.tickExecutor.shutdown();
+    }
+
+    @Override
     public @NotNull @Unmodifiable Set<User> getOnlineUser() {
         return Collections.unmodifiableSet(onlineUserSet);
     }
 
     @Override
     public @NotNull Optional<User> getOnlineUser(@NotNull UUID uuid) {
-        return onlineUserSet.stream().filter(userEntry -> userEntry.getRawID().equals(uuid.toString())).findFirst();
+        return getOnlineUser().stream().filter(userEntry -> userEntry.getRawID().equals(uuid.toString())).findFirst();
     }
 
     @Override
     public @NotNull User getUser(@NotNull String name) throws BackendException {
         return getOnlineUser().stream().filter(user -> user.getNotNull("name", String.class).equals(name)).findFirst().orElseGet(() -> {
-           //TODO
+            //TODO make this work someday
             throw new BackendException();
         });
     }
@@ -233,18 +253,6 @@ public abstract class KissenUserImplementation implements UserImplementation {
     }
 
     /**
-     * Provides a default user save ID.
-     * <p>
-     * This method returns a constant string denoting a generic user save ID. Currently, it returns the string "user".
-     * The purpose of this method is to provide a simple, uniform identifier that can be used for saving and retrieving user information.
-     *
-     * @return String The constant user save ID. In this case, it is "user".
-     */
-    public @NotNull ObjectMeta getUserMeta() {
-        return KissenCore.getInstance().getPublicMeta();
-    }
-
-    /**
      * Fetches and caches user profiles.
      * <p>
      * This method fetches the user profiles by executing a Select query against the MetaData of the User.
@@ -315,7 +323,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @return true if the user was successfully logged in, false otherwise
      */
     public boolean loginUser(User user) {
-        if (onlineUserSet.contains(user)) {
+        if (getOnlineUser().contains(user)) {
             ((KissenUser<?>) user).login();
             return true;
         }
