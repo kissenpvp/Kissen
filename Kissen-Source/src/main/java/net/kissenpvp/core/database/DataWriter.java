@@ -22,19 +22,59 @@ package net.kissenpvp.core.database;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * A contract defining the behavior of a data writer responsible for updating records.
+ *
+ * <p>The {@code DataWriter} interface provides methods to validate the immutability of the object and to update records.
+ * It includes a constant {@code IMMUTABLE} representing the message for an immutable object.</p>
+ *
+ * @param <T> the type of records that this data writer can handle, extending the {@link Record} interface
+ * @see Record
+ */
 public interface DataWriter<T extends Record> {
 
-    String IMMUTABLE = "This object is immutable";
+    String IMMUTABLE = "This object is immutable.";
 
+    /**
+     * Validates the immutability of the specified {@link DataWriter} object.
+     *
+     * <p>The {@code validate} method checks if the given {@link DataWriter} is not null. If the object is null,
+     * it throws an {@link UnsupportedOperationException} with the message {@code IMMUTABLE}.</p>
+     *
+     * @param dataWriter the {@link DataWriter} to be validated
+     * @throws UnsupportedOperationException if the specified {@link DataWriter} is null
+     * @see #validate(DataWriter, RuntimeException)
+     */
     static void validate(@Nullable DataWriter<?> dataWriter) {
         validate(dataWriter, new UnsupportedOperationException(IMMUTABLE));
     }
 
+    /**
+     * Validates the immutability of the specified {@link DataWriter} object, throwing a custom runtime exception
+     * if the object is null.
+     *
+     * <p>The {@code validate} method checks if the given {@link DataWriter} is not null. If the object is null,
+     * it throws the specified runtime exception.</p>
+     *
+     * @param dataWriter      the {@link DataWriter} to be validated
+     * @param runtimeException the custom runtime exception to be thrown if the {@link DataWriter} is null
+     * @param <T>             the type of runtime exception
+     * @throws T if the specified {@link DataWriter} is null
+     * @see #validate(DataWriter)
+     */
     static <T extends RuntimeException> void validate(@Nullable DataWriter<?> dataWriter, @NotNull T runtimeException) {
         if (dataWriter==null) {
             throw runtimeException;
         }
     }
 
-    void update(T record);
+    /**
+     * Updates the specified record using this data writer.
+     *
+     * <p>The {@code update} method is responsible for updating the given record. The behavior is defined by
+     * concrete implementations of this interface.</p>
+     *
+     * @param record the record to be updated
+     */
+    void update(@NotNull T record);
 }
