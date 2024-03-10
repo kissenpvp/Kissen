@@ -3917,10 +3917,10 @@ index 0000000000000000000000000000000000000000..f8a3c48622f620f1ffbebbfddd0a1cd6
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..698c9227b5e612e74e5b3560e28fd0cd042b1e44
+index 0000000000000000000000000000000000000000..0316dff14f39662de4e351afbb3601fffb9f396a
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
-@@ -0,0 +1,157 @@
+@@ -0,0 +1,196 @@
 +package net.kissenpvp.paper.user.rank;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -3940,16 +3940,16 @@ index 0000000000000000000000000000000000000000..698c9227b5e612e74e5b3560e28fd0cd
 +import org.bukkit.Bukkit;
 +import org.bukkit.OfflinePlayer;
 +import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.Contract;
 +import org.jetbrains.annotations.NotNull;
 +
 +import java.time.Instant;
-+import java.util.Collection;
-+import java.util.HashMap;
-+import java.util.Map;
-+import java.util.Optional;
++import java.util.*;
 +import java.util.function.Function;
++import java.util.function.Predicate;
 +import java.util.function.Supplier;
 +import java.util.stream.Collectors;
++import java.util.stream.Stream;
 +
 +public class RankCommand {
 +
@@ -3970,12 +3970,7 @@ index 0000000000000000000000000000000000000000..698c9227b5e612e74e5b3560e28fd0cd
 +        commandPayload.getSender().sendMessage(rankRevoke(offlinePlayer, id));
 +    }
 +
-+    @CommandData(value = "rankedit", aliases = "re")
-+    public void rankEdit(@NotNull CommandPayload<?> commandPayload) {
-+        throw new ArgumentMissingException();
-+    }
-+
-+    @CommandData(value = "rankedit.prefix", runAsync = true)
++    @CommandData(value = "rank.edit.prefix", runAsync = true)
 +    public void rankPrefix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull @ArgumentName("prefix") String[] prefix) {
 +        String mounted = String.join(" ", prefix).replace('&', '§');
 +        if (mounted.replaceAll("&.", "").isBlank()) {
@@ -3988,13 +3983,13 @@ index 0000000000000000000000000000000000000000..698c9227b5e612e74e5b3560e28fd0cd
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.prefix.set", args));
 +    }
 +
-+    @CommandData(value = "rankedit.prefix.none", runAsync = true)
++    @CommandData(value = "rank.edit.prefix.none", runAsync = true)
 +    public void rankPrefix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank) {
 +        paperRank.setPrefix(null);
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.prefix.set", Component.text(paperRank.getName()), Component.text("none")));
 +    }
 +
-+    @CommandData(value = "rankedit.suffix", runAsync = true)
++    @CommandData(value = "rank.edit.suffix", runAsync = true)
 +    public void rankSuffix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull @ArgumentName("suffix") String[] suffix) {
 +        String mounted = String.join(" ", suffix).replace('&', '§');
 +        if (mounted.replaceAll("&.", "").isBlank()) {
@@ -4008,13 +4003,13 @@ index 0000000000000000000000000000000000000000..698c9227b5e612e74e5b3560e28fd0cd
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.suffix.set", args));
 +    }
 +
-+    @CommandData(value = "rankedit.suffix.none", runAsync = true)
++    @CommandData(value = "rank.edit.suffix.none", runAsync = true)
 +    public void rankSuffix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank) {
 +        paperRank.setSuffix(null);
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.suffix.set", Component.text(paperRank.getName()), Component.text("none")));
 +    }
 +
-+    @CommandData(value = "rankedit.priority", runAsync = true)
++    @CommandData(value = "rank.edit.priority", runAsync = true)
 +    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @ArgumentName("priority") int priority) {
 +        paperRank.setPriority(priority);
 +
@@ -4022,14 +4017,14 @@ index 0000000000000000000000000000000000000000..698c9227b5e612e74e5b3560e28fd0cd
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.priority.set", args));
 +    }
 +
-+    @CommandData(value = "rankedit.chatcolor", runAsync = true)
++    @CommandData(value = "rank.edit.chatcolor", runAsync = true)
 +    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull NamedTextColor namedTextColor) {
 +        paperRank.setChatColor(namedTextColor);
 +        Component[] args = {Component.text(paperRank.getName()), Component.text(namedTextColor.toString())};
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.chatcolor.set", args));
 +    }
 +
-+    @CommandData(value = "rankcreate", aliases = "createrank", runAsync = true)
++    @CommandData(value = "rank.create", runAsync = true)
 +    public void rankCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull @ArgumentName("name") String name, @ArgumentName("priority") int priority, @NotNull NamedTextColor namedTextColor) {
 +        Class<KissenPaperRankImplementation> clazz = KissenPaperRankImplementation.class;
 +        KissenPaperRankImplementation rankImplementation = Bukkit.getKissen().getImplementation(clazz);
@@ -4042,30 +4037,10 @@ index 0000000000000000000000000000000000000000..698c9227b5e612e74e5b3560e28fd0cd
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.created", args));
 +    }
 +
-+    @CommandData(value = "rankdelete", aliases = "deleterank", runAsync = true)
++    @CommandData(value = "rank.delete", runAsync = true)
 +    public void rankDelete(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank) {
 +        paperRank.delete();
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.player.deleted", Component.text(paperRank.getName())));
-+    }
-+
-+    private @NotNull Component rankGrant(@NotNull OfflinePlayer offlinePlayer, @NotNull PaperPlayerRank paperPlayerRank) {
-+        Component rankName = Component.text(paperPlayerRank.getSource().getName());
-+        return Component.translatable("server.rank.player.granted", offlinePlayer.displayName(), rankName);
-+    }
-+
-+    public @NotNull Component rankRevoke(@NotNull OfflinePlayer offlinePlayer, @NotNull String id) {
-+        Component[] args = {offlinePlayer.displayName(), Component.text(id)};
-+
-+        if (offlinePlayer.getRankHistory().stream().anyMatch(current -> {
-+            if (current.getID().equals(id) && current.isValid()) {
-+                current.setEnd(Instant.now());
-+                return true;
-+            }
-+            return false;
-+        })) {
-+            return Component.translatable("server.rank.player.revoked", args);
-+        }
-+        return Component.translatable("server.rank.player.not.found", args);
 +    }
 +
 +    @TabCompleter(value = "rank.revoke")
@@ -4076,6 +4051,70 @@ index 0000000000000000000000000000000000000000..698c9227b5e612e74e5b3560e28fd0cd
 +        }
 +        OfflinePlayer offlinePlayer = offlinePlayerParser.deserialize(commandPayload.getArguments()[0]);
 +        return offlinePlayer.getRankHistory().stream().filter(TemporalObject::isValid).map(PlayerRank::getID).collect(Collectors.toSet());
++    }
++
++    /**
++     * Grants a rank to the specified offline player and generates a message indicating the rank has been granted.
++     *
++     * <p>The {@code rankGrant} method grants the specified {@link PaperPlayerRank} to the {@link OfflinePlayer},
++     * generating a message indicating the successful grant. The generated message includes the player's display name
++     * and the name of the granted rank.</p>
++     *
++     * @param offlinePlayer the {@link OfflinePlayer} to whom the rank is granted
++     * @param paperPlayerRank the {@link PaperPlayerRank} to be granted
++     * @return a {@link Component} representing the message indicating the rank has been granted
++     * @throws NullPointerException if either {@code offlinePlayer} or {@code paperPlayerRank} is {@code null}
++     */
++    private @NotNull Component rankGrant(@NotNull OfflinePlayer offlinePlayer, @NotNull PaperPlayerRank paperPlayerRank) {
++        Component rankName = Component.text(paperPlayerRank.getSource().getName());
++        return Component.translatable("server.rank.player.granted", offlinePlayer.displayName(), rankName);
++    }
++
++    /**
++     * Revokes a rank from the specified offline player and generates a corresponding message.
++     *
++     * <p>The {@code rankRevoke} method revokes the rank with the specified ID from the {@link OfflinePlayer},
++     * generating a message indicating the outcome of the revocation. The generated message includes the player's display name
++     * and the ID of the revoked rank.</p>
++     *
++     * @param player the {@link OfflinePlayer} from whom the rank is revoked
++     * @param id the ID of the rank to be revoked
++     * @return a {@link Component} representing the message indicating the outcome of the rank revocation
++     * @throws NullPointerException if either {@code player} or {@code id} is {@code null}
++     */
++    public @NotNull Component rankRevoke(@NotNull OfflinePlayer player, @NotNull String id) {
++
++        String translationString = "server.rank.player.not.found";
++        if (player.getRankHistory().stream().anyMatch(endRank(id))) {
++            translationString = "server.rank.player.revoked";
++        }
++
++        Component[] args = {player.displayName(), Component.text(id)};
++        return Component.translatable(translationString, args);
++    }
++
++    /**
++     * Returns a {@link Predicate} that ends the rank with the specified ID and sets its end time to the current instant.
++     *
++     * <p>The {@code endRank} method returns a {@link Predicate} that can be used with {@link Stream#anyMatch(Predicate)}
++     * to find and end the rank with the specified ID. If the rank is found and is currently valid, its end time is set to the
++     * current instant, and the predicate returns {@code true}; otherwise, it returns {@code false}.</p>
++     *
++     * <p>This method is intended for use with streams and filtering rank history based on the rank's ID.</p>
++     *
++     * @param id the ID of the rank to be ended
++     * @return a {@link Predicate} ending the rank with the specified ID
++     * @throws NullPointerException if {@code id} is {@code null}
++     */
++    @Contract(pure = true, value = "_ -> new")
++    private @NotNull Predicate<PaperPlayerRank> endRank(@NotNull String id) {
++        return current -> {
++            if (Objects.equals(current.getID(), id) && current.isValid()) {
++                current.setEnd(Instant.now());
++                return true;
++            }
++            return false;
++        };
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetChatColorEvent.java b/src/main/java/net/kissenpvp/paper/user/rank/event/KissenPaperRankSetChatColorEvent.java
