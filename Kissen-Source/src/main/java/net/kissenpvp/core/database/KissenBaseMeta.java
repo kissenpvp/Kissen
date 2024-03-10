@@ -288,10 +288,6 @@ public abstract class KissenBaseMeta implements Meta {
     public @NotNull <T> CompletableFuture<MetaList<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type) throws BackendException {
         return getObject(totalID, key, Object[].class).handle((data, throwable) ->
         {
-            if(throwable != null)
-            {
-                throwable.printStackTrace();
-            }
             MetaList<T> metaList = new KissenMetaList<>();
             if(Objects.nonNull(data))
             {
