@@ -159,6 +159,16 @@ public interface Meta extends MetaReader, MetaWriter {
      */
     @NotNull String getTotalIDColumn();
 
+    /**
+     * Retrieves the Gson instance used for JSON serialization and deserialization.
+     *
+     * <p>The {@code getGson} method returns the Gson instance associated with this class, providing access
+     * to the configured Gson object for handling JSON-related operations. It is crucial to ensure that the Gson
+     * instance returned is appropriately configured for the specific needs of the application, including any custom
+     * serializers, deserializers, or other settings.</p>
+     *
+     * @return the Gson instance used for JSON serialization and deserialization
+     */
     @NotNull
     Gson getGson();
 }

@@ -261,7 +261,36 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      */
     boolean containsList(@NotNull String key);
 
-    @NotNull <T> Optional<MetaList<T>> getList(@NotNull String key, Class<T> type);
+    /**
+     * Retrieves a synchronized {@link MetaList} associated with the specified key and element type.
+     *
+     * <p>The {@code getList} method fetches a {@link MetaList} from the metadata using the provided key and element type.
+     * This method ensures synchronization with the database, reflecting any changes in the underlying storage.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * // Assuming 'String' is the type of elements in the MetaList
+     * Optional<MetaList<String>> stringList = getList("exampleKey", String.class);
+     *
+     * // Check if the MetaList is present
+     * if (stringList.isPresent()) {
+     *     MetaList<String> synchronizedList = stringList.get();
+     *     // Perform operations on the synchronized MetaList
+     * } else {
+     *     // Handle the case where the MetaList is not present
+     * }
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the {@link MetaList} in the metadata
+     * @param type the class representing the type of elements in the {@link MetaList}
+     * @param <T> the type of elements in the {@link MetaList}
+     * @return an {@link Optional} containing the synchronized {@link MetaList}, or an empty optional if not present
+     * @throws NullPointerException if the key or type is {@code null}
+     */
+    @NotNull <T> Optional<MetaList<T>> getList(@NotNull String key, @NotNull Class<T> type);
 
     /**
      * Retrieves a List of Strings from the table associated with the specified key.
@@ -331,17 +360,177 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      */
     <T> @Nullable Object putList(@NotNull String key, @Nullable Collection<T> value);
 
+    /**
+     * Adds a value to a list associated with the specified key, returning the list before the change.
+     *
+     * <p>The {@code putListValue} method adds the specified value to the list associated with the given key.
+     * If the list does not exist, it creates a new one. The method returns the unmodifiable list before the change.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * // Assuming 'String' is the type of elements in the list
+     * String key = "exampleKey";
+     * String valueToAdd = "newValue";
+     *
+     * List<String> previousList = putListValue(key, valueToAdd);
+     *
+     * if (previousList != null) {
+     *     // Process the unmodifiable list before the change
+     *     System.out.println("Previous List: " + previousList);
+     * } else {
+     *     // Handle cases where the list was not present before
+     *     System.out.println("List has been created.");
+     * }
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the list
+     * @param value the value to add to the list
+     * @param <T> the type of elements in the list
+     * @return the unmodifiable list before adding the value, or {@code null} if the operation fails
+     * @throws NullPointerException if the key or value is {@code null}
+     */
+    <T> @Nullable @Unmodifiable List<?> putListValue(@NotNull String key, @NotNull T value);
 
-    <T> @Nullable @Unmodifiable List<T> putListValue(@NotNull String key, @NotNull T value);
-
+    /**
+     * Adds a collection of values to a list associated with the specified key if the list is absent, returning the previous object.
+     *
+     * <p>The {@code putListIfAbsent} method adds the specified collection of values to the list associated with the given key
+     * if the list does not already exist. If the list exists, it does not perform any modification. The method returns
+     * the previous object associated with the key, or {@code null} if there was no previous list.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * // Assuming 'String' is the type of elements in the list
+     * String key = "exampleKey";
+     * List<String> valuesToAdd = List.of("value1", "value2");
+     *
+     * Object previousObject = putListIfAbsent(key, valuesToAdd);
+     *
+     * if (previousObject != null) {
+     *     // Process the previous object associated with the key
+     *     System.out.println("Previous Object: " + previousObject);
+     * } else {
+     *     // Handle the case where there was no previous object
+     *     System.out.println("No previous object found for the key.");
+     * }
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the list
+     * @param value the collection of values to add to the list if absent
+     * @param <T> the type of elements in the list
+     * @return the previous object associated with the key, or {@code null} if there was no previous object
+     * @throws NullPointerException if the key or value is {@code null}
+     */
     <T> @Nullable Object putListIfAbsent(@NotNull String key, @NotNull Collection<T> value);
 
+    /**
+     * Sets the list associated with the specified key to the given collection of values in the database, returning the previous value.
+     *
+     * <p>The {@code setList} method sets the list associated with the given key to the specified collection of values in the database.
+     * It returns the previous value associated with the key, which might not be a list if the previous value was not a collection.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * // Assuming 'String' is the type of elements in the list
+     * String key = "exampleKey";
+     * List<String> newValues = List.of("new1", "new2");
+     *
+     * Object previousValue = setList(key, newValues);
+     *
+     * if (previousValue instanceof Collection) {
+     *     // Process the previous collection associated with the key
+     *     System.out.println("Previous Collection: " + previousValue);
+     * } else {
+     *     // Handle the case where the previous value was not a collection or null
+     *     System.out.println("Previous value was not a collection or null: " + previousValue);
+     * }
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the list
+     * @param value the collection of values to set as the new list in the database
+     * @param <T> the type of elements in the list
+     * @return the previous value associated with the key, which might not be a list or {@code null}.
+     * @throws NullPointerException if the key is {@code null}
+     */
     <T> @Nullable Object setList(@NotNull String key, @Nullable Collection<T> value);
 
-    <T> @Nullable @Unmodifiable List<T> setListValue(@NotNull String key, @NotNull T value);
+    /**
+     * Sets a single value in a list associated with the specified key, returning the previous list.
+     *
+     * <p>The {@code setListValue} method sets the list associated with the given key to a new list containing only
+     * the specified value. It returns the unmodifiable list before the change.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * // Assuming 'String' is the type of elements in the list
+     * String key = "exampleKey";
+     * String newValue = "newValue";
+     *
+     * List<String> previousList = setListValue(key, newValue);
+     *
+     * if (previousList != null) {
+     *     // Process the unmodifiable list before the change
+     *     System.out.println("Previous List: " + previousList);
+     * } else {
+     *     // Handle the case where there was no previous list
+     *     System.out.println("No previous list found for the key.");
+     * }
+     * }
+     * </pre>
+     *
+     * @param key   the key associated with the list
+     * @param value the value to set as the new list
+     * @param <T>   the type of elements in the list
+     * @return the unmodifiable list before setting the value, or {@code null} if the operation fails
+     * @throws NullPointerException if the key or value is {@code null}
+     */
+    <T> @Nullable @Unmodifiable List<?> setListValue(@NotNull String key, @NotNull T value);
 
+    /**
+     * Sets a collection of values associated with the specified key if the key is absent, returning the previous value.
+     *
+     * <p>The {@code setListIfAbsent} method sets the collection of values associated with the given key to the specified collection
+     * if the key is not present in the database. If the key exists, it does not perform any modification. The method returns
+     * the previous value associated with the key, which might be any object.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * // Assuming 'String' is the type of elements in the collection
+     * String key = "exampleKey";
+     * List<String> valuesToAdd = List.of("value1", "value2");
+     *
+     * Object previousValue = setListIfAbsent(key, valuesToAdd);
+     *
+     * if (previousValue != null) {
+     *     // Process the previous value associated with the key
+     *     System.out.println("Previous Value: " + previousValue);
+     * } else {
+     *     // Handle the case where there was no previous value
+     *     System.out.println("No previous value found for the key.");
+     * }
+     * }
+     * </pre>
+     *
+     * @param key the key associated with the collection of values
+     * @param value the collection of values to set if the key is absent
+     * @param <T> the type of elements in the collection
+     * @return the previous value associated with the key, which might be any object, or {@code null} if there was no previous value
+     * @throws NullPointerException if the key or value is {@code null}
+     */
     <T> @Nullable Object setListIfAbsent(@NotNull String key, @NotNull Collection<T> value);
-
 
     /**
      * Removes the list associated with the specified key from the table. The list will not be saved permanently.
@@ -515,5 +704,17 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      */
     @NotNull SavableMap serializeSavable();
 
+    /**
+     * Retrieves the metadata associated with the object.
+     *
+     * <p>The {@code getMeta} method returns an {@link ObjectMeta} that serves as an interface between a database table and
+     * Java. It provides a standardized approach for interacting with database tables.</p>
+     *
+     * <p>The {@link ObjectMeta} interface extends the {@link java.io.Serializable} interface, allowing instances of
+     * implementing classes to be serialized and deserialized.</p>
+     *
+     * @return the {@link ObjectMeta} associated with the object
+     * @see java.io.Serializable
+     */
     @NotNull ObjectMeta getMeta();
 }

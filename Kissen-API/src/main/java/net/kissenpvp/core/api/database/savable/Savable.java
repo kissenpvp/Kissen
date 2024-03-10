@@ -163,6 +163,22 @@ public interface Savable extends SavableMap {
      */
     @NotNull String[] getKeys();
 
+    /**
+     * Sets up the object with the specified ID and optional metadata, synchronizing it with the database.
+     *
+     * <p>The {@code setup} method initializes the object with the provided ID and metadata. If the metadata is {@code null},
+     * it retrieves the metadata from the underlying storage using the {@link #getMeta()} method. If the metadata is not present
+     * in the storage, it creates a new {@link Map} with the associated database ID and metadata. After setting up the ID and
+     * metadata, the method synchronizes the object with the database, ensuring that any changes are reflected in the underlying storage.</p>
+     *
+     * <p>This method ensures that the object is properly configured and ready for use after initialization, with any changes
+     * synchronized with the database.</p>
+     *
+     * @param id the ID to set for the object
+     * @param meta the optional metadata as a {@link Map} of key-value pairs
+     * @throws SavableInitializeException if an error occurs during initialization
+     * @throws BackendException if there is an issue with the underlying storage or backend
+     */
     void setup(@NotNull String id, @Nullable Map<String, Object> meta) throws SavableInitializeException, BackendException;
 
     /**

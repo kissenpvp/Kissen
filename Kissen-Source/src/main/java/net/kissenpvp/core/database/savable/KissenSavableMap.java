@@ -196,13 +196,13 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     }
 
     @Override
-    public @Nullable @Unmodifiable <T> List<T> putListValue(@NotNull String key, @NotNull T value) {
-        List<T> current = (List<T>) super.get(key);
+    public @Nullable @Unmodifiable <T> List<?> putListValue(@NotNull String key, @NotNull T value) {
+        List<?> current = (List<?>) super.get(key);
         getList(key, value.getClass()).ifPresentOrElse(list -> {
             MetaList<T> casted = (MetaList<T>) list;
             casted.add(value);
         }, () -> putList(key, Collections.singletonList(value)));
-        return List.copyOf(current);
+        return current == null ? null : List.copyOf(current);
     }
 
     @Override
@@ -229,11 +229,11 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     }
 
     @Override
-    public <T> @Nullable @Unmodifiable List<T> setListValue(@NotNull String key, @NotNull T value) {
+    public @Nullable @Unmodifiable <T> List<?> setListValue(@NotNull String key, @NotNull T value) {
         if (containsList(key)) {
             return putListValue(key, value);
         }
-        return (List<T>) setListIfAbsent(key, Collections.singletonList(value));
+        return (List<?>) setListIfAbsent(key, Collections.singletonList(value));
     }
 
     @Override
