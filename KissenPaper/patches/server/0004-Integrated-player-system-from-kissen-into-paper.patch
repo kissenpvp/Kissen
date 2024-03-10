@@ -1592,7 +1592,7 @@ index 0000000000000000000000000000000000000000..318e2520843c49567887703a254e03a8
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java b/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java
-index 4b96b6a41ca3ba9c0fce327cabcb02dcd10d6e6d..6a42898142a3a92c0ffe07c88cc4d056bcaf5964 100644
+index 4b96b6a41ca3ba9c0fce327cabcb02dcd10d6e6d..1ed8e6a30e485b1f209f286423320cd186640d41 100644
 --- a/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java
 +++ b/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommand.java
 @@ -20,7 +20,6 @@ import net.kyori.adventure.text.format.TextColor;
@@ -1603,8 +1603,12 @@ index 4b96b6a41ca3ba9c0fce327cabcb02dcd10d6e6d..6a42898142a3a92c0ffe07c88cc4d056
  import org.jetbrains.annotations.NotNull;
  import org.jetbrains.annotations.Nullable;
  
-@@ -40,8 +39,11 @@ public class PermissionCommand
-     @CommandData(value = "permission.user", permission = "*", runAsync = true)
+@@ -37,27 +36,33 @@ public class PermissionCommand
+         throw new ArgumentMissingException();
+     }
+ 
+-    @CommandData(value = "permission.user", permission = "*", runAsync = true)
++    @CommandData(value = "permission.user", permission = "*")
      public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value)
      {
 -        commandPayload.confirmRequest(() -> commandPayload.getSender().sendMessage(
@@ -1616,9 +1620,15 @@ index 4b96b6a41ca3ba9c0fce327cabcb02dcd10d6e6d..6a42898142a3a92c0ffe07c88cc4d056
 +        }).send();
      }
  
-     @CommandData(value = "permission.user.wipe", permission = "*", runAsync = true)
-@@ -53,8 +55,11 @@ public class PermissionCommand
-     @CommandData(value = "permission.group", permission = "*", runAsync = true)
+-    @CommandData(value = "permission.user.wipe", permission = "*", runAsync = true)
++    @CommandData(value = "permission.user.wipe", permission = "*")
+     public void permissionUserWipe(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player)
+     {
+         commandPayload.getSender().sendMessage(player.wipePermissions() + " permissions gewiped");
+     }
+ 
+-    @CommandData(value = "permission.group", permission = "*", runAsync = true)
++    @CommandData(value = "permission.group", permission = "*")
      public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value)
      {
 -        commandPayload.confirmRequest(() -> commandPayload.getSender().sendMessage(
@@ -1630,7 +1640,93 @@ index 4b96b6a41ca3ba9c0fce327cabcb02dcd10d6e6d..6a42898142a3a92c0ffe07c88cc4d056
 +        }).send();
      }
  
-     @CommandData(value = "permission.group.create", permission = "*", runAsync = true)
+-    @CommandData(value = "permission.group.create", permission = "*", runAsync = true)
++    @CommandData(value = "permission.group.create", permission = "*")
+     public void permissionGroupCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull String group)
+     {
+         PaperPermissionImplementation implementation = Bukkit.getKissen().getImplementation(PaperPermissionImplementation.class);
+@@ -66,7 +71,7 @@ public class PermissionCommand
+         commandPayload.getSender().sendMessage(message);
+     }
+ 
+-    @CommandData(value = "permission.group.delete", permission = "*", runAsync = true)
++    @CommandData(value = "permission.group.delete", permission = "*")
+     public void permissionGroupCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group)
+     {
+         group.delete();
+@@ -74,61 +79,61 @@ public class PermissionCommand
+         commandPayload.getSender().sendMessage(message);
+     }
+ 
+-    @CommandData(value = "permission.group.wipe", permission = "*", runAsync = true)
++    @CommandData(value = "permission.group.wipe", permission = "*")
+     public void permissionGroupWipe(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group)
+     {
+         commandPayload.getSender().sendMessage(Component.translatable("server.permission.groups.clear", commandPayload.getSender().displayName(), Component.text(group.wipeGroups())));
+     }
+ 
+-    @CommandData(value = "group", permission = "*", runAsync = true)
++    @CommandData(value = "group", permission = "*")
+     public void group() {throw new ArgumentMissingException();}
+ 
+-    @CommandData(value = "group.add.user", permission = "*", runAsync = true)
++    @CommandData(value = "group.add.user", permission = "*")
+     public void groupAddUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PaperPermissionGroup group)
+     {
+         commandPayload.getSender().sendMessage(executor().setGroup(true, player, group));
+     }
+ 
+-    @CommandData(value = "group.wipe.user", permission = "*", runAsync = true)
++    @CommandData(value = "group.wipe.user", permission = "*")
+     public void groupWipeUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player)
+     {
+         commandPayload.getSender().sendMessage(Component.translatable("server.permission.groups.clear", player.displayName(), Component.text(player.wipeGroups())));
+     }
+ 
+-    @CommandData(value = "group.remove.user", permission = "*", runAsync = true)
++    @CommandData(value = "group.remove.user", permission = "*")
+     public void groupRemoveUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PaperPermissionGroup group)
+     {
+         commandPayload.getSender().sendMessage(executor().setGroup(false, player, group));
+     }
+ 
+-    @CommandData(value = "group.add.group", permission = "*", runAsync = true)
++    @CommandData(value = "group.add.group", permission = "*")
+     public void groupAddGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PaperPermissionGroup group1)
+     {
+         commandPayload.getSender().sendMessage(executor().setGroup(true, group, group1));
+     }
+ 
+-    @CommandData(value = "group.remove.group", permission = "*", runAsync = true)
++    @CommandData(value = "group.remove.group", permission = "*")
+     public void groupRemoveGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull PaperPermissionGroup group1)
+     {
+         commandPayload.getSender().sendMessage(executor().setGroup(false, group, group1));
+     }
+ 
+-    @CommandData(value = "group.wipe.group", permission = "*", runAsync = true)
++    @CommandData(value = "group.wipe.group", permission = "*")
+     public void groupWipeGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group)
+     {
+         commandPayload.getSender().sendMessage(Component.translatable("server.permission.permissions.clear", group.displayName(), Component.text(group.wipeGroups())));
+     }
+ 
+-    @CommandData(value = "permissioninfo", aliases = {"peri"}, runAsync = true)
++    @CommandData(value = "permissioninfo", aliases = {"peri"})
+     public void permissionInfo() {throw new ArgumentMissingException();}
+ 
+-    @CommandData(value = "permissioninfo.user", runAsync = true)
++    @CommandData(value = "permissioninfo.user")
+     public void permissionInfoUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull @ArgumentName("page/permission") Optional<String> data)
+     {
+         commandPayload.getSender().sendMessage(info(player, data.orElse(null)));
+     }
+ 
+-    @CommandData(value = "permissioninfo.group", runAsync = true)
++    @CommandData(value = "permissioninfo.group")
+     public void permissionInfoGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperPermissionGroup group, @NotNull @ArgumentName("page/permission") Optional<String> data)
+     {
+         commandPayload.getSender().sendMessage(info(group, data.orElse(null)));
 diff --git a/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommandExecutor.java b/src/main/java/net/kissenpvp/paper/permission/command/PermissionCommandExecutor.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..d7ba9e479bc17461f8ef36b1e6330fdf963c806e
@@ -3917,7 +4013,7 @@ index 0000000000000000000000000000000000000000..f8a3c48622f620f1ffbebbfddd0a1cd6
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..103ee24be26568db6eaa68c4fcb173484123fa1c
+index 0000000000000000000000000000000000000000..cceec1c39a26def6ff9c9c75831863f9cf6b7312
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
 @@ -0,0 +1,229 @@
@@ -3990,7 +4086,7 @@ index 0000000000000000000000000000000000000000..103ee24be26568db6eaa68c4fcb17348
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.prefix.set", args));
 +    }
 +
-+    @CommandData(value = "rank.edit.prefix.none")
++    @CommandData(value = "rank.edit.prefix.remove")
 +    public void rankPrefix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank) {
 +        paperRank.setPrefix(null);
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.prefix.set", Component.text(paperRank.getName()), Component.text("none")));
@@ -4005,7 +4101,7 @@ index 0000000000000000000000000000000000000000..103ee24be26568db6eaa68c4fcb17348
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.suffix.set", args));
 +    }
 +
-+    @CommandData(value = "rank.edit.suffix.none")
++    @CommandData(value = "rank.edit.suffix.remove")
 +    public void rankSuffix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank) {
 +        paperRank.setSuffix(null);
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.suffix.set", Component.text(paperRank.getName()), Component.text("none")));
