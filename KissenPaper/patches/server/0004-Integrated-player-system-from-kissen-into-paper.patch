@@ -3917,10 +3917,10 @@ index 0000000000000000000000000000000000000000..f8a3c48622f620f1ffbebbfddd0a1cd6
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..df266e92b375de189243586545f6b2a4b8aef0b8
+index 0000000000000000000000000000000000000000..103ee24be26568db6eaa68c4fcb173484123fa1c
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
-@@ -0,0 +1,196 @@
+@@ -0,0 +1,229 @@
 +package net.kissenpvp.paper.user.rank;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -3951,6 +3951,17 @@ index 0000000000000000000000000000000000000000..df266e92b375de189243586545f6b2a4
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
++/**
++ * The {@code RankCommand} class represents a command related to player ranks.
++ *
++ * <p>This class provides functionality for handling commands related to player ranks, such as setting, querying, or modifying
++ * rank-related information. It may include methods for managing player ranks, checking rank permissions, or performing
++ * rank-specific actions.</p>
++ *
++ * @see Player
++ * @see Rank
++ * @see Permission
++ */
 +public class RankCommand {
 +
 +    @CommandData("rank")
@@ -3972,11 +3983,7 @@ index 0000000000000000000000000000000000000000..df266e92b375de189243586545f6b2a4
 +
 +    @CommandData(value = "rank.edit.prefix")
 +    public void rankPrefix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull @ArgumentName("prefix") String[] prefix) {
-+        String mounted = String.join(" ", prefix).replace('&', '§');
-+        if (mounted.replaceAll("&.", "").isBlank()) {
-+            throw new ArgumentMissingException();
-+        }
-+        Component prefixComponent = LegacyComponentSerializer.legacySection().deserialize(mounted);
++        Component prefixComponent = LegacyComponentSerializer.legacySection().deserialize(validateComponent(prefix));
 +        paperRank.setPrefix(prefixComponent);
 +
 +        Component[] args = {Component.text(paperRank.getName()), prefixComponent};
@@ -3991,12 +3998,7 @@ index 0000000000000000000000000000000000000000..df266e92b375de189243586545f6b2a4
 +
 +    @CommandData(value = "rank.edit.suffix")
 +    public void rankSuffix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull @ArgumentName("suffix") String[] suffix) {
-+        String mounted = String.join(" ", suffix).replace('&', '§');
-+        if (mounted.replaceAll("&.", "").isBlank()) {
-+            throw new ArgumentMissingException();
-+        }
-+
-+        Component suffixComponent = LegacyComponentSerializer.legacySection().deserialize(mounted);
++        Component suffixComponent = LegacyComponentSerializer.legacySection().deserialize(validateComponent(suffix));
 +        paperRank.setSuffix(suffixComponent);
 +
 +        Component[] args = {Component.text(paperRank.getName()), suffixComponent};
@@ -4054,6 +4056,37 @@ index 0000000000000000000000000000000000000000..df266e92b375de189243586545f6b2a4
 +    }
 +
 +    /**
++     * Validates and processes the specified array of string components to create a formatted string.
++     *
++     * <p>The {@code validateComponent} method takes an array of string components, joins them with a space separator, and replaces
++     * ampersand ('&') characters with section ('§') characters. It then checks if the resulting string contains any non-empty
++     * sections after removing all section color codes. If the processed string is empty, an {@link ArgumentMissingException}
++     * is thrown.</p>
++     *
++     * <p>Example usage:</p>
++     *
++     * <pre>
++     * {@code
++     * String[] components = {"&aHello", "&bWorld"};
++     * String formattedString = validateComponent(components);
++     * System.out.println(formattedString); // Output: "§aHello §bWorld"
++     * }
++     * </pre>
++     *
++     * @param prefix the array of string components to be processed and validated
++     * @return the formatted and validated string
++     * @throws ArgumentMissingException if the resulting string is empty after removing color codes
++     * @throws NullPointerException if the specified array of string components is {@code null}
++     */
++    private static @NotNull String validateComponent(@NotNull String[] prefix) {
++        String mounted = String.join(" ", prefix).replace('&', '§');
++        if (mounted.replaceAll("§.", "").isBlank()) {
++            throw new ArgumentMissingException();
++        }
++        return mounted;
++    }
++
++    /**
 +     * Grants a rank to the specified offline player and generates a message indicating the rank has been granted.
 +     *
 +     * <p>The {@code rankGrant} method grants the specified {@link PaperPlayerRank} to the {@link OfflinePlayer},
@@ -4065,7 +4098,7 @@ index 0000000000000000000000000000000000000000..df266e92b375de189243586545f6b2a4
 +     * @return a {@link Component} representing the message indicating the rank has been granted
 +     * @throws NullPointerException if either {@code offlinePlayer} or {@code paperPlayerRank} is {@code null}
 +     */
-+    private @NotNull Component rankGrant(@NotNull OfflinePlayer offlinePlayer, @NotNull PaperPlayerRank paperPlayerRank) {
++    private static @NotNull Component rankGrant(@NotNull OfflinePlayer offlinePlayer, @NotNull PaperPlayerRank paperPlayerRank) {
 +        Component rankName = Component.text(paperPlayerRank.getSource().getName());
 +        return Component.translatable("server.rank.player.granted", offlinePlayer.displayName(), rankName);
 +    }
@@ -4082,7 +4115,7 @@ index 0000000000000000000000000000000000000000..df266e92b375de189243586545f6b2a4
 +     * @return a {@link Component} representing the message indicating the outcome of the rank revocation
 +     * @throws NullPointerException if either {@code player} or {@code id} is {@code null}
 +     */
-+    public @NotNull Component rankRevoke(@NotNull OfflinePlayer player, @NotNull String id) {
++    private static @NotNull Component rankRevoke(@NotNull OfflinePlayer player, @NotNull String id) {
 +
 +        String translationString = "server.rank.player.not.found";
 +        if (player.getRankHistory().stream().anyMatch(endRank(id))) {
@@ -4107,7 +4140,7 @@ index 0000000000000000000000000000000000000000..df266e92b375de189243586545f6b2a4
 +     * @throws NullPointerException if {@code id} is {@code null}
 +     */
 +    @Contract(pure = true, value = "_ -> new")
-+    private @NotNull Predicate<PaperPlayerRank> endRank(@NotNull String id) {
++    private static @NotNull Predicate<PaperPlayerRank> endRank(@NotNull String id) {
 +        return current -> {
 +            if (Objects.equals(current.getID(), id) && current.isValid()) {
 +                current.setEnd(Instant.now());
