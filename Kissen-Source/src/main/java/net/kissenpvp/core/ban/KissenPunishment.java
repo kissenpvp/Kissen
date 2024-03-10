@@ -214,7 +214,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
         String id = KissenCore.getInstance().getImplementation(DataImplementation.class).generateID();
         UUID senderUUID = sender instanceof PlayerClient<?, ?, ?> playerClient ? playerClient.getUniqueId() : null;
 
-        return new CommentNode(id, comment, senderUUID, Instant.now());
+        return new CommentNode(id, comment, senderUUID, System.currentTimeMillis());
     }
 
     @Override

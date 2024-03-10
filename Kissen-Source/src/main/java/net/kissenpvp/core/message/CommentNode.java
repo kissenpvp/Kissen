@@ -21,11 +21,8 @@ package net.kissenpvp.core.message;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.util.Container;
-import net.kissenpvp.core.ban.KissenPunishmentNode;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.time.KissenAccurateDuration;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,10 +33,10 @@ import java.util.Objects;
 import java.util.UUID;
 
 public record CommentNode(@NotNull String id, @NotNull List<CommentMessageNode> messages, @Nullable UUID sender,
-                          @NotNull Instant timeStamp,
+                          long timeStamp,
                           @NotNull Container<Boolean> hasBeenDeleted) {
 
-    public CommentNode(@NotNull String id, @NotNull List<CommentMessageNode> messages, @Nullable UUID sender, @NotNull Instant timeStamp, @NotNull Container<Boolean> hasBeenDeleted) {
+    public CommentNode(@NotNull String id, @NotNull List<CommentMessageNode> messages, @Nullable UUID sender, long timeStamp, @NotNull Container<Boolean> hasBeenDeleted) {
         this.id = id;
         this.messages = new ArrayList<>(messages);
         this.sender = sender;
@@ -47,7 +44,7 @@ public record CommentNode(@NotNull String id, @NotNull List<CommentMessageNode> 
         this.hasBeenDeleted = hasBeenDeleted;
     }
 
-    public CommentNode(@NotNull String id, @NotNull Component comment, @Nullable UUID sender, @NotNull Instant timeStamp) {
+    public CommentNode(@NotNull String id, @NotNull Component comment, @Nullable UUID sender, long timeStamp) {
         this(id, List.of(new CommentMessageNode(comment, timeStamp)), sender, timeStamp, new Container<>(false));
     }
 

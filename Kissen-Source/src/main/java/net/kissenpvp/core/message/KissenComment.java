@@ -69,13 +69,13 @@ public class KissenComment implements Comment {
     public void setText(@NotNull Component component) {
         DataWriter.validate(dataWriter);
 
-        commentNode.messages().add(new CommentMessageNode(component, Instant.now()));
+        commentNode.messages().add(new CommentMessageNode(component, System.currentTimeMillis()));
         dataWriter.update(commentNode);
     }
 
     @Override
     public @NotNull Instant getTimeStamp() {
-        return commentNode.timeStamp();
+        return Instant.ofEpochMilli(commentNode.timeStamp());
     }
 
     @Override

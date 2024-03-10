@@ -32,6 +32,7 @@ import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TemporalObject;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.database.savable.list.KissenMetaList;
 import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Contract;

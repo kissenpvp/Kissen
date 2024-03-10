@@ -21,9 +21,9 @@ package net.kissenpvp.core.ban;
 import net.kissenpvp.core.api.ban.Ban;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.database.meta.BackendException;
+import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.time.AccurateDuration;
-import net.kissenpvp.core.api.time.TimeImplementation;
 import net.kissenpvp.core.ban.events.ban.BanAlterDurationEvent;
 import net.kissenpvp.core.ban.events.ban.BanAlterTypeEvent;
 import net.kissenpvp.core.ban.events.ban.BanRenameEvent;
@@ -102,6 +102,11 @@ public abstract class KissenBan extends KissenSavable implements Ban {
         }
 
         set("duration",duration);
+    }
+
+    @Override
+    public @NotNull ObjectMeta getMeta() {
+        return KissenCore.getInstance().getImplementation(KissenBanImplementation.class).getMeta();
     }
 
     @Override

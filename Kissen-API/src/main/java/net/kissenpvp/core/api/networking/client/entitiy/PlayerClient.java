@@ -35,7 +35,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -60,19 +59,100 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
      */
     @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException;
 
+    /**
+     * Retrieves the total ID associated with an account for clustering purposes, such as bans.
+     *
+     * <p>The {@code getTotalID()} method returns the unique identifier (UUID) that connects accounts to cluster them.
+     * This identifier is useful for operations involving multiple accounts, such as bans or other collective actions.</p>
+     *
+     * @return the {@link UUID} representing the total ID associated with an account
+     */
     @NotNull UUID getTotalID();
 
+    /**
+     * Retrieves the rank history associated with an entity in an unmodifiable list.
+     *
+     * <p>The {@code getRankHistory()} method returns an unmodifiable {@link List} containing the rank history of the entity.
+     * The list provides a historical perspective of rank changes over time. It is guaranteed to be unmodifiable, ensuring
+     * that the rank history remains consistent and cannot be altered externally.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * SomeEntity entity = new SomeEntity();
+     * List<Rank> rankHistory = entity.getRankHistory();
+     * System.out.println("Rank History: " + rankHistory);
+     * }
+     * </pre>
+     *
+     * @return an unmodifiable {@link List} of type {@code R} representing the rank history of the entity
+     */
     @NotNull @Unmodifiable List<R> getRankHistory();
 
+    /**
+     * Retrieves the current rank associated with an entity.
+     *
+     * <p>The {@code getRank()} method returns the current rank of the entity. This method provides the current snapshot
+     * of the entity's rank without considering the historical changes.</p>
+     *
+     * @return the current rank of the entity
+     */
     @NotNull R getRank();
 
+    /**
+     * Grants the specified rank to an entity.
+     *
+     * <p>The {@code grantRank(Rank)} method assigns the provided rank to the entity. This method is used to set the
+     * entity's rank without specifying a duration for the assignment. The rank is granted indefinitely unless modified
+     * through subsequent operations.</p>
+     *
+     * @param rank the {@link Rank} to be granted to the entity
+     * @return the updated rank of the entity after granting the specified rank
+     */
     @NotNull R grantRank(@NotNull Rank rank);
 
+    /**
+     * Grants the specified rank to an entity for a specific duration.
+     *
+     * <p>The {@code grantRank(Rank rank, AccurateDuration accurateDuration)} method assigns the provided rank to the entity
+     * for the specified duration. This method allows the rank to be granted temporarily, and the entity's rank will revert
+     * to its previous state after the specified duration elapses.</p>
+     *
+     * @param rank              the {@link Rank} to be granted to the entity
+     * @param accurateDuration the duration for which the rank is granted (nullable for indefinite duration)
+     * @return the updated rank of the entity after granting the specified rank
+     */
     @NotNull R grantRank(@NotNull Rank rank, @Nullable AccurateDuration accurateDuration);
 
-    @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator) throws BackendException;
+    /**
+     * Applies a punishment based on the provided ban information and the server entity performing the ban.
+     *
+     * <p>This method is specifically designed for cases where a ban and ban operator are provided without a reason.</p>
+     *
+     * @param ban the {@link Ban} information for the punishment
+     * @param banOperator the {@link ServerEntity} performing the ban
+     * @return the punishment object representing the applied punishment
+     * @throws NullPointerException if either the ban or banOperator is {@code null}
+     */
+    @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator);
 
-    @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException;
+    /**
+     * Applies a punishment based on the provided ban information and the server entity performing the ban.
+     *
+     * <p>This method is overloaded to support two scenarios:</p>
+     * <ol>
+     *     <li>When a ban and ban operator are specified without a reason.</li>
+     *     <li>When a ban, ban operator, and an optional reason are provided.</li>
+     * </ol>
+     *
+     * @param ban the {@link Ban} information for the punishment
+     * @param banOperator the {@link ServerEntity} performing the ban
+     * @param reason (optional) the reason for the ban, can be {@code null} if not provided
+     * @return the punishment object representing the applied punishment
+     * @throws NullPointerException if either the ban or banOperator is {@code null}
+     */
+    @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable Component reason);
 
     @NotNull Optional<B> getPunishment(@NotNull String id) throws BackendException;
 

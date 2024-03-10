@@ -67,16 +67,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public abstract class KissenPlayerClient<P extends Permission, R extends PlayerRank<?>, B extends Punishment<?>> implements PlayerClient<P, R, B> {
 
     @Override
     public @NotNull @Unmodifiable List<R> getRankHistory() {
-        Comparator<R> sort = Comparator.comparing(PlayerRank::getStart);
-        Function<MetaList<PlayerRankNode>, List<R>> listFunction = rankNodes -> rankNodes.stream().map(this::translateRank).sorted(sort).toList();
-        Optional<MetaList<PlayerRankNode>> playerRankNodes = getUser().getList("rank_list", PlayerRankNode.class);
-        return playerRankNodes.map(listFunction).orElse(Collections.emptyList());
+        MetaList<PlayerRankNode> ranks = getUser().getListNotNull("rank_list", PlayerRankNode.class);
+        return ranks.stream().map(this::translateRank).sorted(Comparator.comparing(PlayerRank::getStart)).toList();
     }
 
     @Override
@@ -93,23 +90,17 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     public @NotNull R grantRank(@NotNull Rank rank, @Nullable AccurateDuration accurateDuration) {
         String id = KissenCore.getInstance().getImplementation(DataImplementation.class).generateID();
         PlayerRankNode playerRankNode = new PlayerRankNode(id, rank.getName(), new TemporalMeasureNode(accurateDuration));
-        R playerRank = translateRank(playerRankNode, record -> {
-        });
-        return setRank(playerRank);
+        return setRank(translateRank(playerRankNode, record -> {
+        }));
     }
 
     @Override
     public @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException {
-
-        //key = total_id AND value = getTotalID
-        QuerySelect query = getUser().getMeta().select(Column.TOTAL_ID).where(Column.KEY, "total_id", FilterType.EXACT_MATCH).and(Column.VALUE, "\"" + getTotalID() + "\"", FilterType.EXACT_MATCH);
-
-        Function<String[], UUID> toUUID = data -> UUID.fromString(data[0].substring(getUser().getSaveID().length()));
-        Predicate<UUID> byUser = uuid -> !getUniqueId().equals(uuid);
-
-        /*CompletableFuture<String[][]> alts = query.execute();
-        return alts.thenApply(result -> Arrays.stream(result).map(toUUID).filter(byUser).collect(Collectors.toSet())).join();*/
-        return Collections.emptySet(); //TODO
+        QuerySelect query = getUser().getMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.KEY, "total_id", FilterType.EXACT_MATCH);
+        return Arrays.stream(query.execute().join()).filter(current -> current[1].equals(getTotalID())).map(current -> {
+            String raw = current[0].toString();
+            return UUID.fromString(raw);
+        }).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
@@ -118,7 +109,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
     }
 
     @Override
-    public @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator) throws BackendException {
+    public @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator) {
         return punish(ban, banOperator, null);
     }
 
@@ -239,6 +230,19 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return true;
     }
 
+    /**
+     * Sets the rank for the associated entity and translates the rank using the provided data writer.
+     *
+     * <p>The {@code setRank(@NotNull R playerRank)} method sets the specified player rank for the associated entity.
+     * It translates the rank using the associated data writer for {@link PlayerRankNode} instances.</p>
+     *
+     * @param playerRank the {@link R} (generic) representing the player rank to be set
+     * @return the translated player rank
+     * @throws NullPointerException if the specified player rank is `null`
+     * @see #setRankNode(PlayerRankNode)
+     * @see #rankDataWriter()
+     * @see #translateRank(PlayerRankNode, DataWriter)
+     */
     public @NotNull R setRank(@NotNull R playerRank) {
         PlayerRankNode rankNode = ((KissenPlayerRank<?>) playerRank).getPlayerRankNode();
         return translateRank(setRankNode(rankNode), rankDataWriter());
@@ -263,23 +267,69 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return rankNode;
     }
 
+    /**
+     * Retrieves the data writer for {@link PlayerRankNode}.
+     *
+     * <p>The {@code rankDataWriter()} method returns a {@link DataWriter} for {@link PlayerRankNode} instances.
+     * It is used to set the rank node for the associated entity.</p>
+     *
+     * @return the data writer for {@link PlayerRankNode}
+     * @see #setRankNode(PlayerRankNode)
+     */
     protected @NotNull DataWriter<PlayerRankNode> rankDataWriter() {
         return this::setRankNode;
     }
 
+    /**
+     * Retrieves the data writer for {@link SuffixNode} associated with the current user.
+     *
+     * <p>The {@code suffixDataWriter()} method returns a {@link DataWriter} for {@link SuffixNode} instances,
+     * specifically for the user associated with this class instance. It is used to replace or insert suffix nodes
+     * into the user's list of suffixes.</p>
+     *
+     * @return the data writer for {@link SuffixNode} associated with the current user
+     * @see #suffixDataWriter(User)
+     * @see #getUser()
+     */
     private @NotNull DataWriter<SuffixNode> suffixDataWriter() {
         return suffixDataWriter(getUser());
     }
 
+    /**
+     * Retrieves the data writer for {@link SuffixNode} associated with the specified user.
+     *
+     * <p>The {@code suffixDataWriter(User user)} method returns a {@link DataWriter} for {@link SuffixNode} instances,
+     * specifically for the provided user. It is used to replace or insert suffix nodes into the user's list of suffixes.</p>
+     *
+     * <p>Example usage:</p>
+     *
+     * <pre>
+     * {@code
+     * User user = // retrieve or provide the user instance
+     * DataWriter<SuffixNode> writer = suffixDataWriter(user);
+     * SuffixNode suffix = // provide the suffix node
+     * writer.write(suffix);
+     * }
+     * </pre>
+     *
+     * @param user the {@link User} for which the data writer is obtained
+     * @return the data writer for {@link SuffixNode} associated with the specified user
+     * @throws NullPointerException if the specified user is `null`
+     * @see #suffixDataWriter()
+     */
     protected @NotNull DataWriter<SuffixNode> suffixDataWriter(@NotNull User user) {
         return (suffix) -> user.getListNotNull("suffix_list", SuffixNode.class).replaceOrInsert(suffix);
     }
 
     /**
-     * Returns index from the {@link #getRankHistory()} of the rank currently active.
-     * This is determined using the {@link PlayerRank#isValid()} method and the {@link PlayerRank#getSource()} is not null.
+     * Retrieves the index of the first valid rank in the rank history list.
      *
-     * @return the index of the active {@link PlayerRank}
+     * <p>The {@code getRankIndex} method is responsible for determining the index of the most recent valid rank
+     * within the rank history list. It iterates through the list in reverse order, starting from the latest rank,
+     * and identifies the index of the first valid rank encountered. If no valid ranks are found, an empty optional is returned.</p>
+     *
+     * @return an {@link Optional} containing the index of the most recent valid rank, or an empty optional if no valid ranks are found
+     * @see #getRankHistory()
      */
     protected Optional<Integer> getRankIndex() {
         Integer index = null;
@@ -297,20 +347,59 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return Optional.ofNullable(index);
     }
 
+    /**
+     * Retrieves a user setting of the specified type for the given user.
+     *
+     * <p>The {@code getUserSetting} method is responsible for obtaining a user setting of the specified type for the provided user.
+     * It creates a new {@link KissenBoundPlayerSetting} that wraps the player setting obtained using the {@link #getPlayerSetting(Class)}
+     * method. This bound setting is specific to the given user.</p>
+     *
+     * @param user          the {@link User} for whom the setting is retrieved
+     * @param settingClass  the {@link Class} object representing the type of the desired player setting
+     * @param <X>           the generic type parameter for the player setting
+     * @return              a {@link BoundPlayerSetting} instance wrapping the player setting for the specified user
+     * @throws NullPointerException if either the user or settingClass parameter is {@code null}
+     * @see #getPlayerSetting(Class)
+     * @see KissenBoundPlayerSetting
+     */
     protected <X> BoundPlayerSetting<X> getUserSetting(@NotNull User user, @NotNull Class<? extends PlayerSetting<X>> settingClass) {
-        try {
-            Class<UserImplementation> clazz = UserImplementation.class;
-            UserImplementation userImplementation = KissenCore.getInstance().getImplementation(clazz);
-            Stream<PlayerSetting<?>> settingStream = userImplementation.getPlayerSettings().stream();
-
-            Predicate<PlayerSetting<?>> predicate = currentSetting -> settingClass.isAssignableFrom(currentSetting.getClass());
-            return (BoundPlayerSetting<X>) new KissenBoundPlayerSetting<>(settingStream.filter(predicate).findFirst().orElseThrow(ClassCastException::new), user);
-        } catch (ClassCastException classCastException) {
-            throw new IllegalArgumentException(String.format("Attempted to request content from setting %s which isn't registered. Please ensure the setting %s is correctly registered before trying to fetch its content.", settingClass.getSimpleName(), settingClass.getSimpleName()));
-        }
+        return (BoundPlayerSetting<X>) new KissenBoundPlayerSetting<>(getPlayerSetting(settingClass), user);
     }
 
-    public @NotNull AccurateDuration getOnlineTime(@NotNull User user) {
+    /**
+     * Retrieves a player setting of the specified type from the user system.
+     *
+     * <p>The {@code getPlayerSetting} method obtains a player setting of the specified type from the user system
+     * by utilizing the {@link UserImplementation} and searching through the available player settings. If the
+     * specified setting type is not found, an exception is thrown.</p>
+     *
+     * @param settingClass  the {@link Class} object representing the type of the desired player setting
+     * @param <X>           the generic type parameter for the player setting
+     * @return              a {@link PlayerSetting} instance of the specified type
+     * @throws NoSuchElementException if no player setting of the specified type is found
+     * @throws NullPointerException if the settingClass parameter is {@code null}
+     * @see UserImplementation
+     * @see PlayerSetting
+     */
+    private static <X> @NotNull PlayerSetting<?> getPlayerSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass) {
+        UserImplementation userSystem = KissenCore.getInstance().getImplementation(UserImplementation.class);
+        Predicate<PlayerSetting<?>> predicate = setting -> settingClass.isAssignableFrom(setting.getClass());
+        return userSystem.getPlayerSettings().stream().filter(predicate).findFirst().orElseThrow();
+    }
+
+    /**
+     * Retrieves the accurate online time for the specified user.
+     *
+     * <p>The {@code getOnlineTime} method obtains the online time for the given user. It retrieves the stored online time
+     * from the user's data, or a default duration if no online time is found. If the user is currently connected, additional
+     * online time since the last update may be calculated (TODO section).</p>
+     *
+     * @param user  the {@link User} for whom the online time is retrieved
+     * @return      an {@link AccurateDuration} instance representing the user's online time
+     * @throws NullPointerException if the user parameter is {@code null}
+     * @see AccurateDuration
+     */
+    protected @NotNull AccurateDuration getOnlineTime(@NotNull User user) {
 
         KissenAccurateDuration defaultDuration = new KissenAccurateDuration(0);
         KissenAccurateDuration onlineTime = user.get("online_time", KissenAccurateDuration.class).orElse(defaultDuration);
@@ -322,15 +411,17 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return onlineTime;
     }
 
-    public @NotNull Optional<Instant> getLastPlayed(@NotNull User user) {
-        if(isConnected())
-        {
-            return Optional.of(Instant.now());
-        }
-
-        return user.get("last_played", Instant.class);
-    }
-
+    /**
+     * Retrieves the last text color used in the specified text component.
+     *
+     * <p>The {@code getLastColor} method examines the provided text component and retrieves the last text color used.
+     * If the component has children, it checks the last child's color. If no color is found, an empty optional is returned.</p>
+     *
+     * @param component  the {@link Component} from which to retrieve the last text color
+     * @return           an {@link Optional} containing the last {@link TextColor}, or an empty optional if no color is found
+     * @throws NullPointerException if the component parameter is {@code null}
+     * @see TextColor
+     */
     private @NotNull Optional<TextColor> getLastColor(@NotNull Component component) {
         TextColor color = component.color();
         if (!component.children().isEmpty()) {
@@ -339,11 +430,43 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
         return Optional.ofNullable(color);
     }
 
+    /**
+     * Translates the provided {@link PlayerRankNode} into a result of type {@code R} using the default {@link DataWriter}.
+     *
+     * <p>The {@code translateRank} method is responsible for translating the given {@link PlayerRankNode} into a result of type {@code R}
+     * using the default {@link DataWriter}. This method acts as a convenient wrapper for the more customizable {@link #translateRank(PlayerRankNode, DataWriter)}
+     * method, allowing for translation with the default writer.</p>
+     *
+     * @param playerRankNode  the {@link PlayerRankNode} to be translated
+     * @return                a result of type {@code R} representing the translation
+     * @throws NullPointerException if the playerRankNode parameter is {@code null}
+     * @see #translateRank(PlayerRankNode, DataWriter)
+     */
     private @NotNull R translateRank(@NotNull PlayerRankNode playerRankNode) {
         return translateRank(playerRankNode, rankDataWriter());
     }
 
+    /**
+     * Translates the provided {@link PlayerRankNode} into a result of type {@code R} using a custom {@link DataWriter}.
+     *
+     * <p>The {@code translateRank} method is an abstract method that should be implemented by subclasses to provide
+     * a specific translation logic for the given {@link PlayerRankNode}. It allows for customization by accepting
+     * a {@link DataWriter<PlayerRankNode>} parameter, which can be used to write data related to the translation.</p>
+     *
+     * @param playerRankNode  the {@link PlayerRankNode} to be translated
+     * @param dataWriter      a custom {@link DataWriter<PlayerRankNode>} for writing data related to the translation, or {@code null} if not needed
+     * @return                a result of type {@code R} representing the translation
+     * @throws NullPointerException if the playerRankNode parameter is {@code null}
+     */
     protected abstract @NotNull R translateRank(@NotNull PlayerRankNode playerRankNode, @Nullable DataWriter<PlayerRankNode> dataWriter);
 
+    /**
+     * Provides a fallback result of type {@code R} when translation fails or is not applicable.
+     *
+     * <p>The {@code fallbackRank} method is an abstract method that should be implemented by subclasses to provide
+     * a fallback result of type {@code R} when translation cannot be performed or is not applicable for the given context.</p>
+     *
+     * @return a fallback result of type {@code R}
+     */
     protected abstract @NotNull R fallbackRank();
 }
