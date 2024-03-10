@@ -309,10 +309,10 @@ index 0000000000000000000000000000000000000000..6262d4d139326dc2372576d37dad6b65
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..2b4d05f4e7b6b21a89051334124e5e58b4841f5f
+index 0000000000000000000000000000000000000000..fb700d75c33b4b5cdeb997d585d92ef82fa338a8
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
-@@ -0,0 +1,472 @@
+@@ -0,0 +1,477 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -355,6 +355,7 @@ index 0000000000000000000000000000000000000000..2b4d05f4e7b6b21a89051334124e5e58
 +import org.jetbrains.annotations.Unmodifiable;
 +
 +import java.util.*;
++import java.util.function.Function;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
@@ -440,9 +441,13 @@ index 0000000000000000000000000000000000000000..2b4d05f4e7b6b21a89051334124e5e58
 +
 +        if (args.length > 0)
 +        {
-+            Boolean data = getChildCommand(args[0]).map(
-+                    command -> command.execute(sender, commandLabel, Arrays.copyOfRange(args, 1, args.length))).orElse(
-+                    null);
++            Function<C, Boolean> execute = command ->
++            {
++                String[] newArgs = Arrays.copyOfRange(args, 1, args.length);
++                return command.execute(sender, commandLabel, newArgs);
++            };
++
++            Boolean data = getChildCommand(args[0]).map(execute).orElse(null);
 +            if (data != null)
 +            {
 +                return data;
@@ -456,7 +461,7 @@ index 0000000000000000000000000000000000000000..2b4d05f4e7b6b21a89051334124e5e58
 +
 +        if (commandExecutor == null)
 +        {
-+            getFormattedUsage(payload);
++            sender.sendMessage(getFormattedUsage(payload));
 +            return false;
 +        }
 +
