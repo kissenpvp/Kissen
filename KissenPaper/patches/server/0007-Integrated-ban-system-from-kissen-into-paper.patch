@@ -1886,27 +1886,3 @@ index 21519967a792b76c61af753a430ad5fa638ec919..96af226e2c613498203304166534ccd8
  
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
-diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index dd1c39d145269fcf818c7d128ab066b72e90dc62..19ed602329f5fb453209d2e8a761882f4307bd2e 100644
---- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-+++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -2237,12 +2237,19 @@ public final class CraftServer implements Server {
- 
-     @Override
-     public <T extends BanList<?>> T getBanList(BanList.Type type) {
-+        // KissenPaper start - rework ban system
-+        return (T) Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class);
-+        // The following code is effectively dead
-+        /*
-         Preconditions.checkArgument(type != null, "BanList.Type cannot be null");
- 
-         return switch (type) {
-             case IP -> (T) new CraftIpBanList(this.playerList.getIpBans());
-             case PROFILE, NAME -> (T) new CraftProfileBanList(this.playerList.getBans());
-         };
-+
-+        */
-+        // KissenPaper end
-     }
- 
-     @Override
