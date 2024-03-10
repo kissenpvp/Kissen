@@ -1886,3 +1886,31 @@ index 21519967a792b76c61af753a430ad5fa638ec919..96af226e2c613498203304166534ccd8
  
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 4a2bc7c19de3ab10bbcee27062ee2467cf191e5d..ed1bc2017c30404c67d7d8962882f1ff5244061f 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -2237,6 +2237,11 @@ public final class CraftServer implements Server {
+ 
+     @Override
+     public <T extends BanList<?>> T getBanList(BanList.Type type) {
++        if(true)
++        {
++            // KissenPaper start - rework ban system
++            return (T) Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class).getPunishmentSet();
++        }
+         Preconditions.checkArgument(type != null, "BanList.Type cannot be null");
+ 
+         return switch (type) {
+@@ -2249,6 +2254,11 @@ public final class CraftServer implements Server {
+     @SuppressWarnings("unchecked")
+     @Override
+     public <B extends BanList<E>, E> B getBanList(final io.papermc.paper.ban.BanListType<B> type) {
++        if(true)
++        {
++            // KissenPaper start - rework ban system
++            return (B) Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.ban.PaperBanImplementation.class);
++        }
+         Preconditions.checkArgument(type != null, "BanList.BanType cannot be null");
+        if (type == io.papermc.paper.ban.BanListType.IP) {
+            return (B) new CraftIpBanList(this.playerList.getIpBans());
