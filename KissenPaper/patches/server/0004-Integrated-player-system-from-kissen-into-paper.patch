@@ -3917,7 +3917,7 @@ index 0000000000000000000000000000000000000000..f8a3c48622f620f1ffbebbfddd0a1cd6
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0316dff14f39662de4e351afbb3601fffb9f396a
+index 0000000000000000000000000000000000000000..df266e92b375de189243586545f6b2a4b8aef0b8
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/RankCommand.java
 @@ -0,0 +1,196 @@
@@ -3958,19 +3958,19 @@ index 0000000000000000000000000000000000000000..0316dff14f39662de4e351afbb3601ff
 +        throw new ArgumentMissingException();
 +    }
 +
-+    @CommandData(value = "rank.grant", runAsync = true)
++    @CommandData(value = "rank.grant")
 +    public void rankGrant(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @NotNull @ArgumentName("rank") PaperRank paperRank, @NotNull @ArgumentName("duration") Optional<AccurateDuration> accurateDuration) {
 +        Function<AccurateDuration, PaperPlayerRank> grant = duration -> offlinePlayer.grantRank(paperRank, duration);
 +        Supplier<PaperPlayerRank> orElse = () -> offlinePlayer.grantRank(paperRank);
 +        commandPayload.getSender().sendMessage(rankGrant(offlinePlayer, accurateDuration.map(grant).orElseGet(orElse)));
 +    }
 +
-+    @CommandData(value = "rank.revoke", runAsync = true)
++    @CommandData(value = "rank.revoke")
 +    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @ArgumentName("playerrankid") @NotNull String id) {
 +        commandPayload.getSender().sendMessage(rankRevoke(offlinePlayer, id));
 +    }
 +
-+    @CommandData(value = "rank.edit.prefix", runAsync = true)
++    @CommandData(value = "rank.edit.prefix")
 +    public void rankPrefix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull @ArgumentName("prefix") String[] prefix) {
 +        String mounted = String.join(" ", prefix).replace('&', '§');
 +        if (mounted.replaceAll("&.", "").isBlank()) {
@@ -3983,13 +3983,13 @@ index 0000000000000000000000000000000000000000..0316dff14f39662de4e351afbb3601ff
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.prefix.set", args));
 +    }
 +
-+    @CommandData(value = "rank.edit.prefix.none", runAsync = true)
++    @CommandData(value = "rank.edit.prefix.none")
 +    public void rankPrefix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank) {
 +        paperRank.setPrefix(null);
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.prefix.set", Component.text(paperRank.getName()), Component.text("none")));
 +    }
 +
-+    @CommandData(value = "rank.edit.suffix", runAsync = true)
++    @CommandData(value = "rank.edit.suffix")
 +    public void rankSuffix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull @ArgumentName("suffix") String[] suffix) {
 +        String mounted = String.join(" ", suffix).replace('&', '§');
 +        if (mounted.replaceAll("&.", "").isBlank()) {
@@ -4003,13 +4003,13 @@ index 0000000000000000000000000000000000000000..0316dff14f39662de4e351afbb3601ff
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.suffix.set", args));
 +    }
 +
-+    @CommandData(value = "rank.edit.suffix.none", runAsync = true)
++    @CommandData(value = "rank.edit.suffix.none")
 +    public void rankSuffix(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank) {
 +        paperRank.setSuffix(null);
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.suffix.set", Component.text(paperRank.getName()), Component.text("none")));
 +    }
 +
-+    @CommandData(value = "rank.edit.priority", runAsync = true)
++    @CommandData(value = "rank.edit.priority")
 +    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @ArgumentName("priority") int priority) {
 +        paperRank.setPriority(priority);
 +
@@ -4017,14 +4017,14 @@ index 0000000000000000000000000000000000000000..0316dff14f39662de4e351afbb3601ff
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.priority.set", args));
 +    }
 +
-+    @CommandData(value = "rank.edit.chatcolor", runAsync = true)
++    @CommandData(value = "rank.edit.chatcolor")
 +    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank, @NotNull NamedTextColor namedTextColor) {
 +        paperRank.setChatColor(namedTextColor);
 +        Component[] args = {Component.text(paperRank.getName()), Component.text(namedTextColor.toString())};
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.edit.chatcolor.set", args));
 +    }
 +
-+    @CommandData(value = "rank.create", runAsync = true)
++    @CommandData(value = "rank.create")
 +    public void rankCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull @ArgumentName("name") String name, @ArgumentName("priority") int priority, @NotNull NamedTextColor namedTextColor) {
 +        Class<KissenPaperRankImplementation> clazz = KissenPaperRankImplementation.class;
 +        KissenPaperRankImplementation rankImplementation = Bukkit.getKissen().getImplementation(clazz);
@@ -4037,7 +4037,7 @@ index 0000000000000000000000000000000000000000..0316dff14f39662de4e351afbb3601ff
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.created", args));
 +    }
 +
-+    @CommandData(value = "rank.delete", runAsync = true)
++    @CommandData(value = "rank.delete")
 +    public void rankDelete(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PaperRank paperRank) {
 +        paperRank.delete();
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.player.deleted", Component.text(paperRank.getName())));
