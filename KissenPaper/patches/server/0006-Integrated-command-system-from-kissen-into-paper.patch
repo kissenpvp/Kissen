@@ -309,10 +309,10 @@ index 0000000000000000000000000000000000000000..6262d4d139326dc2372576d37dad6b65
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ba21bb4517d7568fe114b5ee3fc2cd65635ecddf
+index 0000000000000000000000000000000000000000..2b4d05f4e7b6b21a89051334124e5e58b4841f5f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/command/command/KissenPaperAbstractCommand.java
-@@ -0,0 +1,467 @@
+@@ -0,0 +1,472 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -477,6 +477,11 @@ index 0000000000000000000000000000000000000000..ba21bb4517d7568fe114b5ee3fc2cd65
 +        if (!validate(sender))
 +        {
 +            return result;
++        }
++
++        if(Arrays.stream(args).filter(String::isBlank).count() > 1)
++        {
++            return Collections.emptyList();
 +        }
 +
 +        result.addAll(isChildCommand(sender, alias, args).orElseGet(() ->
@@ -1447,7 +1452,7 @@ index b7f338e982d0dcab99137ab6dc200b82ac6b7cba..c41f51fc6b65c3e027296bfcd1c75500
              if (event.message() != null) {
                  commandlistenerwrapper.sendFailure(io.papermc.paper.adventure.PaperAdventure.asVanilla(event.message()), false);
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index c65ad124e3e9d1b4f2a6fe763d521103e8bbe5e1..dd1c39d145269fcf818c7d128ab066b72e90dc62 100644
+index 83873b6663bf901b737f258836c1304726348718..4a2bc7c19de3ab10bbcee27062ee2467cf191e5d 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -1006,18 +1006,26 @@ public final class CraftServer implements Server {
