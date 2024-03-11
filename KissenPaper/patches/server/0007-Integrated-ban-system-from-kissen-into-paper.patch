@@ -122,10 +122,10 @@ index 0000000000000000000000000000000000000000..a9f09b141d510355eb6d5a1d60d90e89
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ebdd79782dabfff47cde7a88cdc279c2d956bcc9
+index 0000000000000000000000000000000000000000..8aedbcac52e6ec29db4e610b343e6996e9741432
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,508 @@
+@@ -0,0 +1,523 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -150,6 +150,8 @@ index 0000000000000000000000000000000000000000..ebdd79782dabfff47cde7a88cdc279c2
 +import com.destroystokyo.paper.profile.PlayerProfile;
 +import com.mojang.authlib.GameProfile;
 +import net.kissenpvp.core.api.ban.BanType;
++import net.kissenpvp.core.api.database.connection.DatabaseConnection;
++import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.meta.Meta;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
@@ -198,6 +200,20 @@ index 0000000000000000000000000000000000000000..ebdd79782dabfff47cde7a88cdc279c2
 +import java.util.stream.Stream;
 +
 +public class KissenPaperBanImplementation extends KissenBanImplementation<PaperBan, PaperPunishment> implements PaperBanImplementation, KissenImplementation {
++
++    private ObjectMeta privateMeta;
++
++    public @NotNull ObjectMeta getPrivateMeta() {
++        return privateMeta;
++    }
++
++    @Override
++    public boolean preStart() {
++        DatabaseImplementation database = Bukkit.getKissen().getImplementation(DatabaseImplementation.class);
++        DatabaseConnection connection = database.getConnection("private").orElseGet(database::getPrimaryConnection);
++        privateMeta = connection.createObjectMeta("kissen_private_ban_meta");
++        return super.preStart();
++    }
 +
 +    @Override
 +    public boolean start() {
@@ -262,11 +278,6 @@ index 0000000000000000000000000000000000000000..ebdd79782dabfff47cde7a88cdc279c2
 +    }
 +
 +    @Override
-+    protected @NotNull @Unmodifiable ObjectMeta getMeta() {
-+        return Bukkit.getKissen().getPublicMeta();
-+    }
-+
-+    @Override
 +    protected @NotNull PaperBan buildBan(int id, @NotNull Map<String, Object> data) throws BackendException {
 +        KissenPaperBan kissenPaperBan = new KissenPaperBan();
 +        kissenPaperBan.setup(String.valueOf(id), data);
@@ -319,15 +330,19 @@ index 0000000000000000000000000000000000000000..ebdd79782dabfff47cde7a88cdc279c2
 +    }
 +
 +    /**
-+     * Retrieves the meta information based on the provided context.
++     * Retrieves the metadata associated with the specified context.
++     *
++     * <p>The {@code getMeta(Context)} method returns the metadata associated with the specified {@link Context}. It allows access to either the global
++     * metadata or the local metadata, depending on the provided context. The global metadata is obtained by invoking the {@link #getMeta()} method,
++     * while the local metadata is accessed through the private {@code privateMeta} field.</p>
 +     *
 +     * @param context The context to determine which meta information to retrieve.
 +     * @return The meta information based on the provided context.
 +     */
 +    protected @NotNull @Unmodifiable ObjectMeta getMeta(@NotNull Context context) {
 +        return switch (context) {
-+            case GLOBAL -> getMeta();
-+            case LOCAL -> Bukkit.getKissen().getPrivateMeta();
++            case GLOBAL -> super.getMeta();
++            case LOCAL -> getPrivateMeta();
 +        };
 +    }
 +
