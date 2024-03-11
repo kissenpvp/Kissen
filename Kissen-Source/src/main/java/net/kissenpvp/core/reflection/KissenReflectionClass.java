@@ -327,7 +327,7 @@ public class KissenReflectionClass implements ReflectionClass {
             }
 
             if (this.getJavaClass().getSimpleName().trim().isEmpty()) {
-                KissenCore.getInstance().getLogger().info("YCannot invoke to an empty class.");
+                KissenCore.getInstance().getLogger().info("Cannot invoke to an empty class.");
                 return null;
             }
 
