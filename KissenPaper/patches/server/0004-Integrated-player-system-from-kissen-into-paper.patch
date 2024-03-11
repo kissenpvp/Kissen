@@ -2571,10 +2571,10 @@ index 0000000000000000000000000000000000000000..e14a41cb4ba7304e3c6a33e248377abc
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f77a06ed0b8214bcad3f8edca0e7e5841be81cba
+index 0000000000000000000000000000000000000000..629bf4df0313f5dd23dfc02d2e5e7928024688f1
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
-@@ -0,0 +1,243 @@
+@@ -0,0 +1,241 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2617,7 +2617,6 @@ index 0000000000000000000000000000000000000000..f77a06ed0b8214bcad3f8edca0e7e584
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +
-+import java.time.Instant;
 +import java.util.Objects;
 +import java.util.UUID;
 +
@@ -2678,7 +2677,6 @@ index 0000000000000000000000000000000000000000..f77a06ed0b8214bcad3f8edca0e7e584
 +    public void login() {
 +        super.login();
 +
-+        getStorage().put("time_joined", Instant.now());
 +        ((KissenUser<?>) getPrivateUserEntry()).login();
 +        getStorage().put("tick", true);
 +    }
