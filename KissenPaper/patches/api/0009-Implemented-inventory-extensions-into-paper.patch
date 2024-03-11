@@ -7,10 +7,10 @@ Signed-off-by: Ivo Quiring <falk.quiring@gmail.com>
 
 diff --git a/src/main/java/net/kissenpvp/paper/api/inventory/InteractableInventory.java b/src/main/java/net/kissenpvp/paper/api/inventory/InteractableInventory.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..e8a8f5937e5436bead1d4f4c168af4ba1bd0a9b1
+index 0000000000000000000000000000000000000000..fced9779740464d762de67f6d30f70d54f69f9b5
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/inventory/InteractableInventory.java
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,27 @@
 +package net.kissenpvp.paper.api.inventory;
 +
 +import net.kissenpvp.core.api.event.EventListener;
@@ -34,6 +34,7 @@ index 0000000000000000000000000000000000000000..e8a8f5937e5436bead1d4f4c168af4ba
 +    void onClose(@NotNull EventListener<InventoryCloseEvent> eventEventListener);
 +
 +    @NotNull InventoryPart getTop();
++
 +    @NotNull InventoryPart getBottom();
 +
 +}

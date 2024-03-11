@@ -94,7 +94,7 @@ index 0000000000000000000000000000000000000000..38b094e176b675a6a756246fa03b62ea
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/inventory/KissenInventoryPart.java b/src/main/java/net/kissenpvp/paper/inventory/KissenInventoryPart.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..c0bdcfe406e6120d8aa381a1bfdd3ecd2d0cdbe5
+index 0000000000000000000000000000000000000000..8b1622e88272d74cc62f78bcab5cf8198cf7cf59
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/inventory/KissenInventoryPart.java
 @@ -0,0 +1,57 @@
@@ -113,7 +113,7 @@ index 0000000000000000000000000000000000000000..c0bdcfe406e6120d8aa381a1bfdd3ecd
 +    private EventListener<InventoryClickEvent> onClick;
 +    private EventListener<InventoryDragEvent> onDrag;
 +    private boolean disallowClick;
-+    private boolean disallowDragging;
++    private boolean disallowDrag;
 +
 +    @Override
 +    public @NotNull Optional<EventListener<InventoryClickEvent>> onClick() {
@@ -132,7 +132,7 @@ index 0000000000000000000000000000000000000000..c0bdcfe406e6120d8aa381a1bfdd3ecd
 +
 +    @Override
 +    public boolean disallowDrag() {
-+        return disallowDragging;
++        return disallowDrag;
 +    }
 +
 +    @Override
@@ -152,7 +152,7 @@ index 0000000000000000000000000000000000000000..c0bdcfe406e6120d8aa381a1bfdd3ecd
 +
 +    @Override
 +    public void disallowDrag(boolean disallowDragging) {
-+        this.disallowDragging = disallowDragging;
++        this.disallowDrag = disallowDragging;
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
