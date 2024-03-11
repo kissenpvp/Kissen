@@ -1,0 +1,230 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Mon, 11 Mar 2024 16:49:45 +0100
+Subject: [PATCH] Implemented inventory extensions into paper
+
+Signed-off-by: Ivo Quiring <falk.quiring@gmail.com>
+
+diff --git a/src/main/java/net/kissenpvp/paper/api/inventory/InteractableInventory.java b/src/main/java/net/kissenpvp/paper/api/inventory/InteractableInventory.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..e8a8f5937e5436bead1d4f4c168af4ba1bd0a9b1
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/inventory/InteractableInventory.java
+@@ -0,0 +1,26 @@
++package net.kissenpvp.paper.api.inventory;
++
++import net.kissenpvp.core.api.event.EventListener;
++import org.bukkit.event.inventory.InventoryCloseEvent;
++import org.bukkit.event.inventory.InventoryOpenEvent;
++import org.bukkit.inventory.Inventory;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Optional;
++
++public interface InteractableInventory extends Inventory {
++
++    @NotNull
++    Optional<EventListener<InventoryOpenEvent>> onOpen();
++
++    @NotNull
++    Optional<EventListener<InventoryCloseEvent>> onClose();
++
++    void onOpen(@NotNull EventListener<InventoryOpenEvent> eventEventListener);
++
++    void onClose(@NotNull EventListener<InventoryCloseEvent> eventEventListener);
++
++    @NotNull InventoryPart getTop();
++    @NotNull InventoryPart getBottom();
++
++}
+diff --git a/src/main/java/net/kissenpvp/paper/api/inventory/InteractableItemStack.java b/src/main/java/net/kissenpvp/paper/api/inventory/InteractableItemStack.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4c1d8ad54c7564efd7a5538b111ef834cf20d2c4
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/inventory/InteractableItemStack.java
+@@ -0,0 +1,149 @@
++package net.kissenpvp.paper.api.inventory;
++
++import net.kissenpvp.core.api.event.EventListener;
++import org.bukkit.Material;
++import org.bukkit.event.inventory.InventoryClickEvent;
++import org.bukkit.inventory.ItemStack;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.Optional;
++
++@SuppressWarnings("deprecation")
++public class InteractableItemStack extends ItemStack {
++
++    private EventListener<InventoryClickEvent> onClick;
++    private boolean cancelClick;
++
++    public InteractableItemStack() {
++    }
++
++    public InteractableItemStack(@NotNull Material type) {
++        super(type);
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount) {
++        super(type, amount);
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount, short damage) {
++        super(type, amount, damage);
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount, short damage, @Nullable Byte data) {
++        super(type, amount, damage, data);
++    }
++
++    public InteractableItemStack(@NotNull ItemStack stack) throws IllegalArgumentException {
++        super(stack);
++    }
++
++    public InteractableItemStack(EventListener<InventoryClickEvent> onClick, boolean cancelClick) {
++        this.onClick = onClick;
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, EventListener<InventoryClickEvent> onClick, boolean cancelClick) {
++        super(type);
++        this.onClick = onClick;
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount, EventListener<InventoryClickEvent> onClick, boolean cancelClick) {
++        super(type, amount);
++        this.onClick = onClick;
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount, short damage, EventListener<InventoryClickEvent> onClick, boolean cancelClick) {
++        super(type, amount, damage);
++        this.onClick = onClick;
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount, short damage, @Nullable Byte data, EventListener<InventoryClickEvent> onClick, boolean cancelClick) {
++        super(type, amount, damage, data);
++        this.onClick = onClick;
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(@NotNull ItemStack stack, EventListener<InventoryClickEvent> onClick, boolean cancelClick) throws IllegalArgumentException {
++        super(stack);
++        this.onClick = onClick;
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(boolean cancelClick) {
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, boolean cancelClick) {
++        super(type);
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount, boolean cancelClick) {
++        super(type, amount);
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount, short damage, boolean cancelClick) {
++        super(type, amount, damage);
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount, short damage, @Nullable Byte data, boolean cancelClick) {
++        super(type, amount, damage, data);
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(@NotNull ItemStack stack, boolean cancelClick) throws IllegalArgumentException {
++        super(stack);
++        this.cancelClick = cancelClick;
++    }
++
++    public InteractableItemStack(EventListener<InventoryClickEvent> onClick) {
++        this.onClick = onClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, EventListener<InventoryClickEvent> onClick) {
++        super(type);
++        this.onClick = onClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount, EventListener<InventoryClickEvent> onClick) {
++        super(type, amount);
++        this.onClick = onClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount, short damage, EventListener<InventoryClickEvent> onClick) {
++        super(type, amount, damage);
++        this.onClick = onClick;
++    }
++
++    public InteractableItemStack(@NotNull Material type, int amount, short damage, @Nullable Byte data, EventListener<InventoryClickEvent> onClick) {
++        super(type, amount, damage, data);
++        this.onClick = onClick;
++    }
++
++    public InteractableItemStack(@NotNull ItemStack stack, EventListener<InventoryClickEvent> onClick) throws IllegalArgumentException {
++        super(stack);
++        this.onClick = onClick;
++    }
++
++    public void setCancelClick(boolean cancelClick) {
++        this.cancelClick = cancelClick;
++    }
++
++    public boolean isCancelClick() {
++        return cancelClick;
++    }
++
++    public void onClick(@NotNull EventListener<InventoryClickEvent> onClick) {
++        this.onClick = onClick;
++    }
++
++    public Optional<EventListener<InventoryClickEvent>> onClick() {
++        return Optional.ofNullable(onClick);
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/api/inventory/InventoryPart.java b/src/main/java/net/kissenpvp/paper/api/inventory/InventoryPart.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..bd38618def95c60db489f3e5f3136de02629d171
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/api/inventory/InventoryPart.java
+@@ -0,0 +1,30 @@
++package net.kissenpvp.paper.api.inventory;
++
++import net.kissenpvp.core.api.event.EventListener;
++import org.bukkit.event.inventory.InventoryClickEvent;
++import org.bukkit.event.inventory.InventoryDragEvent;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Optional;
++
++public interface InventoryPart {
++
++    @NotNull
++    Optional<EventListener<InventoryClickEvent>> onClick();
++
++    @NotNull
++    Optional<EventListener<InventoryDragEvent>> onDrag();
++
++    boolean disallowClick();
++
++    boolean disallowDrag();
++
++    void onClick(@NotNull EventListener<InventoryClickEvent> onClick);
++
++    void onDrag(@NotNull EventListener<InventoryDragEvent> onDrag);
++
++    void disallowClick(boolean disallowClick);
++
++    void disallowDrag(boolean disallowDragging);
++
++}
