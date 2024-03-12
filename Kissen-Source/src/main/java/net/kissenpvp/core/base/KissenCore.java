@@ -22,7 +22,6 @@ import lombok.Getter;
 import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.base.ImplementationAbsentException;
 import net.kissenpvp.core.api.base.Kissen;
-import net.kissenpvp.core.api.base.loader.Ignore;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.database.DataImplementation;
@@ -34,7 +33,6 @@ import net.kissenpvp.core.api.message.ChatImplementation;
 import net.kissenpvp.core.api.message.MessageImplementation;
 import net.kissenpvp.core.api.networking.APIRequestImplementation;
 import net.kissenpvp.core.api.reflection.ReflectionImplementation;
-import net.kissenpvp.core.api.reflection.ReflectionPackage;
 import net.kissenpvp.core.api.time.TimeImplementation;
 import net.kissenpvp.core.api.util.PageImplementation;
 import net.kissenpvp.core.config.KissenConfigurationImplementation;
@@ -56,7 +54,6 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -211,14 +208,6 @@ public abstract class KissenCore implements Kissen {
                         exception);
             }
         }
-    }
-
-    private @Unmodifiable @NotNull Set<Class<?>> loadClasses(@NotNull ReflectionPackage... reflectionPackage) {
-        Set<Class<?>> classes = new HashSet<>();
-        Arrays.stream(reflectionPackage).map(reflectionPackage1 -> reflectionPackage1.getClasses().stream().filter(
-                clazz -> !clazz.isAnnotationPresent(Ignore.class)).collect(Collectors.toSet())).forEach(
-                classes::addAll);
-        return classes;
     }
 
     public @NotNull @Unmodifiable Set<KissenImplementation> getKissenImplementations() {

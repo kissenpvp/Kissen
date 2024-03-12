@@ -18,5 +18,13 @@
 
 package net.kissenpvp.core.api.base.serializer;
 
+/**
+ * Represents a serializer for converting objects to and from text format.
+ * <p>
+ * This interface extends the {@link BaseSerializer} interface with text-specific serialization and deserialization methods.
+ *
+ * @param <T> the type of objects to serialize and deserialize
+ * @see BaseSerializer
+ */
 public interface TextSerializer<T> extends BaseSerializer<T, String> {
 }

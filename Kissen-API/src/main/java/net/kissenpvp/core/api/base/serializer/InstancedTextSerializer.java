@@ -20,6 +20,19 @@ package net.kissenpvp.core.api.base.serializer;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Represents a text serializer for instances of a specific type.
+ * <p>
+ * This interface extends the {@link TextSerializer} interface and provides a method to serialize instances of the specified type to a string.
+ *
+ * @param <T> the type of objects to serialize
+ * @see TextSerializer
+ */
 public interface InstancedTextSerializer<T> extends TextSerializer<T> {
+    /**
+     * Serializes the instance of the specified type to a string representation.
+     *
+     * @return a string representation of the serialized object.
+     */
     @NotNull String serialize();
 }

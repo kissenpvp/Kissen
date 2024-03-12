@@ -48,7 +48,7 @@ public interface Ban {
     /**
      * Returns the unique ID that identifies this ban object. This ID cannot be edited once the object is created.
      * <p>
-     * However, it is possible to create a new object with the same ID and add it to the system. This will delete the previously created instance of the {@link Ban}.
+     * However, it is possible to create a new object with the same ID and add it to the system. This will override the previously created instance of the {@link Ban}.
      * <p>
      * If this ID is no longer needed, call the {@link #delete()} method to remove it from the system.
      *

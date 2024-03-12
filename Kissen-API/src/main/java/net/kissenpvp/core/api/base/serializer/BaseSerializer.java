@@ -20,10 +20,29 @@ package net.kissenpvp.core.api.base.serializer;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * The BaseSerializer interface defines methods for serializing and deserializing objects of type D to type S.
+ *
+ * @param <D> the type of the object to be serialized and deserialized.
+ * @param <S> the type of the serialized data.
+ */
 public interface BaseSerializer<D, S> {
 
+    /**
+     * Serializes the provided object of type D into a serialized form of type S.
+     *
+     * @param object the object to be serialized.
+     * @return the serialized form of the object.
+     * @throws NullPointerException if the provided object is null.
+     */
     @NotNull S serialize(@NotNull D object);
 
+    /**
+     * Deserializes the provided serialized data of type S into an object of type D.
+     *
+     * @param input the serialized data to be deserialized.
+     * @return the deserialized object.
+     * @throws NullPointerException if the provided serialized data is null.
+     */
     @NotNull D deserialize(@NotNull S input);
-
 }

@@ -207,5 +207,13 @@ public interface Kissen {
      */
     @NotNull ConsoleClient getConsole();
 
+    /**
+     * Retrieves the main SLF4J logger instance.
+     * <p>
+     * This method returns the main SLF4J logger instance used for logging throughout the application.
+     * It allows for logging messages at different levels such as INFO, DEBUG, WARN, ERROR, etc.
+     *
+     * @return the main SLF4J logger instance
+     */
     @NotNull Logger getLogger();
 }

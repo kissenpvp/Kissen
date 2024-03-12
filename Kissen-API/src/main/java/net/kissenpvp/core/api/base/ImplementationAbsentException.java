@@ -38,6 +38,5 @@ package net.kissenpvp.core.api.base;
  * }
  * }</pre>
  */
-
 public class ImplementationAbsentException extends IllegalStateException {
 }

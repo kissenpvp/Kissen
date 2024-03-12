@@ -77,5 +77,12 @@ public interface KissenPlugin {
     @NotNull
     Kissen getKissen();
 
+    /**
+     * Returns whether the plugin is currently enabled.
+     * <p>
+     * This method is used to check if the plugin is enabled or disabled within the Kissen system.
+     *
+     * @return {@code true} if the plugin is enabled, {@code false} otherwise.
+     */
     boolean isEnabled();
 }
