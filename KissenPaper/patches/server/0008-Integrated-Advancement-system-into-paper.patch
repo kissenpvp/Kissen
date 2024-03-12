@@ -217,10 +217,10 @@ index 0000000000000000000000000000000000000000..364bc737875a090ad710fe18fccd9059
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java b/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..fd7d5e004e63ba49cf9ad00ed00e95719b94d6de
+index 0000000000000000000000000000000000000000..f53c4307aed4f802395a90516ee40ec27ce1d6c5
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,48 @@
 +package net.kissenpvp.paper.advancement;
 +
 +import com.google.gson.JsonElement;
@@ -228,6 +228,8 @@ index 0000000000000000000000000000000000000000..fd7d5e004e63ba49cf9ad00ed00e9571
 +import com.google.gson.JsonParseException;
 +import com.mojang.datafixers.DataFixer;
 +import com.mojang.serialization.JsonOps;
++import net.kissenpvp.core.api.user.User;
++import net.kissenpvp.paper.api.base.Context;
 +import net.minecraft.Util;
 +import net.minecraft.server.PlayerAdvancements;
 +import net.minecraft.server.ServerAdvancementManager;
@@ -246,7 +248,8 @@ index 0000000000000000000000000000000000000000..fd7d5e004e63ba49cf9ad00ed00e9571
 +
 +    @Override
 +    protected void load(@NotNull ServerAdvancementManager advancementLoader) {
-+        JsonElement jsonElement = new JsonObject(); //TODO load
++        User privateUser = getPlayer().getBukkitEntity().getUser(Context.LOCAL);
++        JsonElement jsonElement = privateUser.get("advancements", JsonElement.class).orElseGet(JsonObject::new);
 +        PlayerAdvancements.Data data = Util.getOrThrow(this.getCodec().parse(JsonOps.INSTANCE, jsonElement), JsonParseException::new);
 +        this.applyFrom(advancementLoader, data);
 +
@@ -259,7 +262,7 @@ index 0000000000000000000000000000000000000000..fd7d5e004e63ba49cf9ad00ed00e9571
 +        if (org.spigotmc.SpigotConfig.disableAdvancementSaving) return; // Spigot
 +
 +        JsonElement jsonelement = Util.getOrThrow(super.getCodec().encodeStart(JsonOps.INSTANCE, this.asData()), IllegalStateException::new);
-+        //TODO save
++        getPlayer().getBukkitEntity().getUser(Context.LOCAL).set("advancements", jsonelement);
 +    }
 +
 +    private @NotNull KissenPaperAdvancementImplementation getImplementation() {
