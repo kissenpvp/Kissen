@@ -21,7 +21,7 @@ package net.kissenpvp.core.api.config.options;
 import net.kissenpvp.core.api.config.AbstractOption;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class OptionString extends AbstractOption<String>
+public abstract class OptionString extends AbstractOption<String, String>
 {
     @Override public @NotNull String serialize(@NotNull String value)
     {

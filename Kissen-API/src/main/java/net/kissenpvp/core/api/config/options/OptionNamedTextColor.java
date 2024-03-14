@@ -23,7 +23,7 @@ import net.kissenpvp.core.api.config.InvalidValueException;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class OptionNamedTextColor extends AbstractOption<NamedTextColor> {
+public abstract class OptionNamedTextColor extends AbstractOption<NamedTextColor, String> {
     @Override
     public @NotNull String serialize(@NotNull NamedTextColor value) {
         return value.toString();

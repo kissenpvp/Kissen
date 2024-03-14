@@ -828,7 +828,7 @@ index 0000000000000000000000000000000000000000..f89bc619e02de3fd4c4bb000df66a11c
 +
 +public interface PaperRankImplementation extends RankImplementation<PaperRank> { }
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index abb5109ed08a3a651c2c27d4d17a3d49eb06da1e..899c102c7704231a11b83c7245aaa010e06cd5db 100644
+index 30298a629b39bd43ce14b414fc697b2dfcbea89c..2a894d8f4ff12c05549b48579db00d31a3951258 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
 +++ b/src/main/java/org/bukkit/OfflinePlayer.java
 @@ -4,6 +4,7 @@ import java.time.Duration;
@@ -930,7 +930,7 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..72227c4175f588f2f9181ca4d5647d75
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index 254a02ddb5dc867c9dd6c2086791f7ab94247fd3..4ad6e71249ea3d808f82a4bce0c47eebcfe43c5b 100644
+index c6cb4f17469a8f2e60dd3e28d41402851ce5fb21..1b23eee19af240424697d0ab13573f47dd16e9b6 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
 @@ -54,7 +54,7 @@ import org.jetbrains.annotations.Nullable;
@@ -943,22 +943,20 @@ index 254a02ddb5dc867c9dd6c2086791f7ab94247fd3..4ad6e71249ea3d808f82a4bce0c47eeb
      // Paper start
      @Override
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 6ffafbabfdd65bee0b40ac34739973b93e1eba96..ece3a40f068c3ce0171c94d81ee77f68ef971472 100644
+index 93a42806aa3d66c42d213115e6971d1f221ce41e..12a61b53041e75a660dc6b34747eade301b5f483 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -319,9 +319,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
-     // Paper end
+@@ -322,6 +322,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
  
-     // KissenPaper start
--
-     void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?> setting, @NotNull Plugin plugin);
+     void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
  
+-    // KissenPaper end
 +    void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin);
-     // KissenPaper end
--
+ 
++    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 493b97b0e6e20ec39d8dd1102fc7f77d168b8c45..ae30066ca8e1dacd14d7add04aded9ddd7388069 100644
+index dd5cf2e9c8535a101b5a8618624d4ce2e64e38e2..bffcad7f1efdf9802e0941303ebbc2a88a0f8515 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 @@ -979,12 +979,15 @@ public final class SimplePluginManager implements PluginManager {
@@ -967,7 +965,7 @@ index 493b97b0e6e20ec39d8dd1102fc7f77d168b8c45..ae30066ca8e1dacd14d7add04aded9dd
      // KissenPaper start
 -
      @Override
-     public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?> setting, @NotNull Plugin plugin)
+     public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin)
      {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
      }

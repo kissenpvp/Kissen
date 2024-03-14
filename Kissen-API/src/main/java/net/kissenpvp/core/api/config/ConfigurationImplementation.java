@@ -54,7 +54,7 @@ public interface ConfigurationImplementation extends Implementation
      * @see #getOption(Class)
      * @see Option#getValue()
      */
-    default <T> @NotNull T getSetting(@NotNull Class<? extends Option<T>> clazz) throws UnregisteredException
+    default <T> @NotNull T getSetting(@NotNull Class<? extends Option<T, ?>> clazz) throws UnregisteredException
     {
         return getOption(clazz).getValue();
     }
@@ -76,7 +76,7 @@ public interface ConfigurationImplementation extends Implementation
      * @throws NullPointerException  if {@code clazz} is {@code null}
      * @see Option
      */
-    <T> @NotNull Option<T> getOption(@NotNull Class<? extends Option<T>> clazz) throws UnregisteredException;
+    <T> @NotNull Option<T, ?> getOption(@NotNull Class<? extends Option<T, ?>> clazz) throws UnregisteredException;
 
     /**
      * Registers a system configuration option with the implementation's configuration store.
@@ -91,5 +91,5 @@ public interface ConfigurationImplementation extends Implementation
      * @throws NullPointerException if either the specified plugin or option class is {@code null}
      * @see Option
      */
-    void registerSetting(@NotNull KissenPlugin kissenPlugin, @NotNull Option<?> optionNode);
+    void registerSetting(@NotNull KissenPlugin kissenPlugin, @NotNull Option<?, ?> optionNode);
 }

@@ -21,15 +21,15 @@ package net.kissenpvp.core.api.config.options;
 import net.kissenpvp.core.api.config.AbstractOption;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class OptionFloat extends AbstractOption<Float>
+public abstract class OptionFloat extends AbstractOption<Float, Float>
 {
-    @Override public @NotNull String serialize(@NotNull Float value)
+    @Override public @NotNull Float serialize(@NotNull Float value)
     {
-        return String.valueOf(value);
+        return value;
     }
 
-    @Override public @NotNull Float deserialize(@NotNull String input)
+    @Override public @NotNull Float deserialize(@NotNull Float input)
     {
-        return Float.parseFloat(input);
+        return input;
     }
 }

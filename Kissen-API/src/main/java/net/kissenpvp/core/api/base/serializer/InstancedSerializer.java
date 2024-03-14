@@ -16,20 +16,22 @@
  * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
  */
 
-package net.kissenpvp.core.api.config.options;
+package net.kissenpvp.core.api.base.serializer;
 
-import net.kissenpvp.core.api.config.AbstractOption;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class OptionShort extends AbstractOption<Short, Short>
-{
-    @Override public @NotNull Short serialize(@NotNull Short value)
-    {
-        return value;
-    }
-
-    @Override public @NotNull Short deserialize(@NotNull Short input)
-    {
-        return input;
-    }
+/**
+ * Represents a text serializer for instances of a specific type.
+ * <p>
+ * This interface extends the {@link TextSerializer} interface and provides a method to serialize instances of the specified type to a string.
+ *
+ * @see TextSerializer
+ */
+public interface InstancedSerializer<D, S> extends BaseSerializer<D, S> {
+    /**
+     * Serializes the instance of the specified type to a string representation.
+     *
+     * @return a string representation of the serialized object.
+     */
+    @NotNull S serialize();
 }

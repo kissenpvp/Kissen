@@ -39,7 +39,7 @@ import net.kissenpvp.core.config.KissenConfigurationImplementation;
 import net.kissenpvp.core.database.KissenDataImplementation;
 import net.kissenpvp.core.database.KissenDatabaseImplementation;
 import net.kissenpvp.core.database.savable.KissenStorageImplementation;
-import net.kissenpvp.core.database.settings.DatabaseDNS;
+import net.kissenpvp.core.database.settings.DatabaseDns;
 import net.kissenpvp.core.message.KissenChatImplementation;
 import net.kissenpvp.core.message.KissenMessageImplementation;
 import net.kissenpvp.core.networking.KissenAPIRequestImplementation;
@@ -150,9 +150,8 @@ public abstract class KissenCore implements Kissen {
     private void startImplementations() throws IOException {
         getLogger().debug("Scan for class scanner entries.");
 
-        File file = new File("kissen.properties");
         KissenConfigurationImplementation config = getImplementation(KissenConfigurationImplementation.class);
-        config.loadInternalConfiguration(file);
+        config.loadInternalConfiguration();
 
         getLogger().debug("Enable locale system and load Languages.");
 
@@ -168,7 +167,7 @@ public abstract class KissenCore implements Kissen {
     }
 
     protected void setupDatabase(@NotNull ConfigurationImplementation config, @NotNull DatabaseImplementation database) {
-        String connectionString = config.getSetting(DatabaseDNS.class);
+        String connectionString = config.getSetting(DatabaseDns.class);
         publicMeta = database.connectDatabase("public", connectionString).createObjectMeta("kissen_public_meta");
     }
 

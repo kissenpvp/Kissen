@@ -27,8 +27,7 @@ import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.jdbc.KissenMySQLDatabaseConnection;
 import net.kissenpvp.core.database.jdbc.KissenSQLiteDatabaseConnection;
 import net.kissenpvp.core.database.mongodb.KissenMongoDatabaseConnection;
-import net.kissenpvp.core.database.settings.DatabaseDNS;
-import net.kissenpvp.core.database.settings.KeepSQLiteFile;
+import net.kissenpvp.core.database.settings.KeepSqliteFile;
 import net.kissenpvp.core.reflection.KissenReflectionClass;
 import org.jetbrains.annotations.NotNull;
 
@@ -54,7 +53,7 @@ public class KissenDatabaseImplementation implements DatabaseImplementation {
         databaseImplementation.registerDatabaseDriver(KissenMongoDatabaseConnection.class);
 
         DatabaseConnection databaseConnection = databaseImplementation.createConnection(id, connectionString);
-        if(!(databaseConnection instanceof KissenSQLiteDatabaseConnection) && !KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(KeepSQLiteFile.class))
+        if(!(databaseConnection instanceof KissenSQLiteDatabaseConnection) && !KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(KeepSqliteFile.class))
         {
             deleteObsoleteDatabaseFiles();
         }

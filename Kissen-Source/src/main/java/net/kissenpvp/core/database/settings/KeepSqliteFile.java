@@ -3,7 +3,7 @@ package net.kissenpvp.core.database.settings;
 import net.kissenpvp.core.api.config.options.OptionBoolean;
 import org.jetbrains.annotations.NotNull;
 
-public class KeepSQLiteFile extends OptionBoolean {
+public class KeepSqliteFile extends OptionBoolean {
     @Override
     public @NotNull String getGroup() {
         return "database";

@@ -22,7 +22,7 @@ import net.kissenpvp.core.api.config.options.OptionNamedTextColor;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.NotNull;
 
-public class DefaultColor extends OptionNamedTextColor
+public class GeneralColor extends OptionNamedTextColor
 {
     @Override public @NotNull String getGroup()
     {

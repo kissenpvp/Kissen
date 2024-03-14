@@ -52,7 +52,7 @@ public class DefaultTheme implements Theme
     @Override
     public @NotNull TextColor getGeneralColor()
     {
-        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultColor.class);
+        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(GeneralColor.class);
     }
 
     @Override

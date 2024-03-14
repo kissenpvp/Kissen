@@ -5,20 +5,24 @@ Subject: [PATCH] Integrated localization from kissen into paper
 
 
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index ece3a40f068c3ce0171c94d81ee77f68ef971472..31b9002187aab40abeb6627c0b0d1ee60c575e5b 100644
+index 12a61b53041e75a660dc6b34747eade301b5f483..a8fc0544b1e5c5b4c46acef0609aa74b822129a2 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -322,5 +322,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
-     void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?> setting, @NotNull Plugin plugin);
+@@ -319,10 +319,11 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+     // Paper end
+ 
+     // KissenPaper start
+-
+     void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
  
      void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin);
-+
+ 
 +    void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin);
 +
      // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index ae30066ca8e1dacd14d7add04aded9ddd7388069..3a8ca4bf5c538c793072720159393c5644d42185 100644
+index bffcad7f1efdf9802e0941303ebbc2a88a0f8515..05a9d12c7371ee82163fb476caa5d455017cac8e 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 @@ -989,5 +989,10 @@ public final class SimplePluginManager implements PluginManager {

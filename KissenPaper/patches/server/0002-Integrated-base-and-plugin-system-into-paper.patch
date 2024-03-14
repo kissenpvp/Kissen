@@ -23,7 +23,7 @@ index eedbf46e04b5ae420f9bedcbc2bbb10643ba7e22..43088e7d9614e8fb151ac3a255f3d030
      }
  
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index dab211c458311869c61779305580a1c7da830f71..6b4ff21d64771486cf452d33c6a44a21dab2ff16 100644
+index dab211c458311869c61779305580a1c7da830f71..8f8a43fa4cefaa8a01c571f2ffc8fe35aa687d84 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 @@ -238,4 +238,12 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
@@ -33,7 +33,7 @@ index dab211c458311869c61779305580a1c7da830f71..6b4ff21d64771486cf452d33c6a44a21
 +
 +    // KissenPaper start
 +    @Override
-+    public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?> setting, @NotNull Plugin plugin)
++    public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin)
 +    {
 +        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
 +    }
@@ -65,7 +65,7 @@ index cb9b13522a976b82bcb71cef486f11f4172e3e99..e132a7c5cd9bea3ba77500dfeeb5eb96
              provided.getSLF4JLogger().error("Error initializing plugin '%s' in folder '%s' (Is it up to date?)".formatted(provider.getFileName(), provider.getParentSource()), ex);
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..1195119d0ef03942c8f8625aa33a3a267160d318
+index 0000000000000000000000000000000000000000..2a84b413edf6ab6d1146a8faf75cbdec703f47d7
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 @@ -0,0 +1,131 @@
@@ -98,7 +98,7 @@ index 0000000000000000000000000000000000000000..1195119d0ef03942c8f8625aa33a3a26
 +import net.kissenpvp.core.base.KissenCore;
 +import net.kissenpvp.paper.api.base.PaperKissen;
 +import net.kissenpvp.paper.database.KissenPaperConfigurationImplementation;
-+import net.kissenpvp.paper.database.PrivateDatabaseDNS;
++import net.kissenpvp.paper.database.PrivateDatabaseDns;
 +import net.kissenpvp.paper.database.UsePrivate;
 +import net.kissenpvp.paper.event.KissenEventImplementation;
 +import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
@@ -158,7 +158,7 @@ index 0000000000000000000000000000000000000000..1195119d0ef03942c8f8625aa33a3a26
 +        super.setupDatabase(config, database);
 +        if(config.getSetting(UsePrivate.class))
 +        {
-+            String connectionString = config.getSetting(PrivateDatabaseDNS.class);
++            String connectionString = config.getSetting(PrivateDatabaseDns.class);
 +            privateMeta = database.connectDatabase("private", connectionString).createObjectMeta("kissen_private_meta");
 +        }
 +    }
@@ -431,13 +431,29 @@ index 0000000000000000000000000000000000000000..a2bfb1547286a1817305196df63cf547
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/database/KissenPaperConfigurationImplementation.java b/src/main/java/net/kissenpvp/paper/database/KissenPaperConfigurationImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..99abc97edc44746b9992d0c28cc938b6f3aeb4f8
+index 0000000000000000000000000000000000000000..2ae8b81f07153be006f1fdb2b52c2ec6fa17ee3a
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/database/KissenPaperConfigurationImplementation.java
-@@ -0,0 +1,14 @@
+@@ -0,0 +1,71 @@
 +package net.kissenpvp.paper.database;
 +
++import net.kissenpvp.core.api.base.plugin.KissenPlugin;
++import net.kissenpvp.core.api.config.Option;
 +import net.kissenpvp.core.config.KissenConfigurationImplementation;
++import org.bukkit.configuration.file.FileConfiguration;
++import org.bukkit.configuration.file.YamlConfiguration;
++import org.jetbrains.annotations.Contract;
++import org.jetbrains.annotations.NotNull;
++
++import java.io.File;
++import java.io.IOException;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Objects;
++import java.util.TreeMap;
++import java.util.function.Function;
++import java.util.stream.Collector;
++import java.util.stream.Collectors;
 +
 +public class KissenPaperConfigurationImplementation extends KissenConfigurationImplementation {
 +
@@ -445,22 +461,63 @@ index 0000000000000000000000000000000000000000..99abc97edc44746b9992d0c28cc938b6
 +    {
 +        super();
 +        registerInternalSetting(new UsePrivate());
-+        registerInternalSetting(new PrivateDatabaseDNS());
++        registerInternalSetting(new PrivateDatabaseDns());
 +    }
 +
++    @Override
++    protected @NotNull File getFile() {
++        return new File("config", "kissen.yml");
++    }
++
++    @Override
++    protected @NotNull File getFile(@NotNull KissenPlugin plugin) {
++        return new File(plugin.getDataFolder(), "config.yml");
++    }
++
++    @Override
++    protected void load(@NotNull File file, @NotNull List<Option<?, ?>> options) {
++        FileConfiguration configuration = YamlConfiguration.loadConfiguration(file);
++        options.forEach(option -> {
++            String path = getPath(option);
++            if (configuration.contains(path)) {
++                Object value = Objects.requireNonNull(configuration.getObject(path, option.getDefault().getClass()));
++                setValue(option, value);
++                return;
++            }
++            setDefault(option);
++        });
++    }
++
++    @Override
++    protected void write(@NotNull File file, @NotNull List<Option<?, ?>> options) throws IOException {
++        FileConfiguration configuration = YamlConfiguration.loadConfiguration(file);
++
++        options.stream().collect(getCollector()).forEach((group, optionList) -> optionList.forEach(option -> {
++            String path = getPath(option);
++            configuration.set(path, getSerialized(option));
++        }));
++
++        configuration.save(file);
++    }
++
++    @Contract(pure = true, value = "-> new")
++    private @NotNull Collector<Option<?, ?>, ?, TreeMap<String, List<Option<?, ?>>>> getCollector() {
++        Function<Option<?, ?>, String> key = option -> option.getGroup().toLowerCase();
++        return Collectors.groupingBy(key, TreeMap::new, Collectors.toCollection(ArrayList::new));
++    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/database/PrivateDatabaseDNS.java b/src/main/java/net/kissenpvp/paper/database/PrivateDatabaseDNS.java
+diff --git a/src/main/java/net/kissenpvp/paper/database/PrivateDatabaseDns.java b/src/main/java/net/kissenpvp/paper/database/PrivateDatabaseDns.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ba0aa2a3fa43d15fec1a012242245380da781933
+index 0000000000000000000000000000000000000000..e690fb547559d83348d53e8ff681af4e85d8f520
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/database/PrivateDatabaseDNS.java
++++ b/src/main/java/net/kissenpvp/paper/database/PrivateDatabaseDns.java
 @@ -0,0 +1,26 @@
 +package net.kissenpvp.paper.database;
 +
 +import net.kissenpvp.core.api.config.options.OptionString;
 +import org.jetbrains.annotations.NotNull;
 +
-+public class PrivateDatabaseDNS extends OptionString {
++public class PrivateDatabaseDns extends OptionString {
 +    @Override
 +    public @NotNull String getGroup() {
 +        return "database";
@@ -587,7 +644,7 @@ index 68d268b6fff126e8645b6deec3fb549ea2286b77..b166b2460fc2f5709bd65b059910e989
          // this.setPlayerList(new DedicatedPlayerList(this, this.registries(), this.playerDataStorage)); // Spigot - moved up
          this.server.loadPlugins();
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 9f7ed337463cc9bb370a5541d9de5cd8f9c1a78a..c65ad124e3e9d1b4f2a6fe763d521103e8bbe5e1 100644
+index c490a29bcf7410bc54959ee71375605964379ed5..83873b6663bf901b737f258836c1304726348718 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -266,7 +266,7 @@ import javax.annotation.Nullable; // Paper

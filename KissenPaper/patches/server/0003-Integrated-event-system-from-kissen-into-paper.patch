@@ -175,7 +175,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..4abf5840c8846dd31b05926f0f55258f
 +    // KissenPaper end - integrate unified event system
  }
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index 6b4ff21d64771486cf452d33c6a44a21dab2ff16..6f194869251e6eed67264152f7c36daa43757094 100644
+index 8f8a43fa4cefaa8a01c571f2ffc8fe35aa687d84..4299c924572408d95fba8cf8675406c14245ceee 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 @@ -122,22 +122,22 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
@@ -206,7 +206,7 @@ index 6b4ff21d64771486cf452d33c6a44a21dab2ff16..6f194869251e6eed67264152f7c36daa
      }
  
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index 1195119d0ef03942c8f8625aa33a3a267160d318..fc5c9b3c92740996b54b89133eea5486d49d2c2f 100644
+index 2a84b413edf6ab6d1146a8faf75cbdec703f47d7..4db1b0bede75d6e1db7e9c4061234ce52d349f74 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 @@ -25,7 +25,9 @@ import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
@@ -217,7 +217,7 @@ index 1195119d0ef03942c8f8625aa33a3a267160d318..fc5c9b3c92740996b54b89133eea5486
  import net.kissenpvp.paper.api.base.PaperKissen;
 +<<<<<<< HEAD
  import net.kissenpvp.paper.database.KissenPaperConfigurationImplementation;
- import net.kissenpvp.paper.database.PrivateDatabaseDNS;
+ import net.kissenpvp.paper.database.PrivateDatabaseDns;
  import net.kissenpvp.paper.database.UsePrivate;
 @@ -39,6 +41,9 @@ import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplement
  import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;

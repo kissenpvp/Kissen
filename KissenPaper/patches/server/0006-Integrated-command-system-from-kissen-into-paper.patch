@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index 7a1110f4c2491fb87575fbcf92380a0e15ef17a6..bc65a18d043d7d67e51ccfa9c0861d1231203ddd 100644
+index b41066d84c5cdb6e3e4d446132e042c262bdf25b..0d0a4cda06e35bc26c1fce4f22af4b500d0ed88a 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 @@ -254,5 +254,20 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
@@ -30,7 +30,7 @@ index 7a1110f4c2491fb87575fbcf92380a0e15ef17a6..bc65a18d043d7d67e51ccfa9c0861d12
      // KissenPaper start
  }
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index 316180e676430f6d06e1d15fd80d7875c25f202d..974a978b1e10fc1ebfb25733861d73169f2a10d5 100644
+index dac3b2e03909b1dca52ebe219c5799fe10e181ed..05945be1269c8d56edcbfa4a7443ae8e0789c85b 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 @@ -29,13 +29,17 @@ import net.kissenpvp.core.api.user.UserImplementation;
@@ -41,7 +41,7 @@ index 316180e676430f6d06e1d15fd80d7875c25f202d..974a978b1e10fc1ebfb25733861d7316
 +import net.kissenpvp.core.permission.PermissionImplementation;
  import net.kissenpvp.paper.api.base.PaperKissen;
  import net.kissenpvp.paper.database.KissenPaperConfigurationImplementation;
- import net.kissenpvp.paper.database.PrivateDatabaseDNS;
+ import net.kissenpvp.paper.database.PrivateDatabaseDns;
  import net.kissenpvp.paper.database.UsePrivate;
  import net.kissenpvp.paper.event.KissenEventImplementation;
 -import net.kissenpvp.core.permission.PermissionImplementation;

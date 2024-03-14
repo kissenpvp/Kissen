@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.api.config;
 
+import net.kissenpvp.core.api.base.serializer.InstancedSerializer;
 import net.kissenpvp.core.api.base.serializer.InstancedTextSerializer;
 import net.kissenpvp.core.api.database.file.FileEditor;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +42,9 @@ import org.jetbrains.annotations.NotNull;
  * @see ConfigurationImplementation
  * @see AbstractOption
  */
-public interface Option<T> extends InstancedTextSerializer<T> {
+public interface Option<T, S> extends InstancedSerializer<T, S> {
+
+    boolean isInitialized();
 
     /**
      * Returns the group of the configuration option. The group is used to specify where the option should be placed

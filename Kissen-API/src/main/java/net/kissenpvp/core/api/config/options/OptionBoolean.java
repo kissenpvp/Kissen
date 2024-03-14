@@ -21,15 +21,15 @@ package net.kissenpvp.core.api.config.options;
 import net.kissenpvp.core.api.config.AbstractOption;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class OptionBoolean extends AbstractOption<Boolean>
+public abstract class OptionBoolean extends AbstractOption<Boolean, Boolean>
 {
-    @Override public @NotNull String serialize(@NotNull Boolean value)
+    @Override public @NotNull Boolean serialize(@NotNull Boolean value)
     {
-        return value.toString();
+        return value;
     }
 
-    @Override public @NotNull Boolean deserialize(@NotNull String input)
+    @Override public @NotNull Boolean deserialize(@NotNull Boolean input)
     {
-        return Boolean.parseBoolean(input);
+        return input;
     }
 }

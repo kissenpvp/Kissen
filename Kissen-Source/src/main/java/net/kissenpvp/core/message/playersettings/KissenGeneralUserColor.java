@@ -20,7 +20,7 @@ package net.kissenpvp.core.message.playersettings;
 
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.message.playersettings.GeneralUserColor;
-import net.kissenpvp.core.api.message.settings.DefaultColor;
+import net.kissenpvp.core.api.message.settings.GeneralColor;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.user.usersetttings.UserValue;
 import net.kissenpvp.core.base.KissenCore;
@@ -37,7 +37,7 @@ public class KissenGeneralUserColor extends UserColorSetting implements GeneralU
     @Override
     public @NotNull NamedTextColor getDefaultValue(@NotNull PlayerClient<?, ?, ?> playerClient)
     {
-        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(DefaultColor.class);
+        return KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(GeneralColor.class);
     }
 
     @Override

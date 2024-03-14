@@ -599,7 +599,7 @@ index 0000000000000000000000000000000000000000..41c41e75acc72141387aed8809058db1
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index f97bde8dd87dbca97edf690c952d07979607bb79..ff3d3f85d982d94e02fb8dbe25b99c5e8c7a0978 100644
+index 67c72fab33dbaa23b66afa15553d5f85240b8604..74bb47152d908106f44d62c0814b6baeee5a31f0 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 @@ -32,6 +32,7 @@ import net.kissenpvp.core.base.KissenCore;
@@ -609,7 +609,7 @@ index f97bde8dd87dbca97edf690c952d07979607bb79..ff3d3f85d982d94e02fb8dbe25b99c5e
 +import net.kissenpvp.paper.advancement.KissenPaperAdvancementImplementation;
  import net.kissenpvp.paper.api.base.PaperKissen;
  import net.kissenpvp.paper.database.KissenPaperConfigurationImplementation;
- import net.kissenpvp.paper.database.PrivateDatabaseDNS;
+ import net.kissenpvp.paper.database.PrivateDatabaseDns;
 @@ -85,6 +86,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
          loader.put(PaperCommandImplementation.class, new KissenPaperCommandImplementation());
          loader.put(BanImplementation.class, new KissenPaperBanImplementation());

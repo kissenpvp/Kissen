@@ -22,7 +22,7 @@ import net.kissenpvp.core.api.config.options.OptionString;
 import org.jetbrains.annotations.NotNull;
 
 
-public class DatabaseDNS extends OptionString {
+public class DatabaseDns extends OptionString {
     @Override
     public @NotNull String getGroup() {
         return "database";
