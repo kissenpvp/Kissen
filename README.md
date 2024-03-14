@@ -1,4 +1,4 @@
-# Kissen Core
+# Kissen
 
 ![KissenPaper Logo](kissenpaper-logo.png)
 
