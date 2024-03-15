@@ -451,7 +451,7 @@ public abstract class KissenBaseMeta implements Meta {
             if (throwable == null) {
                 return object;
             }
-            String message = "There was an exception caught when fetching data from mysql database.";
+            String message = "There was an exception caught when fetching data from the database.";
             KissenCore.getInstance().getLogger().debug(message, throwable);
             return object;
         };
