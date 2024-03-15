@@ -3389,46 +3389,102 @@ index 0000000000000000000000000000000000000000..f7a26a524f5d83dfd445b1228382508e
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..9fe1fcb004464e361a30e6f8cf126a0d53e2082f
+index 0000000000000000000000000000000000000000..f1b885177b47bfbae88354f69b291df891ae331c
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
-@@ -0,0 +1,157 @@
+@@ -0,0 +1,223 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.google.gson.JsonObject;
 +import com.mojang.authlib.GameProfile;
-+import net.kissenpvp.core.api.database.meta.Meta;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
-+import net.kissenpvp.core.api.database.queryapi.Column;
-+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
++import net.kissenpvp.core.api.database.meta.list.MetaList;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.UserInfo;
-+import net.kissenpvp.core.user.UserInfoNode;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.minecraft.server.players.StoredUserEntry;
 +import net.minecraft.server.players.UserWhiteList;
 +import net.minecraft.server.players.UserWhiteListEntry;
 +import org.bukkit.Bukkit;
++import org.jetbrains.annotations.Contract;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
 +
 +import java.io.File;
 +import java.io.IOException;
 +import java.util.*;
-+import java.util.function.Predicate;
-+import java.util.function.Supplier;
++import java.util.function.Consumer;
++import java.util.function.Function;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
 +
++/**
++ * Represents a user whitelist specific to the Kissen application.
++ *
++ * <p>The {@code KissenUserWhiteList} class extends {@link UserWhiteList} and provides functionality for managing a whitelist of users
++ * specific to the Kissen application. This class is not file-based, meaning it does not rely on external files for storing user whitelist data.</p>
++ *
++ * @see UserWhiteList
++ */
 +public class KissenUserWhiteList extends UserWhiteList {
 +
++    private static final Logger log = LoggerFactory.getLogger(KissenUserWhiteList.class);
 +    private final Set<UserInfo> whitelisted;
 +
++    /**
++     * Constructs a new instance of {@code KissenUserWhiteList}.
++     *
++     * <p>This constructor initializes the whitelist of users specific to the Kissen application. It sets up an empty HashSet to store whitelisted users.</p>
++     */
 +    public KissenUserWhiteList() {
 +        //noinspection DataFlowIssue
 +        super(null); // not file based
 +        this.whitelisted = new HashSet<>();
++    }
++
++    /**
++     * Flattens the list of UUIDs into a set of user profiles.
++     *
++     * <p>This method maps each UUID to its corresponding user profile using {@link Bukkit} API. It then collects these profiles into a set.</p>
++     *
++     * @param uuids the list of UUIDs to be flattened
++     * @return a set of {@link UserInfo} objects representing the flattened user profiles
++     */
++    @Contract(pure = true, value = "_ -> new")
++    private static @NotNull Function<UUID, Stream<UserInfo>> flatUUID(@NotNull MetaList<UUID> uuids) {
++        return uuid -> {
++            UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
++            return userImplementation.getCachedUserProfile(uuid).stream();
++        };
++    }
++
++    /**
++     * Constructs a {@link Consumer} that adds the specified UUID to a {@link MetaList}.
++     *
++     * <p>This method returns a {@code Consumer} that, when applied to a {@code MetaList} instance, replaces or inserts the specified UUID into the list.</p>
++     *
++     * @param uuid the UUID to be added to the {@code MetaList}
++     * @return a {@code Consumer} that adds the specified UUID to a {@code MetaList}
++     * @see MetaList
++     */
++    private static @NotNull Consumer<MetaList<UUID>> add(@NotNull UUID uuid) {
++        return list -> list.replaceOrInsert(uuid);
++    }
++
++    /**
++     * Constructs a {@link Consumer} that removes the specified UUID from a {@link MetaList}.
++     *
++     * <p>This method returns a {@code Consumer} that, when applied to a {@code MetaList} instance, removes the specified UUID from the list.</p>
++     *
++     * @param uuid the UUID to be removed from the {@code MetaList}
++     * @return a {@code Consumer} that removes the specified UUID from a {@code MetaList}
++     * @see MetaList
++     */
++    private static @NotNull Consumer<MetaList<UUID>> remove(@NotNull UUID uuid) {
++        return list -> list.remove(uuid);
 +    }
 +
 +    @Override
@@ -3467,15 +3523,16 @@ index 0000000000000000000000000000000000000000..9fe1fcb004464e361a30e6f8cf126a0d
 +        if (!new io.papermc.paper.event.server.WhitelistStateUpdateEvent(com.destroystokyo.paper.profile.CraftPlayerProfile.asBukkitCopy(Objects.requireNonNull(entry.getUser())), io.papermc.paper.event.server.WhitelistStateUpdateEvent.WhitelistStatus.ADDED).callEvent()) {
 +            return;
 +        }
++
 +        UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
 +
-+        Supplier<UserInfo> createNew = () -> new UserInfoNode(entry.getUser().getId(), entry.getUser().getName()).getUserInfo();
-+        Predicate<UserInfo> userInfoPredicate = profile -> Objects.equals(entry.getUser().getId(), profile.getUUID());
++        whitelisted.add(userImplementation.getCachedUserProfile(entry.getUser().getId()).orElseThrow());
++        getLocalUserMeta().getCollection("whitelisted_players", UUID.class).thenAccept(add(entry.getUser().getId()));
++    }
 +
-+        whitelisted.removeIf(userInfo -> userInfo.getUUID().equals(entry.getUser().getId()));
-+        whitelisted.add(userImplementation.getUserProfiles().stream().filter(userInfoPredicate).findFirst().orElseGet(createNew));
-+
-+        getLocalUserMeta().setInt(getLocalUserSaveID() + Objects.requireNonNull(entry.getUser()).getId(), "whitelist", 1);
++    @Override
++    public void save() throws IOException {
++        // ignored
 +    }
 +
 +    @Override
@@ -3486,17 +3543,7 @@ index 0000000000000000000000000000000000000000..9fe1fcb004464e361a30e6f8cf126a0d
 +        }
 +
 +        whitelisted.removeIf(userInfo -> Objects.equals(profile.getId(), userInfo.getUUID()));
-+        getLocalUserMeta().delete(getLocalUserSaveID() + profile.getId(), "whitelist");
-+    }
-+
-+    @Override
-+    public void save() throws IOException {
-+        // ignored
-+    }
-+
-+    @Override
-+    public void load() throws IOException {
-+        fetchWhitelistedUsers();
++        getLocalUserMeta().getCollection("whitelisted_players", UUID.class).thenAccept(remove(profile.getId()));
 +    }
 +
 +    @Override
@@ -3514,22 +3561,41 @@ index 0000000000000000000000000000000000000000..9fe1fcb004464e361a30e6f8cf126a0d
 +        throw new UnsupportedOperationException();
 +    }
 +
++    @Override
++    public void load() throws IOException {
++        whitelisted.clear();
++        whitelisted.addAll(fetchWhitelistedUsers());
++    }
++
++    /**
++     * Retrieves the set of whitelisted user information.
++     *
++     * <p>This method returns an unmodifiable set containing user information of whitelisted users. Any attempt to modify the returned set will result in an UnsupportedOperationException.
++     * The set returned by this method is backed by the original set, meaning changes to the original set will be reflected in the returned set and vice versa.</p>
++     *
++     * @return an unmodifiable set containing user information of whitelisted users
++     * @see UserInfo
++     */
 +    protected @NotNull Set<UserInfo> getWhitelisted() {
 +        return Collections.unmodifiableSet(whitelisted);
 +    }
 +
-+    private void fetchWhitelistedUsers()
-+    {
-+        whitelisted.clear();
-+        Meta meta = getLocalUserMeta();
++    /**
++     * Fetches the set of whitelisted users from local storage.
++     *
++     * <p>This method retrieves the whitelisted users from the local user meta storage. If any error occurs during the retrieval process,
++     * an empty set is returned.</p>
++     *
++     * @return a set of {@link UserInfo} objects representing the whitelisted users
++     */
++    private @NotNull Set<UserInfo> fetchWhitelistedUsers() {
++        return getLocalUserMeta().getCollection("whitelisted_players", UUID.class).handle((uuids, throwable) -> {
++            if (Objects.nonNull(throwable)) {
++                return Set.copyOf(new HashSet<UserInfo>());
++            }
 +
-+        QuerySelect querySelect = meta.select(Column.TOTAL_ID).where(Column.KEY, "whitelist");
-+        querySelect.execute().thenAcceptAsync(data ->
-+        {
-+            UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
-+            Stream<UUID> userStream = Arrays.stream(data[0]).map(Object::toString).map(UUID::fromString); //TODO more efficient
-+            userStream.forEach(uuid -> userImplementation.getCachedUserProfile(uuid).ifPresent(whitelisted::add));
-+        });
++            return uuids.stream().flatMap(flatUUID(uuids)).collect(Collectors.toSet());
++        }).join();
 +    }
 +
 +    /**
