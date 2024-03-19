@@ -32,19 +32,19 @@ class KissenJDBCMetaTest extends net.kissenpvp.core.Test {
         }, "SELECT value, type, uuid FROM test;"), new TestData<>((meta) -> {
             QuerySelect select = meta.select(Column.VALUE, Column.TOTAL_ID, Column.KEY, Column.KEY).where(Column.TOTAL_ID, "");
             select.execute();
-        }, "SELECT value, type, uuid, identifier, identifier FROM test WHERE uuid = ?;"), new TestData<>((meta) -> {
-            QuerySelect select = meta.select(Column.TOTAL_ID, Column.VALUE).where(Column.KEY, "").and(Column.TOTAL_ID, "", FilterType.STARTS_WITH);
+        }, "SELECT value, type, uuid, identifier, identifier FROM test WHERE uuid REGEXP ?;"), new TestData<>((meta) -> {
+            QuerySelect select = meta.select(Column.TOTAL_ID, Column.VALUE).where(Column.KEY, "").and(Column.TOTAL_ID, "");
             select.execute();
-        }, "SELECT uuid, value, type FROM test WHERE identifier = ? AND uuid LIKE ?;"), new TestData<>((meta) -> {
+        }, "SELECT uuid, value, type FROM test WHERE identifier REGEXP ? AND uuid REGEXP ?;"), new TestData<>((meta) -> {
             QueryUpdate.RootQueryUpdate request = meta.update(new Update(Column.TOTAL_ID, ""));
             request.execute();
         }, "UPDATE test SET uuid = ?;"), new TestData<>((meta) -> {
             QueryUpdate request = meta.update(new Update(Column.TOTAL_ID, "")).where(Column.TOTAL_ID, "");
             request.execute();
-        }, "UPDATE test SET uuid = ? WHERE uuid = ?;"), new TestData<>((meta) -> {
+        }, "UPDATE test SET uuid = ? WHERE uuid REGEXP ?;"), new TestData<>((meta) -> {
             QueryUpdate request = meta.update(new Update(Column.TOTAL_ID, "")).where(Column.TOTAL_ID, "").or(Column.KEY, "test").and(Column.VALUE, "test");
             request.execute();
-        }, "UPDATE test SET uuid = ? WHERE uuid = ? OR identifier = ? AND value = ?;"));
+        }, "UPDATE test SET uuid = ? WHERE uuid REGEXP ? OR identifier REGEXP ? AND value REGEXP ?;"));
     }
 
     @ParameterizedTest
