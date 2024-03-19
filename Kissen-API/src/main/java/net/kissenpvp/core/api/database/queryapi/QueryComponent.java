@@ -45,47 +45,13 @@ public interface QueryComponent<T extends QueryComponent<?>> {
      */
     @NotNull FilterQuery[] getFilterQueries();
 
-    /**
-     * Applies a new OR filter condition to the implementing class with a column and a value.
-     * By default, the {@link FilterType} is set as EXACT_MATCH. This method should be overridden
-     * to add the proper OR filter condition to the constructed query.
-     *
-     * @param column The column on which to apply the OR condition.
-     * @param value The value to compare against the column.
-     * @return The implementing class, to facilitate method chaining.
-     */
     @NotNull T or(@NotNull Column column, @NotNull String value);
 
-    /**
-     * Applies a new AND filter condition to the implementing class with a column and a value.
-     * By default, the {@link FilterType} is set as EXACT_MATCH. This method should be overridden
-     * to add the proper AND filter condition to the constructed query.
-     *
-     * @param column The column on which to apply the AND condition.
-     * @param value The value to compare against the column.
-     * @return The implementing class, to facilitate method chaining.
-     */
+    @NotNull
+    T orExact(@NotNull Column column, @NotNull String value);
+
     @NotNull T and(@NotNull Column column, @NotNull String value);
 
-    /**
-     * This method adds a new OR filter condition to the implementing class. This method should
-     * be overridden to add the proper OR filter condition.
-     *
-     * @param column     The column on which to apply the OR condition.
-     * @param value      The value to compare against the column.
-     * @param filterType The type of comparison to perform on the column-value pair.
-     * @return The implementing class, to allow for method chaining.
-     */
-    @NotNull T or(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType);
-
-    /**
-     * This method adds a new AND filter condition to the implementing class. This method should
-     * be overridden to add the proper AND filter condition.
-     *
-     * @param column     The column on which to apply the AND condition.
-     * @param value      The value to compare against the column.
-     * @param filterType The type of comparison to perform on the column-value pair.
-     * @return The implementing class, to allow for method chaining.
-     */
-    @NotNull T and(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType);
+    @NotNull
+    T andExact(@NotNull Column column, @NotNull String value);
 }

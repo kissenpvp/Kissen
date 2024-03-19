@@ -154,6 +154,8 @@ public interface Option<T, S> extends InstancedSerializer<T, S> {
      */
     void setValue(@NotNull T value);
 
+    @NotNull Class<S> getConvertClass();
+
     /**
      * Sets the value of the configuration option to the given value and saves it in the configuration.
      * This method should only be used when the type of the new value is unknown.

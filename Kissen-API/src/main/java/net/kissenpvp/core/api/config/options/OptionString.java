@@ -32,4 +32,9 @@ public abstract class OptionString extends AbstractOption<String, String>
     {
         return input;
     }
+
+    @Override
+    public @NotNull Class<String> getConvertClass() {
+        return String.class;
+    }
 }

@@ -32,4 +32,9 @@ public abstract class OptionByte extends AbstractOption<Byte, Byte>
     {
         return input;
     }
+
+    @Override
+    public @NotNull Class<Byte> getConvertClass() {
+        return Byte.class;
+    }
 }

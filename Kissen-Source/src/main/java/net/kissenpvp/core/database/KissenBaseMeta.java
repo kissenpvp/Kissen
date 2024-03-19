@@ -21,12 +21,11 @@ package net.kissenpvp.core.database;
 import com.google.gson.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.queryapi.*;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
-import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.queryapi.update.Update;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.queryapi.KissenQuerySelect;
@@ -54,7 +53,7 @@ public abstract class KissenBaseMeta implements Meta {
         GSON = GsonComponentSerializer.gson().serializer();
     }
 
-    private final String table, totalIDColumn, keyColumn, valueColumn;
+    private final String table, totalIDColumn, keyColumn, valueColumn, typeColumn;
 
     @Override
     public @NotNull Gson getGson() {
@@ -62,207 +61,207 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public boolean metaContains(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public boolean metaContains(@NotNull String totalID, @NotNull String key) {
         return !getString(totalID, key).isCompletedExceptionally();
     }
 
     @Override
-    public void setString(@NotNull String key, @Nullable String value) throws BackendException {
+    public void setString(@NotNull String key, @Nullable String value) {
         setString(UNDEFINED, key, value);
     }
 
     @Override
-    public void setString(@NotNull String totalID, @NotNull String key, @Nullable String value) throws BackendException {
+    public void setString(@NotNull String totalID, @NotNull String key, @Nullable String value) {
         setObject(totalID, key, value);
     }
 
     @Override
-    public void setLong(@NotNull String key, long value) throws BackendException {
+    public void setLong(@NotNull String key, long value) {
         setLong(UNDEFINED, key, value);
     }
 
     @Override
-    public void setLong(@NotNull String totalID, @NotNull String key, long value) throws BackendException {
+    public void setLong(@NotNull String totalID, @NotNull String key, long value) {
         setObject(totalID, key, value);
     }
 
     @Override
-    public void setDouble(@NotNull String key, double value) throws BackendException {
+    public void setDouble(@NotNull String key, double value) {
         setDouble(UNDEFINED, key, value);
     }
 
     @Override
-    public void setDouble(@NotNull String totalID, @NotNull String key, double value) throws BackendException {
+    public void setDouble(@NotNull String totalID, @NotNull String key, double value) {
         setObject(totalID, key, value);
     }
 
     @Override
-    public void setFloat(@NotNull String key, float value) throws BackendException {
+    public void setFloat(@NotNull String key, float value) {
         setFloat(UNDEFINED, key, value);
     }
 
     @Override
-    public void setFloat(@NotNull String totalID, @NotNull String key, float value) throws BackendException {
+    public void setFloat(@NotNull String totalID, @NotNull String key, float value) {
         setObject(totalID, key, value);
     }
 
     @Override
-    public void setInt(@NotNull String key, int value) throws BackendException {
+    public void setInt(@NotNull String key, int value) {
         setInt(UNDEFINED, key, value);
     }
 
     @Override
-    public void setInt(@NotNull String totalID, @NotNull String key, int value) throws BackendException {
+    public void setInt(@NotNull String totalID, @NotNull String key, int value) {
         setObject(totalID, key, value);
     }
 
     @Override
-    public void setShort(@NotNull String key, short value) throws BackendException {
+    public void setShort(@NotNull String key, short value) {
         setShort(UNDEFINED, key, value);
     }
 
     @Override
-    public void setShort(@NotNull String totalID, @NotNull String key, short value) throws BackendException {
+    public void setShort(@NotNull String totalID, @NotNull String key, short value) {
         setObject(totalID, key, value);
     }
 
     @Override
-    public void setByte(@NotNull String key, byte value) throws BackendException {
+    public void setByte(@NotNull String key, byte value) {
         setByte(UNDEFINED, key, value);
     }
 
     @Override
-    public void setByte(@NotNull String totalID, @NotNull String key, byte value) throws BackendException {
+    public void setByte(@NotNull String totalID, @NotNull String key, byte value) {
         setObject(totalID, key, value);
     }
 
     @Override
-    public void setBoolean(@NotNull String key, boolean value) throws BackendException {
+    public void setBoolean(@NotNull String key, boolean value) {
         setBoolean(UNDEFINED, key, value);
     }
 
     @Override
-    public void setBoolean(@NotNull String totalID, @NotNull String key, boolean value) throws BackendException {
+    public void setBoolean(@NotNull String totalID, @NotNull String key, boolean value) {
         setObject(totalID, key, value);
     }
 
     @Override
-    public <T> void setObject(@NotNull String key, @Nullable T value) throws BackendException {
+    public <T> void setObject(@NotNull String key, @Nullable T value) {
         setObject(UNDEFINED, key, value);
     }
 
     @Override
-    public void setCollection(@NotNull String key, @Nullable Collection<?> value) throws BackendException {
+    public void setCollection(@NotNull String key, @Nullable Collection<?> value) {
         setCollection(UNDEFINED, key, value);
     }
 
     @Override
-    public void setCollection(@NotNull String totalID, @NotNull String key, @Nullable Collection<?> value) throws BackendException {
+    public void setCollection(@NotNull String totalID, @NotNull String key, @Nullable Collection<?> value) {
         setObject(totalID, key, value);
     }
 
     @Override
-    public <T> void setObject(@NotNull String totalID, @NotNull String key, @Nullable T value) throws BackendException {
-        setJson(totalID, key, serialize(value));
+    public <T> void setObject(@NotNull String totalID, @NotNull String key, @Nullable T value) {
+        setJson(totalID, key, value);
     }
 
     @Override
-    public void delete(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public void delete(@NotNull String totalID, @NotNull String key) {
         setObject(totalID, key, null);
     }
 
     @Override
-    public void delete(@NotNull String key) throws BackendException {
+    public void delete(@NotNull String key) {
         delete(UNDEFINED, key);
     }
 
     @Override
-    public @NotNull CompletableFuture<String> getString(@NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<String> getString(@NotNull String key) {
         return getString(UNDEFINED, key);
     }
 
     @Override
-    public @NotNull CompletableFuture<String> getString(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<String> getString(@NotNull String totalID, @NotNull String key) {
         return getObject(totalID, key, String.class);
     }
 
     @Override
-    public @NotNull CompletableFuture<Long> getLong(@NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Long> getLong(@NotNull String key) {
         return getLong(UNDEFINED, key);
     }
 
     @Override
-    public @NotNull CompletableFuture<Long> getLong(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Long> getLong(@NotNull String totalID, @NotNull String key) {
         return getObject(totalID, key, Long.class);
     }
 
     @Override
-    public @NotNull CompletableFuture<Double> getDouble(@NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Double> getDouble(@NotNull String key) {
         return getDouble(UNDEFINED, key);
     }
 
     @Override
-    public @NotNull CompletableFuture<Double> getDouble(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Double> getDouble(@NotNull String totalID, @NotNull String key) {
         return getObject(totalID, key, Double.class);
     }
 
     @Override
-    public @NotNull CompletableFuture<Float> getFloat(@NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Float> getFloat(@NotNull String key) {
         return getFloat(UNDEFINED, key);
     }
 
     @Override
-    public @NotNull CompletableFuture<Float> getFloat(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Float> getFloat(@NotNull String totalID, @NotNull String key) {
         return getObject(totalID, key, Float.class);
     }
 
     @Override
-    public @NotNull CompletableFuture<Integer> getInt(@NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Integer> getInt(@NotNull String key) {
         return getInt(UNDEFINED, key);
     }
 
     @Override
-    public @NotNull CompletableFuture<Integer> getInt(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Integer> getInt(@NotNull String totalID, @NotNull String key) {
         return getObject(totalID, key, Integer.class);
     }
 
     @Override
-    public @NotNull CompletableFuture<Short> getShort(@NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Short> getShort(@NotNull String key) {
         return getShort(UNDEFINED, key);
     }
 
     @Override
-    public @NotNull CompletableFuture<Short> getShort(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Short> getShort(@NotNull String totalID, @NotNull String key) {
         return getObject(totalID, key, Short.class);
     }
 
     @Override
-    public @NotNull CompletableFuture<Byte> getByte(@NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Byte> getByte(@NotNull String key) {
         return getByte(UNDEFINED, key);
     }
 
     @Override
-    public @NotNull CompletableFuture<Byte> getByte(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Byte> getByte(@NotNull String totalID, @NotNull String key) {
         return getObject(totalID, key, Byte.class);
     }
 
     @Override
-    public @NotNull CompletableFuture<Boolean> getBoolean(@NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Boolean> getBoolean(@NotNull String key) {
         return getBoolean(UNDEFINED, key);
     }
 
     @Override
-    public @NotNull CompletableFuture<Boolean> getBoolean(@NotNull String totalID, @NotNull String key) throws BackendException {
+    public @NotNull CompletableFuture<Boolean> getBoolean(@NotNull String totalID, @NotNull String key) {
         return getObject(totalID, key, Boolean.class);
     }
 
     @Override
-    public @NotNull <T> CompletableFuture<T> getObject(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type) throws BackendException {
+    public @NotNull <T> CompletableFuture<T> getObject(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type) {
         return getJson(totalID, key).thenApply(data -> (T) data);
     }
 
     @Override
-    public @NotNull <T> CompletableFuture<T> getObject(@NotNull String key, @NotNull Class<T> type) throws BackendException {
+    public @NotNull <T> CompletableFuture<T> getObject(@NotNull String key, @NotNull Class<T> type) {
         return getObject(UNDEFINED, key, type);
     }
 
@@ -277,8 +276,8 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull QueryUpdate.RootQueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective) {
-        return new KissenQueryUpdate.KissenRootQueryUpdate(queryUpdateDirective) {
+    public @NotNull QueryUpdate.RootQueryUpdate update(@NotNull Update... update) {
+        return new KissenQueryUpdate.KissenRootQueryUpdate(update) {
             @Override
             public @NotNull CompletableFuture<Long> execute() {
                 return KissenBaseMeta.this.execute(getQuery());
@@ -287,7 +286,7 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     @Override
-    public @NotNull <T> CompletableFuture<MetaList<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type) throws BackendException {
+    public @NotNull <T> CompletableFuture<MetaList<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type) {
         return getObject(totalID, key, Object[].class).handle((data, throwable) ->
         {
             MetaList<T> metaList = new KissenMetaList<>();
@@ -295,13 +294,22 @@ public abstract class KissenBaseMeta implements Meta {
             {
                 metaList.addAll(Arrays.stream((T[]) data).toList());
             }
-            metaList.setListAction((o1, o2, o3) -> setCollection(totalID, key, metaList));
+            metaList.setListAction((o1, o2, o3) ->
+            {
+                try {
+
+                    setCollection(totalID, key, metaList);
+                }catch (Exception backendException)
+                {
+                    backendException.printStackTrace(); //TODO
+                }
+            });
             return metaList;
         });
     }
 
     @Override
-    public @NotNull <T> CompletableFuture<MetaList<T>> getCollection(@NotNull String key, @NotNull Class<T> type) throws BackendException {
+    public @NotNull <T> CompletableFuture<MetaList<T>> getCollection(@NotNull String key, @NotNull Class<T> type) {
         return getCollection(UNDEFINED, key, type);
     }
 
@@ -314,7 +322,7 @@ public abstract class KissenBaseMeta implements Meta {
      * @param column the {@link Column} for which to retrieve the column name
      * @return the column name associated with the specified {@link Column}
      */
-    protected @NotNull String getColumn(@NotNull Column column) {
+    public @NotNull String getColumn(@NotNull Column column) {
         return switch (column) {
             case TOTAL_ID -> getTotalIDColumn();
             case KEY -> getKeyColumn();
@@ -370,30 +378,24 @@ public abstract class KissenBaseMeta implements Meta {
      * @return an object deserialized from the JSON string
      * @throws ClassNotFoundException if the class specified in the JSON string cannot be found
      */
-    protected <T> @NotNull T deserialize(@NotNull String json) throws ClassNotFoundException {
-        JsonObject object = JsonParser.parseString(json).getAsJsonObject();
-
-        String value = object.get("object").toString();
-        String clazzString = object.get("type").getAsString();
-
-        return (T) getGson().fromJson(value, Class.forName(clazzString));
+    public <T> @NotNull T deserialize(@NotNull Class<?> type, @NotNull String json) throws ClassNotFoundException {
+        return (T) getGson().fromJson(json, type);
     }
 
-    /**
-     * Serializes the specified object into a JSON string representation.
-     *
-     * <p>The {@code serialize} method wraps the object using an {@link InternalWrapper} and converts it into a JSON string
-     * using the GSON library. If the object is null or an empty collection, it returns null.</p>
-     *
-     * @param object the object to serialize
-     * @return a JSON string representation of the object, or null if the object is null or an empty collection
-     */
-    protected @Nullable String serialize(@Nullable Object object) {
+    public @Nullable String[] serialize(@Nullable Object object) {
         if (object == null || (object instanceof Collection<?> collection && collection.isEmpty())) {
             return null;
         }
 
-        return InternalWrapper.wrap(object).toJson();
+        String clazz = object.getClass().getName();
+
+        if (object instanceof Collection<?> collection) {
+            String typeName = collection.stream().findFirst().orElseThrow().getClass().getName();
+            clazz = ARRAY_PATTERN.formatted(typeName);
+            return new String[] {clazz, getGson().toJson(collection.toArray(Object[]::new))};
+        }
+
+        return new String[] {clazz, getGson().toJson(object)};
     }
 
     /**
@@ -404,11 +406,11 @@ public abstract class KissenBaseMeta implements Meta {
      * The implementation of this method should ensure that the changes are applied to the appropriate JSON structure.</p>
      *
      * @param totalID the total ID identifying the JSON structure
-     * @param key the key to be set in the JSON structure
-     * @param value the value to be associated with the specified key
+     * @param key     the key to be set in the JSON structure
+     * @param object
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}
      */
-    protected abstract void setJson(@NotNull String totalID, @NotNull String key, @Nullable String value);
+    protected abstract void setJson(@NotNull String totalID, @NotNull String key, @Nullable Object object);
 
     /**
      * Executes the specified SELECT query and returns a CompletableFuture containing the query result.
@@ -445,60 +447,16 @@ public abstract class KissenBaseMeta implements Meta {
      *
      * @return a {@link BiFunction} logging exceptions and returning the original object
      */
-    private static @NotNull BiFunction<Object, Throwable, Object> logExceptions() {
+    protected static <T> @NotNull BiFunction<T, Throwable, T> logExceptions() {
         return (object, throwable) ->
         {
-            if (throwable == null) {
+            if (Objects.isNull(throwable)) {
                 return object;
             }
+
             String message = "There was an exception caught when fetching data from the database.";
             KissenCore.getInstance().getLogger().debug(message, throwable);
             return object;
         };
-    }
-
-    /**
-     * A record representing an internal wrapper for objects, associating a type and an object.
-     *
-     * <p>The {@code InternalWrapper} record is used to wrap objects along with their corresponding type.
-     * It provides a convenient way to represent different types of objects uniformly and can be used
-     * for serialization and other purposes.</p>
-     *
-     * @param type the type of the wrapped object
-     * @param object the wrapped object
-     */
-    private record InternalWrapper(@NotNull String type, @NotNull Object object) {
-
-        /**
-         * Wraps the specified object with its corresponding type.
-         *
-         * <p>The {@code wrap} method is a factory method that creates an {@code InternalWrapper} instance
-         * for the given object. If the object is a Collection, it determines the type based on the first
-         * element in the collection. For other types, it uses the class name as the type.</p>
-         *
-         * @param object the object to be wrapped
-         * @param <T> the type of the object
-         * @return an {@code InternalWrapper} instance wrapping the specified object
-         */
-        private static <T> @NotNull InternalWrapper wrap(@NotNull T object) {
-            if (object instanceof Collection<?> collection) {
-                String typeName = collection.stream().findFirst().orElseThrow().getClass().getName();
-                return new InternalWrapper(ARRAY_PATTERN.formatted(typeName), collection.toArray(Object[]::new));
-            }
-            return new InternalWrapper(object.getClass().getName(), object);
-        }
-
-        /**
-         * Converts the internal wrapper to a JSON string.
-         *
-         * <p>The {@code toJson} method uses the GSON library from KissenBaseMeta to convert the internal wrapper
-         * into a JSON string representation.</p>
-         *
-         * @return a JSON string representation of the internal wrapper
-         * @see KissenBaseMeta#GSON
-         */
-        private @NotNull String toJson() {
-            return KissenBaseMeta.GSON.toJson(this);
-        }
     }
 }

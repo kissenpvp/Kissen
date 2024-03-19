@@ -10,6 +10,9 @@ dependencies {
     compileOnly("net.kyori:adventure-text-serializer-legacy:4.14.0")
     compileOnly("net.kyori:adventure-text-minimessage:4.14.0")
 
+    // database
+    implementation("org.xerial:sqlite-jdbc:3.42.0.1")
+
     //mongodb
     implementation("org.mongodb:mongo-java-driver:3.12.10")
 

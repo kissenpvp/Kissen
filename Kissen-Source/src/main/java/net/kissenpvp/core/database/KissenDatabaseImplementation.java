@@ -44,15 +44,13 @@ public class KissenDatabaseImplementation implements DatabaseImplementation {
     public KissenDatabaseImplementation() {
         this.databaseConnections = new HashSet<>();
         this.connectionClasses = new HashSet<>();
+        registerDatabaseDriver(KissenMySQLDatabaseConnection.class);
+        registerDatabaseDriver(KissenSQLiteDatabaseConnection.class);
+        registerDatabaseDriver(KissenMongoDatabaseConnection.class);
     }
 
     public @NotNull DatabaseConnection connectDatabase(@NotNull String id, @NotNull String connectionString) {
-        DatabaseImplementation databaseImplementation = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
-        databaseImplementation.registerDatabaseDriver(KissenMySQLDatabaseConnection.class);
-        databaseImplementation.registerDatabaseDriver(KissenSQLiteDatabaseConnection.class);
-        databaseImplementation.registerDatabaseDriver(KissenMongoDatabaseConnection.class);
-
-        DatabaseConnection databaseConnection = databaseImplementation.createConnection(id, connectionString);
+        DatabaseConnection databaseConnection = createConnection(id, connectionString);
         if(!(databaseConnection instanceof KissenSQLiteDatabaseConnection) && !KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(KeepSqliteFile.class))
         {
             deleteObsoleteDatabaseFiles();

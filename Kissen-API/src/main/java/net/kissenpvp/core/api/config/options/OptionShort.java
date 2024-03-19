@@ -32,4 +32,9 @@ public abstract class OptionShort extends AbstractOption<Short, Short>
     {
         return input;
     }
+
+    @Override
+    public @NotNull Class<Short> getConvertClass() {
+        return Short.class;
+    }
 }

@@ -26,9 +26,7 @@ import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
-import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.message.playersettings.*;
 import net.kissenpvp.core.api.permission.Permission;
@@ -269,7 +267,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      */
     private @NotNull @Unmodifiable Set<UserInfoNode> fetchUserProfiles() {
         Set<UserInfoNode> userInfos = new HashSet<>();
-        QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "name", FilterType.EXACT_MATCH);
+        QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, "^" + getUserSaveID()).and(Column.KEY, "name");
         Object[][] data = querySelect.execute().join();
         for (Object[] user : data) {
             UUID uuid = UUID.fromString(user[0].toString().substring(getUserSaveID().length()));
@@ -345,8 +343,8 @@ public abstract class KissenUserImplementation implements UserImplementation {
     }
 
     public @NotNull CompletableFuture<Long> rewriteTotalID(@NotNull UUID from, @NotNull UUID to) {
-        return getUserMeta().update(new QueryUpdateDirective(Column.VALUE, to.toString())).where(Column.TOTAL_ID, getUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "total_id", FilterType.EXACT_MATCH).and(Column.VALUE, from.toString(), FilterType.EXACT_MATCH).execute();
-
+        //return getUserMeta().update(new Update(Column.VALUE, to.toString())).where(Column.TOTAL_ID, getUserSaveID()).and(Column.KEY, "total_id", FilterType.EXACT_MATCH).and(Column.VALUE, from.toString(), FilterType.EXACT_MATCH).execute();
+        return CompletableFuture.completedFuture(0L); //TODO
     }
 
     private @NotNull Optional<UserInfo> getUserInfo(@NotNull Predicate<UserInfoNode> name) {

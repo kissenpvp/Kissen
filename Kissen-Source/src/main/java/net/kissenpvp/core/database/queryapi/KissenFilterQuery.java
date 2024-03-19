@@ -21,24 +21,28 @@ package net.kissenpvp.core.database.queryapi;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterOperator;
 import net.kissenpvp.core.api.database.queryapi.FilterQuery;
-import net.kissenpvp.core.api.database.queryapi.FilterType;
 import org.jetbrains.annotations.NotNull;
 
-public record KissenFilterQuery(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType, @NotNull FilterOperator filterOperator) implements FilterQuery
+import java.util.Objects;
+
+public record KissenFilterQuery(@NotNull Column column, @NotNull Object value, @NotNull FilterOperator filterOperator) implements FilterQuery
 {
+    public KissenFilterQuery {
+        if(!Objects.equals(column, Column.VALUE) && !(value instanceof String))
+        {
+            String exceptionMessage = "Only String values are allowed for column %s.";
+            throw new IllegalArgumentException(exceptionMessage.formatted(column));
+        }
+    }
+
     @Override public @NotNull Column getColumn()
     {
         return column;
     }
 
-    @Override public @NotNull String getValue()
+    @Override public @NotNull Object getValue()
     {
         return value;
-    }
-
-    @Override public @NotNull FilterType getFilterType()
-    {
-        return filterType;
     }
 
     @Override

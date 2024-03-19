@@ -22,7 +22,12 @@ import net.kissenpvp.core.api.database.connection.DatabaseDriver;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import org.jetbrains.annotations.NotNull;
 
+import java.sql.SQLException;
+import java.util.Objects;
+import java.util.regex.Pattern;
+
 public class KissenSQLiteDatabaseConnection extends KissenJDBCDatabaseConnection {
+
     public KissenSQLiteDatabaseConnection(@NotNull String connectionID, @NotNull String connectionString) {
         super(connectionID, connectionString, DatabaseDriver.SQLITE);
     }
@@ -32,7 +37,24 @@ public class KissenSQLiteDatabaseConnection extends KissenJDBCDatabaseConnection
         if (!getConnectionString().toLowerCase().startsWith("jdbc:sqlite:")) {
             throw new BackendException(new IllegalStateException("Illegal connection string given to sqlite connection"));
         }
-
         super.connect();
+
+        registerRegexFunction();
+    }
+
+    private void registerRegexFunction() throws BackendException {
+        try {
+            org.sqlite.Function.create(getConnection(), "REGEXP", new org.sqlite.Function() {
+                @Override
+                public void xFunc() throws SQLException {
+                    String expression = value_text(0);
+                    String value = Objects.requireNonNullElse(value_text(1), "");
+                    Pattern pattern = Pattern.compile(expression);
+                    result(pattern.matcher(value).find() ? 1 : 0);
+                }
+            });
+        } catch (Exception exception) {
+            throw new BackendException(exception);
+        }
     }
 }

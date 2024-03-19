@@ -32,4 +32,9 @@ public abstract class OptionInteger extends AbstractOption<Integer, Integer>
     {
         return input;
     }
+
+    @Override
+    public @NotNull Class<Integer> getConvertClass() {
+        return Integer.class;
+    }
 }

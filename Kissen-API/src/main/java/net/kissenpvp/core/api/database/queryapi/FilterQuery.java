@@ -47,29 +47,10 @@ public interface FilterQuery {
      * @return A string representing the value for the filter condition,
      * not {@code null}.
      */
-    @NotNull String getValue();
+    @NotNull Object getValue();
 
-    /**
-     * Retrieves the {@link Column} to be filtered in the filter condition.
-     * This is the column of the database on which the filtering operation
-     * specified by the {@link FilterType} will be performed.
-     *
-     * <p> Annotated with {@code @NotNull}, this method should never return {@code null}.
-     *
-     * @return The {@link Column} for the filter condition, not {@code null}.
-     */
+
     @NotNull Column getColumn();
-
-    /**
-     * Retrieves the type of filter to be applied as dictated by the {@link FilterType} enum.
-     * This determines the type of comparison operation to use in the filter condition.
-     *
-     * <p> As per {@link FilterType}, it could represent operations like 'Starts With',
-     * 'Exact Match' or 'Ends With'. Annotated with {@code @NotNull}, this method should never return {@code null}.
-     *
-     * @return The {@link FilterType} for the filter condition, not {@code null}.
-     */
-    @NotNull FilterType getFilterType();
 
     /**
      * Gets the operator used to join this filter with other filters in a query.

@@ -45,7 +45,7 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
     }
 
     public KissenPublicUser(@NotNull SavableMap savableMap) throws BackendException {
-        this(savableMap.getNotNull("id", UUID.class), savableMap.getNotNull("name", String.class), Map.copyOf(savableMap));
+        this(UUID.fromString(savableMap.getNotNull("id", String.class)), savableMap.getNotNull("name", String.class), Map.copyOf(savableMap));
     }
 
     /**

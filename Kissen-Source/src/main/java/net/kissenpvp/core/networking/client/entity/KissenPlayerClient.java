@@ -24,7 +24,6 @@ import net.kissenpvp.core.api.ban.Punishment;
 import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.event.EventCancelledException;
@@ -96,7 +95,7 @@ public abstract class KissenPlayerClient<P extends Permission, R extends PlayerR
 
     @Override
     public @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException {
-        QuerySelect query = getUser().getMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.KEY, "total_id", FilterType.EXACT_MATCH);
+        QuerySelect query = getUser().getMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.KEY, "total_id");
         return Arrays.stream(query.execute().join()).filter(current -> current[1].equals(getTotalID())).map(current -> {
             String raw = current[0].toString();
             return UUID.fromString(raw);

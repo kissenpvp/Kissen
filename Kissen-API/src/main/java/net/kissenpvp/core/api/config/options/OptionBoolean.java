@@ -32,4 +32,9 @@ public abstract class OptionBoolean extends AbstractOption<Boolean, Boolean>
     {
         return input;
     }
+
+    @Override
+    public @NotNull Class<Boolean> getConvertClass() {
+        return Boolean.class;
+    }
 }

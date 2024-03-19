@@ -18,24 +18,25 @@
 
 package net.kissenpvp.core.database.mongodb;
 
-import com.google.gson.reflect.TypeToken;
-import com.mongodb.client.model.*;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOneModel;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.WriteModel;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.database.jdbc.KissenObjectJDBCMeta;
 import net.kissenpvp.core.database.savable.KissenSavableMap;
 import org.bson.Document;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -58,7 +59,10 @@ public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implem
             Document document = new Document();
             document.append(getTotalIDColumn(), id);
             document.append(getKeyColumn(), value.getKey());
-            document.append(getValueColumn(), value.getValue());
+
+            String[] serialized = serialize(value.getValue());
+            document.append(getTypeColumn(), serialized[0]);
+            document.append(getValueColumn(), serialized[1]);
 
             return new UpdateOneModel<>(Filters.and(Filters.eq(getTotalIDColumn(), id), Filters.eq(getKeyColumn(), value.getKey())), new Document("$set", document), new UpdateOptions().upsert(true));
         };
@@ -66,16 +70,15 @@ public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implem
 
     @Override
     public @NotNull CompletableFuture<SavableMap> getData(@NotNull String totalId) throws BackendException {
-        return processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId, FilterType.EXACT_MATCH)).thenApply(map -> map.get(totalId));
+        return processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId)).thenApply(map -> map.get(totalId));
     }
 
     @Override
     public @Unmodifiable @NotNull <T extends Savable> CompletableFuture<@Unmodifiable Map<@NotNull String, @NotNull SavableMap>> getData(@NotNull T savable) throws BackendException {
-        return processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, savable.getSaveID(), FilterType.STARTS_WITH));
+        return processQuery(select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, "^" + savable.getSaveID()));
     }
 
     private @NotNull CompletableFuture<Map<String, SavableMap>> processQuery(@NotNull QuerySelect querySelect) throws BackendException {
-
         return querySelect.execute().thenApply(this::processQuery);
     }
 

@@ -24,7 +24,6 @@ import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
@@ -278,7 +277,7 @@ public abstract class KissenBanImplementation<B extends Ban, P extends Punishmen
      */
     protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull Meta meta)  {
 
-        QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, "punishment", FilterType.EXACT_MATCH);
+        QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, "punishment");
         Object[][] objects = querySelect.execute().exceptionally((t) -> new Object[0][]).join();
 
         return Arrays.stream(objects).flatMap(data -> {

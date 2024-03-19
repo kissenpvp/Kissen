@@ -32,4 +32,9 @@ public abstract class OptionFloat extends AbstractOption<Float, Float>
     {
         return input;
     }
+
+    @Override
+    public @NotNull Class<Float> getConvertClass() {
+        return Float.class;
+    }
 }

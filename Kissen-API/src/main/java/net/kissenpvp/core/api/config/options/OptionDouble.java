@@ -32,4 +32,9 @@ public abstract class OptionDouble extends AbstractOption<Double, Double>
     {
         return input;
     }
+
+    @Override
+    public @NotNull Class<Double> getConvertClass() {
+        return Double.class;
+    }
 }

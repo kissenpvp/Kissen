@@ -31,12 +31,12 @@ public class KissenRootQueryComponent<T extends QueryComponent<?>> implements Ro
 
     @Override
     public @NotNull T where(@NotNull Column column, @NotNull String value) {
-        return where(column, value, FilterType.EXACT_MATCH);
+        return getQueryComponent().initialise(column, value);
     }
 
-    @Override public @NotNull T where(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType)
-    {
-        return getQueryComponent().initialise(column, value, filterType);
+    @Override
+    public @NotNull T whereExact(@NotNull Column column, @NotNull String value) {
+        return where(column, "\\b%s\\b".formatted(value));
     }
 
     public @NotNull T getQuery() {

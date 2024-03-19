@@ -33,4 +33,9 @@ public abstract class OptionComponent extends AbstractOption<Component, String> 
     public @NotNull Component deserialize(@NotNull String input) {
         return MiniMessage.miniMessage().deserialize(input);
     }
+
+    @Override
+    public @NotNull Class<String> getConvertClass() {
+        return String.class;
+    }
 }

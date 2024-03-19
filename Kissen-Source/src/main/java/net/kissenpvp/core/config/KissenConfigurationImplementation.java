@@ -95,7 +95,12 @@ public abstract class KissenConfigurationImplementation implements Configuration
         KissenCore instance = KissenCore.getInstance();
 
         KissenConfigurationImplementation kissenConfigurationImplementation = instance.getImplementation(clazz);
-        write(getFile(), internalSettings.stream().sorted((o1, o2) -> CharSequence.compare(o1.getGroup(), o2.getGroup())).toList());
+        File file = getFile();
+
+        List<Option<?, ?>> sorted = getSorted(internalSettings);
+
+        load(file, sorted);
+        write(getFile(), sorted);
     }
 
     @Override
@@ -137,7 +142,7 @@ public abstract class KissenConfigurationImplementation implements Configuration
             return;
         }
         KissenCore.getInstance().getLogger().info("Load configuration for plugin {}.", plugin.getName());
-        loadPlugin(plugin, getSortedPluginSettings(plugin));
+        loadPlugin(plugin, getSorted(plugin));
     }
 
     /**
@@ -173,9 +178,13 @@ public abstract class KissenConfigurationImplementation implements Configuration
      * @return a sorted list of plugin settings
      * @throws NullPointerException if the specified plugin is `null`
      */
-    private @NotNull List<Option<?, ?>> getSortedPluginSettings(@NotNull KissenPlugin plugin) {
+    private @NotNull List<Option<?, ?>> getSorted(@NotNull KissenPlugin plugin) {
+        return getSorted(getPluginSettings().get(plugin));
+    }
+
+    private @NotNull List<Option<?, ?>> getSorted(@NotNull Set<Option<?, ?>> options) {
         Comparator<Option<?, ?>> compareGroup = (o1, o2) -> CharSequence.compare(o1.getGroup(), o2.getGroup());
-        return getPluginSettings().get(plugin).stream().sorted(compareGroup).toList();
+        return options.stream().sorted(compareGroup).toList();
     }
 
     /**

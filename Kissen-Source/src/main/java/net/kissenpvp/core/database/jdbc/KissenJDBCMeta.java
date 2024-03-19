@@ -22,25 +22,25 @@ import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.FilterQuery;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
-import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.queryapi.update.Update;
 import net.kissenpvp.core.database.KissenBaseMeta;
+import net.kissenpvp.core.database.jdbc.query.JDBCSelectQueryExecutor;
+import net.kissenpvp.core.database.jdbc.query.JDBCUpdateQueryExecutor;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.function.Predicate;
 
 /**
  * The {@code KissenMeta} class is an abstract class that provides a common base for classes representing metadata
@@ -65,13 +65,21 @@ import java.util.stream.IntStream;
  */
 public abstract class KissenJDBCMeta extends KissenBaseMeta {
 
-    private final MessageFormat SELECT_FORMAT = new MessageFormat("SELECT {0} FROM {1} WHERE {2};");
-    private final MessageFormat UPDATE_FORMAT = new MessageFormat("UPDATE {0} SET {1} WHERE {2};");
-    private final MessageFormat VAR_PATTERN = new MessageFormat("{0} = ?");
-
     public KissenJDBCMeta(@NotNull String table, @NotNull String totalIDColumn, @NotNull String keyColumn, @NotNull String valueColumn) throws BackendException {
-        super(table, totalIDColumn, keyColumn, valueColumn);
-        getPreparedStatement(String.format("CREATE TABLE IF NOT EXISTS %s (%s VARCHAR(100) NOT NULL, %s VARCHAR(100) NOT NULL, %s JSON NOT NULL CHECK (JSON_VALID(%s)));", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn(), getValueColumn()), PreparedStatement::executeUpdate);
+        super(table, totalIDColumn, keyColumn, valueColumn, "type");
+        generateTable();
+    }
+
+    @Contract(mutates = "param1")
+    private static void setStatementValues(@NotNull PreparedStatement preparedStatement, @NotNull String @NotNull [] parameterValues) throws SQLException {
+        for (int i = 0; i < parameterValues.length; i++) {
+            preparedStatement.setString(i + 1, parameterValues[i]);
+        }
+    }
+
+    protected void generateTable() {
+        String query = "CREATE TABLE IF NOT EXISTS %s (%s VARCHAR(100) NOT NULL, %s VARCHAR(100) NOT NULL, %s TINYTEXT NOT NULL, %s JSON NOT NULL CHECK (JSON_VALID(%s)));";
+        getPreparedStatement(query.formatted(getTable(), getTotalIDColumn(), getKeyColumn(), getTypeColumn(), getValueColumn(), getValueColumn()), PreparedStatement::executeUpdate);
     }
 
     @Override
@@ -83,8 +91,9 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     }
 
     @Override
-    protected void setJson(@NotNull String totalID, @NotNull String key, @Nullable String value) {
-        if (value == null) {
+    protected void setJson(@NotNull String totalID, @NotNull String key, @Nullable Object object) {
+        String[] serialized = serialize(object);
+        if (serialized == null) {
             getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND %s = ?;", getTable(), getTotalIDColumn(), getKeyColumn()), (preparedStatement -> {
                 preparedStatement.setString(1, totalID);
                 preparedStatement.setString(2, key);
@@ -93,134 +102,58 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             return;
         }
 
-        getPreparedStatement(String.format("UPDATE %s SET %s = ? WHERE %s = ? AND %s = ?;", getTable(), getValueColumn(), getTotalIDColumn(), getKeyColumn()), (preparedStatement -> {
-            preparedStatement.setString(1, value);
-            preparedStatement.setString(2, totalID);
-            preparedStatement.setString(3, key);
-
-            if (preparedStatement.executeUpdate() == 0) {
-                insert(totalID, key, value);
-            }
-        }));
+        assert object != null;
+        Update update = new Update(Column.VALUE, object);
+        QueryUpdate queryUpdate = update(update).where(Column.TOTAL_ID, totalID).and(Column.KEY, key);
+        if (queryUpdate.execute().exceptionally((t) -> 0L).join() == 0) {
+            insert(totalID, key, serialized);
+        }
     }
 
-    private void insert(@NotNull String totalID, @NotNull String key, @NotNull String value) {
-        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn()), (preparedStatement -> {
+    private void insert(@NotNull String totalID, @NotNull String key, @NotNull String[] values) {
+        String insert = "INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?);";
+        getPreparedStatement(insert.formatted(getTable(), getTotalIDColumn(), getKeyColumn(), getTypeColumn(), getValueColumn()), (preparedStatement -> {
             preparedStatement.setString(1, totalID);
             preparedStatement.setString(2, key);
-            preparedStatement.setObject(3, value);
+            preparedStatement.setString(3, values[0]); // type
+            preparedStatement.setString(4, values[1]); // value
             preparedStatement.executeUpdate();
         }));
     }
 
     @Override
     protected @NotNull CompletableFuture<Object[][]> execute(@NotNull QuerySelect select) throws BackendException {
-
+        JDBCSelectQueryExecutor executor = new JDBCSelectQueryExecutor(select, this);
         return CompletableFuture.supplyAsync(() -> {
+            List<Object[]> array = new ArrayList<>();
 
             String[] values = new String[select.getFilterQueries().length];
-            Object[] objects = {columns(select.getColumns()), getTable(), where(values, select.getFilterQueries())};
-            return runSelect(SELECT_FORMAT.format(objects), values, select.getColumns());
-        });
+            getPreparedStatement(executor.constructSQL(values), executor.executeStatement(array, values, select.getColumns()));
 
+            return array.toArray(new Object[0][]);
+        }).handle(logExceptions());
     }
 
     @Override
-    protected @NotNull CompletableFuture<Long> execute(@NotNull QueryUpdate queryUpdate) throws BackendException {
+    protected @NotNull CompletableFuture<Long> execute(@NotNull QueryUpdate update) throws BackendException {
+        JDBCUpdateQueryExecutor executor = new JDBCUpdateQueryExecutor(update, this);
         return CompletableFuture.supplyAsync(() -> {
-            String[] updateValues = new String[queryUpdate.getColumns().length];
-            String[] whereValues = new String[queryUpdate.getFilterQueries().length];
+            Predicate<Update> isValue = (directive) -> Objects.equals(directive.column(), Column.VALUE);
+            int valueColumns = (int) Arrays.stream(update.getColumns()).filter(isValue).count();
 
-            Object[] objects = {getTable(), update(updateValues, queryUpdate.getColumns()), where(whereValues, queryUpdate.getFilterQueries())};
+            String[] updateValues = new String[update.getColumns().length + valueColumns];
+            String[] whereValues = new String[update.getFilterQueries().length];
+            String sql = executor.constructSQL(updateValues, whereValues);
 
             String[] total = new String[updateValues.length + whereValues.length];
             System.arraycopy(updateValues, 0, total, 0, updateValues.length);
             System.arraycopy(whereValues, 0, total, updateValues.length, whereValues.length);
 
-            return runUpdate(UPDATE_FORMAT.format(objects), total);
-        });
+            AtomicLong count = new AtomicLong();
+            getPreparedStatement(sql, executor.executeStatement(sql, total, count));
+            return count.get();
+        }).handle(logExceptions());
     }
 
     public abstract void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor);
-
-    private long runUpdate(@NotNull String sql, @NotNull String @NotNull [] parameterValues) throws BackendException {
-        AtomicLong atomicLong = new AtomicLong();
-        getPreparedStatement(sql, preparedStatement -> {
-            for (int i = 0; i < parameterValues.length; i++) {
-                preparedStatement.setString(i + 1, parameterValues[i]);
-            }
-            atomicLong.set(preparedStatement.executeUpdate());
-        });
-        return atomicLong.get();
-    }
-
-    private @NotNull Object @NotNull [] @NotNull [] runSelect(@NotNull String sql, @NotNull String @NotNull [] parameterValues, @NotNull Column... columns) throws BackendException {
-        List<Object[]> array = new ArrayList<>();
-        getPreparedStatement(sql, preparedStatement -> {
-            for (int i = 0; i < parameterValues.length; i++) {
-                preparedStatement.setString(i + 1, parameterValues[i]);
-            }
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    handleResult(columns, resultSet, array);
-                }
-            }
-        });
-        return array.toArray(new Object[0][]);
-    }
-
-    private void handleResult(@NotNull Column @NotNull [] columns, @NotNull ResultSet resultSet, List<Object[]> array) throws SQLException {
-        Object[] result = new Object[columns.length];
-        for (int i = 0; i < columns.length; i++) {
-            Column column = columns[i];
-            String value = resultSet.getString(getColumn(column));
-            if (column.equals(Column.VALUE)) {
-                try {
-                    result[i] = deserialize(value);
-                } catch (ClassNotFoundException classNotFoundException) {
-                    throw new RuntimeException(classNotFoundException); //TODO
-                }
-                continue;
-            }
-            result[i] = value;
-        }
-        array.add(result);
-    }
-
-    private @NotNull String columns(@NotNull Column @NotNull [] column) {
-        return Arrays.stream(column).map(this::getColumn).collect(Collectors.joining(", "));
-    }
-
-    private @NotNull String where(@NotNull String[] values, @NotNull FilterQuery @NotNull ... filterQueries) {
-        return IntStream.range(0, filterQueries.length).mapToObj(i -> {
-            FilterQuery filterQuery = filterQueries[i];
-            String column = getColumn(filterQuery.getColumn());
-
-            String clause = switch (filterQuery.getFilterType()) {
-                case EXACT_MATCH -> {
-                    values[i] = filterQuery.getValue();
-                    yield column + " = ?";
-                }
-                case STARTS_WITH -> {
-                    values[i] = filterQuery.getValue() + "%";
-                    yield column + " LIKE ?";
-                }
-                case ENDS_WITH -> {
-                    values[i] = "%" + filterQuery.getValue();
-                    yield column + " LIKE ?";
-                }
-            };
-
-            return i == 0 ? clause : filterQuery.getFilterOperator() + " " + clause;
-        }).collect(Collectors.joining());
-    }
-
-    private @NotNull String update(@NotNull String[] values, @NotNull QueryUpdateDirective @NotNull ... columns) {
-        Arrays.setAll(values, i -> columns[i].value());
-
-        return String.join(", ", Arrays.stream(columns).map(update -> {
-            Object[] column = {getColumn(update.column())};
-            return VAR_PATTERN.format(column);
-        }).toArray(String[]::new));
-    }
 }

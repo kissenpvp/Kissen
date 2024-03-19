@@ -40,29 +40,29 @@ public class KissenQueryComponent<T extends QueryComponent<?>> implements QueryC
 
     @Override
     public @NotNull T or(@NotNull Column column, @NotNull String value) {
-        return or(column, value, FilterType.EXACT_MATCH);
+        filterQueries.add(new KissenFilterQuery(column, value, FilterOperator.OR));
+        return (T) this;
+    }
+
+    @Override
+    public @NotNull T orExact(@NotNull Column column, @NotNull String value) {
+        return or(column, "\\b%s\\b".formatted(value));
     }
 
     @Override
     public @NotNull T and(@NotNull Column column, @NotNull String value) {
-        return and(column, value, FilterType.EXACT_MATCH);
-    }
-
-    @Override
-    public @NotNull T or(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType) {
-        filterQueries.add(new KissenFilterQuery(column, value, filterType, FilterOperator.OR));
+        filterQueries.add(new KissenFilterQuery(column, value, FilterOperator.AND));
         return (T) this;
     }
 
     @Override
-    public @NotNull T and(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType) {
-        filterQueries.add(new KissenFilterQuery(column, value, filterType, FilterOperator.AND));
-        return (T) this;
+    public @NotNull T andExact(@NotNull Column column, @NotNull String value) {
+        return and(column, "\\b%s\\b".formatted(value));
     }
 
-    public @NotNull T initialise(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType)
+    public @NotNull T initialise(@NotNull Column column, @NotNull String value)
     {
-        filterQueries.add(new KissenFilterQuery(column, value, filterType, FilterOperator.INIT));
+        filterQueries.add(new KissenFilterQuery(column, value, FilterOperator.INIT));
         return (T) this;
     }
 }

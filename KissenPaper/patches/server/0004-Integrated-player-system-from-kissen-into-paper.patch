@@ -3133,10 +3133,10 @@ index 0000000000000000000000000000000000000000..74477d0a2bdd4df9f09bab3cbaec1ce7
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f7a26a524f5d83dfd445b1228382508ee4d16ae5
+index 0000000000000000000000000000000000000000..53d957feb483dbcb26bd6b790d113d6eb6da711a
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
-@@ -0,0 +1,250 @@
+@@ -0,0 +1,249 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.google.gson.JsonObject;
@@ -3145,7 +3145,6 @@ index 0000000000000000000000000000000000000000..f7a26a524f5d83dfd445b1228382508e
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.database.queryapi.Column;
-+import net.kissenpvp.core.api.database.queryapi.FilterType;
 +import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.paper.api.base.Context;
@@ -3307,8 +3306,8 @@ index 0000000000000000000000000000000000000000..f7a26a524f5d83dfd445b1228382508e
 +    {
 +        cached.clear();
 +
-+        QuerySelect select = getLocalUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, getLocalUserSaveID(), FilterType.STARTS_WITH).and(Column.KEY, "operator");
-+        select.execute().thenAccept(data ->
++        QuerySelect select = getLocalUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, "^" + getLocalUserSaveID()).and(Column.KEY, "operator");
++        select.execute().exceptionally((t) -> new Object[0][]).thenAccept(data ->
 +        {
 +            UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
 +            DataImplementation dataImplementation = Bukkit.getKissen().getImplementation(DataImplementation.class);

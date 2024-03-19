@@ -22,7 +22,6 @@ import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.ban.Punishment;
 import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.message.Comment;
@@ -39,7 +38,6 @@ import net.kissenpvp.core.database.DataWriter;
 import net.kissenpvp.core.event.EventImplementation;
 import net.kissenpvp.core.message.CommentNode;
 import net.kissenpvp.core.message.KissenComment;
-import net.kissenpvp.core.time.KissenAccurateDuration;
 import net.kissenpvp.core.time.KissenTemporalObject;
 import net.kissenpvp.core.user.KissenUserImplementation;
 import net.kyori.adventure.text.Component;
@@ -166,7 +164,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
         Function<String, UUID> toUUID = data -> UUID.fromString(data.substring(userSystem.getUserSaveID().length()));
 
         // total_id = userSystem.getUserSaveID and key = total_ID and value = getTotalID
-        QuerySelect query = userSystem.getUserMeta().select(Column.TOTAL_ID).where(Column.TOTAL_ID, saveID, FilterType.STARTS_WITH).and(Column.KEY, "total_id").and(Column.VALUE, getTotalID().toString());
+        QuerySelect query = userSystem.getUserMeta().select(Column.TOTAL_ID).where(Column.TOTAL_ID, "^" + saveID).and(Column.KEY, "total_id").and(Column.VALUE, getTotalID().toString());
 
         //return query.execute().thenApply(result -> Arrays.stream(result).flatMap(Arrays::stream).map(toUUID).collect(Collectors.toSet())).join();
         return Collections.emptySet(); //TODO

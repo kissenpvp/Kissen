@@ -19,7 +19,7 @@
 package net.kissenpvp.core.api.database.meta;
 
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
-import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.queryapi.update.Update;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -82,7 +82,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getString(String)
      * @see MetaReader#getString(String, String)
      */
-    void setString(@NotNull String totalID, @NotNull String key, @Nullable String value) throws BackendException;
+    void setString(@NotNull String totalID, @NotNull String key, @Nullable String value);
 
     /**
      * Sets a value in the meta associated with the specified {@code key}.
@@ -117,7 +117,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getString(String)
      * @see MetaReader#getString(String, String)
      */
-    void setString(@NotNull String key, @Nullable String value) throws BackendException;
+    void setString(@NotNull String key, @Nullable String value);
 
     /**
      * Sets a long value in the meta associated with the specified {@code totalID} and {@code key}.
@@ -154,7 +154,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getLong(String)
      * @see MetaReader#getLong(String, String)
      */
-    void setLong(@NotNull String totalID, @NotNull String key, long value) throws BackendException;
+    void setLong(@NotNull String totalID, @NotNull String key, long value);
 
     /**
      * Sets a long value in the meta associated with the specified {@code key}.
@@ -189,7 +189,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getLong(String)
      * @see MetaReader#getLong(String, String)
      */
-    void setLong(@NotNull String key, long value) throws BackendException;
+    void setLong(@NotNull String key, long value);
 
     /**
      * Sets a double value in the meta associated with the specified {@code totalID} and {@code key}.
@@ -226,7 +226,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getDouble(String)
      * @see MetaReader#getDouble(String, String)
      */
-    void setDouble(@NotNull String totalID, @NotNull String key, double value) throws BackendException;
+    void setDouble(@NotNull String totalID, @NotNull String key, double value);
 
     /**
      * Sets a double value in the meta associated with the specified {@code key}.
@@ -261,7 +261,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getDouble(String)
      * @see MetaReader#getDouble(String, String)
      */
-    void setDouble(@NotNull String key, double value) throws BackendException;
+    void setDouble(@NotNull String key, double value);
 
     /**
      * Sets a float value in the meta associated with the specified {@code totalID} and {@code key}.
@@ -298,7 +298,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getFloat(String)
      * @see MetaReader#getFloat(String, String)
      */
-    void setFloat(@NotNull String totalID, @NotNull String key, float value) throws BackendException;
+    void setFloat(@NotNull String totalID, @NotNull String key, float value);
 
     /**
      * Sets a float value in the meta associated with the specified {@code key}.
@@ -333,7 +333,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getFloat(String)
      * @see MetaReader#getFloat(String, String)
      */
-    void setFloat(@NotNull String key, float value) throws BackendException;
+    void setFloat(@NotNull String key, float value);
 
     /**
      * Sets an integer value in the meta associated with the specified {@code totalID} and {@code key}.
@@ -370,7 +370,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getInt(String)
      * @see MetaReader#getInt(String, String)
      */
-    void setInt(@NotNull String totalID, @NotNull String key, int value) throws BackendException;
+    void setInt(@NotNull String totalID, @NotNull String key, int value);
 
     /**
      * Sets an integer value in the meta associated with the specified {@code key}.
@@ -405,7 +405,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getInt(String)
      * @see MetaReader#getInt(String, String)
      */
-    void setInt(@NotNull String key, int value) throws BackendException;
+    void setInt(@NotNull String key, int value);
 
     /**
      * Sets a short value in the meta associated with the specified {@code totalID} and {@code key}.
@@ -442,7 +442,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getShort(String)
      * @see MetaReader#getShort(String, String)
      */
-    void setShort(@NotNull String totalID, @NotNull String key, short value) throws BackendException;
+    void setShort(@NotNull String totalID, @NotNull String key, short value);
 
     /**
      * Sets a short value in the meta associated with the specified {@code key}.
@@ -477,7 +477,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getShort(String)
      * @see MetaReader#getShort(String, String)
      */
-    void setShort(@NotNull String key, short value) throws BackendException;
+    void setShort(@NotNull String key, short value);
 
     /**
      * Sets a byte value in the meta associated with the specified {@code totalID} and {@code key}.
@@ -514,7 +514,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getByte(String)
      * @see MetaReader#getByte(String, String)
      */
-    void setByte(@NotNull String totalID, @NotNull String key, byte value) throws BackendException;
+    void setByte(@NotNull String totalID, @NotNull String key, byte value);
 
     /**
      * Sets a byte value in the meta associated with the specified {@code key}.
@@ -549,7 +549,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getByte(String)
      * @see MetaReader#getByte(String, String)
      */
-    void setByte(@NotNull String key, byte value) throws BackendException;
+    void setByte(@NotNull String key, byte value);
 
     /**
      * Sets a boolean value in the meta associated with the specified {@code totalID} and {@code key}.
@@ -586,7 +586,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getBoolean(String)
      * @see MetaReader#getBoolean(String, String)
      */
-    void setBoolean(@NotNull String totalID, @NotNull String key, boolean value) throws BackendException;
+    void setBoolean(@NotNull String totalID, @NotNull String key, boolean value);
 
     /**
      * Sets a boolean value in the meta associated with the specified {@code key}.
@@ -621,7 +621,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getBoolean(String)
      * @see MetaReader#getBoolean(String, String)
      */
-    void setBoolean(@NotNull String key, boolean value) throws BackendException;
+    void setBoolean(@NotNull String key, boolean value);
 
     /**
      * Sets a collection value in the meta associated with the specified {@code totalID} and {@code key}.
@@ -658,7 +658,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getCollection(String, Class)
      * @see MetaReader#getCollection(String, String, Class)
      */
-    void setCollection(@NotNull String totalID, @NotNull String key, @Nullable Collection<?> value) throws BackendException;
+    void setCollection(@NotNull String totalID, @NotNull String key, @Nullable Collection<?> value);
 
     /**
      * Sets a collection value in the meta associated with the specified {@code key}.
@@ -693,7 +693,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getCollection(String, Class)
      * @see MetaReader#getCollection(String, String, Class)
      */
-    void setCollection(@NotNull String key, @Nullable Collection<?> value) throws BackendException;
+    void setCollection(@NotNull String key, @Nullable Collection<?> value);
 
     /**
      * Sets an object value in the meta associated with the specified {@code totalID} and {@code key}.
@@ -730,7 +730,7 @@ public interface MetaWriter extends Serializable {
      * @see MetaReader#getObject(String, Class)
      * @see MetaReader#getObject(String, String, Class)
      */
-    <T> void setObject(@NotNull String totalID, @NotNull String key, @Nullable T value) throws BackendException;
+    <T> void setObject(@NotNull String totalID, @NotNull String key, @Nullable T value);
 
     /**
      * Sets an object value in the meta associated with the specified {@code key}.
@@ -764,13 +764,13 @@ public interface MetaWriter extends Serializable {
      * @see #setObject(String, String, Object)
      * @see #setObject(String, Object)
      */
-    <T> void setObject(@NotNull String key, @Nullable T value) throws BackendException;
+    <T> void setObject(@NotNull String key, @Nullable T value);
 
     /**
      * Creates and returns a root query update with the specified query update directives.
      *
      * <p>The {@code update} method returns a {@link QueryUpdate.RootQueryUpdate} that can be further configured with the
-     * provided {@link QueryUpdateDirective} instances. It allows updating the underlying data store based on the specified directives.</p>
+     * provided {@link Update} instances. It allows updating the underlying data store based on the specified directives.</p>
      *
      * <p>Example usage:</p>
      *
@@ -787,9 +787,9 @@ public interface MetaWriter extends Serializable {
      * }
      * </pre>
      *
-     * @param queryUpdateDirective the query update directives to be applied to the root query update
+     * @param update the query update directives to be applied to the root query update
      * @return a {@link QueryUpdate.RootQueryUpdate} configured with the specified directives
      */
     @NotNull
-    QueryUpdate.RootQueryUpdate update(@NotNull QueryUpdateDirective... queryUpdateDirective);
+    QueryUpdate.RootQueryUpdate update(@NotNull Update... update);
 }

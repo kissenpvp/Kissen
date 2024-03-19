@@ -21,6 +21,8 @@ package net.kissenpvp.core.api.database.queryapi.update;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 /**
  * The {@code QueryUpdateDirective} record represents a simple data holder for a column to-be-updated
  * and its new value within an update query. It consists of a {@link Column} and the corresponding
@@ -34,5 +36,13 @@ import org.jetbrains.annotations.NotNull;
  * @param column The {@link Column} object representing the column to be updated.
  * @param value  The new value for the column in {@code String} format.
  */
-public record QueryUpdateDirective(@NotNull Column column, @NotNull String value) {
+public record Update(@NotNull Column column, @NotNull Object value) {
+
+    public Update {
+        if(!Objects.equals(column, Column.VALUE) && !(value instanceof String))
+        {
+            String exceptionMessage = "Only String values are allowed for column %s.";
+            throw new IllegalArgumentException(exceptionMessage.formatted(column));
+        }
+    }
 }

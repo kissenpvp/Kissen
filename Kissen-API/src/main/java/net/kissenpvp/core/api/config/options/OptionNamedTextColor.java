@@ -37,4 +37,9 @@ public abstract class OptionNamedTextColor extends AbstractOption<NamedTextColor
         }
         return namedTextColor;
     }
+
+    @Override
+    public @NotNull Class<String> getConvertClass() {
+        return String.class;
+    }
 }

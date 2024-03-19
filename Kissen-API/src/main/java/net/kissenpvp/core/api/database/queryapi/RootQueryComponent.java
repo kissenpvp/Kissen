@@ -35,26 +35,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface RootQueryComponent<T extends QueryComponent<?>> {
 
-    /**
-     * Applies a new WHERE filter condition to the implementing class with a column and a value.
-     * By default, the {@link FilterType} is set as EXACT_MATCH. This method should be overridden
-     * to add the proper WHERE filter condition to the constructed query.
-     *
-     * @param column The column on which to apply the WHERE condition.
-     * @param value The value to compare against the column.
-     * @return The implementing class, to facilitate method chaining.
-     */
     @NotNull T where(@NotNull Column column, @NotNull String value);
 
-    /**
-     * This method applies a WHERE filter condition to the implementing class. This method
-     * is primarily expected to be the first method in a method chain, aligning with the SQL
-     * standard where a query generally starts with a WHERE clause.
-     *
-     * @param column     The column to apply the WHERE condition on.
-     * @param value      The value for the column to be compared against.
-     * @param filterType The comparison type to perform on the pair, column-value.
-     * @return The implementing class, to enable method chaining.
-     */
-    @NotNull T where(@NotNull Column column, @NotNull String value, @NotNull FilterType filterType);
+    @NotNull T whereExact(@NotNull Column column, @NotNull String value);
 }

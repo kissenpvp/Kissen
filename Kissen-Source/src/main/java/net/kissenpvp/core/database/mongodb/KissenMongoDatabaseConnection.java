@@ -88,7 +88,8 @@ public class KissenMongoDatabaseConnection implements MongoDatabaseConnection {
     public @NotNull ObjectMeta createObjectMeta(@NotNull String table) {
         return new KissenObjectMongoMeta(table) {
             @Override
-            protected @NotNull MongoCollection<Document> getCollection() {
+            @NotNull
+            public MongoCollection<Document> getCollection() {
                 return database.getCollection(table);
             }
         };
@@ -98,7 +99,7 @@ public class KissenMongoDatabaseConnection implements MongoDatabaseConnection {
     public @NotNull Meta createMeta(@NotNull String table, @NotNull String uuidColumn, @NotNull String keyColumn, @NotNull String valueColumn) {
         return new KissenMongoMeta(table, uuidColumn, keyColumn, valueColumn) {
             @Override
-            protected @NotNull MongoCollection<Document> getCollection() {
+            public @NotNull MongoCollection<Document> getCollection() {
                 return database.getCollection(table);
             }
         };

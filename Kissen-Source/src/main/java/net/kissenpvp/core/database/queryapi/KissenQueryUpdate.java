@@ -19,29 +19,29 @@
 package net.kissenpvp.core.database.queryapi;
 
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
-import net.kissenpvp.core.api.database.queryapi.update.QueryUpdateDirective;
+import net.kissenpvp.core.api.database.queryapi.update.Update;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 
 public abstract class KissenQueryUpdate extends KissenQueryComponent<QueryUpdate> implements QueryUpdate
 {
-    private final QueryUpdateDirective[] queryUpdateDirectives;
+    private final Update[] updates;
 
-    public KissenQueryUpdate(QueryUpdateDirective... queryUpdateDirectives)
+    public KissenQueryUpdate(Update... updates)
     {
-        this.queryUpdateDirectives = queryUpdateDirectives;
+        this.updates = updates;
     }
 
-    @Override public QueryUpdateDirective[] getColumns()
+    @Override public Update[] getColumns()
     {
-        return queryUpdateDirectives;
+        return updates;
     }
 
     public abstract static class KissenRootQueryUpdate extends KissenRootQueryComponent<QueryUpdate> implements RootQueryUpdate {
 
-        public KissenRootQueryUpdate(@NotNull QueryUpdateDirective... queryUpdateDirectives) {
-            this.setQueryComponent(new KissenQueryUpdate(queryUpdateDirectives) {
+        public KissenRootQueryUpdate(@NotNull Update... updates) {
+            this.setQueryComponent(new KissenQueryUpdate(updates) {
                 @Override
                 public @NotNull CompletableFuture<Long> execute() {
                     return KissenRootQueryUpdate.this.execute();

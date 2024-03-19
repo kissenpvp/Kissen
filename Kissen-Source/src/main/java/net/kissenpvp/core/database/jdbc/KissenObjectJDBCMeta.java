@@ -22,7 +22,6 @@ import lombok.SneakyThrows;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.FilterType;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
@@ -100,11 +99,14 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
 
     @Override
     public void insertJsonMap(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException {
-        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s) VALUES (?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getValueColumn()), preparedStatement -> {
+        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getTypeColumn(), getValueColumn()), preparedStatement -> {
             for (Map.Entry<String, Object> current : data.entrySet()) {
                 preparedStatement.setString(1, id);
                 preparedStatement.setString(2, current.getKey());
-                preparedStatement.setString(3, serialize(current.getValue()));
+
+                String[] serialized = serialize(current.getValue());
+                preparedStatement.setString(3, serialized[0]);
+                preparedStatement.setString(4, serialized[1]);
                 preparedStatement.addBatch();
             }
             preparedStatement.executeBatch();
@@ -113,7 +115,7 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
 
     @Override
     public @NotNull CompletableFuture<SavableMap> getData(@NotNull String totalId) {
-        QuerySelect select = select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId, FilterType.EXACT_MATCH);
+        QuerySelect select = select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId);
         return select.execute().thenApply(data ->
         {
             Object[][] modifiedData = new Object[data.length][data[0].length + 1];
@@ -129,7 +131,8 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
 
     @Override
     public @NotNull <T extends Savable> CompletableFuture<@Unmodifiable Map<@NotNull String, @NotNull SavableMap>> getData(@NotNull T savable) {
-        return select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, savable.getSaveID(), FilterType.STARTS_WITH).execute().thenApply(this::processQuery);
+        String regex = "^" + savable.getSaveID();
+        return select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, regex).execute().thenApply(this::processQuery);
     }
 
     @SneakyThrows

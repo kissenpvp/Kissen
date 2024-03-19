@@ -36,9 +36,9 @@ public interface QueryUpdate extends QueryComponent<QueryUpdate> {
     /**
      * Gets the columns that are to be updated in the query.
      *
-     * @return An array of {@link QueryUpdateDirective}, which represents the columns to be updated.
+     * @return An array of {@link Update}, which represents the columns to be updated.
      */
-    @NotNull QueryUpdateDirective[] getColumns();
+    @NotNull Update[] getColumns();
 
     /**
      * Executes the update query that has been built.
