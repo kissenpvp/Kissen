@@ -570,7 +570,7 @@ index 0000000000000000000000000000000000000000..96674e6f20f94c065586c6d7823a8751
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index d06185566b447c432d4dc2e3ba04d121bcdbc71b..98531c5e718f80c25c6d6009a1494b8bc5ac98a9 100644
+index 93b661e9cb7743aeff7da3972942cb73049a5e4c..67bab2e8c48cc7cf88c9aca8d0ec6ad1b464341d 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -191,7 +191,7 @@ import org.bukkit.event.server.ServerLoadEvent;
@@ -604,7 +604,7 @@ index d06185566b447c432d4dc2e3ba04d121bcdbc71b..98531c5e718f80c25c6d6009a1494b8b
              this.nextTickTimeNanos = Util.getNanos();
              this.statusIcon = (ServerStatus.Favicon) this.loadStatusIcon().orElse(null); // CraftBukkit - decompile error
              this.status = this.buildServerStatus();
-@@ -1855,7 +1863,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1865,7 +1873,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
  
      @DontObfuscate
      public String getServerModName() {
