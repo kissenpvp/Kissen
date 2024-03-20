@@ -14,12 +14,35 @@ import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * A utility class for executing JDBC queries.
+ * <p>
+ * This class provides functionality for executing JDBC queries. It is annotated with {@code @Getter} to automatically generate
+ * getter methods for all fields and {@code @AllArgsConstructor} to generate a constructor with all fields as parameters.
+ *
+ * @see Getter
+ * @see AllArgsConstructor
+ */
 @Getter
 @AllArgsConstructor
 public class JDBCQueryExecutor {
 
     private final KissenJDBCMeta meta;
 
+    /**
+     * Sets values for the parameters of the provided {@link PreparedStatement}.
+     * <p>
+     * This method sets values for the parameters of the provided {@link PreparedStatement} using the specified array of parameter values.
+     * It iterates through each parameter value in the array and sets it to the corresponding parameter index in the prepared statement.
+     * <p>
+     * This method mutates the provided {@code preparedStatement} by setting parameter values.
+     *
+     * @param preparedStatement the {@link PreparedStatement} to set parameter values for
+     * @param parameterValues an array of {@link String} representing the parameter values
+     * @throws SQLException if a database access error occurs or if one of the given parameters is not a valid parameter index
+     * @throws NullPointerException if either {@code preparedStatement} or {@code parameterValues} is {@code null}
+     * @see PreparedStatement
+     */
     @Contract(mutates = "param1")
     protected static void setStatementValues(@NotNull PreparedStatement preparedStatement, @NotNull String @NotNull [] parameterValues) throws SQLException {
         for (int i = 0; i < parameterValues.length; i++) {
