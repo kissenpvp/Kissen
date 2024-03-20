@@ -109,17 +109,6 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
         }
     }
 
-    private void insert(@NotNull String totalID, @NotNull String key, @NotNull String[] values) {
-        String insert = "INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?);";
-        getPreparedStatement(insert.formatted(getTable(), getTotalIDColumn(), getKeyColumn(), getTypeColumn(), getValueColumn()), (preparedStatement -> {
-            preparedStatement.setString(1, totalID);
-            preparedStatement.setString(2, key);
-            preparedStatement.setString(3, values[0]); // type
-            preparedStatement.setString(4, values[1]); // value
-            preparedStatement.executeUpdate();
-        }));
-    }
-
     @Override
     protected @NotNull CompletableFuture<Object[][]> execute(@NotNull QuerySelect select) {
         JDBCSelectQueryExecutor executor = new JDBCSelectQueryExecutor(select, this);
@@ -152,6 +141,29 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             getPreparedStatement(sql, executor.executeStatement(sql, total, count));
             return count.get();
         }).handle(logExceptions());
+    }
+
+    /**
+     * Inserts a new dataset into the database.
+     *
+     * <p>This method inserts a new dataset into the database with the specified total ID, key, and values.
+     * It constructs a SQL INSERT statement using the table and column names,
+     * then prepares and executes the statement with the provided values.</p>
+     *
+     * @param totalID the total ID for the record
+     * @param key the key for the record
+     * @param values an array containing the type and value for the record
+     * @throws NullPointerException if any of the parameters or values array is `null`
+     */
+    private void insert(@NotNull String totalID, @NotNull String key, @NotNull String[] values) {
+        String insert = "INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?);";
+        getPreparedStatement(insert.formatted(getTable(), getTotalIDColumn(), getKeyColumn(), getTypeColumn(), getValueColumn()), (preparedStatement -> {
+            preparedStatement.setString(1, totalID);
+            preparedStatement.setString(2, key);
+            preparedStatement.setString(3, values[0]); // type
+            preparedStatement.setString(4, values[1]); // value
+            preparedStatement.executeUpdate();
+        }));
     }
 
     /**
