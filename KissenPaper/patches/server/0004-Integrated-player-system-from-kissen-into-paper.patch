@@ -2441,27 +2441,6 @@ index 0000000000000000000000000000000000000000..2218bac468aeaed0795749697105f5cd
 +        return (GroupablePermissionEntry<PaperPermission>) getPlayer().getUser(context);
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/user/KissenOperatorDataNode.java b/src/main/java/net/kissenpvp/paper/user/KissenOperatorDataNode.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..6e27b52d62505e5669f8b13235aba2cca5f20457
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/user/KissenOperatorDataNode.java
-@@ -0,0 +1,15 @@
-+package net.kissenpvp.paper.user;
-+
-+import com.mojang.authlib.GameProfile;
-+import net.minecraft.server.players.ServerOpListEntry;
-+import org.jetbrains.annotations.NotNull;
-+
-+public record KissenOperatorDataNode(int level, boolean bypassServerLimit)
-+{
-+
-+    public @NotNull ServerOpListEntry getServerOpListEntry(@NotNull GameProfile profile)
-+    {
-+        return new ServerOpListEntry(profile, level(), bypassServerLimit());
-+    }
-+
-+}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperProfileCache.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..e14a41cb4ba7304e3c6a33e248377abc1a3ce0df
@@ -3133,20 +3112,18 @@ index 0000000000000000000000000000000000000000..74477d0a2bdd4df9f09bab3cbaec1ce7
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..53d957feb483dbcb26bd6b790d113d6eb6da711a
+index 0000000000000000000000000000000000000000..655aafe5cdd89028d0512639f6afa3469bab6125
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
-@@ -0,0 +1,249 @@
+@@ -0,0 +1,247 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.google.gson.JsonObject;
 +import com.mojang.authlib.GameProfile;
-+import net.kissenpvp.core.api.database.DataImplementation;
-+import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.meta.ObjectMeta;
-+import net.kissenpvp.core.api.database.queryapi.Column;
-+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
++import net.kissenpvp.core.api.database.meta.list.MetaList;
 +import net.kissenpvp.core.api.user.UserImplementation;
++import net.kissenpvp.core.api.user.UserInfo;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.minecraft.server.players.ServerOpList;
 +import net.minecraft.server.players.ServerOpListEntry;
@@ -3158,8 +3135,10 @@ index 0000000000000000000000000000000000000000..53d957feb483dbcb26bd6b790d113d6e
 +
 +import java.io.File;
 +import java.util.*;
-+import java.util.concurrent.Executors;
++import java.util.function.Function;
++import java.util.function.Predicate;
 +import java.util.stream.Collectors;
++import java.util.stream.Stream;
 +
 +/**
 + * This is a class that extends the functionality of StoredUserList. It provides functionality to manage a list
@@ -3174,7 +3153,24 @@ index 0000000000000000000000000000000000000000..53d957feb483dbcb26bd6b790d113d6e
 + */
 +public class KissenUserOperatorList extends ServerOpList {
 +
-+    private final Set<LinkedOperatorDataNode> cached;
++    private MetaList<OperatorData> cached;
++
++    /**
++     * Creates a predicate for comparing {@link OperatorData} based on the equality of their associated {@link GameProfile}.
++     *
++     * <p>This method returns a {@link Predicate} that compares {@link OperatorData} based on the equality of their associated {@link GameProfile}.
++     * The returned predicate tests whether the {@link GameProfile} ID of the provided {@link OperatorData} is equal to the ID of the specified {@link GameProfile}.</p>
++     *
++     * @param gameProfile the {@link GameProfile} to compare against
++     * @return a {@link Predicate} for comparing {@link OperatorData} based on the equality of their associated {@link GameProfile}
++     * @throws NullPointerException if the specified {@link GameProfile} is `null`
++     * @see OperatorData
++     * @see GameProfile
++     */
++    @Contract(pure = true, value = "_ -> new")
++    private static @NotNull Predicate<OperatorData> equals(@NotNull GameProfile gameProfile) {
++        return info -> Objects.equals(info.uuid(), gameProfile.getId());
++    }
 +
 +    /**
 +     * This is a class that extends the functionality of StoredUserList. It provides functionality to manage a list
@@ -3190,42 +3186,18 @@ index 0000000000000000000000000000000000000000..53d957feb483dbcb26bd6b790d113d6e
 +    public KissenUserOperatorList() {
 +        //noinspection DataFlowIssue
 +        super(null); // not file based
-+        this.cached = new HashSet<>();
 +    }
 +
 +    @Override
 +    public void add(@NotNull ServerOpListEntry entry) {
-+        KissenOperatorDataNode operatorDataNode = new KissenOperatorDataNode(entry.getLevel(), entry.getBypassesPlayerLimit());
-+        getCached().removeIf(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().equals(entry.getUser()));
-+        getCached().add(new LinkedOperatorDataNode(Objects.requireNonNull(entry.getUser()), operatorDataNode));
-+
-+        Executors.newSingleThreadExecutor().submit(() -> {
-+            try {
-+                getLocalUserMeta().setObject(getLocalUserSaveID() + Objects.requireNonNull(entry.getUser()).getId(), "operator", operatorDataNode);
-+            } catch (BackendException backendException) {
-+                throw new RuntimeException(String.format("Something went wrong when setting the operator data from user %s.", entry.getUser().getName()), backendException);
-+            }
-+        });
++        UUID id = Objects.requireNonNull(entry.getUser()).getId();
++        cached.add(new OperatorData(id, entry.getLevel(), entry.getBypassesPlayerLimit()));
 +    }
 +
 +    @Nullable
 +    @Override
 +    public ServerOpListEntry get(@NotNull GameProfile key) {
-+        return getCached().stream().filter(
-+                operators -> operators.gameProfile().equals(key)).findFirst().map(
-+                LinkedOperatorDataNode::getServerOpListEntry).orElse(null);
-+    }
-+
-+    @Override
-+    public void remove(@NotNull GameProfile key) {
-+        getCached().removeIf(linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().equals(key));
-+        Executors.newSingleThreadExecutor().submit(() -> {
-+            try {
-+                getLocalUserMeta().delete(getLocalUserSaveID() + Objects.requireNonNull(key.getId()), "operator");
-+            } catch (BackendException backendException) {
-+                throw new RuntimeException(String.format("An error occurred when removing operator rights from user %s.", key.getName()), backendException);
-+            }
-+        });
++        return getCached(key).map(OperatorData::getServerOpListEntry).orElse(null);
 +    }
 +
 +    @Override
@@ -3234,10 +3206,16 @@ index 0000000000000000000000000000000000000000..53d957feb483dbcb26bd6b790d113d6e
 +    }
 +
 +    @Override
++    public void remove(@NotNull GameProfile key) {
++        cached.removeIf(equals(key));
++    }
++
++    @Override
 +    public String @NotNull [] getUserList() {
-+        return getCached().stream().map(
-+                linkedOperatorDataNode -> linkedOperatorDataNode.gameProfile().getName()).distinct().toArray(
-+                String[]::new);
++        return getCached().stream().flatMap(node -> {
++            GameProfile info = node.getServerOpListEntry().getUser();
++            return Stream.of(Objects.requireNonNull(info).getName());
++        }).toArray(String[]::new);
 +    }
 +
 +    @Override
@@ -3247,12 +3225,12 @@ index 0000000000000000000000000000000000000000..53d957feb483dbcb26bd6b790d113d6e
 +
 +    @Override
 +    protected boolean contains(@NotNull GameProfile k0) {
-+        return getCached().stream().anyMatch(gameProfile -> gameProfile.gameProfile().equals(k0));
++        return getCached(k0).isPresent();
 +    }
 +
 +    @Override
 +    public @NotNull Collection<ServerOpListEntry> getEntries() {
-+        return getCached().stream().map(LinkedOperatorDataNode::getServerOpListEntry).collect(Collectors.toSet());
++        return getCached().stream().map(OperatorData::getServerOpListEntry).collect(Collectors.toSet());
 +    }
 +
 +    @Override
@@ -3272,7 +3250,7 @@ index 0000000000000000000000000000000000000000..53d957feb483dbcb26bd6b790d113d6e
 +
 +    @Override
 +    public void load() {
-+        fetchOperators();
++        cached = getMeta().getCollection("operator_players", OperatorData.class).join();
 +    }
 +
 +    @Override
@@ -3281,65 +3259,29 @@ index 0000000000000000000000000000000000000000..53d957feb483dbcb26bd6b790d113d6e
 +    }
 +
 +    /**
-+     * This method fetch operators data from the local user metadata and returns an unmodifiable set of LinkedOperatorDataNode.
-+     * Each LinkedOperatorDataNode record holds a GameProfile and a KissenOperatorDataNode which correlates user information and operator data.
-+     * <p>
-+     * An SQL SELECT query is constructed to fetch the TOTAL_ID and VALUE columns.
-+     * Filters are appended to this query to match rows starting with local user SaveID and where KEY equals 'operator'.
-+     * The information is fetched into the 'data' array where every array element corresponds to a row from the result.
-+     * <p>
-+     * The method iterates over each row from the query result:
-+     * - Extracts UUID by stripping the SaveID off TOTAL_ID
-+     * - Fetches UserInfo from user profiles matching the UUID
-+     * - Throws a RuntimeException if no such profile is found
-+     * - Constructs KissenOperatorDataNode from the VALUE column data
-+     * - The UUID and KissenOperatorDataNode are combined into a new LinkedOperatorDataNode instance and added to the resultant set.
-+     * <p>
-+     * If any exception is raised during the backend processing, it is wrapped in a runtime exception with an appropriate
-+     * error message and thrown, thus indicating the issue with loading operators.
-+     * <p>
-+     * The method guarantees to return a set of LinkedOperatorDataNode or throw an exception in case of an error.
-+     *
-+     * @throws RuntimeException if any error occurs while fetching and processing records from the database
-+     */
-+    private void fetchOperators()
-+    {
-+        cached.clear();
-+
-+        QuerySelect select = getLocalUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, "^" + getLocalUserSaveID()).and(Column.KEY, "operator");
-+        select.execute().exceptionally((t) -> new Object[0][]).thenAccept(data ->
-+        {
-+            UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
-+            DataImplementation dataImplementation = Bukkit.getKissen().getImplementation(DataImplementation.class);
-+
-+            Arrays.stream(data).forEach(current ->
-+            {
-+                UUID uuid = UUID.fromString(current[0].toString().substring(getLocalUserSaveID().length()));
-+                userImplementation.getCachedUserProfile(uuid).map(userInfo ->
-+                {
-+                    KissenOperatorDataNode node = (KissenOperatorDataNode) current[1];
-+                    return new LinkedOperatorDataNode(new GameProfile(userInfo.getUUID(), userInfo.getName()), node);
-+                }).ifPresent(cached::add);
-+            });
-+        });
-+    }
-+
-+    /**
-+     * Retrieves the local user save ID. This is typically used for persisting user data in the {@link Context#LOCAL}.
-+     *
-+     * @return saved ID of the local user.
-+     */
-+    private @NotNull String getLocalUserSaveID() {
-+        return Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUserSaveID(Context.LOCAL);
-+    }
-+
-+    /**
 +     * Retrieves implementation of {@link KissenPaperUserImplementation} for {@link Context#LOCAL} and gets User Metadata.
 +     *
 +     * @return object meta of the local user.
 +     */
-+    private @NotNull ObjectMeta getLocalUserMeta() {
++    protected @NotNull ObjectMeta getMeta() {
 +        return Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getUserMeta(Context.LOCAL);
++    }
++
++    /**
++     * Retrieves the cached {@link OperatorData} associated with the specified {@link GameProfile}, if present.
++     *
++     * <p>This method retrieves the cached {@link OperatorData} from the set of cached data by filtering the set based on the provided {@link GameProfile}.
++     * If the cached data for the specified {@link GameProfile} is found, it is wrapped in an {@link Optional} and returned; otherwise, an empty {@link Optional} is returned.</p>
++     *
++     * @param gameProfile the {@link GameProfile} for which to retrieve the cached {@link OperatorData}
++     * @return an {@link Optional} containing the cached {@link OperatorData} associated with the specified {@link GameProfile},
++     * or an empty {@link Optional} if no data is found for the specified {@link GameProfile}
++     * @throws NullPointerException if the specified {@link GameProfile} is `null`
++     * @see OperatorData
++     * @see GameProfile
++     */
++    protected @NotNull Optional<OperatorData> getCached(@NotNull GameProfile gameProfile) {
++        return getCached().stream().filter(equals(gameProfile)).findFirst();
 +    }
 +
 +    /**
@@ -3351,38 +3293,73 @@ index 0000000000000000000000000000000000000000..53d957feb483dbcb26bd6b790d113d6e
 +     * @return A Set containing all LinkedOperatorDataNodes.
 +     * This returned set is not null.
 +     */
-+    protected @NotNull Set<LinkedOperatorDataNode> getCached()
++    protected @NotNull Set<OperatorData> getCached()
 +    {
-+        return cached;
++        return Set.copyOf(cached);
 +    }
 +
 +    /**
-+     * This is a record class that encapsulates a GameProfile and a KissenOperatorDataNode
-+     * into a single entity, termed as a LinkedOperatorDataNode.
-+     * <p>
-+     * It provides a method `getServerOpListEntry()`, that utilizes `getServerOpListEntry`
-+     * method from `kissenOperatorDataNode` and passes the `gameProfile` from this record.
-+     * Resulting a ServerOpListEntry correlating user profile and operator data.
-+     * <p>
-+     * GameProfile part of this record is user's profile information & KissenOperatorDataNode is operator data.
-+     * <p>
-+     * The data items stored in a LinkedOperatorDataNode record can be accessed
-+     * directly by name.
++     * Represents data for an operator.
++     *
++     * <p>An {@code OperatorData} object encapsulates information about an operator, including their UUID, level, and whether they can bypass server limits.</p>
++     *
++     * @param uuid the UUID of the operator. This value is not `null`.
++     * @param level the level of the operator.
++     * @param bypassServerLimit {@code true} if the operator can bypass server limits; {@code false} otherwise.
++     * @see UUID
 +     */
-+    protected record LinkedOperatorDataNode(@NotNull GameProfile gameProfile,
-+                                          @NotNull KissenOperatorDataNode kissenOperatorDataNode) {
++    protected record OperatorData(@NotNull UUID uuid, int level, boolean bypassServerLimit) {
++
 +        /**
-+         * Returns ServerOpListEntry that associates with this LinkedOperatorDataNode's operator data and game profile.
-+         * The ServerOpListEntry is obtained by calling `getServerOpListEntry` method on `kissenOperatorDataNode`
-+         * with `gameProfile` passed as parameter.
-+         * <p>
-+         * The method is expected to return a new ServerOpListEntry for every call.
++         * Converts {@link UserInfo} to {@link GameProfile}.
 +         *
-+         * @return ServerOpListEntry constructed from gameProfile and kissenOperatorDataNode
++         * <p>This method returns a {@link Function} that converts a {@link UserInfo} object to a {@link GameProfile}.
++         * The returned function creates a new {@link GameProfile} using the UUID and name obtained from the provided {@link UserInfo}.</p>
++         *
++         * @return a {@link Function} for converting {@link UserInfo} to {@link GameProfile}
++         * @see UserInfo
++         * @see GameProfile
 +         */
-+        @Contract(" -> new")
-+        private @NotNull ServerOpListEntry getServerOpListEntry() {
-+            return kissenOperatorDataNode.getServerOpListEntry(gameProfile);
++        @Contract(pure = true, value = "-> new")
++        private static @NotNull Function<UserInfo, GameProfile> toGameProfile() {
++            return userInfo -> new GameProfile(userInfo.getUUID(), userInfo.getName());
++        }
++
++        /**
++         * Retrieves the {@link ServerOpListEntry} associated with this operator.
++         *
++         * <p>This method retrieves the {@link ServerOpListEntry} associated with this operator.
++         * It obtains the {@link GameProfile} from the cached user profile using the operator's UUID,
++         * then constructs a new {@link ServerOpListEntry} using the obtained {@link GameProfile},
++         * the operator's level, and whether the operator can bypass server limits.</p>
++         *
++         * @return the {@link ServerOpListEntry} associated with this operator
++         * @throws NoSuchElementException if the cached user profile is not present for the operator's UUID
++         * @see ServerOpListEntry
++         */
++        public @NotNull ServerOpListEntry getServerOpListEntry() {
++            UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
++            GameProfile gameProfile = userImplementation.getCachedUserProfile(uuid()).map(toGameProfile()).orElseThrow();
++            return new ServerOpListEntry(gameProfile, level(), bypassServerLimit());
++        }
++
++        @Contract(pure = true)
++        @Override
++        public @NotNull String toString() {
++            return "OperatorData{" + "uuid=" + uuid + ", level=" + level + ", bypassServerLimit=" + bypassServerLimit + '}';
++        }
++
++        @Override
++        public boolean equals(Object object) {
++            if (this == object) return true;
++            if (object == null || getClass() != object.getClass()) return false;
++            OperatorData that = (OperatorData) object;
++            return Objects.equals(uuid, that.uuid);
++        }
++
++        @Override
++        public int hashCode() {
++            return Objects.hashCode(uuid);
 +        }
 +    }
 +}
