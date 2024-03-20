@@ -28,12 +28,10 @@ import net.kissenpvp.core.api.database.queryapi.update.Update;
 import net.kissenpvp.core.database.KissenBaseMeta;
 import net.kissenpvp.core.database.jdbc.query.JDBCSelectQueryExecutor;
 import net.kissenpvp.core.database.jdbc.query.JDBCUpdateQueryExecutor;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,21 +63,22 @@ import java.util.function.Predicate;
  */
 public abstract class KissenJDBCMeta extends KissenBaseMeta {
 
-    public KissenJDBCMeta(@NotNull String table, @NotNull String totalIDColumn, @NotNull String keyColumn, @NotNull String valueColumn) throws BackendException {
+    /**
+     * Constructs a new instance of KissenJDBCMeta with the specified table and column names.
+     *
+     * <p>This constructor initializes a new instance of KissenJDBCMeta with the provided table and column names.
+     * It invokes the constructor of the superclass using the specified parameters,
+     * then generates the database table if it does not already exist.</p>
+     *
+     * @param table the name of the database table
+     * @param totalIDColumn the name of the column containing the total ID
+     * @param keyColumn the name of the column containing the key
+     * @param valueColumn the name of the column containing the value
+     * @see BackendException
+     */
+    public KissenJDBCMeta(@NotNull String table, @NotNull String totalIDColumn, @NotNull String keyColumn, @NotNull String valueColumn) {
         super(table, totalIDColumn, keyColumn, valueColumn, "type");
         generateTable();
-    }
-
-    @Contract(mutates = "param1")
-    private static void setStatementValues(@NotNull PreparedStatement preparedStatement, @NotNull String @NotNull [] parameterValues) throws SQLException {
-        for (int i = 0; i < parameterValues.length; i++) {
-            preparedStatement.setString(i + 1, parameterValues[i]);
-        }
-    }
-
-    protected void generateTable() {
-        String query = "CREATE TABLE IF NOT EXISTS %s (%s VARCHAR(100) NOT NULL, %s VARCHAR(100) NOT NULL, %s TINYTEXT NOT NULL, %s JSON NOT NULL CHECK (JSON_VALID(%s)));";
-        getPreparedStatement(query.formatted(getTable(), getTotalIDColumn(), getKeyColumn(), getTypeColumn(), getValueColumn(), getValueColumn()), PreparedStatement::executeUpdate);
     }
 
     @Override
@@ -122,7 +121,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     }
 
     @Override
-    protected @NotNull CompletableFuture<Object[][]> execute(@NotNull QuerySelect select) throws BackendException {
+    protected @NotNull CompletableFuture<Object[][]> execute(@NotNull QuerySelect select) {
         JDBCSelectQueryExecutor executor = new JDBCSelectQueryExecutor(select, this);
         return CompletableFuture.supplyAsync(() -> {
             List<Object[]> array = new ArrayList<>();
@@ -135,7 +134,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     }
 
     @Override
-    protected @NotNull CompletableFuture<Long> execute(@NotNull QueryUpdate update) throws BackendException {
+    protected @NotNull CompletableFuture<Long> execute(@NotNull QueryUpdate update) {
         JDBCUpdateQueryExecutor executor = new JDBCUpdateQueryExecutor(update, this);
         return CompletableFuture.supplyAsync(() -> {
             Predicate<Update> isValue = (directive) -> Objects.equals(directive.column(), Column.VALUE);
@@ -155,5 +154,35 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
         }).handle(logExceptions());
     }
 
+    /**
+     * Generates the database table if it does not already exist.
+     *
+     * <p>This method generates the database table if it does not already exist.
+     * It executes a SQL query to create the table with the specified columns,
+     * including a check constraint to ensure the validity of JSON data in the value column.</p>
+     *
+     * @see #getTable()
+     * @see #getTotalIDColumn()
+     * @see #getKeyColumn()
+     * @see #getTypeColumn()
+     * @see #getValueColumn()
+     */
+    protected void generateTable() {
+        String query = "CREATE TABLE IF NOT EXISTS %s (%s VARCHAR(100) NOT NULL, %s VARCHAR(100) NOT NULL, %s TINYTEXT NOT NULL, %s JSON NOT NULL CHECK (JSON_VALID(%s)));";
+        getPreparedStatement(query.formatted(getTable(), getTotalIDColumn(), getKeyColumn(), getTypeColumn(), getValueColumn(), getValueColumn()), PreparedStatement::executeUpdate);
+    }
+
+    /**
+     * Prepares a {@link PreparedStatement} for the specified query and executes it using the provided {@link PreparedStatementExecutor}.
+     *
+     * <p>This method prepares a {@link PreparedStatement} for the specified query and executes it using the provided {@link PreparedStatementExecutor}.
+     * The {@link PreparedStatement} and any associated resources are managed by the implementation of this method.</p>
+     *
+     * @param query the SQL query string to be prepared
+     * @param preparedStatementExecutor the {@link PreparedStatementExecutor} to execute the prepared statement
+     * @throws NullPointerException if either the query or the {@link PreparedStatementExecutor} is {@code null}
+     * @see PreparedStatement
+     * @see PreparedStatementExecutor
+     */
     public abstract void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor);
 }
