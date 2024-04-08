@@ -19,14 +19,18 @@
 package net.kissenpvp.core.database.jdbc;
 
 import lombok.Getter;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.connection.DatabaseDriver;
 import net.kissenpvp.core.api.database.connection.MYSQLDatabaseConnection;
 import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.database.KissenTable;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -49,7 +53,7 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     @Override
     public boolean isConnected() {
         try {
-            return connection != null && !connection.isClosed();
+            return connection!=null && !connection.isClosed();
         } catch (SQLException sqlException) {
             return false;
         }
@@ -84,43 +88,41 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     }
 
     @Override
-    public @NotNull ObjectMeta createObjectMeta(@NotNull String table) {
-        return new KissenObjectJDBCMeta(table) {
+    public @NotNull Table createTable(@NotNull String table, @NotNull String idColumn, @NotNull String keyColumn, @NotNull String pluginColumn, @NotNull String typeColumn, @NotNull String valueColumn) {
+        return new KissenTable(table, idColumn, keyColumn, pluginColumn, typeColumn, valueColumn) {
             @Override
-            public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
-                KissenJDBCDatabaseConnection.this.getPreparedStatement(query, preparedStatementExecutor);
+            protected @NotNull ObjectMeta createMeta(@NotNull Table instance, @Nullable KissenPlugin kissenPlugin) {
+                return objectMeta(instance, kissenPlugin);
             }
         };
     }
 
     @Override
-    public @NotNull Meta createMeta(@NotNull String table, @NotNull String uuidColumn, @NotNull String keyColumn, @NotNull String valueColumn) {
-        return new KissenJDBCMeta(table, uuidColumn, keyColumn, valueColumn) {
-            @Override
-            public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
-                KissenJDBCDatabaseConnection.this.getPreparedStatement(query, preparedStatementExecutor);
-            }
-        };
+    public @NotNull Table createTable(@NotNull String table) {
+        return createTable(table, "uuid", "identifier", "type", "plugin", "value");
     }
 
-    @SuppressWarnings("SqlSourceToSinkFlow") // prepared statement
-    public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor statementExecutor) {
+    @Contract(pure = true, value = "_, _ -> new")
+    private @NotNull ObjectMeta objectMeta(@NotNull Table table, @Nullable KissenPlugin kissenPlugin) {
+        return new KissenObjectJDBCMeta(table, kissenPlugin) {
+            @Override
+            public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
+                if (!isConnected()) {
+                    disconnect(); // clean up broken connection
+                    connect(); // reconnect if possible
+                }
 
-        if (!isConnected()) {
-            disconnect(); // clean up broken connection
-            connect(); // reconnect if possible
-        }
-
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            KissenCore.getInstance().getLogger().debug("Run sql query {}.", query);
-            statementExecutor.execute(preparedStatement);
-            preparedStatement.close();
-        } catch (SQLException sqlException) {
-            if (!statementExecutor.handle(sqlException))
-            {
-                throw new BackendException(sqlException);
+                try {
+                    PreparedStatement preparedStatement = connection.prepareStatement(query);
+                    KissenCore.getInstance().getLogger().debug("Run sql query {}.", query);
+                    preparedStatementExecutor.execute(preparedStatement);
+                    preparedStatement.close();
+                } catch (SQLException sqlException) {
+                    if (!preparedStatementExecutor.handle(sqlException)) {
+                        throw new BackendException(sqlException);
+                    }
+                }
             }
-        }
+        };
     }
 }

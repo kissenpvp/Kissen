@@ -20,7 +20,8 @@ package net.kissenpvp.core.api.permission.event;
 
 import net.kissenpvp.core.api.event.Cancellable;
 import net.kissenpvp.core.api.event.EventClass;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
+import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -50,13 +51,14 @@ import org.jetbrains.annotations.NotNull;
  *
  * @see EventClass
  * @see Cancellable
- * @see net.kissenpvp.core.api.permission.PermissionEntry#setPermission(Permission)
- * @see net.kissenpvp.core.api.permission.PermissionEntry#setPermission(String, boolean)
- * @see net.kissenpvp.core.api.permission.PermissionEntry#setPermission(String)
+ * @see AbstractPermissionEntry#setPermission(AbstractPermission)
+ * @see AbstractPermissionEntry#setPermission(String, boolean)
+ * @see AbstractPermissionEntry#setPermission(String)
  */
 public interface PermissionEntrySetPermissionEvent extends EventClass, Cancellable
 {
-    @NotNull Permission getPermission();
+    @NotNull
+    AbstractPermission getPermission();
 
     boolean isOverride();
 }

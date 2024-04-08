@@ -18,16 +18,16 @@
 
 package net.kissenpvp.core.user.rank;
 
+import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
-import net.kissenpvp.core.api.user.rank.Rank;
-import net.kissenpvp.core.api.user.rank.RankImplementation;
+import net.kissenpvp.core.api.user.rank.AbstractRank;
+import net.kissenpvp.core.api.user.rank.AbstractRankImplementation;
 import net.kissenpvp.core.base.KissenCore;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
+import net.kissenpvp.core.database.KissenTable;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
@@ -41,8 +41,10 @@ import java.util.stream.Collectors;
  *
  * @param <T> The generic type parameter representing the specific type of ranks managed by this implementation.
  */
-public abstract class KissenRankImplementation<T extends Rank> implements RankImplementation<T> {
+public abstract class KissenRankImplementation<T extends AbstractRank> implements AbstractRankImplementation<T> {
+
     protected final Set<T> cached;
+    private Table rankTable;
 
     /**
      * Constructs a KissenRankImplementation object, initializing the internal set for caching ranks.
@@ -52,9 +54,16 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
     }
 
     @Override
+    public boolean preStart() {
+        DatabaseImplementation database = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
+        rankTable = database.getPrimaryConnection().createTable("kissen_ban_table");
+        return AbstractRankImplementation.super.preStart();
+    }
+
+    @Override
     public boolean postStart() {
         cached.addAll(fetchRanks());
-        return RankImplementation.super.postStart();
+        return AbstractRankImplementation.super.postStart();
     }
 
     @Override
@@ -75,14 +84,9 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
     }
 
     @Override
-    public @NotNull T createRank(@NotNull String name, int priority, @NotNull TextColor chatColor, @NotNull Component prefix, @Nullable Component suffix) {
+    public @NotNull T createRank(@NotNull String name, int priority) {
         Map<String, Object> data = new HashMap<>();
         data.put("priority", priority);
-        data.put("chat_color", chatColor);
-        data.put("prefix", prefix);
-        if (suffix != null) {
-            data.put("suffix", suffix);
-        }
         return createRank(name, data);
     }
 
@@ -92,16 +96,7 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
     }
 
     /**
-     * Returns the {@link ObjectMeta} which contains the {@link Rank} data.
-     *
-     * @return the object meta containing the rank data.
-     */
-    protected ObjectMeta getMeta() {
-        return KissenCore.getInstance().getPublicMeta();
-    }
-
-    /**
-     * Removes a {@link Rank} from the {@link #cached} when {@link Rank#delete()} is called.
+     * Removes a {@link AbstractRank} from the {@link #cached} when {@link AbstractRank#delete()} is called.
      *
      * @param kissenRank the rank to remove from the cached ranks.
      */
@@ -119,10 +114,8 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
      * @return an unmodifiable set of ranks
      * @throws NullPointerException if the associated {@link net.kissenpvp.core.api.database.meta.Meta} is `null`
      */
-    protected @NotNull @Unmodifiable Set<T> fetchRanks()
-    {
-        return getMeta().getData(getSavableType()).thenApply(rankData ->
-        {
+    protected @NotNull @Unmodifiable Set<T> fetchRanks() {
+        return getInternalMeta().getData(getSavableType()).thenApply(rankData -> {
             Function<SavableMap, T> setup = map -> setup(map.getNotNull("id", String.class), Map.copyOf(map));
             return rankData.values().stream().map(setup).collect(Collectors.toUnmodifiableSet());
         }).join();
@@ -136,8 +129,7 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
      * @param data A Map containing key-value pairs of data associated with the rank.
      * @return An initialized rank object of type T.
      */
-    protected @NotNull T setup(@NotNull String name, @NotNull Map<String, Object> data)
-    {
+    protected @NotNull T setup(@NotNull String name, @NotNull Map<String, Object> data) {
         Savable savable = getSavableType();
         savable.setup(name, data);
         return (T) savable;
@@ -159,4 +151,11 @@ public abstract class KissenRankImplementation<T extends Rank> implements RankIm
      * @return A default or fallback rank object of type T.
      */
     protected abstract @NotNull T getFallbackRank();
+
+    protected @NotNull ObjectMeta getInternalMeta() {
+        if (rankTable instanceof KissenTable kissenTable) {
+            return kissenTable.getInternal();
+        }
+        throw new IllegalStateException("Private rank table is not instance of kissen table and therefore has no internal meta");
+    }
 }

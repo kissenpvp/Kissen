@@ -22,8 +22,10 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.savable.Savable;
@@ -33,6 +35,7 @@ import net.kissenpvp.core.database.savable.KissenSavableMap;
 import org.bson.Document;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.HashMap;
@@ -42,8 +45,8 @@ import java.util.function.Function;
 
 public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implements ObjectMeta {
 
-    public KissenObjectMongoMeta(String table) {
-        super(table);
+    public KissenObjectMongoMeta(@NotNull Table table, @Nullable KissenPlugin plugin) {
+        super(table, plugin);
     }
 
     @Override
@@ -57,14 +60,15 @@ public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implem
     private @NotNull Function<Map.Entry<String, Object>, WriteModel<Document>> buildUpdateQuery(@NotNull String id) {
         return value -> {
             Document document = new Document();
-            document.append(getTotalIDColumn(), id);
-            document.append(getKeyColumn(), value.getKey());
+            document.append(getTable().getColumn(Column.TOTAL_ID), id);
+            document.append(getTable().getColumn(Column.KEY), value.getKey());
 
             String[] serialized = serialize(value.getValue());
-            document.append(getTypeColumn(), serialized[0]);
-            document.append(getValueColumn(), serialized[1]);
+            document.append(getTable().getPluginColumn(), getPluginName());
+            document.append(getTable().getTypeColumn(), serialized[0]); // type
+            document.append(getTable().getColumn(Column.VALUE), serialized[1]); // value
 
-            return new UpdateOneModel<>(Filters.and(Filters.eq(getTotalIDColumn(), id), Filters.eq(getKeyColumn(), value.getKey())), new Document("$set", document), new UpdateOptions().upsert(true));
+            return new UpdateOneModel<>(Filters.and(Filters.eq(getTable().getColumn(Column.TOTAL_ID), id), Filters.eq(getTable().getColumn(Column.KEY), value.getKey())), new Document("$set", document), new UpdateOptions().upsert(true));
         };
     }
 

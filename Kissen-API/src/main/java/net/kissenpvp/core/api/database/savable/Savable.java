@@ -18,7 +18,9 @@
 
 package net.kissenpvp.core.api.database.savable;
 
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.BackendException;
+import net.kissenpvp.core.api.database.meta.Table;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,7 +50,7 @@ import java.util.Map;
  * @see SavableMap
  * @see Map
  */
-public interface Savable extends SavableMap {
+public interface Savable {
 
     /**
      * Retrieves the save ID for the object. The save ID is used to recognize and distinguish the object from other
@@ -79,7 +81,14 @@ public interface Savable extends SavableMap {
      * @see #getDatabaseID()
      */
 
-    @NotNull String getSaveID();
+    @NotNull
+    String getSaveID();
+
+    @NotNull
+    Table getTable();
+
+    @NotNull
+    SavableMap getRepository(@NotNull KissenPlugin plugin);
 
     /**
      * Retrieves the unmodified ID associated with the object. The raw ID represents the original identifier given to
@@ -106,7 +115,8 @@ public interface Savable extends SavableMap {
      * @see #getSaveID()
      * @see #getDatabaseID()
      */
-    @NotNull String getRawID();
+    @NotNull
+    String getRawID();
 
     /**
      * Retrieves the ID that is used to save the entry to the table. The ID is constructed by concatenating the
@@ -161,7 +171,8 @@ public interface Savable extends SavableMap {
      * @return the keys that must be set in any case
      * @see #setup(String, Map)
      */
-    @NotNull String[] getKeys();
+    @NotNull
+    String[] getKeys();
 
     /**
      * Sets up the object with the specified ID and optional metadata, synchronizing it with the database.
@@ -174,10 +185,10 @@ public interface Savable extends SavableMap {
      * <p>This method ensures that the object is properly configured and ready for use after initialization, with any changes
      * synchronized with the database.</p>
      *
-     * @param id the ID to set for the object
+     * @param id   the ID to set for the object
      * @param meta the optional metadata as a {@link Map} of key-value pairs
      * @throws SavableInitializeException if an error occurs during initialization
-     * @throws BackendException if there is an issue with the underlying storage or backend
+     * @throws BackendException           if there is an issue with the underlying storage or backend
      */
     void setup(@NotNull String id, @Nullable Map<String, Object> meta) throws SavableInitializeException, BackendException;
 
@@ -208,7 +219,8 @@ public interface Savable extends SavableMap {
      * @return the storage map associated with the savable object
      * @see #setup(String, Map)
      */
-    @NotNull Map<String, Object> getStorage();
+    @NotNull
+    Map<String, Object> getStorage();
 
     /**
      * Deletes the savable object from the database and returns the number of rows affected by this operation.
@@ -239,5 +251,5 @@ public interface Savable extends SavableMap {
      * @return the number of rows affected by the delete operation
      * @see #setup(String, Map)
      */
-    int delete() throws BackendException;
+    int delete();
 }

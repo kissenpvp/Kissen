@@ -18,26 +18,29 @@
 
 package net.kissenpvp.core.database.savable;
 
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
+import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
+import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.networking.socket.DataPackage;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.database.KissenTable;
 import net.kissenpvp.core.database.savable.event.SavableDeletedEvent;
 import net.kissenpvp.core.event.EventImplementation;
-import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 
-public abstract class KissenSavable extends KissenSavableMap implements Savable {
+public abstract class KissenSavable extends HashMap<KissenPlugin, SavableMap> implements Savable {
+
     /**
      * This class is setting the data about an object.
      */
@@ -61,16 +64,21 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
     }
 
     @Override
+    public @NotNull SavableMap getRepository(@NotNull KissenPlugin plugin) {
+        return super.computeIfAbsent(plugin, (key) -> new KissenSavableMap(getDatabaseID(), getTable().registerMeta(plugin)));
+    }
+
+    @Override
     public void setup(@NotNull String id, @Nullable Map<@NotNull String, @NotNull Object> meta) throws SavableInitializeException, BackendException {
         super.setId(id);
-        internalSetup(id, meta == null ? getMeta().getData(this.getDatabaseID()).handle((savableMap, throwable) -> {
+        internalSetup(id, meta==null ? getMeta().getData(this.getDatabaseID()).handle((savableMap, throwable) -> {
 
-            if (savableMap == null) {
+            if (savableMap==null) {
                 return new KissenSavableMap(this.getDatabaseID(), getMeta());
             }
 
             return savableMap.serializeSavable();
-        }).join() : meta);
+        }).join():meta);
     }
 
     private void internalSetup(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> meta) {
@@ -101,6 +109,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
         return this.getSaveID() + super.getId();
     }
 
+/*
     @Override
     public String getId() {
         return getDatabaseID();
@@ -109,13 +118,14 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
     @Override
     public void setId(String id) {
     }
+*/
 
     @Override
     public @NotNull String getRawID() {
         return super.getId();
     }
 
-    @Override
+/*    @Override
     public <T> @Nullable Object set(@NotNull String key, @Nullable T value) {
 
         if (Arrays.asList(getKeys()).contains(key) && value == null) {
@@ -125,7 +135,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
         return super.set(key, value);
         //TODO
         //sendData(KissenCore.getInstance().getImplementation(NetworkImplementation.class).createPackage("meta_update_entry", getSerializableSavableHandler(), key, value));
-    }
+    }*/
 
     @Override
     public int delete() throws BackendException {
@@ -139,7 +149,7 @@ public abstract class KissenSavable extends KissenSavableMap implements Savable 
     @Override
     public boolean equals(Object o) {
 
-        if (this == o) {
+        if (this==o) {
             return true;
         }
         if (!(o instanceof KissenSavable that)) {

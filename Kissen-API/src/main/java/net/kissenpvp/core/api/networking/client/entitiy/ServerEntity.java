@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.api.networking.client.entitiy;
 
-import net.kissenpvp.core.api.message.Theme;
 import net.kissenpvp.core.api.networking.client.Client;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +39,4 @@ public interface ServerEntity extends Client {
     {
         return DateTimeFormatter.ofLocalizedDateTime(formatStyle).withZone(ZoneId.systemDefault()).withLocale(getCurrentLocale());
     }
-
-    @NotNull Theme getTheme();
 }

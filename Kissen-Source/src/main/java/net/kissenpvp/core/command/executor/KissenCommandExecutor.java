@@ -30,6 +30,7 @@ import net.kissenpvp.core.command.handler.AbstractCommandHandler;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -128,8 +129,20 @@ public abstract class KissenCommandExecutor<S extends ServerEntity> implements C
     @SafeVarargs
     private boolean isException(@NotNull Throwable exception, @NotNull Class<? extends Throwable>... throwable)
     {
-        return Stream.of(throwable).anyMatch(current -> current.isAssignableFrom(exception.getClass()) || current.isAssignableFrom(
-                exception.getCause().getClass()));
+        return Stream.of(throwable).anyMatch(current ->
+        {
+            if(current.isAssignableFrom(exception.getClass()))
+            {
+                return true;
+            }
+
+            if(Objects.isNull(exception.getCause()))
+            {
+                return false;
+            }
+
+            return current.isAssignableFrom(exception.getCause().getClass());
+        });
     }
 
     public @NotNull ArgumentEvaluator<S> getEvaluator()

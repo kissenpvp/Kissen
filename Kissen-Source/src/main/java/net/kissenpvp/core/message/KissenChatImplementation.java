@@ -32,7 +32,7 @@ import java.util.Optional;
 public class KissenChatImplementation implements ChatImplementation
 {
     @Override
-    public @NotNull Optional<Component> prepareMessage(@NotNull ServerEntity sender, @NotNull ServerEntity receiver, @NotNull Component @NotNull ... components)
+    public @NotNull Optional<Component> handle(@NotNull ServerEntity sender, @NotNull ServerEntity receiver, @NotNull Component @NotNull ... components)
     {
         if(!receiver.isConnected())
         {
@@ -46,39 +46,5 @@ public class KissenChatImplementation implements ChatImplementation
         }
 
         return Optional.of(systemMessageEvent.getComponent());
-
-        /*Predicate<Component> contain = component -> component.contains(Component.newline());
-        boolean append = components.length < 2 && Arrays.stream(components).noneMatch(contain);
-
-        if (!append || (receiver instanceof PlayerClient<?, ?, ?> player && !player.getUserSetting(ShowPrefix.class).getValue()))
-        {
-            return Optional.of(styleComponent(receiver, components));
-        }
-
-        Component prefix = getPrefix(receiver);
-
-        Component[] prefixAppendedComponents = new Component[components.length + 1];
-        prefixAppendedComponents[0] = prefix.appendSpace().append(Component.text("»")).appendSpace();
-        System.arraycopy(components, 0, prefixAppendedComponents, 1, components.length);
-        return Optional.of(styleComponent(receiver, prefixAppendedComponents));*/
     }
-
-
-    /*private @NotNull Component getPrefix(@NotNull ServerEntity serverEntity)
-    {
-        final MiniMessage miniMessage = MiniMessage.miniMessage();
-        String primary = serverEntity.getTheme().getPrimaryAccentColor().asHexString();
-        String secondary = serverEntity.getTheme().getSecondaryAccentColor().asHexString();
-
-        ConfigurationImplementation config = KissenCore.getInstance().getImplementation(ConfigurationImplementation.class);
-        String systemPrefix = config.getSetting(DefaultSystemPrefix.class);
-        if (serverEntity instanceof PlayerClient<?, ?, ?> player)
-        {
-            systemPrefix = player.getUserSetting(SystemPrefix.class).getValue();
-        }
-
-        String base = "<gradient:%s:%s>%s</gradient>";
-
-        return MiniMessage.miniMessage().deserialize(base.formatted(primary, secondary, systemPrefix));
-    }*/
 }

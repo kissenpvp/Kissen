@@ -18,7 +18,7 @@
 
 package net.kissenpvp.core.ban;
 
-import net.kissenpvp.core.api.ban.Ban;
+import net.kissenpvp.core.api.ban.AbstractBan;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
@@ -36,7 +36,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
-public abstract class KissenBan extends KissenSavable implements Ban {
+public abstract class KissenBan extends KissenSavable implements AbstractBan {
 
     @Override
     public int getID() {
@@ -88,12 +88,12 @@ public abstract class KissenBan extends KissenSavable implements Ban {
     }
 
     @Override
-    public @NotNull Optional<AccurateDuration> getAccurateDuration() {
+    public @NotNull Optional<AccurateDuration> getDuration() {
         return get("duration", AccurateDuration.class);
     }
 
     @Override
-    public void setAccurateDuration(@Nullable AccurateDuration duration) throws EventCancelledException {
+    public void setDuration(@Nullable AccurateDuration duration) throws EventCancelledException {
 
         BanAlterDurationEvent<?> banAlterDurationEvent = new BanAlterDurationEvent<>(this, duration);
         if(!KissenCore.getInstance().getImplementation(EventImplementation.class).call(banAlterDurationEvent))
@@ -106,7 +106,7 @@ public abstract class KissenBan extends KissenSavable implements Ban {
 
     @Override
     public @NotNull ObjectMeta getMeta() {
-        return KissenCore.getInstance().getImplementation(KissenBanImplementation.class).getMeta();
+        return KissenCore.getInstance().getImplementation(KissenBanImplementation.class).getInternalMeta();
     }
 
     @Override

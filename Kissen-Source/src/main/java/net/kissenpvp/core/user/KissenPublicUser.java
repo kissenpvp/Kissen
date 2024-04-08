@@ -23,16 +23,17 @@ import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.database.KissenTable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 
-public abstract class KissenPublicUser<T extends Permission> extends KissenUser<T> implements User {
+public abstract class KissenPublicUser<T extends AbstractPermission> extends KissenUser<T> implements User {
 
     /**
      * Creates a public user which is based on the parameter given just an abstract user or a specific player.
@@ -103,7 +104,7 @@ public abstract class KissenPublicUser<T extends Permission> extends KissenUser<
 
     @Override
     public final @NotNull ObjectMeta getMeta() {
-        return getImplementation().getUserMeta();
+        return ((KissenTable) getImplementation().getUserTable()).getInternal();
     }
 
     @Override

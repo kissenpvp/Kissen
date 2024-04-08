@@ -1,13 +1,13 @@
 package net.kissenpvp.core.command.exceptionhandler;
 
 import net.kissenpvp.core.api.command.CommandPayload;
-import net.kissenpvp.core.api.command.exception.CommandExceptionHandler;
+import net.kissenpvp.core.api.command.exception.AbstractCommandExceptionHandler;
 import net.kissenpvp.core.api.networking.client.entitiy.MessageReceiver;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class NullPointerExceptionHandler<S extends ServerEntity> implements CommandExceptionHandler<NullPointerException, S>
+public class NullPointerExceptionHandler<S extends ServerEntity> implements AbstractCommandExceptionHandler<NullPointerException, S>
 {
 
     @Override

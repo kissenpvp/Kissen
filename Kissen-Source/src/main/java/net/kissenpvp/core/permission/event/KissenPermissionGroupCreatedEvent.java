@@ -18,7 +18,7 @@
 
 package net.kissenpvp.core.permission.event;
 
-import net.kissenpvp.core.api.permission.PermissionGroup;
+import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
 import net.kissenpvp.core.api.permission.event.PermissionGroupCreatedEvent;
 
-public record KissenPermissionGroupCreatedEvent(PermissionGroup<?> permissionGroup) implements PermissionGroupCreatedEvent {}
+public record KissenPermissionGroupCreatedEvent(AbstractPermissionGroup<?> permissionGroup) implements PermissionGroupCreatedEvent {}

@@ -20,17 +20,17 @@ package net.kissenpvp.core.permission.event;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.permission.event.PermissionEntrySetPermissionEvent;
 
 @Getter
 public class KissenPermissionEntrySetPermissionEvent implements PermissionEntrySetPermissionEvent
 {
-    private final Permission permission;
+    private final AbstractPermission permission;
     private final boolean override;
     @Setter private boolean cancelled;
 
-    public KissenPermissionEntrySetPermissionEvent(Permission permission, boolean override)
+    public KissenPermissionEntrySetPermissionEvent(AbstractPermission permission, boolean override)
     {
         this.permission = permission;
         this.override = override;

@@ -21,7 +21,10 @@ package net.kissenpvp.core.database.mongodb;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.BackendException;
+import net.kissenpvp.core.api.database.meta.Table;
+import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
 import net.kissenpvp.core.base.KissenCore;
@@ -36,31 +39,32 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class KissenMongoMeta extends KissenBaseMeta {
 
-    public KissenMongoMeta(String table, String totalIDColumn, String keyColumn, String valueColumn) {
-        super(table, totalIDColumn, keyColumn, valueColumn, "type");
+    public KissenMongoMeta(@NotNull Table table, @Nullable KissenPlugin kissenPlugin) {
+        super(table, kissenPlugin);
     }
 
     @Override
     public void purge(@NotNull String totalID) {
-        getCollection().deleteMany(new Document(getTotalIDColumn(), totalID));
+        getCollection().deleteMany(new Document(getTable().getColumn(Column.TOTAL_ID), totalID));
     }
 
     @Override
     protected void setJson(@NotNull String totalID, @NotNull String key, @Nullable Object object) {
         String[] data = serialize(object);
-        if (data == null) {
-            getCollection().deleteMany(new Document(getTotalIDColumn(), totalID).append(getKeyColumn(), key));
+        if (data==null) {
+            getCollection().deleteMany(new Document(getTable().getColumn(Column.TOTAL_ID), totalID).append(getTable().getColumn(Column.KEY), key));
             return;
         }
 
         Document document = new Document();
-        document.append(getTotalIDColumn(), totalID);
-        document.append(getKeyColumn(), key);
+        document.append(getTable().getColumn(Column.TOTAL_ID), totalID);
+        document.append(getTable().getColumn(Column.KEY), key);
 
-        document.append(getTypeColumn(), data[0]);
-        document.append(getValueColumn(), data[1]);
+        document.append(getTable().getPluginColumn(), getPluginName());
+        document.append(getTable().getTypeColumn(), data[0]); // type
+        document.append(getTable().getColumn(Column.VALUE), data[1]); // value
 
-        getCollection().updateOne(Filters.and(Filters.eq(getTotalIDColumn(), totalID), Filters.eq(getKeyColumn(), key)), new Document("$set", document), new UpdateOptions().upsert(true));
+        getCollection().updateOne(Filters.and(Filters.eq(getTable().getColumn(Column.TOTAL_ID), totalID), Filters.eq(getTable().getColumn(Column.KEY), key)), new Document("$set", document), new UpdateOptions().upsert(true));
         KissenCore.getInstance().getLogger().debug("Set {} to {} from id {}.", key, data[0], totalID);
     }
 

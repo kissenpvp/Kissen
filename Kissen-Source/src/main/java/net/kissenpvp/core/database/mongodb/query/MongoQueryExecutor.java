@@ -100,15 +100,15 @@ public class MongoQueryExecutor {
      * @see FilterQuery
      * @see Column
      * @see Filters#regex(String, String)
-     * @see net.kissenpvp.core.database.KissenBaseMeta#getColumn(Column)
+     * @see net.kissenpvp.core.api.database.meta.Table#getColumn(Column)
      * @see net.kissenpvp.core.database.KissenBaseMeta#serialize(Object)
      */
     private @NotNull Bson createFilter(@NotNull FilterQuery filterQuery) {
         String value = filterQuery.getValue().toString();
         if (Objects.equals(filterQuery.getColumn(), Column.VALUE)) {
-            value = getMeta().serialize(filterQuery.getValue())[1]; //[0] is not required
+            value = getMeta().serialize(filterQuery.getValue())[1];
         }
 
-        return Filters.regex(getMeta().getColumn(filterQuery.getColumn()), value);
+        return Filters.regex(getMeta().getTable().getColumn(filterQuery.getColumn()), value);
     }
 }

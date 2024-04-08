@@ -20,7 +20,7 @@ package net.kissenpvp.core.api.permission.event;
 
 import net.kissenpvp.core.api.event.Cancellable;
 import net.kissenpvp.core.api.event.EventClass;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 
 /**
  * Represents an event that is triggered when a permission option is set.
@@ -48,11 +48,11 @@ import net.kissenpvp.core.api.permission.Permission;
  *
  * @see EventClass
  * @see Cancellable
- * @see Permission#setOption(String, String)
+ * @see AbstractPermission#setOption(String, String)
  */
 public interface PermissionOptionSetEvent extends EventClass, Cancellable
 {
-    Permission getPermission();
+    AbstractPermission getPermission();
 
     boolean isOverride();
 

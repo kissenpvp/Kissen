@@ -18,8 +18,13 @@
 
 package net.kissenpvp.core.database.mongodb;
 
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
+import net.kissenpvp.core.api.database.meta.Table;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 public abstract class KissenNativeMongoMeta extends KissenMongoMeta {
-    public KissenNativeMongoMeta(String table) {
-        super(table, "uuid", "key", "value");
+    public KissenNativeMongoMeta(@NotNull Table table, @Nullable KissenPlugin kissenPlugin) {
+        super(table, kissenPlugin);
     }
 }

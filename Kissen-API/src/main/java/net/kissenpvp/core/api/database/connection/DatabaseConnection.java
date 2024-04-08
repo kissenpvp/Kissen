@@ -19,8 +19,7 @@
 package net.kissenpvp.core.api.database.connection;
 
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.Meta;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Table;
 import org.jetbrains.annotations.NotNull;
 
 public interface DatabaseConnection {
@@ -37,7 +36,9 @@ public interface DatabaseConnection {
 
     void disconnect() throws BackendException;
 
-    @NotNull ObjectMeta createObjectMeta(@NotNull String table);
-    
-    @NotNull Meta createMeta(@NotNull String table, @NotNull String uuidColumn, @NotNull String keyColumn, @NotNull String valueColumn);
+    @NotNull
+    Table createTable(@NotNull String table, @NotNull String idColumn, @NotNull String keyColumn, @NotNull String pluginColumn, @NotNull String typeColumn, @NotNull String valueColumn);
+
+    @NotNull
+    Table createTable(@NotNull String table);
 }

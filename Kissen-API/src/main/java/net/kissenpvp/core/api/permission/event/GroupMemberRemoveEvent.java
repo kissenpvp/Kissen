@@ -20,8 +20,8 @@ package net.kissenpvp.core.api.permission.event;
 
 import net.kissenpvp.core.api.event.Cancellable;
 import net.kissenpvp.core.api.event.EventClass;
-import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
-import net.kissenpvp.core.api.permission.PermissionGroup;
+import net.kissenpvp.core.api.permission.AbstractGroupablePermissionEntry;
+import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -51,11 +51,13 @@ import org.jetbrains.annotations.NotNull;
  *
  * @see EventClass
  * @see Cancellable
- * @see PermissionGroup#removeMember(GroupablePermissionEntry)
+ * @see AbstractPermissionGroup#removeMember(AbstractGroupablePermissionEntry)
  */
 public interface GroupMemberRemoveEvent extends EventClass, Cancellable
 {
-    @NotNull PermissionGroup<?> getPermissionGroup();
+    @NotNull
+    AbstractPermissionGroup<?> getPermissionGroup();
 
-    @NotNull GroupablePermissionEntry<?> getPermissionEntry();
+    @NotNull
+    AbstractGroupablePermissionEntry<?> getPermissionEntry();
 }

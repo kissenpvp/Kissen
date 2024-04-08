@@ -28,23 +28,18 @@ import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
-import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.message.ChatImplementation;
-import net.kissenpvp.core.api.message.MessageImplementation;
 import net.kissenpvp.core.api.networking.APIRequestImplementation;
 import net.kissenpvp.core.api.reflection.ReflectionImplementation;
 import net.kissenpvp.core.api.time.TimeImplementation;
 import net.kissenpvp.core.api.util.PageImplementation;
+import net.kissenpvp.core.command.CommandImplementation;
 import net.kissenpvp.core.config.KissenConfigurationImplementation;
 import net.kissenpvp.core.database.KissenDataImplementation;
-import net.kissenpvp.core.database.KissenDatabaseImplementation;
 import net.kissenpvp.core.database.savable.KissenStorageImplementation;
 import net.kissenpvp.core.database.settings.DatabaseDns;
 import net.kissenpvp.core.message.KissenChatImplementation;
-import net.kissenpvp.core.message.KissenMessageImplementation;
 import net.kissenpvp.core.networking.KissenAPIRequestImplementation;
-import net.kissenpvp.core.reflection.KissenReflectionClass;
 import net.kissenpvp.core.reflection.KissenReflectionImplementation;
 import net.kissenpvp.core.time.KissenTimeImplementation;
 import net.kissenpvp.core.util.KissenPageImplementation;
@@ -52,9 +47,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -66,7 +59,6 @@ public abstract class KissenCore implements Kissen {
     private static KissenCore instance;
     private final Logger logger;
     private Map<Class<? extends Implementation>, Implementation> implementation;
-    private ObjectMeta publicMeta;
 
     protected KissenCore(@NotNull Logger logger) {
         this.logger = logger;
@@ -100,17 +92,20 @@ public abstract class KissenCore implements Kissen {
         }
     }
 
+
+    public abstract @NotNull Optional<KissenPlugin> getPlugin(@NotNull String plugin);
+
+    public abstract @NotNull KissenPlugin[] getPlugins();
+
     protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader)
     {
         loader.put(APIRequestImplementation.class, new KissenAPIRequestImplementation());
         loader.put(ChatImplementation.class, new KissenChatImplementation());
         loader.put(DataImplementation.class, new KissenDataImplementation());
-        loader.put(DatabaseImplementation.class, new KissenDatabaseImplementation());
         loader.put(PageImplementation.class, new KissenPageImplementation());
         loader.put(TimeImplementation.class, new KissenTimeImplementation());
         loader.put(ReflectionImplementation.class, new KissenReflectionImplementation());
         loader.put(StorageImplementation.class, new KissenStorageImplementation());
-        loader.put(MessageImplementation.class, new KissenMessageImplementation());
     }
 
     /**
@@ -121,6 +116,7 @@ public abstract class KissenCore implements Kissen {
      */
     public void start() {
         getKissenImplementations().forEach(KissenImplementation::setupComplete);
+        getImplementation(CommandImplementation.class).getInternalHandler().registerCachedCommands();
     }
 
     /**
@@ -165,7 +161,6 @@ public abstract class KissenCore implements Kissen {
 
     protected void setupDatabase(@NotNull ConfigurationImplementation config, @NotNull DatabaseImplementation database) {
         String connectionString = config.getSetting(DatabaseDns.class);
-        publicMeta = database.connectDatabase("public", connectionString).createObjectMeta("kissen_public_meta");
     }
 
     public <T extends Implementation> @NotNull T getImplementation(@NotNull Class<T> implementation) {
@@ -210,30 +205,6 @@ public abstract class KissenCore implements Kissen {
         return KissenCore.getInstance().getImplementation().values().stream().filter(
                 implementation -> implementation instanceof KissenImplementation).map(
                 implementation1 -> (KissenImplementation) implementation1).collect(Collectors.toSet());
-    }
-
-    private void injectImplementations(@NotNull Set<Class<?>> reflectionClasses) {
-        Set<Class<?>> allFiles = reflectionClasses.stream().filter(Implementation.class::isAssignableFrom).collect(
-                Collectors.toUnmodifiableSet());
-
-        Set<Class<?>> implementationFiles = allFiles.stream().filter(
-                clazz -> Modifier.isInterface(clazz.getModifiers())).filter(
-                clazz -> !clazz.equals(Implementation.class) && !clazz.equals(KissenImplementation.class)).collect(
-                Collectors.toSet());
-
-        Set<Class<?>> sourceFiles = allFiles.stream().filter(
-                clazz -> !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())).filter(
-                clazz -> allFiles.stream().noneMatch(
-                        intern -> clazz != intern && clazz.isAssignableFrom(intern))).collect(Collectors.toSet());
-
-        sourceFiles.forEach(sourceClazz -> {
-            Implementation implementationInstance = (Implementation) new KissenReflectionClass(
-                    sourceClazz).newInstance();
-            implementationFiles.stream().filter(
-                    clazz -> clazz.isAssignableFrom(sourceClazz)).findFirst().ifPresentOrElse(
-                    clazz -> implementation.put((Class<? extends Implementation>) clazz, implementationInstance),
-                    () -> implementation.put((Class<? extends Implementation>) sourceClazz, implementationInstance));
-        });
     }
 
     public void load(@NotNull PluginState pluginState, @NotNull KissenPlugin kissenPlugin) {

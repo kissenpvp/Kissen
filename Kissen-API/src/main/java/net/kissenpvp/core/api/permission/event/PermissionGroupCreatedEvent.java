@@ -19,11 +19,11 @@
 package net.kissenpvp.core.api.permission.event;
 
 import net.kissenpvp.core.api.event.EventClass;
-import net.kissenpvp.core.api.permission.PermissionGroup;
+import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Represents an event that is triggered when a {@link PermissionGroup} was already created.
+ * Represents an event that is triggered when a {@link AbstractPermissionGroup} was already created.
  *
  * <p>This event extends the {@link EventClass} interface, providing access to
  * common event functionality.</p>
@@ -50,9 +50,10 @@ import org.jetbrains.annotations.NotNull;
  * }</pre>
  *
  * @see EventClass
- * @see PermissionGroup
+ * @see AbstractPermissionGroup
  */
 public interface PermissionGroupCreatedEvent extends EventClass
 {
-    @NotNull PermissionGroup<?> permissionGroup();
+    @NotNull
+    AbstractPermissionGroup<?> permissionGroup();
 }

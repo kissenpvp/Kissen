@@ -19,14 +19,17 @@
 package net.kissenpvp.core.database.jdbc;
 
 import lombok.SneakyThrows;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.database.savable.KissenSavableMap;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.HashMap;
@@ -93,20 +96,21 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
      * @see KissenNativeJDBCMeta
      * @see ObjectMeta
      */
-    public KissenObjectJDBCMeta(@NotNull String table) {
-        super(table);
+    public KissenObjectJDBCMeta(@NotNull Table table, @Nullable KissenPlugin plugin) {
+        super(table, plugin);
     }
 
     @Override
     public void insertJsonMap(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException {
-        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?);", getTable(), getTotalIDColumn(), getKeyColumn(), getTypeColumn(), getValueColumn()), preparedStatement -> {
+        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s, %s, %s) VALUES (?, ?, ?, ?, ?);", getTable(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY), getTable().getPluginColumn(), getTable().getTypeColumn(), getTable().getColumn(Column.VALUE)), preparedStatement -> {
             for (Map.Entry<String, Object> current : data.entrySet()) {
                 preparedStatement.setString(1, id);
                 preparedStatement.setString(2, current.getKey());
 
                 String[] serialized = serialize(current.getValue());
-                preparedStatement.setString(3, serialized[0]);
-                preparedStatement.setString(4, serialized[1]);
+                preparedStatement.setString(3, getPluginName());
+                preparedStatement.setString(4, serialized[0]); // type
+                preparedStatement.setString(5, serialized[1]); // value
                 preparedStatement.addBatch();
             }
             preparedStatement.executeBatch();
@@ -116,8 +120,7 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
     @Override
     public @NotNull CompletableFuture<SavableMap> getData(@NotNull String totalId) {
         QuerySelect select = select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId);
-        return select.execute().thenApply(data ->
-        {
+        return select.execute().thenApply(data -> {
             Object[][] modifiedData = new Object[data.length][data[0].length + 1];
 
             for (int i = 0; i < data.length; i++) {

@@ -14,5 +14,5 @@ public interface CommandHandler<S extends ServerEntity, C>
 
     void registerExceptionHandler(@NotNull ExceptionHandler<?> exceptionHandler);
 
-    <T> void registerParser(@NotNull Class<T> type, @NotNull ArgumentParser<T, S> parser);
+    <T> void registerParser(@NotNull Class<T> type, @NotNull AbstractArgumentParser<T, S> parser);
 }

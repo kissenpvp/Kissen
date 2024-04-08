@@ -18,15 +18,15 @@
 
 package net.kissenpvp.core.permission;
 
-import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractGroupablePermissionEntry;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.List;
 import java.util.Set;
 
-public interface PermissionCollector<T extends Permission> extends GroupablePermissionEntry<T>
+public interface PermissionCollector<T extends AbstractPermission> extends AbstractGroupablePermissionEntry<T>
 {
     @NotNull Set<T> permissionCollector();
 

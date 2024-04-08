@@ -1,8 +1,8 @@
 package net.kissenpvp.core.permission;
 
 import net.kissenpvp.core.api.networking.socket.DataPackage;
-import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
-import net.kissenpvp.core.database.DataWriter;
+import net.kissenpvp.core.api.permission.AbstractGroupablePermissionEntry;
+import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 
 import java.util.Collections;
@@ -25,7 +25,7 @@ class TestPermissionEntry extends KissenPermissionEntry<TestPermission>
     }
 
     @Override
-    public @org.jetbrains.annotations.NotNull @org.jetbrains.annotations.Unmodifiable Set<GroupablePermissionEntry<TestPermission>> getConnectedEntries()
+    public @org.jetbrains.annotations.NotNull @org.jetbrains.annotations.Unmodifiable Set<AbstractGroupablePermissionEntry<TestPermission>> getConnectedEntries()
     {
         return Collections.emptySet();
     }

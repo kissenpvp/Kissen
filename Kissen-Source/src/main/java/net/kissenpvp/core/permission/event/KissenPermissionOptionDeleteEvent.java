@@ -20,18 +20,18 @@ package net.kissenpvp.core.permission.event;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.permission.event.PermissionOptionDeleteEvent;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
 public class KissenPermissionOptionDeleteEvent implements PermissionOptionDeleteEvent
 {
-    private final Permission permission;
+    private final AbstractPermission permission;
     private final String key, option;
     @Setter private boolean cancelled;
 
-    public KissenPermissionOptionDeleteEvent(@NotNull Permission permission, @NotNull String key, @NotNull String option)
+    public KissenPermissionOptionDeleteEvent(@NotNull AbstractPermission permission, @NotNull String key, @NotNull String option)
     {
         this.permission = permission;
         this.key = key;

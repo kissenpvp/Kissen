@@ -20,7 +20,7 @@ package net.kissenpvp.core.command;
 
 import lombok.Getter;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
-import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.command.exception.deserialization.TemporaryDeserializationException;
 import net.kissenpvp.core.api.command.handler.BackendExceptionHandler;
 import net.kissenpvp.core.api.command.handler.DateTimeParseExceptionHandler;
@@ -29,6 +29,7 @@ import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.base.KissenImplementation;
 import net.kissenpvp.core.command.exceptionhandler.*;
+import net.kissenpvp.core.command.handler.AbstractCommandHandler;
 import net.kissenpvp.core.command.handler.InternalCommandHandler;
 import net.kissenpvp.core.command.handler.PluginCommandHandler;
 import net.kissenpvp.core.command.parser.*;
@@ -39,7 +40,10 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.reflect.Array;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 @Getter
 public abstract class CommandImplementation<S extends ServerEntity> implements KissenImplementation
@@ -117,6 +121,12 @@ public abstract class CommandImplementation<S extends ServerEntity> implements K
     }
 
     @Override
+    public void postEnable(@NotNull KissenPlugin kissenPlugin) {
+        KissenCore.getInstance().getLogger().debug("Initialize command handler from plugin {}.", kissenPlugin);
+        getHandler().stream().filter(handler -> handler.getPlugin().equals(kissenPlugin)).findFirst().ifPresent(AbstractCommandHandler::registerCachedCommands);
+    }
+
+    @Override
     public void stop() {
         getInternalHandler().unregister();
     }
@@ -157,15 +167,15 @@ public abstract class CommandImplementation<S extends ServerEntity> implements K
      * This method is used to deserialize a string using an ArgumentParser.
      *
      * @param input          the input string to be deserialized
-     * @param argumentParser the parser to use for deserialization
+     * @param abstractArgumentParser the parser to use for deserialization
      * @return the object deserialized from the input
      * @throws TemporaryDeserializationException if any exception occurs during deserialization
      */
-    public @NotNull Object deserialize(@NotNull String input, @NotNull ArgumentParser<?, ?> argumentParser) {
+    public @NotNull Object deserialize(@NotNull String input, @NotNull AbstractArgumentParser<?, ?> abstractArgumentParser) {
         try {
-            return argumentParser.deserialize(input);
+            return abstractArgumentParser.deserialize(input);
         } catch (Exception exception) {
-            argumentParser.processError(input, exception);
+            abstractArgumentParser.processError(input, exception);
             throw new TemporaryDeserializationException(exception);
         }
     }

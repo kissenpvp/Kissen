@@ -20,7 +20,7 @@ package net.kissenpvp.core.user.rank;
 
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.savable.Savable;
-import net.kissenpvp.core.api.user.rank.RankImplementation;
+import net.kissenpvp.core.api.user.rank.AbstractRankImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.KissenSavable;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
@@ -39,12 +39,12 @@ public class SerializableRankHandler implements SerializableSavableHandler {
 
     @Override
     public Savable getSavable() {
-        return (Savable) KissenCore.getInstance().getImplementation(RankImplementation.class).getRank(rankName).orElse(null);
+        return (Savable) KissenCore.getInstance().getImplementation(AbstractRankImplementation.class).getRank(rankName).orElse(null);
     }
 
     @Override
     public void create(@NotNull String name, @NotNull Map<String, String> data) {
-        KissenCore.getInstance().getImplementation(RankImplementation.class).createRank(name, data);
+        KissenCore.getInstance().getImplementation(AbstractRankImplementation.class).createRank(name, data);
     }
 
     @Override

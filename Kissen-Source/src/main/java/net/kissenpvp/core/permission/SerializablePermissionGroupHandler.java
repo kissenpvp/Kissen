@@ -39,7 +39,7 @@ public class SerializablePermissionGroupHandler implements SerializableSavableHa
     @Override
     public Savable getSavable() {
         return (Savable) KissenCore.getInstance()
-                .getImplementation(PermissionImplementation.class)
+                .getImplementation(InternalPermissionImplementation.class)
                 .getPermissionGroupSavable(permissionGroup).orElse(null);
     }
 
@@ -57,7 +57,7 @@ public class SerializablePermissionGroupHandler implements SerializableSavableHa
     public void create(@NotNull String name, @NotNull Map<String, String> data) {
         try {
             KissenCore.getInstance()
-                    .getImplementation(PermissionImplementation.class)
+                    .getImplementation(InternalPermissionImplementation.class)
                     .create(name, data);
         } catch (BackendException backendException) {
             KissenCore.getInstance()

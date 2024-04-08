@@ -2,7 +2,7 @@ package net.kissenpvp.core.ban.events.ban;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.kissenpvp.core.api.ban.Ban;
+import net.kissenpvp.core.api.ban.AbstractBan;
 import net.kissenpvp.core.api.ban.BanType;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,10 +18,10 @@ import org.jetbrains.annotations.NotNull;
  * @see BanEvent
  * @see BanType
  *
- * @param <B> The type of ban managed by this event, this type extends {@link Ban}
+ * @param <B> The type of ban managed by this event, this type extends {@link AbstractBan}
  */
 @Getter @Setter
-public class BanAlterTypeEvent<B extends Ban>  extends BanEvent<B> {
+public class BanAlterTypeEvent<B extends AbstractBan>  extends BanEvent<B> {
 
     private final BanType previousType;
     private BanType updatedType;
@@ -32,11 +32,11 @@ public class BanAlterTypeEvent<B extends Ban>  extends BanEvent<B> {
      * <p>
      * This constructor is used to create a new ban rename event which is triggered when an existing ban's type is changed.
      *
-     * @param ban the {@link Ban} related to this ban rename event. This parameter must not be null.
+     * @param ban the {@link AbstractBan} related to this ban rename event. This parameter must not be null.
      * @param previousType the old {@link BanType} of the ban before the change. This parameter must not be null.
      * @param updatedType the new {@link BanType} of the ban after the change. This parameter must not be null.
      *
-     * @see Ban
+     * @see AbstractBan
      * @see BanType
      * @see NotNull
      */

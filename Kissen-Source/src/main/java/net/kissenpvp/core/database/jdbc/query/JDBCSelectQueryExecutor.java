@@ -1,6 +1,7 @@
 package net.kissenpvp.core.database.jdbc.query;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
  *
  * @see JDBCQueryExecutor
  */
+@Slf4j
 @Getter
 public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
 
@@ -35,7 +37,7 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * Constructs a JDBCSelectQueryExecutor with the specified {@link QuerySelect} and {@link KissenJDBCMeta}.
      *
      * @param select the {@link QuerySelect} object representing the select query
-     * @param meta the {@link KissenJDBCMeta} object representing the JDBC metadata
+     * @param meta   the {@link KissenJDBCMeta} object representing the JDBC metadata
      * @throws NullPointerException if either {@code select} or {@code meta} is {@code null}
      */
     public JDBCSelectQueryExecutor(@NotNull QuerySelect select, @NotNull KissenJDBCMeta meta) {
@@ -72,9 +74,9 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * method, executes the statement, and iterates through the result set. For each row in the result set, it calls
      * the {@link #handleResult(Column[], ResultSet)} method to handle the result and adds it to the list.
      *
-     * @param results a {@link List} to populate with the query results
+     * @param results   a {@link List} to populate with the query results
      * @param parameter an array of {@link String} representing the parameter values for the SQL statement
-     * @param columns an array of {@link Column} representing the columns to extract from the result set
+     * @param columns   an array of {@link Column} representing the columns to extract from the result set
      * @return a {@link PreparedStatementExecutor} for further processing
      * @throws NullPointerException if {@code results}, {@code parameter}, or {@code columns} is {@code null}
      * @see PreparedStatementExecutor
@@ -96,7 +98,7 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
 
             @Override
             public boolean handle(@NotNull SQLException throwable) {
-                throwable.printStackTrace(); //TODO
+                log.error("An exception occurred when executing sql request.", throwable); //TODO
                 return true;
             }
         };
@@ -110,10 +112,10 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * It iterates through each column in the array and calls the {@link #handleResult(ResultSet, Column)} method to retrieve the corresponding value.
      * The values are then stored in an array and returned.
      *
-     * @param columns an array of {@link Column} representing the columns for which values should be extracted
+     * @param columns   an array of {@link Column} representing the columns for which values should be extracted
      * @param resultSet the {@link ResultSet} containing the query result
      * @return an array of {@link Object} containing the values for the specified columns
-     * @throws SQLException if a database access error occurs or if one of the specified columns is not found in the result set
+     * @throws SQLException         if a database access error occurs or if one of the specified columns is not found in the result set
      * @throws NullPointerException if either {@code columns} or {@code resultSet} is {@code null}
      * @see Column
      * @see ResultSet
@@ -135,21 +137,19 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * and if the column is {@link Column#VALUE}, it attempts to deserialize the value using the metadata.
      *
      * @param resultSet the {@link ResultSet} containing the query result
-     * @param column the {@link Column} representing the column for which the value should be extracted
+     * @param column    the {@link Column} representing the column for which the value should be extracted
      * @return the value of the specified column
-     * @throws SQLException if a database access error occurs or if the specified column is not found in the result set
+     * @throws SQLException         if a database access error occurs or if the specified column is not found in the result set
      * @throws NullPointerException if either {@code resultSet} or {@code column} is {@code null}
      * @see Column
      * @see ResultSet
      */
     private @NotNull Object handleResult(@NotNull ResultSet resultSet, @NotNull Column column) throws SQLException {
-        String value = resultSet.getString(getMeta().getColumn(column));
+        String value = resultSet.getString(getMeta().getTable().getColumn(column));
         if (column.equals(Column.VALUE)) {
-            try {
-                return getMeta().deserialize(Class.forName(resultSet.getString(getMeta().getTypeColumn())), value);
-            } catch (ClassNotFoundException ignored) {
-            }
-            throw new SQLException(); //TODO
+            String clazzName = resultSet.getString(getMeta().getTable().getTypeColumn());
+            String plugin = resultSet.getString(getMeta().getTable().getPluginColumn());
+            return getMeta().deserialize(plugin, clazzName, value);
         }
         return value;
     }
@@ -171,8 +171,8 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * @see #where(String[], net.kissenpvp.core.api.database.queryapi.FilterQuery...)
      */
     private @NotNull String selectFromWhere(@NotNull QuerySelect select, String[] values) {
-        StringJoiner table = new StringJoiner(" ").add(getMeta().getTable());
-        if (select.getFilterQueries().length != 0) {
+        StringJoiner table = new StringJoiner(" ").add(getMeta().getTable().getTable());
+        if (select.getFilterQueries().length!=0) {
             table.add("WHERE").add(where(values, select.getFilterQueries()));
         }
         return table.toString();
@@ -192,8 +192,8 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      */
     private @NotNull String columns(@NotNull Column @NotNull [] column) {
         return Arrays.stream(column).map(col -> {
-            String addType = ", %s"; // add type
-            return getMeta().getColumn(col) + (Objects.equals(col, Column.VALUE) ? addType.formatted(getMeta().getTypeColumn()) : "");
+            String addType = ", %s, %s"; // add type and plugin
+            return getMeta().getTable().getColumn(col) + (Objects.equals(col, Column.VALUE) ? addType.formatted(getMeta().getTable().getPluginColumn(), getMeta().getTable().getTypeColumn()):"");
         }).collect(Collectors.joining(", "));
     }
 }

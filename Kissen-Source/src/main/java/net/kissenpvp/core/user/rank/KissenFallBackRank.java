@@ -18,17 +18,11 @@
 
 package net.kissenpvp.core.user.rank;
 
-import net.kissenpvp.core.api.user.rank.Rank;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
+import net.kissenpvp.core.api.user.rank.AbstractRank;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Optional;
 
 
-public class KissenFallBackRank implements Rank
+public class KissenFallBackRank implements AbstractRank
 {
     @Override public @NotNull String getName()
     {
@@ -41,36 +35,6 @@ public class KissenFallBackRank implements Rank
     }
 
     @Override public void setPriority(int priority)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override public @NotNull Optional<Component> getPrefix()
-    {
-        return Optional.of(Component.text("Player |").color(getChatColor()));
-    }
-
-    @Override public void setPrefix(@Nullable Component prefix)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override public @NotNull TextColor getChatColor()
-    {
-        return NamedTextColor.GRAY;
-    }
-
-    @Override public void setChatColor(@NotNull TextColor chatColor)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override public @NotNull Optional<Component> getSuffix()
-    {
-        return Optional.empty();
-    }
-
-    @Override public void setSuffix(@Nullable Component suffix)
     {
         throw new UnsupportedOperationException();
     }

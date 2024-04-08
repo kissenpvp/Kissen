@@ -20,13 +20,14 @@ package net.kissenpvp.core.api.permission.event;
 
 import net.kissenpvp.core.api.event.Cancellable;
 import net.kissenpvp.core.api.event.EventClass;
+import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
 /**
- * Represents an event that is triggered when a {@link net.kissenpvp.core.api.permission.PermissionGroup} creation is attempted.
+ * Represents an event that is triggered when a {@link AbstractPermissionGroup} creation is attempted.
  * This event can be canceled, preventing the permission group from being created.
  *
  * <p>This event extends the {@link EventClass} and {@link Cancellable} interfaces,
@@ -38,7 +39,7 @@ import java.util.Map;
  * <p>Canceling this event will prevent the permission group from being created.</p>
  *
  * <p>
- *     Note that this event is NOT called when a {@link net.kissenpvp.core.api.permission.PermissionGroup} is created.
+ *     Note that this event is NOT called when a {@link AbstractPermissionGroup} is created.
  *     These cases include on the server start when they are being cached, or the creation is initialized by another server.
  *     However, {@link PermissionGroupCreatedEvent} will always be called.
  * </p>
@@ -57,7 +58,7 @@ import java.util.Map;
  *
  * @see EventClass
  * @see Cancellable
- * @see net.kissenpvp.core.api.permission.PermissionGroup
+ * @see AbstractPermissionGroup
  */
 public interface PermissionGroupCreateEvent extends EventClass, Cancellable
 {

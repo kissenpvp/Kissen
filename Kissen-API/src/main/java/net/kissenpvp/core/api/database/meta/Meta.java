@@ -20,7 +20,9 @@ package net.kissenpvp.core.api.database.meta;
 
 import com.google.gson.Gson;
 import net.kissenpvp.core.api.base.Kissen;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The {@code Meta} interface serves as an interface between a database table and the Java plugin.
@@ -48,6 +50,9 @@ import org.jetbrains.annotations.NotNull;
  * @see Kissen#getPublicMeta()
  */
 public interface Meta extends MetaReader, MetaWriter {
+
+    @Nullable
+    KissenPlugin getPlugin();
 
     /**
      * Checks if a meta was stored and exists in the database.
@@ -128,36 +133,6 @@ public interface Meta extends MetaReader, MetaWriter {
      * @throws BackendException     if a database access error occurs.
      */
     void delete(@NotNull String key) throws BackendException;
-
-    /**
-     * Retrieves the name of the table associated with the meta.
-     *
-     * <p>
-     * This method returns the name of the database table to which the meta is associated.
-     * The table name can be useful for various operations or reference purposes.
-     * </p>
-     *
-     * <p>
-     * Note: The table name returned by this method represents the actual name used in the database.
-     * It may differ from any table alias or logical name used in the application layer.
-     * </p>
-     *
-     * @return The name of the table.
-     */
-    @NotNull String getTable();
-
-    /**
-     * Retrieves the ID column associated with this object.
-     *
-     * <p>
-     * The ID column represents a unique identifier for each entry in the dataset.
-     * It is used to uniquely identify and reference individual records or data points.
-     * </p>
-     *
-     * @return The name of the ID column as a {@code String}.
-     * @throws NullPointerException If the ID column is {@code null}.
-     */
-    @NotNull String getTotalIDColumn();
 
     /**
      * Retrieves the Gson instance used for JSON serialization and deserialization.

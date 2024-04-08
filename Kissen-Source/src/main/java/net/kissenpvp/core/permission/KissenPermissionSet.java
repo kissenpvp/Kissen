@@ -1,6 +1,6 @@
 package net.kissenpvp.core.permission;
 
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class KissenPermissionSet<T extends Permission> extends HashSet<T>
+public class KissenPermissionSet<T extends AbstractPermission> extends HashSet<T>
 {
 
     public KissenPermissionSet()

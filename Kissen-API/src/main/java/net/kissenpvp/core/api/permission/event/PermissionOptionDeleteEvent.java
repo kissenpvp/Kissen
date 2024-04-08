@@ -20,7 +20,7 @@ package net.kissenpvp.core.api.permission.event;
 
 import net.kissenpvp.core.api.event.Cancellable;
 import net.kissenpvp.core.api.event.EventClass;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -49,7 +49,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @see EventClass
  * @see Cancellable
- * @see Permission#deleteOption(String)
+ * @see AbstractPermission#deleteOption(String)
  */
 public interface PermissionOptionDeleteEvent extends EventClass, Cancellable
 {
@@ -57,5 +57,6 @@ public interface PermissionOptionDeleteEvent extends EventClass, Cancellable
 
     @NotNull String getOption();
 
-    @NotNull Permission getPermission();
+    @NotNull
+    AbstractPermission getPermission();
 }

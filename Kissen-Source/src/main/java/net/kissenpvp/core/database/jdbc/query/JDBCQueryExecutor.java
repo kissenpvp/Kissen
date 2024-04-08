@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -63,7 +64,7 @@ public class JDBCQueryExecutor {
      * @throws NullPointerException if the array of values or filter queries is {@code null}
      * @see FilterQuery
      */
-    protected @NotNull String where(@NotNull String[] values, @NotNull FilterQuery @NotNull ... filterQueries) {
+    protected @NotNull String where(@NotNull List<String> values, @NotNull FilterQuery @NotNull ... filterQueries) {
         int length = filterQueries.length;
         return IntStream.range(0, length).mapToObj(whereEntry(values, filterQueries)).collect(Collectors.joining());
     }
@@ -83,7 +84,7 @@ public class JDBCQueryExecutor {
      * @see FilterQuery
      */
     @Contract(pure = true, value = "_, _ -> new")
-    private @NotNull IntFunction<String> whereEntry(@NotNull String[] values, @NotNull FilterQuery[] filterQueries) {
+    private @NotNull IntFunction<String> whereEntry(@NotNull List<String> values, @NotNull FilterQuery[] filterQueries) {
         final String pattern = "%s REGEXP ?";
         return i -> {
             FilterQuery filterQuery = filterQueries[i];
@@ -92,9 +93,9 @@ public class JDBCQueryExecutor {
             if (filterQuery.getColumn().equals(Column.VALUE)) {
                 serialized = getMeta().serialize(filterQuery.getValue())[1]; // [0] is not required;
             }
-            values[i] = serialized;
+            values.add(serialized);
 
-            String clause = pattern.formatted(getMeta().getColumn(filterQuery.getColumn()));
+            String clause = pattern.formatted(getMeta().getTable().getColumn(filterQuery.getColumn()));
             return i == 0 ? clause : " " + filterQuery.getFilterOperator() + " " + clause;
         };
     }

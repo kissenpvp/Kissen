@@ -20,7 +20,7 @@ package net.kissenpvp.core.api.permission.event;
 
 import net.kissenpvp.core.api.event.Cancellable;
 import net.kissenpvp.core.api.event.EventClass;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -51,11 +51,12 @@ import org.jetbrains.annotations.NotNull;
  *
  * @see EventClass
  * @see Cancellable
- * @see Permission#setValue(boolean)
+ * @see AbstractPermission#setValue(boolean)
  */
 public interface PermissionValueUpdateEvent extends EventClass, Cancellable
 {
-    @NotNull Permission getPermission();
+    @NotNull
+    AbstractPermission getPermission();
 
     boolean isValue();
 

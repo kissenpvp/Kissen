@@ -26,20 +26,22 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import lombok.Getter;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.connection.DatabaseDriver;
 import net.kissenpvp.core.api.database.connection.MongoDatabaseConnection;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Table;
+import net.kissenpvp.core.database.KissenTable;
 import org.bson.BsonInt64;
 import org.bson.Document;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 public class KissenMongoDatabaseConnection implements MongoDatabaseConnection {
 
-    private final String connectionID;
-    private final String connectionString;
+    private final String connectionID, connectionString;
     private final DatabaseDriver driver;
     private MongoClient mongoClient;
     private MongoDatabase database;
@@ -53,7 +55,7 @@ public class KissenMongoDatabaseConnection implements MongoDatabaseConnection {
 
     @Override
     public boolean isConnected() {
-        return mongoClient != null;
+        return mongoClient!=null;
     }
 
     @Override
@@ -63,7 +65,7 @@ public class KissenMongoDatabaseConnection implements MongoDatabaseConnection {
                 MongoClientSettings mongoClientSettings = MongoClientSettings.builder().applyConnectionString(new ConnectionString(connectionString)).build();
                 mongoClient = MongoClients.create(mongoClientSettings);
 
-                assert mongoClientSettings.getCredential() != null;
+                assert mongoClientSettings.getCredential()!=null;
                 database = mongoClient.getDatabase(mongoClientSettings.getCredential().getSource());
                 database.runCommand(new Document("ping", new BsonInt64(1)));
             } catch (MongoException | IllegalArgumentException mongoException) {
@@ -85,23 +87,22 @@ public class KissenMongoDatabaseConnection implements MongoDatabaseConnection {
     }
 
     @Override
-    public @NotNull ObjectMeta createObjectMeta(@NotNull String table) {
-        return new KissenObjectMongoMeta(table) {
+    public @NotNull Table createTable(@NotNull String table, @NotNull String idColumn, @NotNull String keyColumn, @NotNull String pluginColumn, @NotNull String typeColumn, @NotNull String valueColumn) {
+        return new KissenTable(table, idColumn, keyColumn, pluginColumn, typeColumn, valueColumn) {
             @Override
-            @NotNull
-            public MongoCollection<Document> getCollection() {
-                return database.getCollection(table);
+            protected @NotNull ObjectMeta createMeta(@NotNull Table instance, @Nullable KissenPlugin kissenPlugin) {
+                return new KissenObjectMongoMeta(instance, kissenPlugin) {
+                    @Override
+                    public @NotNull MongoCollection<Document> getCollection() {
+                        return getDatabase().getCollection(instance.getTable());
+                    }
+                };
             }
         };
     }
 
     @Override
-    public @NotNull Meta createMeta(@NotNull String table, @NotNull String uuidColumn, @NotNull String keyColumn, @NotNull String valueColumn) {
-        return new KissenMongoMeta(table, uuidColumn, keyColumn, valueColumn) {
-            @Override
-            public @NotNull MongoCollection<Document> getCollection() {
-                return database.getCollection(table);
-            }
-        };
+    public @NotNull Table createTable(@NotNull String table) {
+        return createTable(table, "uuid", "key", "plugin", "type", "value");
     }
 }

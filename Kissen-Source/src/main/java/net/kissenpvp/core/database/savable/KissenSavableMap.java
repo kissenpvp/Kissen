@@ -22,9 +22,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
-import net.kissenpvp.core.api.database.savable.SavableMap;
+import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
-import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.database.savable.list.KissenMetaList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -66,6 +66,7 @@ import java.util.*;
 public class KissenSavableMap extends HashMap<String, Object> implements SavableMap {
 
     private String id;
+    private Table table;
 
     /**
      * Constructs a new KissenSavableMap using the data from the specified KissenSavableMap.
@@ -76,7 +77,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
      * @param savableMap the source KissenSavableMap to copy data from
      */
     public KissenSavableMap(@NotNull KissenSavableMap savableMap) {
-        setData(savableMap, savableMap instanceof KissenSavable kissenSavable ? kissenSavable.getDatabaseID() : savableMap.getId());
+        setData(savableMap, savableMap.getId());
     }
 
     /**
@@ -128,7 +129,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     public <T> @Nullable Object set(@NotNull String key, @Nullable T value) {
 
         Object returnValue;
-        if (value == null) {
+        if (value==null) {
             if (Objects.nonNull(returnValue = remove(key))) {
                 getMeta().delete(key);
             }
@@ -185,8 +186,8 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     @Override
     public <T> @Nullable Object putList(@NotNull String key, @Nullable Collection<T> value) {
 
-        Object current =  super.get(key);
-        if (value == null) {
+        Object current = super.get(key);
+        if (value==null) {
             remove(key);
             return current;
         }
@@ -202,7 +203,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
             MetaList<T> casted = (MetaList<T>) list;
             casted.add(value);
         }, () -> putList(key, Collections.singletonList(value)));
-        return current == null ? null : List.copyOf(current);
+        return current==null ? null:List.copyOf(current);
     }
 
     @Override
@@ -261,14 +262,15 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
         return new KissenSavableMap(this);
     }
 
+    @Override
     public @NotNull ObjectMeta getMeta() {
-        return KissenCore.getInstance().getPublicMeta();
+        return null;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this==o) return true;
+        if (o==null || getClass()!=o.getClass()) return false;
         if (!super.equals(o)) return false;
         KissenSavableMap that = (KissenSavableMap) o;
         return Objects.equals(getId(), that.getId());
@@ -301,8 +303,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     private <T> @NotNull MetaList<T> getList(@NotNull String key) {
         MetaList<T> metaList = new KissenMetaList<>();
         Object obj = super.get(key);
-        if(obj != null)
-        {
+        if (obj!=null) {
             if (obj.getClass().isArray()) {
                 obj = Arrays.stream(((Object[]) obj)).toList();
             }

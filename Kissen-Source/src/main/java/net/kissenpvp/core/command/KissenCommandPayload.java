@@ -25,7 +25,7 @@ import net.kissenpvp.core.api.command.*;
 import net.kissenpvp.core.api.command.exception.OperationException;
 import net.kissenpvp.core.api.networking.client.entitiy.MessageReceiver;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
-import net.kissenpvp.core.api.permission.PermissionEntry;
+import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.command.confirmation.ConfirmationNode;
 import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
@@ -49,7 +49,7 @@ import java.util.function.Consumer;
  *
  * @see net.kissenpvp.core.api.command.CommandPayload
  * @see CommandTarget
- * @see PermissionEntry
+ * @see AbstractPermissionEntry
  * @see CommandHolder
  * @see Component
  */
@@ -91,7 +91,7 @@ public abstract class KissenCommandPayload<S extends ServerEntity> implements ne
         CommandImplementation<S> command = KissenCore.getInstance().getImplementation(CommandImplementation.class);
 
 
-        final ArgumentParser<?, ?> adapter = ((AbstractCommandHandler<S, ?>) getHandler()).getParser().get(type);
+        final AbstractArgumentParser<?, ?> adapter = ((AbstractCommandHandler<S, ?>) getHandler()).getParser().get(type);
         final T[] instance = (T[]) Array.newInstance(type, to - from);
 
         for (int i = from; i <= to; i++) {
@@ -104,7 +104,7 @@ public abstract class KissenCommandPayload<S extends ServerEntity> implements ne
     @Override
     public boolean validate(@NotNull ServerEntity serverEntity) {
 
-        if (getCommandHolder().getCommandInfo().map(CommandInfo::isPermissionRequired).orElse(true) && serverEntity instanceof PermissionEntry<?> permissionEntry) {
+        if (getCommandHolder().getCommandInfo().map(CommandInfo::isPermissionRequired).orElse(true) && serverEntity instanceof AbstractPermissionEntry<?> permissionEntry) {
 
             if (!permissionEntry.hasPermission(getCommandHolder().getCommandInfo().map(CommandInfo::getPermission).orElse("kissen.command" + getLabel()))) {
                 return false;

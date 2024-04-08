@@ -36,7 +36,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 
-public class KissenDatabaseImplementation implements DatabaseImplementation {
+public abstract class KissenDatabaseImplementation implements DatabaseImplementation {
 
     private final Set<DatabaseConnection> databaseConnections;
     private final Set<Class<? extends DatabaseConnection>> connectionClasses;
@@ -58,6 +58,8 @@ public class KissenDatabaseImplementation implements DatabaseImplementation {
         KissenCore.getInstance().getLogger().info("The application is currently utilizing the backend driver '{}' for the database.", databaseConnection.getDriver());
         return databaseConnection;
     }
+
+    public abstract @NotNull Class<?> loadClass(@NotNull String name);
 
     @Override
     public @NotNull DatabaseConnection[] getConnections() {

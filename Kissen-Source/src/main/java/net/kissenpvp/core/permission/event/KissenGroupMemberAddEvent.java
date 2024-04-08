@@ -20,19 +20,19 @@ package net.kissenpvp.core.permission.event;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
-import net.kissenpvp.core.api.permission.PermissionGroup;
+import net.kissenpvp.core.api.permission.AbstractGroupablePermissionEntry;
+import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
 import net.kissenpvp.core.api.permission.event.GroupMemberAddEvent;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
 public class KissenGroupMemberAddEvent implements GroupMemberAddEvent
 {
-    private final PermissionGroup<?> permissionGroup;
-    private final GroupablePermissionEntry<?> permissionEntry;
+    private final AbstractPermissionGroup<?> permissionGroup;
+    private final AbstractGroupablePermissionEntry<?> permissionEntry;
     @Setter private boolean cancelled;
 
-    public KissenGroupMemberAddEvent(@NotNull PermissionGroup<?> permissionGroup, @NotNull GroupablePermissionEntry<?> permissionEntry)
+    public KissenGroupMemberAddEvent(@NotNull AbstractPermissionGroup<?> permissionGroup, @NotNull AbstractGroupablePermissionEntry<?> permissionEntry)
     {
         this.permissionGroup = permissionGroup;
         this.permissionEntry = permissionEntry;

@@ -18,18 +18,14 @@
 
 package net.kissenpvp.core.api.networking.client.entitiy;
 
-import net.kissenpvp.core.api.ban.Ban;
-import net.kissenpvp.core.api.ban.Punishment;
+import net.kissenpvp.core.api.ban.AbstractBan;
+import net.kissenpvp.core.api.ban.AbstractPunishment;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.event.EventCancelledException;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.user.User;
-import net.kissenpvp.core.api.user.rank.PlayerRank;
-import net.kissenpvp.core.api.user.rank.Rank;
-import net.kissenpvp.core.api.user.suffix.Suffix;
-import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
-import net.kissenpvp.core.api.user.usersetttings.BoundPlayerSetting;
+import net.kissenpvp.core.api.user.rank.AbstractPlayerRank;
+import net.kissenpvp.core.api.user.rank.AbstractRank;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,7 +36,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B extends Punishment<?>> extends ServerEntity {
+public interface PlayerClient<P extends AbstractPermission, R extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> extends ServerEntity {
 
     /**
      * Returns the UUID of the player this object is pointing to.
@@ -107,10 +103,10 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
      * entity's rank without specifying a duration for the assignment. The rank is granted indefinitely unless modified
      * through subsequent operations.</p>
      *
-     * @param rank the {@link Rank} to be granted to the entity
+     * @param rank the {@link AbstractRank} to be granted to the entity
      * @return the updated rank of the entity after granting the specified rank
      */
-    @NotNull R grantRank(@NotNull Rank rank);
+    @NotNull R grantRank(@NotNull AbstractRank rank);
 
     /**
      * Grants the specified rank to an entity for a specific duration.
@@ -119,23 +115,23 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
      * for the specified duration. This method allows the rank to be granted temporarily, and the entity's rank will revert
      * to its previous state after the specified duration elapses.</p>
      *
-     * @param rank              the {@link Rank} to be granted to the entity
+     * @param rank              the {@link AbstractRank} to be granted to the entity
      * @param accurateDuration the duration for which the rank is granted (nullable for indefinite duration)
      * @return the updated rank of the entity after granting the specified rank
      */
-    @NotNull R grantRank(@NotNull Rank rank, @Nullable AccurateDuration accurateDuration);
+    @NotNull R grantRank(@NotNull AbstractRank rank, @Nullable AccurateDuration accurateDuration);
 
     /**
      * Applies a punishment based on the provided ban information and the server entity performing the ban.
      *
      * <p>This method is specifically designed for cases where a ban and ban operator are provided without a reason.</p>
      *
-     * @param ban the {@link Ban} information for the punishment
+     * @param ban the {@link AbstractBan} information for the punishment
      * @param banOperator the {@link ServerEntity} performing the ban
      * @return the punishment object representing the applied punishment
      * @throws NullPointerException if either the ban or banOperator is {@code null}
      */
-    @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator);
+    @NotNull B punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator);
 
     /**
      * Applies a punishment based on the provided ban information and the server entity performing the ban.
@@ -146,18 +142,18 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
      *     <li>When a ban, ban operator, and an optional reason are provided.</li>
      * </ol>
      *
-     * @param ban the {@link Ban} information for the punishment
+     * @param ban the {@link AbstractBan} information for the punishment
      * @param banOperator the {@link ServerEntity} performing the ban
      * @param reason (optional) the reason for the ban, can be {@code null} if not provided
      * @return the punishment object representing the applied punishment
      * @throws NullPointerException if either the ban or banOperator is {@code null}
      */
-    @NotNull B punish(@NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable Component reason);
+    @NotNull B punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator, @Nullable Component reason);
 
     @NotNull Optional<B> getPunishment(@NotNull String id) throws BackendException;
 
     /**
-     * Returns a {@link List} containing all {@link Punishment} this player had.
+     * Returns a {@link List} containing all {@link AbstractPunishment} this player had.
      * These are sorted after the time they were created.
      *
      * @return a list containing all bans this player ever had.
@@ -166,25 +162,8 @@ public interface PlayerClient<P extends Permission, R extends PlayerRank<?>, B e
 
     @NotNull Component displayName();
 
-    @NotNull Component styledRankName();
-
-    @NotNull Set<Suffix> getSuffixSet();
-
-    @NotNull Optional<Suffix> getSuffix(@NotNull String name);
-
-    @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content) throws EventCancelledException;
-
-    @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content, @Nullable AccurateDuration accurateDuration) throws EventCancelledException;
-
-    boolean revokeSuffix(@NotNull String name);
-
-    @NotNull Optional<Suffix> getSelectedSuffix();
-
-    @NotNull AccurateDuration getOnlineTime();
+    @NotNull
+    AccurateDuration getOnlineTime();
 
     @NotNull User getUser();
-
-    <X> @NotNull BoundPlayerSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass);
-
-
 }

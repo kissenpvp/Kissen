@@ -22,7 +22,6 @@ import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.annotations.CommandData;
 import net.kissenpvp.core.api.command.executor.CommandExecutor;
 import net.kissenpvp.core.api.command.executor.TabCompleterExecutor;
-import net.kissenpvp.core.api.message.ThemeProvider;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -65,7 +64,7 @@ public interface CommandHolder<S extends ServerEntity, C extends CommandHolder<S
         String[] usages = getUsage().split(";");
         for (String usage : usages)
         {
-            Component usageComponent = Component.text(usage).color(ThemeProvider.general());
+            Component usageComponent = Component.text(usage);
             builder.appendNewline().append(Component.text("» ")).append(usageComponent);
         }
         return Component.translatable("server.command.incorrect-usage", builder);

@@ -20,15 +20,15 @@ package net.kissenpvp.core.permission;
 
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.event.EventCancelledException;
-import net.kissenpvp.core.api.permission.Permission;
-import net.kissenpvp.core.api.permission.PermissionEntry;
+import net.kissenpvp.core.api.permission.AbstractPermission;
+import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
 import net.kissenpvp.core.api.permission.event.PermissionEntrySetPermissionEvent;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.database.DataWriter;
+import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.database.savable.KissenSavable;
 import net.kissenpvp.core.event.EventImplementation;
 import net.kissenpvp.core.permission.event.KissenPermissionEntrySetPermissionEvent;
-import net.kissenpvp.core.time.TemporalMeasureNode;
+import net.kissenpvp.core.api.time.TemporalData;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,7 +40,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class KissenPermissionEntry<T extends Permission> extends KissenSavable implements PermissionEntry<T> {
+public abstract class KissenPermissionEntry<T extends AbstractPermission> extends KissenSavable implements AbstractPermissionEntry<T> {
     @Override
     public @NotNull String getPermissionID() {
         return getRawID();
@@ -59,7 +59,7 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
     @Override
     public @NotNull T setPermission(@NotNull String permission, boolean value) throws EventCancelledException {
         return getPermission(permission).map(current -> setPermission(current, value)).orElseGet(() -> {
-            PermissionNode newPermission = new PermissionNode(permission, this, value, new TemporalMeasureNode());
+            PermissionNode newPermission = new PermissionNode(permission, this, value, new TemporalData());
             return setPermission(permission);
         });
     }
@@ -125,7 +125,7 @@ public abstract class KissenPermissionEntry<T extends Permission> extends Kissen
      *         or an empty Optional if no matching internal permission is found.
      * @throws NullPointerException if the provided permission is null.
      *
-     * @see #setPermission(Permission, boolean) 
+     * @see #setPermission(AbstractPermission, boolean)
      */
     public @NotNull Optional<Boolean> getInternalPermission(@NotNull String permission) {
 

@@ -20,7 +20,7 @@ package net.kissenpvp.core.permission.event;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.permission.event.PermissionEndUpdateEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,11 +29,11 @@ import java.util.Optional;
 
 public class KissenPermissionEndUpdateEvent implements PermissionEndUpdateEvent
 {
-    @Getter private final Permission permission;
+    @Getter private final AbstractPermission permission;
     @Setter private Instant end;
     @Getter @Setter private boolean cancelled;
 
-    public KissenPermissionEndUpdateEvent(@NotNull Permission permission, Instant end)
+    public KissenPermissionEndUpdateEvent(@NotNull AbstractPermission permission, Instant end)
     {
         this.permission = permission;
         this.end = end;

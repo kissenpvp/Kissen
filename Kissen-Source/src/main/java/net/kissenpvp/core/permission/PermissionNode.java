@@ -18,12 +18,12 @@
 
 package net.kissenpvp.core.permission;
 
-import net.kissenpvp.core.api.permission.Permission;
-import net.kissenpvp.core.api.permission.PermissionEntry;
-import net.kissenpvp.core.time.KissenAccurateDuration;
-import net.kissenpvp.core.api.util.Container;
+import net.kissenpvp.core.api.permission.AbstractPermission;
+import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
+import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TemporalObject;
-import net.kissenpvp.core.time.TemporalMeasureNode;
+import net.kissenpvp.core.api.util.Container;
+import net.kissenpvp.core.api.time.TemporalData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,7 +44,7 @@ import java.util.Objects;
  * </ul>
  */
 public record PermissionNode(@NotNull String name, @NotNull String owner, @NotNull Container<@NotNull Boolean> value,
-                             @NotNull Map<String, String> additionalData, @NotNull TemporalMeasureNode temporalMeasureNode)
+                             @NotNull Map<String, String> additionalData, @NotNull TemporalData temporalData)
 {
     /**
      * This constructor creates a new instance of {@code KissenPermissionNode} using an instance of {@code Permission}.
@@ -52,7 +52,7 @@ public record PermissionNode(@NotNull String name, @NotNull String owner, @NotNu
      * @param permission a {@code Permission} object that contains {@code name}, {@code owner}, {@code value}, and {@code definedOptions}.
      * @throws NullPointerException if {@code permission} is {@code null}.
      */
-    public PermissionNode(@NotNull Permission permission) {
+    public PermissionNode(@NotNull AbstractPermission permission) {
         this(permission.getName(), permission.getOwner(), permission.getValue(), permission.getDefinedOptions(), permission);
     }
 
@@ -63,11 +63,11 @@ public record PermissionNode(@NotNull String name, @NotNull String owner, @NotNu
      * @param owner the owner of the permission, represented as a {@code PermissionEntry}.
      * @param value the value of the permission, represented as a boolean.
      * @param additionalData a {@code Map} of additional data related to the permission.
-     * @param temporalMeasureNode a {@code TemporalNode} object representing the temporal aspect associated with the permission.
+     * @param temporalData a {@code TemporalNode} object representing the temporal aspect associated with the permission.
      * @throws NullPointerException if any of {@code name}, {@code owner}, {@code additionalData} or {@code temporalNode} is {@code null}.
      */
-    public PermissionNode(@NotNull String name, @NotNull PermissionEntry<?> owner, boolean value, @NotNull Map<String, String> additionalData, @NotNull TemporalMeasureNode temporalMeasureNode) {
-        this(name, owner.getPermissionID(), new Container<>(value), additionalData, temporalMeasureNode);
+    public PermissionNode(@NotNull String name, @NotNull AbstractPermissionEntry<?> owner, boolean value, @NotNull Map<String, String> additionalData, @NotNull TemporalData temporalData) {
+        this(name, owner.getPermissionID(), new Container<>(value), additionalData, temporalData);
     }
 
     /**
@@ -80,8 +80,8 @@ public record PermissionNode(@NotNull String name, @NotNull String owner, @NotNu
      * @param temporalObject a {@code TemporalObject} object representing the temporal aspect associated with the permission. It will be converted into a {@code TemporalNode} object.
      * @throws NullPointerException if any of {@code name}, {@code owner}, {@code additionalData} or {@code temporalObject} is {@code null}.
      */
-    public PermissionNode(@NotNull String name, @NotNull PermissionEntry<?> owner, boolean value, @NotNull Map<String, String> additionalData, @NotNull TemporalObject temporalObject) {
-        this(name, owner.getPermissionID(), new Container<>(value), additionalData, new TemporalMeasureNode(temporalObject));
+    public PermissionNode(@NotNull String name, @NotNull AbstractPermissionEntry<?> owner, boolean value, @NotNull Map<String, String> additionalData, @NotNull TemporalObject temporalObject) {
+        this(name, owner.getPermissionID(), new Container<>(value), additionalData, new TemporalData(temporalObject));
     }
 
     /**
@@ -92,7 +92,7 @@ public record PermissionNode(@NotNull String name, @NotNull String owner, @NotNu
      * @param value the value of the permission, represented as a boolean.
      * @param temporalObject a {@code TemporalObject} object representing the temporal aspect associated with the permission. It will be converted into a {@code TemporalNode} object.
      */
-    public PermissionNode(String name, PermissionEntry<?> owner, boolean value, @NotNull TemporalObject temporalObject) {
+    public PermissionNode(String name, AbstractPermissionEntry<?> owner, boolean value, @NotNull TemporalObject temporalObject) {
         this(name, owner, value, new HashMap<>(), temporalObject);
     }
 
@@ -102,10 +102,10 @@ public record PermissionNode(@NotNull String name, @NotNull String owner, @NotNu
      * @param name  the name of the permission.
      * @param owner the owner of the permission, represented as a {@code PermissionEntry}.
      * @param value the value of the permission, represented as a boolean.
-     * @param temporalMeasureNode a {@code TemporalNode} object representing the temporal aspect associated with the permission.
+     * @param temporalData a {@code TemporalNode} object representing the temporal aspect associated with the permission.
      */
-    public PermissionNode(String name, PermissionEntry<?> owner, boolean value, @NotNull TemporalMeasureNode temporalMeasureNode) {
-        this(name, owner.getPermissionID(), new Container<>(value), new HashMap<>(), temporalMeasureNode);
+    public PermissionNode(String name, AbstractPermissionEntry<?> owner, boolean value, @NotNull TemporalData temporalData) {
+        this(name, owner.getPermissionID(), new Container<>(value), new HashMap<>(), temporalData);
     }
 
     /**
@@ -114,10 +114,10 @@ public record PermissionNode(@NotNull String name, @NotNull String owner, @NotNu
      * @param name  the name of the permission.
      * @param owner the owner of the permission, represented as a {@code PermissionEntry}.
      * @param value the value of the permission, represented as a boolean.
-     * @param kissenAccurateDuration the duration of the period, represented as a {@code Nullable PeriodDuration}.
+     * @param accurateDuration the duration of the period, represented as a {@code Nullable PeriodDuration}.
      */
-    public PermissionNode(String name, PermissionEntry<?> owner, boolean value, @Nullable KissenAccurateDuration kissenAccurateDuration) {
-        this(name, owner.getPermissionID(), new Container<>(value), new HashMap<>(), new TemporalMeasureNode(System.currentTimeMillis(), kissenAccurateDuration));
+    public PermissionNode(String name, AbstractPermissionEntry<?> owner, boolean value, @Nullable AccurateDuration accurateDuration) {
+        this(name, owner.getPermissionID(), new Container<>(value), new HashMap<>(), new TemporalData(System.currentTimeMillis(), accurateDuration));
     }
 
     @Override public boolean equals(Object o)

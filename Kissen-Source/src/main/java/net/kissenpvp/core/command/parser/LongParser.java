@@ -18,11 +18,11 @@
 
 package net.kissenpvp.core.command.parser;
 
-import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 
-public class LongParser <S extends ServerEntity> implements ArgumentParser<Long, S> {
+public class LongParser <S extends ServerEntity> implements AbstractArgumentParser<Long, S> {
 
     @Override
     public @NotNull String serialize(@NotNull Long object) {

@@ -20,14 +20,14 @@ package net.kissenpvp.core.user;
 
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
-import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractGroupablePermissionEntry;
+import net.kissenpvp.core.api.permission.AbstractPermission;
+import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 import net.kissenpvp.core.permission.KissenGroupablePermissionEntry;
-import net.kissenpvp.core.time.KissenAccurateDuration;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +38,7 @@ import java.time.Instant;
 import java.util.*;
 
 
-public abstract class KissenUser<T extends Permission> extends KissenGroupablePermissionEntry<T> implements User {
+public abstract class KissenUser<T extends AbstractPermission> extends KissenGroupablePermissionEntry<T> implements User {
 
     public KissenUser(@Nullable UUID uuid, @Nullable String name) throws BackendException {
         this(uuid, name, null);
@@ -60,7 +60,7 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<GroupablePermissionEntry<T>> getConnectedEntries()
+    public @NotNull @Unmodifiable Set<AbstractGroupablePermissionEntry<T>> getConnectedEntries()
     {
         return Collections.singleton(this);
     }
@@ -69,7 +69,7 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
     public void permissionUpdate()
     {
         clearCache();
-        ((GroupablePermissionEntry<T>) getPlayerClient()).permissionUpdate();
+        ((AbstractGroupablePermissionEntry<T>) getPlayerClient()).permissionUpdate();
     }
 
     public void clearCache()
@@ -129,8 +129,8 @@ public abstract class KissenUser<T extends Permission> extends KissenGroupablePe
      * Most likely this is called when the user quits.
      */
     public void writeOnlineTimeData(@NotNull Instant loginTime) {
-        KissenAccurateDuration duration = get("online_time", KissenAccurateDuration.class).orElse(new KissenAccurateDuration(0));
+        AccurateDuration duration = get("online_time", AccurateDuration.class).orElse(new AccurateDuration(0));
         Duration plus = Duration.between(loginTime, Instant.now());
-        set("online_time", new KissenAccurateDuration(plus.toMillis() + duration.milliseconds()));
+        set("online_time", new AccurateDuration(plus.toMillis() + duration.milliseconds()));
     }
 }

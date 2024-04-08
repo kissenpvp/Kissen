@@ -33,12 +33,12 @@ public class KissenTimeImplementation implements TimeImplementation {
                 current = i + 1;
             }
         }
-        return new KissenAccurateDuration(time);
+        return new AccurateDuration(time);
     }
 
     @Override
     public @NotNull AccurateDuration millis(long milliseconds) {
-        return new KissenAccurateDuration(milliseconds);
+        return new AccurateDuration(milliseconds);
     }
 
     @Override public @NotNull AccurateDuration seconds(long seconds)
@@ -79,13 +79,13 @@ public class KissenTimeImplementation implements TimeImplementation {
     @Override
     public @NotNull AccurateDuration period(@NotNull Period period)
     {
-        return new KissenAccurateDuration(period);
+        return new AccurateDuration(period);
     }
 
     @Override
     public @NotNull AccurateDuration duration(@NotNull Duration duration)
     {
-        return new KissenAccurateDuration(duration);
+        return new AccurateDuration(duration);
     }
 
 }

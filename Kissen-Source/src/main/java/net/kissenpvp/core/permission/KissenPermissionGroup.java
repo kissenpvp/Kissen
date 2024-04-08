@@ -40,7 +40,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class KissenPermissionGroup<T extends Permission> extends KissenGroupablePermissionEntry<T> implements PermissionGroup<T>
+public abstract class KissenPermissionGroup<T extends AbstractPermission> extends KissenGroupablePermissionEntry<T> implements AbstractPermissionGroup<T>
 {
 
     @Override public @NotNull @Unmodifiable Set<String> getMember()
@@ -49,9 +49,9 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
         memberTransform().apply(getOwnMember()).forEach(current ->
         {
             member.add(current.getPermissionID());
-            if (current instanceof PermissionGroup<T> permissionGroup)
+            if (current instanceof AbstractPermissionGroup<T> permissionGroup)
             {
-                member.addAll(((PermissionGroup<T>) current).getMember());
+                member.addAll(((AbstractPermissionGroup<T>) current).getMember());
             }
         });
         return member;
@@ -65,7 +65,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
 
         // add users with rank called like this group to members
         Predicate<User> matches = user -> user.getPlayerClient().getRank().getSource().getName().equals(getPermissionID());
-        Function<User, String> transform = user -> ((PermissionEntry<T>) user).getPermissionID();
+        Function<User, String> transform = user -> ((AbstractPermissionEntry<T>) user).getPermissionID();
         Stream<User> userStream = userImplementation.getOnlineUser().stream();
 
         member.addAll(userStream.filter(matches).map(transform).collect(Collectors.toUnmodifiableSet()));
@@ -73,7 +73,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
         return Set.copyOf(member);
     }
 
-    @Override public boolean addMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry) throws PermissionGroupConflictException
+    @Override public boolean addMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry) throws PermissionGroupConflictException
     {
         boolean added = addInternalMember(groupablePermissionEntry);
         if (added)
@@ -84,9 +84,9 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
         return false;
     }
 
-    private boolean addInternalMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry) throws PermissionGroupConflictException
+    private boolean addInternalMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry) throws PermissionGroupConflictException
     {
-        if (groupablePermissionEntry instanceof PermissionGroup<?>)
+        if (groupablePermissionEntry instanceof AbstractPermissionGroup<?>)
         {
             if (getPermissionID().equals(groupablePermissionEntry.getPermissionID()) || getPermissionGroups().contains(
                     groupablePermissionEntry))
@@ -108,7 +108,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
         return false;
     }
 
-    @Override public boolean removeMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry)
+    @Override public boolean removeMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry)
     {
         boolean removed = removeInternalMember(groupablePermissionEntry);
         if (removed)
@@ -119,7 +119,7 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
         return false;
     }
 
-    private boolean removeInternalMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry)
+    private boolean removeInternalMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry)
     {
         if (!containsList("group_member") || !getListNotNull("group_member", String.class).contains(groupablePermissionEntry.getPermissionID()))
         {
@@ -136,8 +136,8 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
     @Override public @NotNull @Unmodifiable Set<UUID> getAffectedUsers()
     {
         Set<UUID> uuids = new HashSet<>();
-        PermissionImplementation<?> permissionImplementation = KissenCore.getInstance().getImplementation(
-                PermissionImplementation.class);
+        InternalPermissionImplementation<?> permissionImplementation = KissenCore.getInstance().getImplementation(
+                InternalPermissionImplementation.class);
         for (String member : getMember())
         {
             if (member.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
@@ -147,35 +147,35 @@ public abstract class KissenPermissionGroup<T extends Permission> extends Kissen
             }
 
             uuids.addAll(permissionImplementation.getPermissionGroupSavable(member).map(
-                    PermissionEntry::getAffectedUsers).orElse(new HashSet<>()));
+                    AbstractPermissionEntry::getAffectedUsers).orElse(new HashSet<>()));
         }
         return uuids;
     }
 
-    @Override public @NotNull @Unmodifiable Set<GroupablePermissionEntry<T>> getConnectedEntries()
+    @Override public @NotNull @Unmodifiable Set<AbstractGroupablePermissionEntry<T>> getConnectedEntries()
     {
         return memberTransform().apply(getOwnMember());
     }
 
     @Contract(pure = true, value = "-> new")
-    private @NotNull Function<Set<String>, Set<GroupablePermissionEntry<T>>> memberTransform()
+    private @NotNull Function<Set<String>, Set<AbstractGroupablePermissionEntry<T>>> memberTransform()
     {
-        PermissionImplementation<T> permissionImplementation = KissenCore.getInstance().getImplementation(
-                PermissionImplementation.class);
+        InternalPermissionImplementation<T> permissionImplementation = KissenCore.getInstance().getImplementation(
+                InternalPermissionImplementation.class);
         UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
         return (memberList) ->
         {
-            Set<GroupablePermissionEntry<T>> entries = new HashSet<>();
+            Set<AbstractGroupablePermissionEntry<T>> entries = new HashSet<>();
             for (String member : memberList)
             {
                 if (member.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
                 {
-                    Consumer<User> add = user -> entries.add((GroupablePermissionEntry<T>) user);
+                    Consumer<User> add = user -> entries.add((AbstractGroupablePermissionEntry<T>) user);
                     userImplementation.getOnlineUser(UUID.fromString(member)).ifPresent(add);
                     continue;
                 }
 
-                Consumer<PermissionGroup<?>> add = group -> entries.add((PermissionGroup<T>) group);
+                Consumer<AbstractPermissionGroup<?>> add = group -> entries.add((AbstractPermissionGroup<T>) group);
                 permissionImplementation.getInternalGroups().stream().filter(group -> group.getPermissionID().equals(
                         member)).findFirst().ifPresent(add);
             }

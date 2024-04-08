@@ -18,7 +18,10 @@
 
 package net.kissenpvp.core.database.jdbc;
 
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
+import net.kissenpvp.core.api.database.meta.Table;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The {@code KissenNativeMeta} class is a concrete implementation of {@link KissenJDBCMeta} that provides native
@@ -58,7 +61,7 @@ public abstract class KissenNativeJDBCMeta extends KissenJDBCMeta {
      * @param table the name of the table associated with the Kissen objects.
      * @throws NullPointerException if the provided table name is {@code null}.
      */
-    public KissenNativeJDBCMeta(@NotNull String table) {
-        super(table, "uuid", "identifier", "value");
+    public KissenNativeJDBCMeta(@NotNull Table table, @Nullable KissenPlugin plugin) {
+        super(table, plugin);
     }
 }

@@ -19,17 +19,17 @@
 package net.kissenpvp.core.permission;
 
 import net.kissenpvp.core.api.event.EventCancelledException;
-import net.kissenpvp.core.api.permission.Permission;
-import net.kissenpvp.core.api.permission.PermissionEntry;
+import net.kissenpvp.core.api.permission.AbstractPermission;
+import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
 import net.kissenpvp.core.api.permission.event.PermissionEndUpdateEvent;
+import net.kissenpvp.core.api.time.KissenTemporalObject;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.database.DataWriter;
+import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.event.EventImplementation;
 import net.kissenpvp.core.permission.event.KissenPermissionEndUpdateEvent;
 import net.kissenpvp.core.permission.event.KissenPermissionOptionDeleteEvent;
 import net.kissenpvp.core.permission.event.KissenPermissionOptionSetEvent;
 import net.kissenpvp.core.permission.event.KissenPermissionValueUpdateEvent;
-import net.kissenpvp.core.time.KissenTemporalObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -40,14 +40,14 @@ import java.util.Map;
 import java.util.Objects;
 
 
-public class KissenPermission extends KissenTemporalObject implements Permission {
+public class KissenPermission extends KissenTemporalObject implements AbstractPermission {
 
     protected final PermissionNode permissionNode;
-    protected final PermissionEntry<? extends Permission> permissionEntry;
+    protected final AbstractPermissionEntry<? extends AbstractPermission> permissionEntry;
     protected final DataWriter<PermissionNode> dataWriter;
 
-    public KissenPermission(@NotNull PermissionNode permissionNode, @NotNull PermissionEntry<? extends Permission> permissionEntry, @Nullable DataWriter<PermissionNode> dataWriter) {
-        super(permissionNode.temporalMeasureNode());
+    public KissenPermission(@NotNull PermissionNode permissionNode, @NotNull AbstractPermissionEntry<? extends AbstractPermission> permissionEntry, @Nullable DataWriter<PermissionNode> dataWriter) {
+        super(permissionNode.temporalData());
         this.permissionNode = permissionNode;
         this.permissionEntry = permissionEntry;
         this.dataWriter = dataWriter;
@@ -59,7 +59,7 @@ public class KissenPermission extends KissenTemporalObject implements Permission
     }
 
     @Override
-    public @NotNull PermissionEntry<? extends Permission> getOwner() {
+    public @NotNull AbstractPermissionEntry<? extends AbstractPermission> getOwner() {
         return permissionEntry;
     }
 

@@ -20,17 +20,17 @@ package net.kissenpvp.core.permission.event;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
 public class KissenPermissionValueUpdateEvent implements net.kissenpvp.core.api.permission.event.PermissionValueUpdateEvent
 {
-    private final Permission permission;
+    private final AbstractPermission permission;
     @Setter private boolean value;
     @Setter private boolean cancelled;
 
-    public KissenPermissionValueUpdateEvent(@NotNull Permission permission, boolean value)
+    public KissenPermissionValueUpdateEvent(@NotNull AbstractPermission permission, boolean value)
     {
         this.permission = permission;
         this.value = value;
