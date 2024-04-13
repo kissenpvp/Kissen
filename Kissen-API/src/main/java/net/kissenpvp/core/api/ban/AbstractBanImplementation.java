@@ -90,7 +90,7 @@ public interface AbstractBanImplementation<B extends AbstractBan, P extends Abst
      * @throws NullPointerException if the data map is null.
      * @see AbstractBan
      */
-    @NotNull B createBan(int id, @NotNull Map<String, Object> data);
+    @NotNull B createBan(int id);
 
     /**
      * Creates a new ban with the given ID, name, and type.

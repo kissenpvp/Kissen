@@ -107,14 +107,14 @@ public abstract class KissenGroupablePermissionEntry<T extends AbstractPermissio
         return permissionGroup.getMember().contains(getPermissionID());
     }
 
-    @Override
+/*    @Override //TODO
     public <X> @Nullable Object putList(@NotNull String key, @Nullable Collection<X> value) {
         Object result = super.putList(key, value);
         if (key.equals("permission_group_list")) {
             permissionUpdate();
         }
         return result;
-    }
+    }*/
 
     private @NotNull InternalPermissionImplementation<T> getImplementation()
     {

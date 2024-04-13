@@ -48,12 +48,12 @@ public abstract class KissenRank extends KissenSavable implements Savable, Abstr
 
     @Override
     public int getPriority() {
-        return getNotNull("priority", Integer.class);
+        return getRepository().getNotNull("priority", Integer.class);
     }
 
     @Override
     public void setPriority(int priority) {
-        set("priority", priority);
+        getRepository().set("priority", priority);
     }
 
     @Override

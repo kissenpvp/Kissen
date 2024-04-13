@@ -21,8 +21,8 @@ package net.kissenpvp.core.api.database.savable;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Table;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
@@ -187,10 +187,12 @@ public interface Savable {
      *
      * @param id   the ID to set for the object
      * @param meta the optional metadata as a {@link Map} of key-value pairs
+     * @return
      * @throws SavableInitializeException if an error occurs during initialization
      * @throws BackendException           if there is an issue with the underlying storage or backend
      */
-    void setup(@NotNull String id, @Nullable Map<String, Object> meta) throws SavableInitializeException, BackendException;
+    @Contract(value = "_ -> this")
+    @NotNull Savable setup(@NotNull String id) throws SavableInitializeException, BackendException;
 
     /**
      * Retrieves the storage map associated with the savable object. This map serves as a cache for storing

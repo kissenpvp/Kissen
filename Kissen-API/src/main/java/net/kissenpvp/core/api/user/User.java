@@ -20,7 +20,20 @@ package net.kissenpvp.core.api.user;
 
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Locale;
+import java.util.UUID;
 
 public interface User extends Savable {
-    PlayerClient<?, ?, ?> getPlayerClient();
+
+    @NotNull String getName();
+
+    @NotNull
+    UUID getTotalId();
+
+    @NotNull
+    Locale getLocale();
+
+    @NotNull PlayerClient<?, ?, ?> getPlayerClient();
 }

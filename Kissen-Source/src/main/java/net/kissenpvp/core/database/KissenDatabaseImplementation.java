@@ -123,4 +123,5 @@ public abstract class KissenDatabaseImplementation implements DatabaseImplementa
             Arrays.stream(files).filter(file -> !file.delete()).forEach(file -> KissenCore.getInstance().getLogger().error("The system was unable to delete the file {}.", file));
         }
     }
+
 }

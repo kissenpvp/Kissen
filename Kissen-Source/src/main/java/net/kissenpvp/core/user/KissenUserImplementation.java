@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.Table;
+import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.event.EventCancelledException;
@@ -71,7 +71,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
     @Getter(AccessLevel.PROTECTED) private final Set<UserInfoNode> cachedProfiles;
     private final Set<KissenRegisteredPlayerSetting<?, ?>> pluginSettings;
     private final ScheduledExecutorService tickExecutor;
-    @Getter private Table userTable;
+    @Getter private KissenTable userTable;
 
     /**
      * Initializes the KissenUserImplementation instance.
@@ -92,7 +92,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
     @Override
     public boolean preStart() {
         DatabaseImplementation database = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
-        userTable = database.getPrimaryConnection().createTable("kissen_user_data");
+        userTable = (KissenTable) database.getPrimaryConnection().createTable("kissen_user_data");
         return UserImplementation.super.preStart();
     }
 
@@ -139,7 +139,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
     @Override
     public @NotNull User getUser(@NotNull String name) throws BackendException {
-        return getOnlineUser().stream().filter(user -> user.getNotNull("name", String.class).equals(name)).findFirst().orElseGet(() -> {
+        return getOnlineUser().stream().filter(user -> Objects.equals(user.getPlayerClient().getName(), name)).findFirst().orElseGet(() -> {
             //TODO make this work someday
             throw new BackendException();
         });
@@ -229,7 +229,8 @@ public abstract class KissenUserImplementation implements UserImplementation {
      */
     private @NotNull @Unmodifiable Set<UserInfoNode> fetchUserProfiles() {
         Set<UserInfoNode> userInfos = new HashSet<>();
-        QuerySelect querySelect = ((KissenTable) getUserTable()).getInternal().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, "^" + getUserSaveID()).and(Column.KEY, "name");
+        ObjectMeta internal = getUserTable().getInternal();
+        QuerySelect querySelect = internal.select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, "^" + getUserSaveID()).and(Column.KEY, "name");
         Object[][] data = querySelect.execute().join();
         for (Object[] user : data) {
             UUID uuid = UUID.fromString(user[0].toString().substring(getUserSaveID().length()));

@@ -20,12 +20,21 @@ package net.kissenpvp.core.user.playersetting;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
+import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.playersettting.AbstractBoundPlayerSetting;
 import net.kissenpvp.core.api.user.playersettting.RegisteredPlayerSetting;
+import org.jetbrains.annotations.NotNull;
 
 @Getter @RequiredArgsConstructor
 public abstract class KissenUserSetting<T, S extends PlayerClient<?, ?, ?>> implements AbstractBoundPlayerSetting<T>
 {
     private final RegisteredPlayerSetting<T, S> setting;
+
+    protected @NotNull SavableMap getRepository(@NotNull User user)
+    {
+        return user.getRepository(getSetting().getPlugin());
+    }
+
 }

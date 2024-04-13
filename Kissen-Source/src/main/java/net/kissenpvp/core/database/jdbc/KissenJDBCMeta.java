@@ -70,7 +70,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
      * It invokes the constructor of the superclass using the specified parameters,
      * then generates the database table if it does not already exist.</p>
      *
-     * @param table         the name of the database table
+     * @param table the name of the database table
      * @see BackendException
      */
     public KissenJDBCMeta(@NotNull Table table, @Nullable KissenPlugin kissenPlugin) {
@@ -111,8 +111,8 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
         return CompletableFuture.supplyAsync(() -> {
             List<Object[]> array = new ArrayList<>();
 
-            String[] values = new String[select.getFilterQueries().length];
-            getPreparedStatement(executor.constructSQL(values), executor.executeStatement(array, values, select.getColumns()));
+            List<String> values = new ArrayList<>();
+            getPreparedStatement(executor.constructSQL(values), executor.executeStatement(array, values.toArray(String[]::new), select.getColumns()));
 
             return array.toArray(new Object[0][]);
         }).handle(logExceptions());

@@ -75,12 +75,12 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
 
     @Override
     public boolean unsetPermission(@NotNull String permission) {
-        return getList("permission_list", PermissionNode.class).map(list -> list.removeIf(node -> node.name().equals(permission))).orElse(false);
+        return getRepository().getList("permission_list", PermissionNode.class).map(list -> list.removeIf(node -> node.name().equals(permission))).orElse(false);
     }
 
     @Override
     public int wipePermissions() {
-        return getList("permission_list", PermissionNode.class).map(list -> {
+        return getRepository().getList("permission_list", PermissionNode.class).map(list -> {
             int count = list.size();
             list.clear();
             return count;
@@ -89,7 +89,7 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
 
     @Override
     public @NotNull @Unmodifiable Set<T> getPermissionList() {
-        Stream<PermissionNode> permissionNodes = getListNotNull("permission_list", PermissionNode.class).stream();
+        Stream<PermissionNode> permissionNodes = getRepository().getListNotNull("permission_list", PermissionNode.class).stream();
         return permissionNodes.map(this::translatePermission).collect(Collectors.toUnmodifiableSet());
     }
 
@@ -102,15 +102,6 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
     @Override
     public boolean hasPermission(@NotNull String permission) {
         return getInternalPermission(permission).orElse(false);
-    }
-
-    @Override
-    public <X> @Nullable Object putList(@NotNull String key, @Nullable Collection<X> value) {
-        Object result = super.putList(key, value);
-        if (key.equals("permission_list")) {
-            permissionUpdate();
-        }
-        return result;
     }
 
     /**
@@ -257,7 +248,7 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
      * @return A non-null value representing the result of internally setting the permission.
      */
     private @NotNull T internSetPermission(@NotNull PermissionNode permissionNode) {
-        getListNotNull("permission_list", PermissionNode.class).replaceOrInsert(permissionNode);
+        getRepository().getListNotNull("permission_list", PermissionNode.class).replaceOrInsert(permissionNode);
         return translatePermission(permissionNode, permissionWriter());
     }
 

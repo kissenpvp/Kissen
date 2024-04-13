@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.user.rank;
 
+import lombok.Getter;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.meta.Table;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 public abstract class KissenRankImplementation<T extends AbstractRank> implements AbstractRankImplementation<T> {
 
     protected final Set<T> cached;
-    private Table rankTable;
+    @Getter private Table rankTable;
 
     /**
      * Constructs a KissenRankImplementation object, initializing the internal set for caching ranks.
@@ -92,7 +93,8 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
 
     @Override
     public @NotNull T getDefaultRank() {
-        return getRankSet().stream().filter(currentRank -> ((KissenRank) currentRank).containsKey("default")).findFirst().orElseGet(this::getFallbackRank);
+        //return getRankSet().stream().filter(currentRank -> ((KissenRank) currentRank).getR.containsKey("default")).findFirst().orElseGet(this::getFallbackRank);
+        return null; //TODO
     }
 
     /**
@@ -130,9 +132,7 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
      * @return An initialized rank object of type T.
      */
     protected @NotNull T setup(@NotNull String name, @NotNull Map<String, Object> data) {
-        Savable savable = getSavableType();
-        savable.setup(name, data);
-        return (T) savable;
+        return (T) getSavableType().setup(name);
     }
 
 

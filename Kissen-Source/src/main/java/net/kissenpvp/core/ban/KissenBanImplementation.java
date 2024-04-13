@@ -23,7 +23,6 @@ import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
-import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
@@ -59,7 +58,7 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
     private static final String STORAGE_KEY = "ban_storage";
     private static final MessageFormat TOTAL_ID_KEY = new MessageFormat("ban_{0}");
     private final Set<B> cachedBans;
-    private Table banTable;
+    private KissenTable banTable;
 
     /**
      * Initializes a new instance of the KissenBanImplementation class.
@@ -72,7 +71,7 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
     @Override
     public boolean preStart() {
         DatabaseImplementation database = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
-        banTable = database.getPrimaryConnection().createTable("kissen_ban_table");
+        banTable = (KissenTable) database.getPrimaryConnection().createTable("kissen_ban_table");
         return AbstractBanImplementation.super.preStart();
     }
 
@@ -114,8 +113,8 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
     }
 
     @Override
-    public @NotNull B createBan(int id, @NotNull Map<String, Object> data) {
-        B ban = buildBan(id, data);
+    public @NotNull B createBan(int id) {
+        B ban = buildBan(id);
         cachedBans.removeIf(currentBan -> currentBan.getID() == ban.getID());
         cachedBans.add(ban);
         return ban;
@@ -128,13 +127,13 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
 
     @Override
     public @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration)  {
-        Map<String, Object> data = new HashMap<>();
+/*        Map<String, Object> data = new HashMap<>();
         data.put("name", name);
         data.put("ban_type", banType);
         if (accurateDuration != null) {
             data.put("duration", accurateDuration);
-        }
-        return createBan(id, data);
+        }*/
+        return createBan(id);
     }
 
     @Override
@@ -390,7 +389,7 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      *
      * @return The meta information as an instance of the Meta class.
      */
-    protected @NotNull @Unmodifiable Table getMeta()
+    protected @NotNull KissenTable getTable()
     {
         return banTable;
     }
@@ -399,10 +398,9 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      * Constructs a ban object with the specified id and data.
      *
      * @param id   the id of the ban object
-     * @param data the data to be associated with the ban object
      * @return the constructed ban object
      */
-    protected abstract @NotNull B buildBan(int id, @NotNull Map<String, Object> data) ;
+    protected abstract @NotNull B buildBan(int id) ;
 
     /**
      * Translates a punishment from the given parameters.
@@ -432,9 +430,6 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
     }
 
     protected @NotNull ObjectMeta getInternalMeta() {
-        if (banTable instanceof KissenTable kissenTable) {
-            return kissenTable.getInternal();
-        }
-        throw new IllegalStateException("Private ban table is not instance of kissen table and therefore has no internal meta");
+        return getTable().getInternal();
     }
 }

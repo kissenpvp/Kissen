@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.permission;
 
+import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.permission.*;
 import net.kissenpvp.core.api.permission.event.GroupMemberAddEvent;
 import net.kissenpvp.core.api.user.User;
@@ -61,7 +62,7 @@ public abstract class KissenPermissionGroup<T extends AbstractPermission> extend
     public @NotNull @Unmodifiable Set<String> getOwnMember()
     {
         UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
-        Set<String> member = new HashSet<>(getListNotNull("group_member", String.class));
+        Set<String> member = new HashSet<>(getRepository().getListNotNull("group_member", String.class));
 
         // add users with rank called like this group to members
         Predicate<User> matches = user -> user.getPlayerClient().getRank().getSource().getName().equals(getPermissionID());
@@ -95,7 +96,7 @@ public abstract class KissenPermissionGroup<T extends AbstractPermission> extend
             }
         }
 
-        if (getListNotNull("group_member", String.class).contains(groupablePermissionEntry.getPermissionID()))
+        if (getRepository().getListNotNull("group_member", String.class).contains(groupablePermissionEntry.getPermissionID()))
         {
             return false;
         }
@@ -103,7 +104,7 @@ public abstract class KissenPermissionGroup<T extends AbstractPermission> extend
         GroupMemberAddEvent groupMemberAddEvent = new KissenGroupMemberAddEvent(this, groupablePermissionEntry);
         if(KissenCore.getInstance().getImplementation(EventImplementation.class).call(groupMemberAddEvent))
         {
-            return getListNotNull("group_member", String.class).add(groupMemberAddEvent.getPermissionEntry().getPermissionID());
+            return getRepository().getListNotNull("group_member", String.class).add(groupMemberAddEvent.getPermissionEntry().getPermissionID());
         }
         return false;
     }
@@ -121,14 +122,15 @@ public abstract class KissenPermissionGroup<T extends AbstractPermission> extend
 
     private boolean removeInternalMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry)
     {
-        if (!containsList("group_member") || !getListNotNull("group_member", String.class).contains(groupablePermissionEntry.getPermissionID()))
+        SavableMap repo = getRepository();
+        if (!repo.containsList("group_member") || !repo.getListNotNull("group_member", String.class).contains(groupablePermissionEntry.getPermissionID()))
         {
             return false;
         }
         KissenGroupMemberRemoveEvent kissenGroupMemberRemoveEvent = new KissenGroupMemberRemoveEvent(this, groupablePermissionEntry);
         if(KissenCore.getInstance().getImplementation(EventImplementation.class).call(kissenGroupMemberRemoveEvent))
         {
-            return getListNotNull("group_member", String.class).remove(groupablePermissionEntry.getPermissionID());
+            return repo.getListNotNull("group_member", String.class).remove(groupablePermissionEntry.getPermissionID());
         }
         return false;
     }

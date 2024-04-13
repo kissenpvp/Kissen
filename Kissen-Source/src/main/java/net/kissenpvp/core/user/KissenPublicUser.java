@@ -19,18 +19,21 @@
 package net.kissenpvp.core.user;
 
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.list.MetaList;
+import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
 import net.kissenpvp.core.api.database.savable.SavableMap;
-import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.database.KissenTable;
+import net.kissenpvp.core.user.rank.PlayerRankNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 
 public abstract class KissenPublicUser<T extends AbstractPermission> extends KissenUser<T> implements User {
@@ -42,28 +45,25 @@ public abstract class KissenPublicUser<T extends AbstractPermission> extends Kis
      * @param uuid of the player this class should represent, null if it's just an abstraction.
      */
     public KissenPublicUser(@Nullable UUID uuid, @Nullable String name) throws BackendException {
-        this(uuid, name, null);
-    }
+        super(uuid, name);
 
-    public KissenPublicUser(@NotNull SavableMap savableMap) throws BackendException {
-        this(UUID.fromString(savableMap.getNotNull("id", String.class)), savableMap.getNotNull("name", String.class), Map.copyOf(savableMap));
-    }
-
-    /**
-     * Creates a public user which is based on the parameter given just an abstract user or a specific player.
-     *
-     * @param name of the player this class should represent, null if it's just an abstraction.
-     * @param uuid of the player this class should represent, null if it's just an abstraction.
-     */
-    public KissenPublicUser(@Nullable UUID uuid, @Nullable String name, @Nullable Map<String, Object> data) throws BackendException {
-        super(uuid, name, data);
-
-        if (name != null && uuid != null) {
-            String currentName = getNotNull("name", String.class);
+        if (name!=null && uuid!=null) {
+            String currentName = getRepository().getNotNull("name", String.class);
             if (!Objects.equals(currentName, name)) {
                 updateName(name, currentName);
             }
         }
+    }
+
+    public @NotNull MetaList<PlayerRankNode> getRankNodes()
+    {
+        return getRepository().getListNotNull("rank_list", PlayerRankNode.class);
+    }
+
+    public void updateLocale(@NotNull String locale)
+    {
+        // TODO intervene when default
+        getRepository().set("locale", locale);
     }
 
     /**
@@ -72,15 +72,15 @@ public abstract class KissenPublicUser<T extends AbstractPermission> extends Kis
      * <p>The {@code updateName} method is used to update the name of the user to the specified name.
      * It also logs the name change, and removes the cached profiles with the previous name.</p>
      *
-     * @param name the new name for the user
+     * @param name        the new name for the user
      * @param currentName the current name of the user
      * @throws NullPointerException if the specified new name is `null`
      */
     private void updateName(@NotNull String name, String currentName) {
         String message = "The user '{}' has changed their name from '{}' to '{}'.";
-        KissenCore.getInstance().getLogger().debug(message, getRawID(), getNotNull("name", String.class), name);
+        KissenCore.getInstance().getLogger().debug(message, getRawID(), getRepository().getNotNull("name", String.class), name);
         getImplementation().getCachedProfiles().removeIf(cached -> Objects.equals(currentName, cached.name()));
-        set("name", name);
+        getRepository().set("name", name);
     }
 
     @Override
@@ -97,30 +97,16 @@ public abstract class KissenPublicUser<T extends AbstractPermission> extends Kis
     }
 
     @Override
-    public void setup(@NotNull String id, @Nullable Map<String, Object> meta) throws SavableInitializeException, BackendException {
-        super.setup(id, meta);
-        getImplementation().cacheProfile(new UserInfoNode(UUID.fromString(id), getNotNull("name", String.class)));
-    }
-
-    @Override
-    public final @NotNull ObjectMeta getMeta() {
-        return ((KissenTable) getImplementation().getUserTable()).getInternal();
+    public @NotNull Savable setup(@NotNull String id) throws SavableInitializeException, BackendException {
+        Savable value = super.setup(id);
+        String name = getRepository().getNotNull("name", String.class);
+        getImplementation().cacheProfile(new UserInfoNode(UUID.fromString(id), name));
+        return value;
     }
 
     @Override
     public final @NotNull String getSaveID() {
         return getImplementation().getUserSaveID();
-    }
-
-    @Override
-    public <X> @Nullable Object set(@NotNull String key, @Nullable X value) {
-        LocalizationImplementation locale = KissenCore.getInstance().getImplementation(LocalizationImplementation.class);
-        String defaultLanguage = locale.getDefaultLocale().toString().toLowerCase();
-        if (key.equals("locale") && Objects.equals(value, defaultLanguage)) {
-            delete(key); // delete if default language is updated
-            return value; //TODO actual return value
-        }
-        return super.set(key, value);
     }
 
     /**

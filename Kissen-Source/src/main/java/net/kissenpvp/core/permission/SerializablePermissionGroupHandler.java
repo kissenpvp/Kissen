@@ -45,12 +45,12 @@ public class SerializablePermissionGroupHandler implements SerializableSavableHa
 
     @Override
     public void set(@NotNull String key, @Nullable String value) {
-        getSavable().put(key, value);
+        //getSavable().put(key, value);
     }
 
     @Override
     public void setList(@NotNull String key, @Nullable List<String> value) {
-        getSavable().putList(key, value);
+        //getSavable().putList(key, value);
     }
 
     @Override

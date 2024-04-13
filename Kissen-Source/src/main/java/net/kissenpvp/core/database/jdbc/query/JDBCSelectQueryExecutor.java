@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.queryapi.Column;
+import net.kissenpvp.core.api.database.queryapi.FilterQuery;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.database.jdbc.KissenJDBCMeta;
 import org.jetbrains.annotations.NotNull;
@@ -51,16 +52,16 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * <p>
      * This method constructs a SQL SELECT statement based on the provided values for WHERE conditions.
      * It retrieves the column names using the {@link #columns(Column[])} method, and constructs the SELECT statement
-     * using the {@link #selectFromWhere(QuerySelect, String[])} method. The column names and the SELECT statement are
+     * using the {@link #selectFromWhere(QuerySelect, List)}  method. The column names and the SELECT statement are
      * then formatted into a single SQL string using the {@code SELECT_FORMAT} constant.
      *
      * @param values an array of {@link String} representing the values for the WHERE conditions
      * @return a SQL SELECT statement
      * @throws NullPointerException if {@code values} is {@code null}
      * @see #columns(Column[])
-     * @see #selectFromWhere(QuerySelect, String[])
+     * @see #selectFromWhere(QuerySelect, List)
      */
-    public @NotNull String constructSQL(@NotNull String[] values) {
+    public @NotNull String constructSQL(@NotNull List<String> values) {
         Object[] args = {columns(getQuery().getColumns()), selectFromWhere(getQuery(), values)};
         return SELECT_FORMAT.formatted(args);
     }
@@ -160,7 +161,7 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * <p>
      * This method constructs a SQL SELECT statement with a WHERE clause based on the provided {@link QuerySelect} object
      * and values for WHERE conditions. It retrieves the table name from the metadata and generates the WHERE clause using
-     * the {@link #where(String[], net.kissenpvp.core.api.database.queryapi.FilterQuery...)} method. The SELECT statement is constructed by joining the table name and
+     * the {@link #where(List, FilterQuery...)} method. The SELECT statement is constructed by joining the table name and
      * the WHERE clause.
      *
      * @param select the {@link QuerySelect} object representing the SELECT query
@@ -168,9 +169,9 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * @return a SQL SELECT statement with a WHERE clause
      * @throws NullPointerException if {@code select} is {@code null}
      * @see QuerySelect
-     * @see #where(String[], net.kissenpvp.core.api.database.queryapi.FilterQuery...)
+     * @see #where(List, FilterQuery...)
      */
-    private @NotNull String selectFromWhere(@NotNull QuerySelect select, String[] values) {
+    private @NotNull String selectFromWhere(@NotNull QuerySelect select, @NotNull List<String> values) {
         StringJoiner table = new StringJoiner(" ").add(getMeta().getTable().getTable());
         if (select.getFilterQueries().length!=0) {
             table.add("WHERE").add(where(values, select.getFilterQueries()));

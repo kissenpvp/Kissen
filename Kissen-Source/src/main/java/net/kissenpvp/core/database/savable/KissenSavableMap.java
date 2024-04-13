@@ -22,7 +22,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
-import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.database.savable.list.KissenMetaList;
@@ -66,19 +65,8 @@ import java.util.*;
 public class KissenSavableMap extends HashMap<String, Object> implements SavableMap {
 
     private String id;
-    private Table table;
+    private ObjectMeta meta;
 
-    /**
-     * Constructs a new KissenSavableMap using the data from the specified KissenSavableMap.
-     *
-     * <p>The constructor creates a new instance of KissenSavableMap and initializes it with the data and ID from the provided KissenSavableMap.
-     * If the source map is a {@link KissenSavable}, the database ID is used; otherwise, the regular ID is used.</p>
-     *
-     * @param savableMap the source KissenSavableMap to copy data from
-     */
-    public KissenSavableMap(@NotNull KissenSavableMap savableMap) {
-        setData(savableMap, savableMap.getId());
-    }
 
     /**
      * Constructs a new KissenSavableMap with the specified ID and ObjectMeta.
@@ -89,35 +77,19 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
      * @param meta the ObjectMeta to associate with the new KissenSavableMap
      */
     public KissenSavableMap(@NotNull String id, @NotNull ObjectMeta meta) {
-        this(new HashMap<>(), id, meta);
+        this(id, meta, null);
     }
 
-    /**
-     * Constructs a new KissenSavableMap with the specified data, ID, and ObjectMeta.
-     *
-     * <p>The constructor creates a new instance of KissenSavableMap and initializes it with the provided data map, ID, and ObjectMeta.</p>
-     *
-     * @param data the data map to initialize the new KissenSavableMap with
-     * @param id   the ID to associate with the new KissenSavableMap
-     * @param meta the ObjectMeta to associate with the new KissenSavableMap
-     */
-    public KissenSavableMap(@NotNull Map<String, Object> data, @NotNull String id, @NotNull ObjectMeta meta) {
-        setData(data, id);
-    }
-
-    /**
-     * Sets the data of this KissenSavableMap with the specified data map and ID.
-     *
-     * <p>The {@code setData} method clears the existing data, puts all entries from the provided map, and sets the ID.</p>
-     *
-     * @param data the data map to set for this KissenSavableMap
-     * @param id   the ID to set for this KissenSavableMap
-     */
-    protected void setData(@NotNull Map<String, Object> data, @NotNull String id) {
+    public KissenSavableMap(@NotNull String id, @NotNull ObjectMeta meta, @Nullable Map<String, Object> data) {
         this.clear();
-        super.putAll(data);
+        if (Objects.nonNull(data)) {
+            super.putAll(data);
+        } else {
+            super.putAll(meta.getData(getId()).join());
+        }
 
         this.id = id;
+        this.meta = meta;
     }
 
     @Override
@@ -129,7 +101,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     public <T> @Nullable Object set(@NotNull String key, @Nullable T value) {
 
         Object returnValue;
-        if (value==null) {
+        if (Objects.isNull(value)) {
             if (Objects.nonNull(returnValue = remove(key))) {
                 getMeta().delete(key);
             }
@@ -259,7 +231,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
 
     @Override
     public @NotNull SavableMap serializeSavable() {
-        return new KissenSavableMap(this);
+        return new KissenSavableMap(getId(), getMeta(), this);
     }
 
     @Override

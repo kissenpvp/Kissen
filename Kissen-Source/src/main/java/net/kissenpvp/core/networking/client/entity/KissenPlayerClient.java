@@ -25,9 +25,6 @@ import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
-import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
-import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.permission.AbstractPermission;
@@ -36,12 +33,11 @@ import net.kissenpvp.core.api.time.TemporalData;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting;
-import net.kissenpvp.core.api.user.playersettting.AbstractBoundPlayerSetting;
 import net.kissenpvp.core.api.user.playersettting.RegisteredPlayerSetting;
 import net.kissenpvp.core.api.user.rank.AbstractPlayerRank;
 import net.kissenpvp.core.api.user.rank.AbstractRank;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.user.playersetting.KissenBoundPlayerSetting;
+import net.kissenpvp.core.user.KissenPublicUser;
 import net.kissenpvp.core.user.rank.KissenPlayerRank;
 import net.kissenpvp.core.user.rank.PlayerRankNode;
 import net.kyori.adventure.text.Component;
@@ -51,8 +47,6 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public abstract class KissenPlayerClient<P extends AbstractPermission, R extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> implements PlayerClient<P, R, B> {
 
@@ -88,22 +82,23 @@ public abstract class KissenPlayerClient<P extends AbstractPermission, R extends
 
     @Override
     public @NotNull @Unmodifiable List<R> getRankHistory() {
-        MetaList<PlayerRankNode> ranks = getUser().getListNotNull("rank_list", PlayerRankNode.class);
+        MetaList<PlayerRankNode> ranks = ((KissenPublicUser<?>) getUser()).getRankNodes();
         return ranks.stream().map(this::translateRank).sorted(Comparator.comparing(AbstractPlayerRank::getStart)).toList();
     }
 
     @Override
     public @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException {
-        QuerySelect query = getUser().getMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.KEY, "total_id");
+        return Collections.emptySet(); //TODO
+        /*QuerySelect query = getUser().getMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.KEY, "total_id");
         return Arrays.stream(query.execute().join()).filter(current -> current[1].equals(getTotalID())).map(current -> {
             String raw = current[0].toString();
             return UUID.fromString(raw);
-        }).collect(Collectors.toUnmodifiableSet());
+        }).collect(Collectors.toUnmodifiableSet());^*/
     }
 
     @Override
     public @NotNull UUID getTotalID() {
-        return getUser().get("total_id", UUID.class).orElse(getUniqueId());
+        return getUser().getTotalId();
     }
 
     @Override
@@ -133,10 +128,7 @@ public abstract class KissenPlayerClient<P extends AbstractPermission, R extends
 
     @Override
     public @NotNull Locale getCurrentLocale() {
-        LocalizationImplementation localizationImplementation = KissenCore.getInstance().getImplementation(LocalizationImplementation.class);
-        Supplier<String> defaultLocale = () -> localizationImplementation.getDefaultLocale().toString();
-        Supplier<String> autoLocale = () -> getUser().get("locale", String.class).orElseGet(defaultLocale);
-        return localizationImplementation.getLocale(getUser().get("force_locale", String.class).orElseGet(autoLocale));
+        return getUser().getLocale();
     }
 
     @Override
@@ -146,7 +138,7 @@ public abstract class KissenPlayerClient<P extends AbstractPermission, R extends
 
     @Override
     public @NotNull String getName() {
-        return getUser().getNotNull("name", String.class);
+        return getUser().getName();
     }
 
     @Override
@@ -187,7 +179,7 @@ public abstract class KissenPlayerClient<P extends AbstractPermission, R extends
      * @see PlayerRankNode
      */
     private @NotNull PlayerRankNode setRankNode(@NotNull PlayerRankNode rankNode) {
-        getUser().getListNotNull("rank_list", PlayerRankNode.class).replaceOrInsert(rankNode);
+        ((KissenPublicUser<?>) getUser()).getRankNodes().replaceOrInsert(rankNode);
         return rankNode;
     }
 
@@ -251,15 +243,15 @@ public abstract class KissenPlayerClient<P extends AbstractPermission, R extends
      * @see AccurateDuration
      */
     protected @NotNull AccurateDuration getOnlineTime(@NotNull User user) {
-
-        AccurateDuration defaultDuration = new AccurateDuration(0);
+        return new AccurateDuration(0);
+/*        AccurateDuration defaultDuration = new AccurateDuration(0);
         AccurateDuration onlineTime = user.get("online_time", AccurateDuration.class).orElse(defaultDuration);
 
         if (isConnected()) {
             //Duration onlineSince = Duration.between(Instant.now(), Instant.now()); //TODO
             //return new KissenAccurateDuration(onlineTime.milliseconds() + onlineSince.toMillis());
         }
-        return onlineTime;
+        return onlineTime;*/
     }
 
     /**

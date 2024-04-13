@@ -19,6 +19,7 @@
 package net.kissenpvp.core.user.playersetting;
 
 import lombok.Getter;
+import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
 import net.kissenpvp.core.api.user.User;
@@ -45,7 +46,7 @@ public abstract class KissenBoundPlayerSetting<T, S extends PlayerClient<?, ?, ?
     }
 
     protected void isAllowed(@NotNull T value, @NotNull UserValue<T>[] possibilities) throws UnauthorizedException {
-        Optional<UserValue<T>> currentPossibility = Arrays.stream(possibilities).filter(possibility -> possibility.value().equals(value)).findFirst(); // find the one the user wants to set
+        Optional<UserValue<T>> currentPossibility = Arrays.stream(possibilities).filter(possibility -> Objects.equals(possibility.value(), value)).findFirst(); // find the one the user wants to set
 
         if (currentPossibility.isEmpty()) // throw exception if value is not listed as option
         {
@@ -67,18 +68,17 @@ public abstract class KissenBoundPlayerSetting<T, S extends PlayerClient<?, ?, ?
                 throw new UnauthorizedException(getPlayer().getUniqueId(), permission.get());
             }
         }
+
+        getRepository(getPlayer().getUser()).set(getKey(), getSetting().getParent().serialize(value));
     }
 
-
-    protected @NotNull Optional<T> getValue(@NotNull User user)
-    {
-        Optional<String> value = user.get(getKey(), String.class);
-        return value.map(currentValue -> getSetting().getParent().deserialize(currentValue));
+    protected @NotNull Optional<T> getValue(@NotNull User user) {
+        SavableMap repo = user.getRepository(getSetting().getPlugin());
+        return repo.get(getKey(), String.class).map(currentValue -> getSetting().getParent().deserialize(currentValue));
     }
 
-    protected boolean reset(@NotNull User user)
-    {
-        return Objects.nonNull(user.delete(getKey()));
+    protected boolean reset(@NotNull User user) {
+        return Objects.nonNull(getRepository(user).delete(getKey()));
     }
 
     @Contract(pure = true, value = "-> new")

@@ -22,13 +22,17 @@ import net.kissenpvp.core.api.ban.AbstractBan;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Table;
+import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.event.EventCancelledException;
+import net.kissenpvp.core.api.networking.socket.DataPackage;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.ban.events.ban.BanAlterDurationEvent;
 import net.kissenpvp.core.ban.events.ban.BanAlterTypeEvent;
 import net.kissenpvp.core.ban.events.ban.BanRenameEvent;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.KissenSavable;
+import net.kissenpvp.core.database.savable.KissenSavableMap;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 import net.kissenpvp.core.event.EventImplementation;
 import org.jetbrains.annotations.NotNull;
@@ -49,13 +53,24 @@ public abstract class KissenBan extends KissenSavable implements AbstractBan {
     }
 
     @Override
+    public @NotNull Table getTable() {
+        return KissenCore.getInstance().getImplementation(KissenBanImplementation.class).getTable();
+    }
+
+    @Override
+    protected @NotNull SavableMap createRepository(@NotNull String id) {
+        ObjectMeta meta = KissenCore.getInstance().getImplementation(KissenBanImplementation.class).getInternalMeta();
+        return new KissenSavableMap(id, meta);
+    }
+
+    @Override
     public String[] getKeys() {
         return new String[]{"name", "ban_type"};
     }
 
     @Override
     public @NotNull String getName() {
-        return getNotNull("name", String.class);
+        return getRepository().getNotNull("name", String.class);
     }
 
     @Override
@@ -67,12 +82,12 @@ public abstract class KissenBan extends KissenSavable implements AbstractBan {
             throw new EventCancelledException(banRenameEvent);
         }
 
-        set("name", banRenameEvent.getUpdateName());
+        getRepository().set("name", banRenameEvent.getUpdateName());
     }
 
     @Override
     public @NotNull BanType getBanType() {
-        return getNotNull("ban_type", BanType.class);
+        return getRepository().getNotNull("ban_type", BanType.class);
     }
 
     @Override
@@ -84,12 +99,12 @@ public abstract class KissenBan extends KissenSavable implements AbstractBan {
             throw new EventCancelledException(banAlterTypeEvent);
         }
 
-        set("ban_type", banType);
+        getRepository().set("ban_type", banType);
     }
 
     @Override
     public @NotNull Optional<AccurateDuration> getDuration() {
-        return get("duration", AccurateDuration.class);
+        return getRepository().get("duration", AccurateDuration.class);
     }
 
     @Override
@@ -101,18 +116,18 @@ public abstract class KissenBan extends KissenSavable implements AbstractBan {
             throw new EventCancelledException(banAlterDurationEvent);
         }
 
-        set("duration",duration);
-    }
-
-    @Override
-    public @NotNull ObjectMeta getMeta() {
-        return KissenCore.getInstance().getImplementation(KissenBanImplementation.class).getInternalMeta();
+        getRepository().set("duration",duration);
     }
 
     @Override
     public int softDelete() throws BackendException {
         KissenCore.getInstance().getImplementation(KissenBanImplementation.class).remove(this);
         return super.softDelete();
+    }
+
+    @Override
+    public void sendData(@NotNull DataPackage dataPackage) {
+
     }
 
     @Override
