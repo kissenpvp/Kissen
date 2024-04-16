@@ -26,6 +26,7 @@ import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.meta.Table;
+import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.KissenTable;
 import org.jetbrains.annotations.Contract;
@@ -89,17 +90,19 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
 
     @Override
     public @NotNull Table createTable(@NotNull String table, @NotNull String idColumn, @NotNull String keyColumn, @NotNull String pluginColumn, @NotNull String typeColumn, @NotNull String valueColumn) {
-        return new KissenTable(table, idColumn, keyColumn, pluginColumn, typeColumn, valueColumn) {
+        Table kissenTable = new KissenTable(table, idColumn, keyColumn, pluginColumn, typeColumn, valueColumn) {
             @Override
-            protected @NotNull ObjectMeta createMeta(@NotNull Table instance, @Nullable KissenPlugin kissenPlugin) {
-                return objectMeta(instance, kissenPlugin);
+            public @NotNull ObjectMeta setupMeta(@Nullable KissenPlugin kissenPlugin) {
+                return objectMeta(this, kissenPlugin);
             }
         };
+        generateTable(kissenTable);
+        return kissenTable;
     }
 
     @Override
     public @NotNull Table createTable(@NotNull String table) {
-        return createTable(table, "uuid", "identifier", "type", "plugin", "value");
+        return createTable(table, "uuid", "identifier", "plugin", "type", "value");
     }
 
     @Contract(pure = true, value = "_, _ -> new")
@@ -107,22 +110,31 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
         return new KissenObjectJDBCMeta(table, kissenPlugin) {
             @Override
             public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
-                if (!isConnected()) {
-                    disconnect(); // clean up broken connection
-                    connect(); // reconnect if possible
-                }
-
-                try {
-                    PreparedStatement preparedStatement = connection.prepareStatement(query);
-                    KissenCore.getInstance().getLogger().debug("Run sql query {}.", query);
-                    preparedStatementExecutor.execute(preparedStatement);
-                    preparedStatement.close();
-                } catch (SQLException sqlException) {
-                    if (!preparedStatementExecutor.handle(sqlException)) {
-                        throw new BackendException(sqlException);
-                    }
-                }
+                executeStatement(query, preparedStatementExecutor);
             }
         };
+    }
+
+    private void executeStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
+        if (!isConnected()) {
+            disconnect(); // clean up broken connection
+            connect(); // reconnect if possible
+        }
+
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            KissenCore.getInstance().getLogger().debug("Run sql query {}.", query);
+            preparedStatementExecutor.execute(preparedStatement);
+            preparedStatement.close();
+        } catch (SQLException sqlException) {
+            if (!preparedStatementExecutor.handle(sqlException)) {
+                throw new BackendException(sqlException);
+            }
+        }
+    }
+
+    private void generateTable(@NotNull Table table) {
+        String query = "CREATE TABLE IF NOT EXISTS %s (%s VARCHAR(100) NOT NULL, %s VARCHAR(100) NOT NULL, %s TINYTEXT, %s TINYTEXT NOT NULL, %s JSON NOT NULL CHECK (JSON_VALID(%s)));";
+        executeStatement(query.formatted(table, table.getColumn(Column.TOTAL_ID), table.getColumn(Column.KEY), table.getPluginColumn(), table.getTypeColumn(), table.getColumn(Column.VALUE), table.getColumn(Column.VALUE)), PreparedStatement::executeUpdate);
     }
 }

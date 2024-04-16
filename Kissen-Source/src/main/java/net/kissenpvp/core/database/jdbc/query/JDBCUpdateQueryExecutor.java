@@ -64,7 +64,6 @@ public class JDBCUpdateQueryExecutor extends JDBCQueryExecutor {
      * for further processing. It sets the parameter values for the prepared statement using the {@link #setStatementValues(PreparedStatement, String[])}
      * method and updates the count using the provided {@link AtomicLong}.
      *
-     * @param sql       the SQL statement to execute
      * @param parameter an array of {@link String} representing the parameter values for the SQL statement
      * @param count     an {@link AtomicLong} to hold the count of affected rows
      * @return a {@link PreparedStatementExecutor} for further processing

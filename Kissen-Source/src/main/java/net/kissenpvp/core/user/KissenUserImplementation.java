@@ -71,7 +71,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
     @Getter(AccessLevel.PROTECTED) private final Set<UserInfoNode> cachedProfiles;
     private final Set<KissenRegisteredPlayerSetting<?, ?>> pluginSettings;
     private final ScheduledExecutorService tickExecutor;
-    @Getter private KissenTable userTable;
+    @Getter private KissenTable Table;
 
     /**
      * Initializes the KissenUserImplementation instance.
@@ -92,7 +92,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
     @Override
     public boolean preStart() {
         DatabaseImplementation database = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
-        userTable = (KissenTable) database.getPrimaryConnection().createTable("kissen_user_data");
+        Table = (KissenTable) database.getPrimaryConnection().createTable("kissen_user_data");
         return UserImplementation.super.preStart();
     }
 
@@ -229,8 +229,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      */
     private @NotNull @Unmodifiable Set<UserInfoNode> fetchUserProfiles() {
         Set<UserInfoNode> userInfos = new HashSet<>();
-        ObjectMeta internal = getUserTable().getInternal();
-        QuerySelect querySelect = internal.select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, "^" + getUserSaveID()).and(Column.KEY, "name");
+        QuerySelect querySelect = getMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, "^" + getUserSaveID()).and(Column.KEY, "name");
         Object[][] data = querySelect.execute().join();
         for (Object[] user : data) {
             UUID uuid = UUID.fromString(user[0].toString().substring(getUserSaveID().length()));
@@ -238,6 +237,10 @@ public abstract class KissenUserImplementation implements UserImplementation {
             userInfos.add(new UserInfoNode(uuid, name));
         }
         return userInfos;
+    }
+
+    public @NotNull ObjectMeta getMeta() {
+        return getTable().setupMeta(null);
     }
 
     /**

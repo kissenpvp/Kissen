@@ -35,7 +35,6 @@ import net.kissenpvp.core.api.time.TimeImplementation;
 import net.kissenpvp.core.api.util.PageImplementation;
 import net.kissenpvp.core.command.CommandImplementation;
 import net.kissenpvp.core.config.KissenConfigurationImplementation;
-import net.kissenpvp.core.database.KissenDataImplementation;
 import net.kissenpvp.core.database.savable.KissenStorageImplementation;
 import net.kissenpvp.core.database.settings.DatabaseDns;
 import net.kissenpvp.core.message.KissenChatImplementation;
@@ -101,7 +100,6 @@ public abstract class KissenCore implements Kissen {
     {
         loader.put(APIRequestImplementation.class, new KissenAPIRequestImplementation());
         loader.put(ChatImplementation.class, new KissenChatImplementation());
-        loader.put(DataImplementation.class, new KissenDataImplementation());
         loader.put(PageImplementation.class, new KissenPageImplementation());
         loader.put(TimeImplementation.class, new KissenTimeImplementation());
         loader.put(ReflectionImplementation.class, new KissenReflectionImplementation());
@@ -161,6 +159,7 @@ public abstract class KissenCore implements Kissen {
 
     protected void setupDatabase(@NotNull ConfigurationImplementation config, @NotNull DatabaseImplementation database) {
         String connectionString = config.getSetting(DatabaseDns.class);
+        database.connectDatabase("public", connectionString);
     }
 
     public <T extends Implementation> @NotNull T getImplementation(@NotNull Class<T> implementation) {

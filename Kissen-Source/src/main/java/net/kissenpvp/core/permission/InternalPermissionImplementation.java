@@ -35,7 +35,7 @@ public interface InternalPermissionImplementation<T extends AbstractPermission> 
     void addPermission(@NotNull String permission);
 
     @NotNull
-    AbstractPermissionGroup<?> create(@NotNull String name, @Nullable Map<String, Object> data) throws EventCancelledException;
+    AbstractPermissionGroup<?> create(@NotNull String name) throws EventCancelledException;
 
     @NotNull Optional<AbstractPermissionGroup<?>> getPermissionGroupSavable(@NotNull String name);
 

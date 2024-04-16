@@ -22,7 +22,6 @@ import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
-import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.socket.DataPackage;
 import net.kissenpvp.core.api.permission.AbstractGroupablePermissionEntry;
 import net.kissenpvp.core.api.permission.AbstractPermission;
@@ -54,7 +53,7 @@ public abstract class KissenUser<T extends AbstractPermission> extends KissenGro
 
     @Override
     public @NotNull Table getTable() {
-        return getImplementation().getUserTable();
+        return getImplementation().getTable();
     }
 
     @Override

@@ -703,18 +703,4 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * @return a serializable version of the SavableMap
      */
     @NotNull SavableMap serializeSavable();
-
-    /**
-     * Retrieves the metadata associated with the object.
-     *
-     * <p>The {@code getMeta} method returns an {@link ObjectMeta} that serves as an interface between a database table and
-     * Java. It provides a standardized approach for interacting with database tables.</p>
-     *
-     * <p>The {@link ObjectMeta} interface extends the {@link java.io.Serializable} interface, allowing instances of
-     * implementing classes to be serialized and deserialized.</p>
-     *
-     * @return the {@link ObjectMeta} associated with the object
-     * @see java.io.Serializable
-     */
-    @NotNull ObjectMeta getMeta();
 }

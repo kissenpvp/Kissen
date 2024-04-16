@@ -385,7 +385,7 @@ public abstract class KissenBaseMeta implements Meta {
      * @return an object deserialized from the JSON string
      */
     @SneakyThrows
-    public <T> @NotNull T deserialize(@Nullable String plugin, @NotNull String clazz, @NotNull String json) {
+    public <T> @NotNull T deserialize(@NotNull String clazz, @NotNull String json) {
 
         ClassLoader classLoader = getClass().getClassLoader();
         if (Objects.nonNull(getPlugin())) {

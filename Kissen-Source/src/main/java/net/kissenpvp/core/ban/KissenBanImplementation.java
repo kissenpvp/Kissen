@@ -430,6 +430,6 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
     }
 
     protected @NotNull ObjectMeta getInternalMeta() {
-        return getTable().getInternal();
+        return getTable().setupMeta(null);
     }
 }

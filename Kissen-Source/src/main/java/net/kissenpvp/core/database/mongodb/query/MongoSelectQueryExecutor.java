@@ -112,7 +112,7 @@ public class MongoSelectQueryExecutor extends MongoQueryExecutor {
         if (Objects.equals(column, Column.VALUE)) {
             String clazzName = document.getString(getMeta().getTable().getTypeColumn());
             String plugin = document.getString(getMeta().getTable().getPluginColumn());
-            return getMeta().deserialize(plugin, clazzName, document.getString(columnName));
+            return getMeta().deserialize(clazzName, document.getString(columnName));
         }
         return document.getString(columnName);
     }

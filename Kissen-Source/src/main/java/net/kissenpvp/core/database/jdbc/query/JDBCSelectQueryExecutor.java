@@ -3,6 +3,7 @@ package net.kissenpvp.core.database.jdbc.query;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
+import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.FilterQuery;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
@@ -31,7 +32,8 @@ import java.util.stream.Collectors;
 @Getter
 public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
 
-    private static final String SELECT_FORMAT = "SELECT %s FROM %s;";
+    private static final String SELECT_FORMAT_WHERE = "SELECT %s FROM %s WHERE (%s) AND %s = ?;";
+    private static final String SELECT_FORMAT = "SELECT %s FROM %s WHERE %s = ?;";
     private final QuerySelect query;
 
     /**
@@ -46,53 +48,23 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
         this.query = select;
     }
 
-    /**
-     * Constructs a SQL SELECT statement based on the provided values for WHERE conditions.
-     *
-     * <p>
-     * This method constructs a SQL SELECT statement based on the provided values for WHERE conditions.
-     * It retrieves the column names using the {@link #columns(Column[])} method, and constructs the SELECT statement
-     * using the {@link #selectFromWhere(QuerySelect, List)}  method. The column names and the SELECT statement are
-     * then formatted into a single SQL string using the {@code SELECT_FORMAT} constant.
-     *
-     * @param values an array of {@link String} representing the values for the WHERE conditions
-     * @return a SQL SELECT statement
-     * @throws NullPointerException if {@code values} is {@code null}
-     * @see #columns(Column[])
-     * @see #selectFromWhere(QuerySelect, List)
-     */
     public @NotNull String constructSQL(@NotNull List<String> values) {
-        Object[] args = {columns(getQuery().getColumns()), selectFromWhere(getQuery(), values)};
-        return SELECT_FORMAT.formatted(args);
+        String table = getMeta().getTable().getTable();
+        String pluginColumn = getMeta().getTable().getPluginColumn();
+        if (getQuery().getFilterQueries().length==0) {
+            return String.format(SELECT_FORMAT, columns(), table, pluginColumn);
+        }
+        return String.format(SELECT_FORMAT_WHERE, columns(), table, selectFromWhere(values), pluginColumn);
     }
 
-    /**
-     * Executes a SQL statement and populates a list with the query results.
-     *
-     * <p>
-     * This method executes the provided SQL statement with the specified parameters and populates the provided list
-     * with the query results. It sets the parameter values for the prepared statement using the {@link #setStatementValues(PreparedStatement, String[])}
-     * method, executes the statement, and iterates through the result set. For each row in the result set, it calls
-     * the {@link #handleResult(Column[], ResultSet)} method to handle the result and adds it to the list.
-     *
-     * @param results   a {@link List} to populate with the query results
-     * @param parameter an array of {@link String} representing the parameter values for the SQL statement
-     * @param columns   an array of {@link Column} representing the columns to extract from the result set
-     * @return a {@link PreparedStatementExecutor} for further processing
-     * @throws NullPointerException if {@code results}, {@code parameter}, or {@code columns} is {@code null}
-     * @see PreparedStatementExecutor
-     * @see #setStatementValues(PreparedStatement, String[])
-     * @see #handleResult(Column[], ResultSet)
-     */
-    public @NotNull PreparedStatementExecutor executeStatement(@NotNull List<Object[]> results, @NotNull String[] parameter, @NotNull Column... columns) {
+    public @NotNull PreparedStatementExecutor executeStatement(@NotNull List<Object[]> results, @NotNull String[] parameter) {
         return new PreparedStatementExecutor() {
             @Override
             public void execute(@NotNull PreparedStatement statement) throws SQLException {
                 setStatementValues(statement, parameter);
-
                 try (ResultSet resultSet = statement.executeQuery()) {
                     while (resultSet.next()) {
-                        results.add(handleResult(columns, resultSet));
+                        results.add(handleResult(resultSet));
                     }
                 }
             }
@@ -121,7 +93,8 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * @see Column
      * @see ResultSet
      */
-    private @NotNull Object @NotNull [] handleResult(@NotNull Column @NotNull [] columns, @NotNull ResultSet resultSet) throws SQLException {
+    private @NotNull Object @NotNull [] handleResult(@NotNull ResultSet resultSet) throws SQLException {
+        Column[] columns = getQuery().getColumns();
         Object[] result = new Object[columns.length];
         for (int i = 0; i < columns.length; i++) {
             result[i] = handleResult(resultSet, columns[i]);
@@ -150,7 +123,7 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
         if (column.equals(Column.VALUE)) {
             String clazzName = resultSet.getString(getMeta().getTable().getTypeColumn());
             String plugin = resultSet.getString(getMeta().getTable().getPluginColumn());
-            return getMeta().deserialize(plugin, clazzName, value);
+            return getMeta().deserialize(clazzName, value);
         }
         return value;
     }
@@ -171,12 +144,8 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * @see QuerySelect
      * @see #where(List, FilterQuery...)
      */
-    private @NotNull String selectFromWhere(@NotNull QuerySelect select, @NotNull List<String> values) {
-        StringJoiner table = new StringJoiner(" ").add(getMeta().getTable().getTable());
-        if (select.getFilterQueries().length!=0) {
-            table.add("WHERE").add(where(values, select.getFilterQueries()));
-        }
-        return table.toString();
+    private @NotNull String selectFromWhere(@NotNull List<String> values) {
+        return where(values, getQuery().getFilterQueries());
     }
 
     /**
@@ -191,10 +160,14 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * @throws NullPointerException if {@code column} is {@code null}
      * @see Column
      */
-    private @NotNull String columns(@NotNull Column @NotNull [] column) {
-        return Arrays.stream(column).map(col -> {
-            String addType = ", %s, %s"; // add type and plugin
-            return getMeta().getTable().getColumn(col) + (Objects.equals(col, Column.VALUE) ? addType.formatted(getMeta().getTable().getPluginColumn(), getMeta().getTable().getTypeColumn()):"");
+    private @NotNull String columns() {
+        return Arrays.stream(getQuery().getColumns()).map(columns -> {
+            Table table = getMeta().getTable();
+            String current = table.getColumn(columns);
+            if (Objects.equals(columns, Column.VALUE)) {
+                return String.format("%s, %s, %s", table.getPluginColumn(), table.getTypeColumn(), current);
+            }
+            return current;
         }).collect(Collectors.joining(", "));
     }
 }

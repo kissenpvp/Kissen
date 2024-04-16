@@ -31,7 +31,7 @@ public record KissenFilterQuery(@NotNull Column column, @NotNull Object value, @
         if(!Objects.equals(column, Column.VALUE) && !(value instanceof String))
         {
             String exceptionMessage = "Only String values are allowed for column %s.";
-            throw new IllegalArgumentException(exceptionMessage.formatted(column));
+            throw new IllegalArgumentException(String.format(exceptionMessage, column));
         }
     }
 

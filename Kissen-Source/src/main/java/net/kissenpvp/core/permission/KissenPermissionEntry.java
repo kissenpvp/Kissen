@@ -18,23 +18,22 @@
 
 package net.kissenpvp.core.permission;
 
+import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
-import net.kissenpvp.core.api.permission.event.PermissionEntrySetPermissionEvent;
-import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.api.database.DataWriter;
-import net.kissenpvp.core.database.savable.KissenSavable;
-import net.kissenpvp.core.event.EventImplementation;
-import net.kissenpvp.core.permission.event.KissenPermissionEntrySetPermissionEvent;
 import net.kissenpvp.core.api.time.TemporalData;
+import net.kissenpvp.core.database.savable.KissenSavable;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -113,9 +112,8 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
      *
      * @param permission the name of the permission to check. Must not be null.
      * @return An Optional containing the Boolean value of the internal permission if found,
-     *         or an empty Optional if no matching internal permission is found.
+     * or an empty Optional if no matching internal permission is found.
      * @throws NullPointerException if the provided permission is null.
-     *
      * @see #setPermission(AbstractPermission, boolean)
      */
     public @NotNull Optional<Boolean> getInternalPermission(@NotNull String permission) {
@@ -148,7 +146,7 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
         if (!permission.getOwner().equals(this)) {
             throw new IllegalArgumentException("The specified permission owner does not match this object.");
         }
-        if (permission.getValue() != value) {
+        if (permission.getValue()!=value) {
             permission.setValue(value);
         }
         return permission;
@@ -188,20 +186,20 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
         int testedIndex = 0, givenIndex = 0, testedWildcardIndex = -1, givenWildcardIndex = -1;
 
         while (givenIndex < permission.length()) {
-            if (testedIndex < internalPermission.getName().length() && internalPermission.getName().charAt(testedIndex) == '*') {
+            if (testedIndex < internalPermission.getName().length() && internalPermission.getName().charAt(testedIndex)=='*') {
                 testedWildcardIndex = testedIndex;
                 givenWildcardIndex = givenIndex;
                 testedIndex++;
                 continue;
             }
 
-            if (testedIndex < internalPermission.getName().length() && (internalPermission.getName().charAt(testedIndex) == permission.charAt(givenIndex) || internalPermission.getName().charAt(testedIndex) == '?')) {
+            if (testedIndex < internalPermission.getName().length() && (internalPermission.getName().charAt(testedIndex)==permission.charAt(givenIndex) || internalPermission.getName().charAt(testedIndex)=='?')) {
                 testedIndex++;
                 givenIndex++;
                 continue;
             }
 
-            if (testedWildcardIndex != -1) {
+            if (testedWildcardIndex!=-1) {
                 testedIndex = testedWildcardIndex + 1;
                 givenIndex = givenWildcardIndex + 1;
                 givenWildcardIndex++;
@@ -211,11 +209,11 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
             return Optional.empty();
         }
 
-        while (testedIndex < internalPermission.getName().length() && internalPermission.getName().charAt(testedIndex) == '*') {
+        while (testedIndex < internalPermission.getName().length() && internalPermission.getName().charAt(testedIndex)=='*') {
             testedIndex++;
         }
 
-        return testedIndex == internalPermission.getName().length() && givenIndex == permission.length() ? Optional.of(internalPermission) : Optional.empty();
+        return testedIndex==internalPermission.getName().length() && givenIndex==permission.length() ? Optional.of(internalPermission):Optional.empty();
     }
 
     /**
@@ -230,12 +228,7 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
      * @throws EventCancelledException If the permission change event is cancel by any listener.
      */
     protected @NotNull T setPermission(@NotNull PermissionNode permissionNode) throws EventCancelledException {
-        PermissionEntrySetPermissionEvent permissionEntrySetPermissionEvent = new KissenPermissionEntrySetPermissionEvent(translatePermission(permissionNode, record -> {/* ignored */}), getPermission(permissionNode.name()).isPresent());
-
-        if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(permissionEntrySetPermissionEvent)) {
-            return internSetPermission(((KissenPermission) permissionEntrySetPermissionEvent.getPermission()).getKissenPermissionNode());
-        }
-        throw new EventCancelledException();
+        return internSetPermission(permissionNode);
     }
 
     /**
@@ -260,7 +253,6 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
      *
      * @param permissionNode the{@link PermissionNode} to be translated. Must not be null.
      * @return A non-null value representing the translated permission result.
-     *
      * @see #translatePermission(PermissionNode, DataWriter)
      */
     private @NotNull T translatePermission(@NotNull PermissionNode permissionNode) {

@@ -21,6 +21,7 @@ package net.kissenpvp.core.ban;
 import net.kissenpvp.core.api.ban.AbstractPunishment;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.database.DataImplementation;
+import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
@@ -35,8 +36,6 @@ import net.kissenpvp.core.ban.events.punishment.PunishmentAlterCauseEvent;
 import net.kissenpvp.core.ban.events.punishment.PunishmentAlterEndEvent;
 import net.kissenpvp.core.ban.events.punishment.PunishmentCommentEvent;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.api.database.DataWriter;
-import net.kissenpvp.core.database.KissenTable;
 import net.kissenpvp.core.event.EventImplementation;
 import net.kissenpvp.core.message.CommentNode;
 import net.kissenpvp.core.message.KissenComment;
@@ -103,7 +102,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public void setCause(@Nullable Component cause) throws EventCancelledException {
-        if (dataWriter == null) {
+        if (dataWriter==null) {
             throw new EventCancelledException();
         }
 
@@ -123,7 +122,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public @NotNull Comment addComment(@NotNull ServerEntity sender, @NotNull Component comment) throws EventCancelledException {
-        if (dataWriter == null) {
+        if (dataWriter==null) {
             throw new EventCancelledException();
         }
 
@@ -131,7 +130,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
         KissenComment currentComment = new KissenComment(tempCommentNode.get(), tempCommentNode::set);
 
         PunishmentCommentEvent<?> punishmentCommentEvent = new PunishmentCommentEvent<>(this, currentComment);
-        if (tempCommentNode.get() == null || !KissenCore.getInstance().getImplementation(EventImplementation.class).call(punishmentCommentEvent)) {
+        if (tempCommentNode.get()==null || !KissenCore.getInstance().getImplementation(EventImplementation.class).call(punishmentCommentEvent)) {
             throw new EventCancelledException(punishmentCommentEvent);
         }
 
@@ -143,7 +142,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public void setEnd(@Nullable Instant end) throws EventCancelledException {
-        if (dataWriter == null) {
+        if (dataWriter==null) {
             throw new EventCancelledException();
         }
 
@@ -164,8 +163,8 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
         String saveID = userSystem.getUserSaveID();
         Function<String, UUID> toUUID = data -> UUID.fromString(data.substring(userSystem.getUserSaveID().length()));
 
-        ObjectMeta meta = ((KissenTable) userSystem.getUserTable()).getInternal();
-        QuerySelect query = meta.select(Column.TOTAL_ID).where(Column.TOTAL_ID, "^" + saveID).and(Column.KEY, "total_id").and(Column.VALUE, getTotalID().toString());
+        ObjectMeta userMeta = userSystem.getMeta();
+        QuerySelect query = userMeta.select(Column.TOTAL_ID).where(Column.TOTAL_ID, "^" + saveID).and(Column.KEY, "total_id").and(Column.VALUE, getTotalID().toString());
         return Collections.emptySet(); //TODO
     }
 
@@ -209,7 +208,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
      */
     private @NotNull CommentNode constructComment(@NotNull ServerEntity sender, @NotNull Component comment) {
         String id = KissenCore.getInstance().getImplementation(DataImplementation.class).generateID();
-        UUID senderUUID = sender instanceof PlayerClient<?, ?, ?> playerClient ? playerClient.getUniqueId() : null;
+        UUID senderUUID = sender instanceof PlayerClient<?, ?, ?> playerClient ? playerClient.getUniqueId():null;
 
         return new CommentNode(id, comment, senderUUID, System.currentTimeMillis());
     }

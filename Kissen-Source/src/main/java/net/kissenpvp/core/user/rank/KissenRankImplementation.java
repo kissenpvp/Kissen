@@ -21,7 +21,6 @@ package net.kissenpvp.core.user.rank;
 import lombok.Getter;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
-import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.user.rank.AbstractRank;
@@ -45,7 +44,7 @@ import java.util.stream.Collectors;
 public abstract class KissenRankImplementation<T extends AbstractRank> implements AbstractRankImplementation<T> {
 
     protected final Set<T> cached;
-    @Getter private Table rankTable;
+    @Getter private KissenTable table;
 
     /**
      * Constructs a KissenRankImplementation object, initializing the internal set for caching ranks.
@@ -57,7 +56,7 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
     @Override
     public boolean preStart() {
         DatabaseImplementation database = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
-        rankTable = database.getPrimaryConnection().createTable("kissen_ban_table");
+        table = (KissenTable) database.getPrimaryConnection().createTable("kissen_ban_table");
         return AbstractRankImplementation.super.preStart();
     }
 
@@ -117,7 +116,7 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
      * @throws NullPointerException if the associated {@link net.kissenpvp.core.api.database.meta.Meta} is `null`
      */
     protected @NotNull @Unmodifiable Set<T> fetchRanks() {
-        return getInternalMeta().getData(getSavableType()).thenApply(rankData -> {
+        return getMeta().getData(getSavableType()).thenApply(rankData -> {
             Function<SavableMap, T> setup = map -> setup(map.getNotNull("id", String.class), Map.copyOf(map));
             return rankData.values().stream().map(setup).collect(Collectors.toUnmodifiableSet());
         }).join();
@@ -152,10 +151,7 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
      */
     protected abstract @NotNull T getFallbackRank();
 
-    protected @NotNull ObjectMeta getInternalMeta() {
-        if (rankTable instanceof KissenTable kissenTable) {
-            return kissenTable.getInternal();
-        }
-        throw new IllegalStateException("Private rank table is not instance of kissen table and therefore has no internal meta");
+    public @NotNull ObjectMeta getMeta() {
+        return getTable().setupMeta(null);
     }
 }

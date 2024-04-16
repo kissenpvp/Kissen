@@ -112,7 +112,8 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             List<Object[]> array = new ArrayList<>();
 
             List<String> values = new ArrayList<>();
-            getPreparedStatement(executor.constructSQL(values), executor.executeStatement(array, values.toArray(String[]::new), select.getColumns()));
+            String sql = executor.constructSQL(values);
+            getPreparedStatement(sql, executor.executeStatement(array, values.toArray(String[]::new)));
 
             return array.toArray(new Object[0][]);
         }).handle(logExceptions());
@@ -158,11 +159,6 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             preparedStatement.setString(5, values[1]); // value
             preparedStatement.executeUpdate();
         }));
-    }
-
-    protected void generateTable() {
-        String query = "CREATE TABLE IF NOT EXISTS %s (%s VARCHAR(100) NOT NULL, %s VARCHAR(100) NOT NULL, %s TINYTEXT, %s TINYTEXT NOT NULL, %s JSON NOT NULL CHECK (JSON_VALID(%s)));";
-        getPreparedStatement(query.formatted(getTable(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY), getTable().getPluginColumn(), getTable().getTypeColumn(), getTable().getColumn(Column.VALUE), getTable().getColumn(Column.VALUE)), PreparedStatement::executeUpdate);
     }
 
     /**

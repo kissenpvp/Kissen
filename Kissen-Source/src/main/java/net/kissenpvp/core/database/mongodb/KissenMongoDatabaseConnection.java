@@ -90,11 +90,11 @@ public class KissenMongoDatabaseConnection implements MongoDatabaseConnection {
     public @NotNull Table createTable(@NotNull String table, @NotNull String idColumn, @NotNull String keyColumn, @NotNull String pluginColumn, @NotNull String typeColumn, @NotNull String valueColumn) {
         return new KissenTable(table, idColumn, keyColumn, pluginColumn, typeColumn, valueColumn) {
             @Override
-            protected @NotNull ObjectMeta createMeta(@NotNull Table instance, @Nullable KissenPlugin kissenPlugin) {
-                return new KissenObjectMongoMeta(instance, kissenPlugin) {
+            public @NotNull ObjectMeta setupMeta(@Nullable KissenPlugin kissenPlugin) {
+                return new KissenObjectMongoMeta(this, kissenPlugin) {
                     @Override
                     public @NotNull MongoCollection<Document> getCollection() {
-                        return getDatabase().getCollection(instance.getTable());
+                        return getDatabase().getCollection(getTable().getTable());
                     }
                 };
             }

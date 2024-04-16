@@ -18,16 +18,15 @@
 
 package net.kissenpvp.core.permission;
 
+import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.permission.*;
-import net.kissenpvp.core.api.permission.event.GroupMemberAddEvent;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.database.KissenTable;
+import net.kissenpvp.core.database.savable.KissenSavableMap;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
-import net.kissenpvp.core.event.EventImplementation;
-import net.kissenpvp.core.permission.event.KissenGroupMemberAddEvent;
-import net.kissenpvp.core.permission.event.KissenGroupMemberRemoveEvent;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
@@ -41,17 +40,14 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class KissenPermissionGroup<T extends AbstractPermission> extends KissenGroupablePermissionEntry<T> implements AbstractPermissionGroup<T>
-{
+public abstract class KissenPermissionGroup<T extends AbstractPermission> extends KissenGroupablePermissionEntry<T> implements AbstractPermissionGroup<T> {
 
-    @Override public @NotNull @Unmodifiable Set<String> getMember()
-    {
+    @Override
+    public @NotNull @Unmodifiable Set<String> getMember() {
         Set<String> member = new HashSet<>();
-        memberTransform().apply(getOwnMember()).forEach(current ->
-        {
+        memberTransform().apply(getOwnMember()).forEach(current -> {
             member.add(current.getPermissionID());
-            if (current instanceof AbstractPermissionGroup<T> permissionGroup)
-            {
+            if (current instanceof AbstractPermissionGroup<T> permissionGroup) {
                 member.addAll(((AbstractPermissionGroup<T>) current).getMember());
             }
         });
@@ -59,8 +55,7 @@ public abstract class KissenPermissionGroup<T extends AbstractPermission> extend
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<String> getOwnMember()
-    {
+    public @NotNull @Unmodifiable Set<String> getOwnMember() {
         UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
         Set<String> member = new HashSet<>(getRepository().getListNotNull("group_member", String.class));
 
@@ -74,119 +69,101 @@ public abstract class KissenPermissionGroup<T extends AbstractPermission> extend
         return Set.copyOf(member);
     }
 
-    @Override public boolean addMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry) throws PermissionGroupConflictException
-    {
+    @Override
+    public boolean addMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry) throws PermissionGroupConflictException {
         boolean added = addInternalMember(groupablePermissionEntry);
-        if (added)
-        {
+        if (added) {
             groupablePermissionEntry.permissionUpdate();
             return true;
         }
         return false;
     }
 
-    private boolean addInternalMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry) throws PermissionGroupConflictException
-    {
-        if (groupablePermissionEntry instanceof AbstractPermissionGroup<?>)
-        {
-            if (getPermissionID().equals(groupablePermissionEntry.getPermissionID()) || getPermissionGroups().contains(
-                    groupablePermissionEntry))
-            {
+    private boolean addInternalMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry) throws PermissionGroupConflictException {
+        if (groupablePermissionEntry instanceof AbstractPermissionGroup<?>) {
+            if (getPermissionID().equals(groupablePermissionEntry.getPermissionID()) || getPermissionGroups().contains(groupablePermissionEntry)) {
                 throw new PermissionGroupConflictException();
             }
         }
 
-        if (getRepository().getListNotNull("group_member", String.class).contains(groupablePermissionEntry.getPermissionID()))
-        {
+        if (getRepository().getListNotNull("group_member", String.class).contains(groupablePermissionEntry.getPermissionID())) {
             return false;
         }
 
-        GroupMemberAddEvent groupMemberAddEvent = new KissenGroupMemberAddEvent(this, groupablePermissionEntry);
-        if(KissenCore.getInstance().getImplementation(EventImplementation.class).call(groupMemberAddEvent))
-        {
-            return getRepository().getListNotNull("group_member", String.class).add(groupMemberAddEvent.getPermissionEntry().getPermissionID());
-        }
-        return false;
+        return getRepository().getListNotNull("group_member", String.class).add(groupablePermissionEntry.getPermissionID());
     }
 
-    @Override public boolean removeMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry)
-    {
+    @Override
+    public boolean removeMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry) {
         boolean removed = removeInternalMember(groupablePermissionEntry);
-        if (removed)
-        {
+        if (removed) {
             groupablePermissionEntry.permissionUpdate();
             return true;
         }
         return false;
     }
 
-    private boolean removeInternalMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry)
-    {
+    private boolean removeInternalMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry) {
         SavableMap repo = getRepository();
-        if (!repo.containsList("group_member") || !repo.getListNotNull("group_member", String.class).contains(groupablePermissionEntry.getPermissionID()))
-        {
+        if (!repo.containsList("group_member") || !repo.getListNotNull("group_member", String.class).contains(groupablePermissionEntry.getPermissionID())) {
             return false;
         }
-        KissenGroupMemberRemoveEvent kissenGroupMemberRemoveEvent = new KissenGroupMemberRemoveEvent(this, groupablePermissionEntry);
-        if(KissenCore.getInstance().getImplementation(EventImplementation.class).call(kissenGroupMemberRemoveEvent))
-        {
-            return repo.getListNotNull("group_member", String.class).remove(groupablePermissionEntry.getPermissionID());
-        }
-        return false;
+        return repo.getListNotNull("group_member", String.class).remove(groupablePermissionEntry.getPermissionID());
     }
 
-    @Override public @NotNull @Unmodifiable Set<UUID> getAffectedUsers()
-    {
+    @Override
+    public @NotNull @Unmodifiable Set<UUID> getAffectedUsers() {
         Set<UUID> uuids = new HashSet<>();
-        InternalPermissionImplementation<?> permissionImplementation = KissenCore.getInstance().getImplementation(
-                InternalPermissionImplementation.class);
-        for (String member : getMember())
-        {
-            if (member.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
-            {
+        InternalPermissionImplementation<?> permissionImplementation = KissenCore.getInstance().getImplementation(InternalPermissionImplementation.class);
+        for (String member : getMember()) {
+            if (member.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}")) {
                 uuids.add(UUID.fromString(member));
                 continue;
             }
 
-            uuids.addAll(permissionImplementation.getPermissionGroupSavable(member).map(
-                    AbstractPermissionEntry::getAffectedUsers).orElse(new HashSet<>()));
+            uuids.addAll(permissionImplementation.getPermissionGroupSavable(member).map(AbstractPermissionEntry::getAffectedUsers).orElse(new HashSet<>()));
         }
         return uuids;
     }
 
-    @Override public @NotNull @Unmodifiable Set<AbstractGroupablePermissionEntry<T>> getConnectedEntries()
-    {
+    @Override
+    public @NotNull @Unmodifiable Set<AbstractGroupablePermissionEntry<T>> getConnectedEntries() {
         return memberTransform().apply(getOwnMember());
     }
 
     @Contract(pure = true, value = "-> new")
-    private @NotNull Function<Set<String>, Set<AbstractGroupablePermissionEntry<T>>> memberTransform()
-    {
-        InternalPermissionImplementation<T> permissionImplementation = KissenCore.getInstance().getImplementation(
-                InternalPermissionImplementation.class);
+    private @NotNull Function<Set<String>, Set<AbstractGroupablePermissionEntry<T>>> memberTransform() {
+        InternalPermissionImplementation<T> permissionImplementation = KissenCore.getInstance().getImplementation(InternalPermissionImplementation.class);
         UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
-        return (memberList) ->
-        {
+        return (memberList) -> {
             Set<AbstractGroupablePermissionEntry<T>> entries = new HashSet<>();
-            for (String member : memberList)
-            {
-                if (member.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
-                {
+            for (String member : memberList) {
+                if (member.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}")) {
                     Consumer<User> add = user -> entries.add((AbstractGroupablePermissionEntry<T>) user);
                     userImplementation.getOnlineUser(UUID.fromString(member)).ifPresent(add);
                     continue;
                 }
 
                 Consumer<AbstractPermissionGroup<?>> add = group -> entries.add((AbstractPermissionGroup<T>) group);
-                permissionImplementation.getInternalGroups().stream().filter(group -> group.getPermissionID().equals(
-                        member)).findFirst().ifPresent(add);
+                permissionImplementation.getInternalGroups().stream().filter(group -> group.getPermissionID().equals(member)).findFirst().ifPresent(add);
             }
             return entries;
         };
     }
 
-    @Override public SerializableSavableHandler getSerializableSavableHandler()
-    {
+    @Override
+    protected @NotNull SavableMap createRepository(@NotNull String id) {
+        ObjectMeta meta = KissenCore.getInstance().getImplementation(InternalKissenPermissionImplementation.class).getMeta();
+        return new KissenSavableMap(id, meta);
+    }
+
+    @Override
+    public SerializableSavableHandler getSerializableSavableHandler() {
         return new SerializablePermissionGroupHandler(getPermissionID());
+    }
+
+    @Override
+    public @NotNull KissenTable getTable() {
+        return (KissenTable) KissenCore.getInstance().getImplementation(InternalKissenPermissionImplementation.class).getTable();
     }
 }

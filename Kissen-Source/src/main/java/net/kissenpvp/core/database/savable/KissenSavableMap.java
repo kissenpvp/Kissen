@@ -85,7 +85,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
         if (Objects.nonNull(data)) {
             super.putAll(data);
         } else {
-            super.putAll(meta.getData(getId()).join());
+            super.putAll(getMeta().getData(getId()).join());
         }
 
         this.id = id;
@@ -232,11 +232,6 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     @Override
     public @NotNull SavableMap serializeSavable() {
         return new KissenSavableMap(getId(), getMeta(), this);
-    }
-
-    @Override
-    public @NotNull ObjectMeta getMeta() {
-        return null;
     }
 
     @Override
