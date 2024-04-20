@@ -61,39 +61,6 @@ import java.util.Optional;
 public interface SavableMap extends Map<String, Object>, Serializable {
 
     /**
-     * Copies all the key-value pairs from the specified {@link SavableMap} to this map.
-     *
-     * <p>The {@code putAll(SavableMap)} method copies all the key-value pairs from the specified {@link SavableMap} to this map,
-     * effectively adding or updating the entries. Unlike the {@link #set(String, Object)} method, the {@code putAll(SavableMap)} method does not
-     * alter the underlying table or storage mechanism. It only affects the contents of this map.</p>
-     *
-     * <p>The specified {@link SavableMap} contains key-value pairs that will be copied to this map. If a key already
-     * exists in this map, the corresponding value will be updated. If a key does not exist, a new entry will
-     * be added to this map.</p>
-     *
-     * <p>Example usage:</p>
-     *
-     * <pre>
-     * {@code
-     * SavableMap sourceMap = new SomeSavableMapImplementation();
-     * sourceMap.put("key1", "value1");
-     * sourceMap.put("key2", "value2");
-     *
-     * SavableMap targetMap = new SomeSavableMapImplementation();
-     * targetMap.putAll(sourceMap);
-     *
-     * Optional<String> value = targetMap.get("key1");
-     * System.out.println(value.orElse(null)); // Output: "value1"
-     * }
-     * </pre>
-     *
-     * @param savableMap the {@link SavableMap} containing the key-value pairs to be copied to this map
-     * @throws NullPointerException if the specified {@link SavableMap} is `null`
-     * @see #put(Object, Object)
-     */
-    void putAll(@NotNull SavableMap savableMap);
-
-    /**
      * Associates the specified value with the specified key in this map and saves the value within the database.
      *
      * <p>The {@code set} method associates the specified value with the specified key in this map.

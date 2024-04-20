@@ -77,24 +77,10 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
      * @param meta the ObjectMeta to associate with the new KissenSavableMap
      */
     public KissenSavableMap(@NotNull String id, @NotNull ObjectMeta meta) {
-        this(id, meta, null);
-    }
-
-    public KissenSavableMap(@NotNull String id, @NotNull ObjectMeta meta, @Nullable Map<String, Object> data) {
-        this.clear();
-        if (Objects.nonNull(data)) {
-            super.putAll(data);
-        } else {
-            super.putAll(getMeta().getData(getId()).join());
-        }
+        super.putAll(getMeta().getData(getId()).join());
 
         this.id = id;
         this.meta = meta;
-    }
-
-    @Override
-    public void putAll(@NotNull SavableMap savableMap) {
-        super.putAll(savableMap);
     }
 
     @Override

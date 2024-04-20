@@ -43,13 +43,6 @@ public abstract class KissenSavable extends HashMap<KissenPlugin, SavableMap> im
     private String id;
     @Getter(AccessLevel.PROTECTED) private SavableMap repository;
 
-    /**
-     * This class is setting the data about an object.
-     */
-    public KissenSavable() {
-        super();
-    }
-
     @Override
     public @NotNull Map<String, Object> getStorage() {
         return KissenCore.getInstance().getImplementation(StorageImplementation.class).getStorage(getDatabaseID());
