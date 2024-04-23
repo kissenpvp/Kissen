@@ -39,24 +39,24 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class KissenPermissionEntry<T extends AbstractPermission> extends KissenSavable implements AbstractPermissionEntry<T> {
+public abstract class KissenPermissionEntry<T, X extends AbstractPermission> extends KissenSavable<T> implements AbstractPermissionEntry<X> {
     @Override
     public @NotNull String getPermissionID() {
-        return getRawID();
+        return getRawID().toString();
     }
 
     @Override
     public @NotNull Component displayName() {
-        return Component.text(getRawID());
+        return Component.text(getPermissionID());
     }
 
     @Override
-    public @NotNull T setPermission(@NotNull String permission) throws EventCancelledException {
+    public @NotNull X setPermission(@NotNull String permission) throws EventCancelledException {
         return setPermission(permission, true);
     }
 
     @Override
-    public @NotNull T setPermission(@NotNull String permission, boolean value) throws EventCancelledException {
+    public @NotNull X setPermission(@NotNull String permission, boolean value) throws EventCancelledException {
         return getPermission(permission).map(current -> setPermission(current, value)).orElseGet(() -> {
             PermissionNode newPermission = new PermissionNode(permission, this, value, new TemporalData());
             return setPermission(permission);
@@ -64,7 +64,7 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
     }
 
     @Override
-    public @NotNull T setPermission(@NotNull T permission) throws EventCancelledException {
+    public @NotNull X setPermission(@NotNull X permission) throws EventCancelledException {
         if (!permission.getOwner().equals(this)) {
             throw new IllegalArgumentException("The specified permission owner does not match this object.");
         }
@@ -87,14 +87,14 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<T> getPermissionList() {
+    public @NotNull @Unmodifiable Set<X> getPermissionList() {
         Stream<PermissionNode> permissionNodes = getRepository().getListNotNull("permission_list", PermissionNode.class).stream();
         return permissionNodes.map(this::translatePermission).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
-    public @NotNull Optional<T> getPermission(@NotNull String permission) {
-        Predicate<T> isSearched = currentPermission -> currentPermission.getName().equals(permission);
+    public @NotNull Optional<X> getPermission(@NotNull String permission) {
+        Predicate<X> isSearched = currentPermission -> currentPermission.getName().equals(permission);
         return getPermissionList().stream().filter(isSearched).findFirst();
     }
 
@@ -118,9 +118,9 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
      */
     public @NotNull Optional<Boolean> getInternalPermission(@NotNull String permission) {
 
-        Function<T, Stream<T>> matching = internalPermission -> matcher(permission, internalPermission).stream();
-        Comparator<T> sortByName = (o1, o2) -> CharSequence.compare(o1.getName(), o2.getName());
-        List<T> permissions = getPermissionList().stream().flatMap(matching).sorted(sortByName).toList();
+        Function<X, Stream<X>> matching = internalPermission -> matcher(permission, internalPermission).stream();
+        Comparator<X> sortByName = (o1, o2) -> CharSequence.compare(o1.getName(), o2.getName());
+        List<X> permissions = getPermissionList().stream().flatMap(matching).sorted(sortByName).toList();
 
         if (permissions.isEmpty()) {
             return Optional.empty();
@@ -142,7 +142,7 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
      * @throws EventCancelledException  if the operation is canceled due to an event (checked exception).
      * @throws NullPointerException     if the provided permission is null.
      */
-    protected @NotNull T setPermission(@NotNull T permission, boolean value) throws EventCancelledException {
+    protected @NotNull X setPermission(@NotNull X permission, boolean value) throws EventCancelledException {
         if (!permission.getOwner().equals(this)) {
             throw new IllegalArgumentException("The specified permission owner does not match this object.");
         }
@@ -182,7 +182,7 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
      * internal permission, or null if it doesn't.
      * @throws NullPointerException if either the permission or internalPermission parameter is null.
      */
-    public @NotNull Optional<T> matcher(@NotNull String permission, @NotNull T internalPermission) {
+    public @NotNull Optional<X> matcher(@NotNull String permission, @NotNull X internalPermission) {
         int testedIndex = 0, givenIndex = 0, testedWildcardIndex = -1, givenWildcardIndex = -1;
 
         while (givenIndex < permission.length()) {
@@ -227,7 +227,7 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
      * @return A non-null value representing the result of setting the permission.
      * @throws EventCancelledException If the permission change event is cancel by any listener.
      */
-    protected @NotNull T setPermission(@NotNull PermissionNode permissionNode) throws EventCancelledException {
+    protected @NotNull X setPermission(@NotNull PermissionNode permissionNode) throws EventCancelledException {
         return internSetPermission(permissionNode);
     }
 
@@ -240,7 +240,7 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
      * @param permissionNode The Kissen permission node for which the permission should be set. Must not be null.
      * @return A non-null value representing the result of internally setting the permission.
      */
-    private @NotNull T internSetPermission(@NotNull PermissionNode permissionNode) {
+    private @NotNull X internSetPermission(@NotNull PermissionNode permissionNode) {
         getRepository().getListNotNull("permission_list", PermissionNode.class).replaceOrInsert(permissionNode);
         return translatePermission(permissionNode, permissionWriter());
     }
@@ -255,7 +255,7 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
      * @return A non-null value representing the translated permission result.
      * @see #translatePermission(PermissionNode, DataWriter)
      */
-    private @NotNull T translatePermission(@NotNull PermissionNode permissionNode) {
+    private @NotNull X translatePermission(@NotNull PermissionNode permissionNode) {
         return translatePermission(permissionNode, permissionWriter());
     }
 
@@ -269,7 +269,7 @@ public abstract class KissenPermissionEntry<T extends AbstractPermission> extend
      * @param dataWriter     An optional data writer for storing the translated permission. Can be null.
      * @return A non-null value representing the translated permission result.
      */
-    protected abstract @NotNull T translatePermission(@NotNull PermissionNode permissionNode, @Nullable DataWriter<PermissionNode> dataWriter);
+    protected abstract @NotNull X translatePermission(@NotNull PermissionNode permissionNode, @Nullable DataWriter<PermissionNode> dataWriter);
 
 
     /**

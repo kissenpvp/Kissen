@@ -21,8 +21,8 @@ package net.kissenpvp.core.user;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.database.savable.Savable;
-import net.kissenpvp.core.api.database.savable.SavableInitializeException;
 import net.kissenpvp.core.api.database.savable.SavableMap;
+import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.base.KissenCore;
@@ -44,7 +44,7 @@ public abstract class KissenPublicUser<T extends AbstractPermission> extends Kis
      * @param name of the player this class should represent, null if it's just an abstraction.
      * @param uuid of the player this class should represent, null if it's just an abstraction.
      */
-    public KissenPublicUser(@Nullable UUID uuid, @Nullable String name) throws BackendException {
+    public KissenPublicUser(@Nullable UUID uuid, @Nullable String name) {
         super(uuid, name);
 
         if (name!=null && uuid!=null) {
@@ -55,14 +55,16 @@ public abstract class KissenPublicUser<T extends AbstractPermission> extends Kis
         }
     }
 
-    public @NotNull MetaList<PlayerRankNode> getRankNodes()
-    {
+    public @NotNull MetaList<PlayerRankNode> getRankNodes() {
         return getRepository().getListNotNull("rank_list", PlayerRankNode.class);
     }
 
-    public void updateLocale(@NotNull String locale)
-    {
-        // TODO intervene when default
+    public void updateLocale(@NotNull String locale) {
+        LocalizationImplementation locales = KissenCore.getInstance().getImplementation(LocalizationImplementation.class);
+        if (Objects.equals(locale, locales.getDefaultLocale().toString())) {
+            getRepository().delete("locale");
+            return;
+        }
         getRepository().set("locale", locale);
     }
 
@@ -97,10 +99,10 @@ public abstract class KissenPublicUser<T extends AbstractPermission> extends Kis
     }
 
     @Override
-    public @NotNull Savable setup(@NotNull String id) throws SavableInitializeException, BackendException {
-        Savable value = super.setup(id);
+    public @NotNull Savable<UUID> setup(@NotNull UUID id, @Nullable Map<String, Object> initialData) {
+        Savable<UUID> value = super.setup(id, initialData);
         String name = getRepository().getNotNull("name", String.class);
-        getImplementation().cacheProfile(new UserInfoNode(UUID.fromString(id), name));
+        getImplementation().cacheProfile(new UserInfoNode(id, name));
         return value;
     }
 

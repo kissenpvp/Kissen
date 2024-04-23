@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.api.database.queryapi.FilterQuery;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.database.jdbc.KissenJDBCMeta;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +15,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 /**
@@ -32,8 +30,7 @@ import java.util.stream.Collectors;
 @Getter
 public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
 
-    private static final String SELECT_FORMAT_WHERE = "SELECT %s FROM %s WHERE (%s) AND %s = ?;";
-    private static final String SELECT_FORMAT = "SELECT %s FROM %s WHERE %s = ?;";
+    private static final String SELECT_FORMAT = "SELECT %s FROM %s WHERE %s;";
     private final QuerySelect query;
 
     /**
@@ -50,11 +47,7 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
 
     public @NotNull String constructSQL(@NotNull List<String> values) {
         String table = getMeta().getTable().getTable();
-        String pluginColumn = getMeta().getTable().getPluginColumn();
-        if (getQuery().getFilterQueries().length==0) {
-            return String.format(SELECT_FORMAT, columns(), table, pluginColumn);
-        }
-        return String.format(SELECT_FORMAT_WHERE, columns(), table, selectFromWhere(values), pluginColumn);
+        return String.format(SELECT_FORMAT, columns(), table, where(values, getQuery().getFilterQueries()));
     }
 
     public @NotNull PreparedStatementExecutor executeStatement(@NotNull List<Object[]> results, @NotNull String[] parameter) {
@@ -85,7 +78,6 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
      * It iterates through each column in the array and calls the {@link #handleResult(ResultSet, Column)} method to retrieve the corresponding value.
      * The values are then stored in an array and returned.
      *
-     * @param columns   an array of {@link Column} representing the columns for which values should be extracted
      * @param resultSet the {@link ResultSet} containing the query result
      * @return an array of {@link Object} containing the values for the specified columns
      * @throws SQLException         if a database access error occurs or if one of the specified columns is not found in the result set
@@ -129,33 +121,12 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
     }
 
     /**
-     * Constructs a SQL SELECT statement with a WHERE clause based on the provided {@link QuerySelect} and values.
-     *
-     * <p>
-     * This method constructs a SQL SELECT statement with a WHERE clause based on the provided {@link QuerySelect} object
-     * and values for WHERE conditions. It retrieves the table name from the metadata and generates the WHERE clause using
-     * the {@link #where(List, FilterQuery...)} method. The SELECT statement is constructed by joining the table name and
-     * the WHERE clause.
-     *
-     * @param select the {@link QuerySelect} object representing the SELECT query
-     * @param values an array of {@link String} representing the values for the WHERE conditions
-     * @return a SQL SELECT statement with a WHERE clause
-     * @throws NullPointerException if {@code select} is {@code null}
-     * @see QuerySelect
-     * @see #where(List, FilterQuery...)
-     */
-    private @NotNull String selectFromWhere(@NotNull List<String> values) {
-        return where(values, getQuery().getFilterQueries());
-    }
-
-    /**
      * Constructs a comma-separated list of column names for use in SQL statements.
      *
      * <p>
      * This method constructs a comma-separated list of column names based on the provided array of {@link Column} objects.
      * It retrieves the column names from the metadata and appends an optional type column for the {@link Column#VALUE} column.
      *
-     * @param column an array of {@link Column} representing the columns to include in the list
      * @return a comma-separated list of column names
      * @throws NullPointerException if {@code column} is {@code null}
      * @see Column

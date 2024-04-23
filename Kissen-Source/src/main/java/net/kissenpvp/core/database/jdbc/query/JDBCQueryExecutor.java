@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -28,14 +29,36 @@ import java.util.stream.IntStream;
 @AllArgsConstructor
 public class JDBCQueryExecutor {
 
+    protected static final String WHERE = "(%s) AND %s = ?";
+    protected static final String WHERE_NO_FILTER = "%s = ?";
+    protected static final String WHERE_INTERNAL = "(%s) AND %s IS NULL";
+    protected static final String WHERE_NO_FILTER_INTERNAL = "%s = IS NULL";
     private final KissenJDBCMeta meta;
-
 
     protected void setStatementValues(@NotNull PreparedStatement preparedStatement, @NotNull String @NotNull [] parameterValues) throws SQLException {
         for (int i = 0; i < parameterValues.length; i++) {
             preparedStatement.setString(i + 1, parameterValues[i]);
         }
-        preparedStatement.setString(parameterValues.length + 1, getMeta().getTable().getPluginColumn());
+    }
+
+    protected @NotNull String where(@NotNull List<String> values, @NotNull FilterQuery @NotNull ... filterQueries)
+    {
+        String pluginColumn = getMeta().getTable().getPluginColumn();
+        String where = internalWhere(values, filterQueries);
+        boolean noFilter = filterQueries.length==0;
+
+        if (Objects.isNull(getMeta().getPlugin())) {
+            if (noFilter) {
+                return String.format(WHERE_NO_FILTER_INTERNAL, pluginColumn);
+            }
+            return String.format(WHERE_INTERNAL, where, pluginColumn);
+        }
+
+        values.add(getMeta().getPlugin().getName());
+        if (noFilter) {
+            return String.format(WHERE_NO_FILTER, pluginColumn);
+        }
+        return String.format(WHERE, where, pluginColumn);
     }
 
     /**
@@ -51,7 +74,7 @@ public class JDBCQueryExecutor {
      * @throws NullPointerException if the array of values or filter queries is {@code null}
      * @see FilterQuery
      */
-    protected @NotNull String where(@NotNull List<String> values, @NotNull FilterQuery @NotNull ... filterQueries) {
+    private @NotNull String internalWhere(@NotNull List<String> values, @NotNull FilterQuery @NotNull ... filterQueries) {
         int length = filterQueries.length;
         return IntStream.range(0, length).mapToObj(whereEntry(values, filterQueries)).collect(Collectors.joining());
     }
@@ -83,7 +106,7 @@ public class JDBCQueryExecutor {
             values.add(serialized);
 
             String clause = pattern.formatted(getMeta().getTable().getColumn(filterQuery.getColumn()));
-            return i == 0 ? clause : " " + filterQuery.getFilterOperator() + " " + clause;
+            return i==0 ? clause:" " + filterQuery.getFilterOperator() + " " + clause;
         };
     }
 }

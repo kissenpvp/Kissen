@@ -108,13 +108,13 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     @Override
     protected @NotNull CompletableFuture<Object[][]> execute(@NotNull QuerySelect select) {
         JDBCSelectQueryExecutor executor = new JDBCSelectQueryExecutor(select, this);
+
         return CompletableFuture.supplyAsync(() -> {
             List<Object[]> array = new ArrayList<>();
 
             List<String> values = new ArrayList<>();
             String sql = executor.constructSQL(values);
             getPreparedStatement(sql, executor.executeStatement(array, values.toArray(String[]::new)));
-
             return array.toArray(new Object[0][]);
         }).handle(logExceptions());
     }
@@ -130,7 +130,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             AtomicLong count = new AtomicLong();
             getPreparedStatement(sql, executor.executeStatement(total, count));
             return count.get();
-        }).handle(logExceptions());
+        }).handle(logExceptions()).thenApply((data) -> data);
     }
 
     /**

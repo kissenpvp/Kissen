@@ -71,7 +71,7 @@ public interface ObjectMeta extends Meta {
      * @param id   the ID of the object to which the data will be added.
      * @param data a map containing the data to be added to the object.
      */
-    void insertJsonMap(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException;
+    void addMap(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException;
 
     /**
      * Retrieves the data associated with the object identified by the specified total ID.

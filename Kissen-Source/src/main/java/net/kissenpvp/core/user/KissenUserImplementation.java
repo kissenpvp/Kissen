@@ -134,7 +134,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
     @Override
     public @NotNull Optional<User> getOnlineUser(@NotNull UUID uuid) {
-        return getOnlineUser().stream().filter(userEntry -> userEntry.getRawID().equals(uuid.toString())).findFirst();
+        return getOnlineUser().stream().filter(userEntry -> Objects.equals(userEntry.getRawID(), uuid)).findFirst();
     }
 
     @Override
@@ -272,7 +272,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @return boolean indicating whether user data was successfully loaded into online users (true if loaded, otherwise false)
      */
     public boolean loadUser(@NotNull User user) {
-        Optional<User> userOptional = getOnlineUser(UUID.fromString(user.getRawID()));
+        Optional<User> userOptional = getOnlineUser((UUID) user.getRawID());
         if (userOptional.isPresent()) {
             onlineUserSet.removeIf(currentUser -> currentUser.getRawID().equals(user.getRawID()));
         }
@@ -286,7 +286,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @param user a User entity representing the user to login
      * @return true if the user was successfully logged in, false otherwise
      */
-    public boolean loginUser(User user) {
+    public boolean loginUser(@NotNull User user) {
         if (getOnlineUser().contains(user)) {
             ((KissenUser<?>) user).login();
             return true;
@@ -301,7 +301,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @return true if the user was successfully logged out, false otherwise
      */
     public boolean logoutUser(@NotNull User user) {
-        if (getOnlineUser(UUID.fromString(user.getRawID())).isPresent()) {
+        if (getOnlineUser((UUID) user.getRawID()).isPresent()) {
             ((KissenUser<?>) user).logout();
             return onlineUserSet.removeIf(userEntry -> userEntry.getRawID().equals(user.getRawID()));
         }

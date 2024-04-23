@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.database.jdbc;
 
-import lombok.SneakyThrows;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.ObjectMeta;
@@ -32,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -101,7 +101,7 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
     }
 
     @Override
-    public void insertJsonMap(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException {
+    public void addMap(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException {
         getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s, %s, %s) VALUES (?, ?, ?, ?, ?);", getTable(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY), getTable().getPluginColumn(), getTable().getTypeColumn(), getTable().getColumn(Column.VALUE)), preparedStatement -> {
             for (Map.Entry<String, Object> current : data.entrySet()) {
                 preparedStatement.setString(1, id);
@@ -121,6 +121,9 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
     public @NotNull CompletableFuture<SavableMap> getData(@NotNull String totalId) {
         QuerySelect select = select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, totalId);
         return select.execute().thenApply(data -> {
+            if (data.length==0) {
+                return new KissenSavableMap(totalId, KissenObjectJDBCMeta.this, Collections.EMPTY_MAP);
+            }
             Object[][] modifiedData = new Object[data.length][data[0].length + 1];
 
             for (int i = 0; i < data.length; i++) {
@@ -138,11 +141,10 @@ public abstract class KissenObjectJDBCMeta extends KissenNativeJDBCMeta implemen
         return select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, regex).execute().thenApply(this::processQuery);
     }
 
-    @SneakyThrows
-    private @NotNull Map<String, SavableMap> processQuery(@NotNull Object @NotNull [] @NotNull [] data) throws BackendException {
+    private @NotNull Map<String, SavableMap> processQuery(@NotNull Object @NotNull [] @NotNull [] data) {
         Map<String, SavableMap> dataContainer = new HashMap<>();
         for (Object[] current : data) {
-            Function<String, SavableMap> generateMap = (id) -> new KissenSavableMap(id, KissenObjectJDBCMeta.this);
+            Function<String, SavableMap> generateMap = (id) -> new KissenSavableMap(id, KissenObjectJDBCMeta.this, Collections.EMPTY_MAP);
             dataContainer.computeIfAbsent(current[0].toString(), generateMap).put(current[1].toString(), current[2]);
         }
         return dataContainer;

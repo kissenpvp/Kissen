@@ -49,6 +49,10 @@ public class MongoQueryExecutor {
     protected @NotNull @Unmodifiable Bson where(@NotNull FilterQuery @NotNull [] filterQueries) {
         List<Bson> total = new ArrayList<>();
         getFilters(total, filterQueries);
+        if(Objects.nonNull(getMeta().getPlugin()))
+        {
+            total.add(Filters.eq(getMeta().getTable().getPluginColumn(), getMeta().getPlugin().getName()));
+        }
         return Filters.or(total);
     }
 

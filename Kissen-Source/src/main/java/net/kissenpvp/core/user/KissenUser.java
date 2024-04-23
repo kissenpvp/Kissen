@@ -18,8 +18,8 @@
 
 package net.kissenpvp.core.user;
 
-import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.api.database.meta.Table;
+import net.kissenpvp.core.api.database.savable.SavableInitializeException;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 import net.kissenpvp.core.api.networking.socket.DataPackage;
@@ -31,7 +31,6 @@ import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 import net.kissenpvp.core.permission.KissenGroupablePermissionEntry;
-import net.kissenpvp.core.permission.PermissionNode;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,11 +42,15 @@ import java.util.*;
 import java.util.function.Supplier;
 
 
-public abstract class KissenUser<T extends AbstractPermission> extends KissenGroupablePermissionEntry<T> implements User {
+public abstract class KissenUser<T extends AbstractPermission> extends KissenGroupablePermissionEntry<UUID, T> implements User{
 
     public KissenUser(@Nullable UUID uuid, @Nullable String name) {
         if (Objects.nonNull(uuid)) {
-            setup(uuid.toString());
+            try {
+                setup(uuid);
+            } catch (SavableInitializeException savableInitializeException) {
+                setup(uuid, getDefaultData(uuid, name));
+            }
         }
     }
 
@@ -58,7 +61,7 @@ public abstract class KissenUser<T extends AbstractPermission> extends KissenGro
 
     @Override
     public @NotNull @Unmodifiable Set<UUID> getAffectedUsers() {
-        return Collections.singleton(UUID.fromString(getRawID()));
+        return Collections.singleton(getRawID());
     }
 
     @Override
@@ -83,15 +86,10 @@ public abstract class KissenUser<T extends AbstractPermission> extends KissenGro
     @Override
     public @NotNull Map<String, Object> getStorage() {
         UserImplementation userImplementation = KissenCore.getInstance().getImplementation(UserImplementation.class);
-        if (userImplementation.getOnlineUser(UUID.fromString(getRawID())).isEmpty()) {
+        if (userImplementation.getOnlineUser(getRawID()).isEmpty()) {
             return new HashMap<>(); // not connected
         }
         return super.getStorage();
-    }
-
-    @Override
-    protected @NotNull SavableMap createRepository(@NotNull String id) {
-        return null;
     }
 
     @Override
@@ -101,17 +99,12 @@ public abstract class KissenUser<T extends AbstractPermission> extends KissenGro
 
     @Override
     public SerializableSavableHandler getSerializableSavableHandler() {
-        return new SerializableUserHandler(UUID.fromString(getRawID()));
+        return new SerializableUserHandler(getRawID());
     }
 
     @Override
     public @NotNull Component displayName() {
         return getPlayerClient().displayName();
-    }
-
-    @Override
-    protected @NotNull T translatePermission(@NotNull PermissionNode permissionNode, @Nullable DataWriter<PermissionNode> dataWriter) {
-        return null;
     }
 
     protected @NotNull KissenUserImplementation getImplementation() {

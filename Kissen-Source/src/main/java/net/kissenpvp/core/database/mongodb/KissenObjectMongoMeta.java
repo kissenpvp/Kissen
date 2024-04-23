@@ -38,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -50,7 +51,7 @@ public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implem
     }
 
     @Override
-    public void insertJsonMap(@NotNull String id, final @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException {
+    public void addMap(@NotNull String id, final @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException {
         getCollection().bulkWrite(data.entrySet().stream().map(buildUpdateQuery(id)).toList());
         KissenCore.getInstance().getLogger().debug("Insert map {} with id {}.", data, id);
     }
@@ -93,7 +94,7 @@ public abstract class KissenObjectMongoMeta extends KissenNativeMongoMeta implem
     private @NotNull Map<String, SavableMap> processQuery(@NotNull Object @NotNull [] @NotNull [] data) throws BackendException {
         Map<String, SavableMap> dataContainer = new HashMap<>();
         for (Object[] current : data) {
-            Function<String, SavableMap> generateMap = (id) -> new KissenSavableMap(id, KissenObjectMongoMeta.this);
+            Function<String, SavableMap> generateMap = (id) -> new KissenSavableMap(id, KissenObjectMongoMeta.this, Collections.EMPTY_MAP);
             dataContainer.computeIfAbsent(current[0].toString(), generateMap).put(current[1].toString(), current[2]);
         }
         return dataContainer;

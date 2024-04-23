@@ -29,7 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 
-public abstract class KissenRank extends KissenSavable implements Savable, AbstractRank {
+public abstract class KissenRank extends KissenSavable<String> implements AbstractRank {
     @Override
     public final @NotNull String getSaveID() {
         return "rank";
@@ -44,7 +44,6 @@ public abstract class KissenRank extends KissenSavable implements Savable, Abstr
     public @NotNull String getName() {
         return getRawID();
     }
-
 
     @Override
     public int getPriority() {

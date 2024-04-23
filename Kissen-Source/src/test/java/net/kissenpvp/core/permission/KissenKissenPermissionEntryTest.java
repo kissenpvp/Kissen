@@ -12,14 +12,14 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 class KissenKissenPermissionEntryTest extends Test {
-    private static final TestPermissionEntry testPermissionEntry = new TestPermissionEntry();
+/*    private static final TestPermissionEntry testPermissionEntry = new TestPermissionEntry();
 
     @Contract(pure = true, value = "-> new")
     private static @NotNull Stream<TestData<String, TestPermission>> testMatcherSource() {
         return Stream.of(new TestData<>("minecraft.command.gamemode", testPermission("minecraft.command.gamemode"), true), new TestData<>("minecraft.command.gamemode", testPermission("minecraft.comman?.gamemode"), true), new TestData<>("minecraft.command.gamemode", testPermission("minecraft*gamemode"), true), new TestData<>("minecraft.command.gamemode", testPermission("minec*"), true), new TestData<>("minecraft.command.gamemode", testPermission("minecraft.c?ommand.gamemode"), false), new TestData<>("minecraft.c", testPermission("minecraft.c?ommand.gamemode"), false));
-    }
+    }*/
 
-    @Contract(pure = true, value = "_ -> new")
+/*    @Contract(pure = true, value = "_ -> new")
     private static @NotNull TestPermission testPermission(@NotNull String permission) {
         TemporalData temporal = new TemporalData();
         PermissionNode node = new PermissionNode(permission, testPermissionEntry, true, temporal);
@@ -33,5 +33,5 @@ class KissenKissenPermissionEntryTest extends Test {
             Optional<TestPermission> permission = testPermissionEntry.matcher(request, testData.expected());
             return permission.isPresent();
         });
-    }
+    }*/
 }

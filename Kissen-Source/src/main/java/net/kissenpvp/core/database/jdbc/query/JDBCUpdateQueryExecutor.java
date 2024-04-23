@@ -28,8 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Getter(AccessLevel.PROTECTED)
 public class JDBCUpdateQueryExecutor extends JDBCQueryExecutor {
 
-    private static final String UPDATE_FORMAT_WHERE = "UPDATE %s SET %s WHERE (%s) AND %s = ?;";
-    private static final String UPDATE_FORMAT = "UPDATE %s SET %s WHERE %s = ?;";
+    private static final String UPDATE_FORMAT = "UPDATE %s SET %s WHERE %s;";
     private final QueryUpdate update;
 
     /**
@@ -46,15 +45,7 @@ public class JDBCUpdateQueryExecutor extends JDBCQueryExecutor {
 
     public @NotNull String constructSQL(@NotNull List<String> update, @NotNull List<String> where) {
         FilterQuery[] queries = getUpdate().getFilterQueries();
-        String updateSql = update(update, getUpdate().getColumns());
-        String pluginColumn = getMeta().getTable().getPluginColumn();
-
-        if (queries.length==0) {
-            return String.format(UPDATE_FORMAT, getMeta().getTable(), updateSql, pluginColumn);
-        }
-
-        String whereSql = where(where, queries);
-        return String.format(UPDATE_FORMAT_WHERE, getMeta().getTable(), updateSql, whereSql, pluginColumn);
+        return String.format(UPDATE_FORMAT, getMeta().getTable(), update(update), where(where, queries));
     }
 
     /**
@@ -91,14 +82,14 @@ public class JDBCUpdateQueryExecutor extends JDBCQueryExecutor {
      * @throws NullPointerException if the array of values or columns is {@code null}
      * @see Update
      */
-    private @NotNull String update(@NotNull List<String> values, @NotNull Update @NotNull ... columns) {
+    private @NotNull String update(@NotNull List<String> values) {
         List<String> col = new ArrayList<>();
         if (Objects.nonNull(getMeta().getPlugin())) {
             col.add(getMeta().getTable().getPluginColumn());
             values.add(getMeta().getPlugin().getName());
         }
 
-        for (Update column : columns) {
+        for (Update column : getUpdate().getColumns()) {
             if (Objects.equals(column.column(), Column.VALUE)) {
                 String[] serialized = getMeta().serialize(column.value());
                 col.add(getMeta().getTable().getTypeColumn());

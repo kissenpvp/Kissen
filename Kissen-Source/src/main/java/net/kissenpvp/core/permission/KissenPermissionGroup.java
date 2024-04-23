@@ -29,18 +29,17 @@ import net.kissenpvp.core.database.savable.KissenSavableMap;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class KissenPermissionGroup<T extends AbstractPermission> extends KissenGroupablePermissionEntry<T> implements AbstractPermissionGroup<T> {
+public abstract class KissenPermissionGroup<T extends AbstractPermission> extends KissenGroupablePermissionEntry<String, T> implements AbstractPermissionGroup<T> {
 
     @Override
     public @NotNull @Unmodifiable Set<String> getMember() {
@@ -152,9 +151,9 @@ public abstract class KissenPermissionGroup<T extends AbstractPermission> extend
     }
 
     @Override
-    protected @NotNull SavableMap createRepository(@NotNull String id) {
+    protected @NotNull SavableMap createRepository(@Nullable Map<String, Object> data) {
         ObjectMeta meta = KissenCore.getInstance().getImplementation(InternalKissenPermissionImplementation.class).getMeta();
-        return new KissenSavableMap(id, meta);
+        return new KissenSavableMap(getDatabaseID(), meta, Objects.requireNonNullElseGet(data, meta.getData(getDatabaseID())::join));
     }
 
     @Override
@@ -164,6 +163,6 @@ public abstract class KissenPermissionGroup<T extends AbstractPermission> extend
 
     @Override
     public @NotNull KissenTable getTable() {
-        return (KissenTable) KissenCore.getInstance().getImplementation(InternalKissenPermissionImplementation.class).getTable();
+        return KissenCore.getInstance().getImplementation(InternalKissenPermissionImplementation.class).getTable();
     }
 }

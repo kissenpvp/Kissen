@@ -642,32 +642,4 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * @see #removeList(String)
      */
     boolean deleteList(@NotNull String key);
-
-    /**
-     * Returns a serializable version of the SavableMap.
-     *
-     * <p>The `toSerializable()` method allows you to obtain a serializable version of the SavableMap. This can be
-     * useful
-     * when you need to serialize the map and store it or transfer it over a network.</p>
-     *
-     * <p>The returned `SavableMap` object is a serializable representation of the original map. It contains the same
-     * key-value
-     * pairs and maintains any modifications made to the original map.</p>
-     *
-     * <p>Example usage:</p>
-     *
-     * <pre>
-     * {@code
-     * SavableMap savableMap = new SomeSavableMapImplementation();
-     * savableMap.set("key1", "value1");
-     * savableMap.set("key2", "value2");
-     *
-     * // Obtain the serializable version of the map
-     * SavableMap serializableMap = savableMap.toSerializable();
-     * }
-     * </pre>
-     *
-     * @return a serializable version of the SavableMap
-     */
-    @NotNull SavableMap serializeSavable();
 }

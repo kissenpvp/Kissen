@@ -61,11 +61,11 @@ import java.util.*;
  */
 @Setter
 @Getter
-@NoArgsConstructor
 public class KissenSavableMap extends HashMap<String, Object> implements SavableMap {
 
-    private String id;
-    private ObjectMeta meta;
+    private final String id;
+    private final ObjectMeta meta;
+    private final boolean internal;
 
 
     /**
@@ -76,11 +76,12 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
      * @param id   the ID to associate with the new KissenSavableMap
      * @param meta the ObjectMeta to associate with the new KissenSavableMap
      */
-    public KissenSavableMap(@NotNull String id, @NotNull ObjectMeta meta) {
-        super.putAll(getMeta().getData(getId()).join());
+    public KissenSavableMap(@NotNull String id, @NotNull ObjectMeta meta, @NotNull Map<String, Object> copy) {
+        super.putAll(copy);
 
         this.id = id;
         this.meta = meta;
+        this.internal = false;
     }
 
     @Override
@@ -213,11 +214,6 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
     @Override
     public <T> boolean deleteListValue(@NotNull String key, @NotNull T value) {
         return getList(key, value.getClass()).map(data -> data.remove(value)).orElse(false);
-    }
-
-    @Override
-    public @NotNull SavableMap serializeSavable() {
-        return new KissenSavableMap(getId(), getMeta(), this);
     }
 
     @Override
