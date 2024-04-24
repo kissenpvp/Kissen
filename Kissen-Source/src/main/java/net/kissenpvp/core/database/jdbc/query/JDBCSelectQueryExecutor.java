@@ -51,21 +51,12 @@ public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
     }
 
     public @NotNull PreparedStatementExecutor executeStatement(@NotNull List<Object[]> results, @NotNull String[] parameter) {
-        return new PreparedStatementExecutor() {
-            @Override
-            public void execute(@NotNull PreparedStatement statement) throws SQLException {
-                setStatementValues(statement, parameter);
-                try (ResultSet resultSet = statement.executeQuery()) {
-                    while (resultSet.next()) {
-                        results.add(handleResult(resultSet));
-                    }
+        return statement -> {
+            setStatementValues(statement, parameter);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    results.add(handleResult(resultSet));
                 }
-            }
-
-            @Override
-            public boolean handle(@NotNull SQLException throwable) {
-                log.error("An exception occurred when executing sql request.", throwable); //TODO
-                return true;
             }
         };
     }

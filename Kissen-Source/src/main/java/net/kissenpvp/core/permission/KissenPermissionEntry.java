@@ -30,10 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -59,7 +56,7 @@ public abstract class KissenPermissionEntry<T, X extends AbstractPermission> ext
     public @NotNull X setPermission(@NotNull String permission, boolean value) throws EventCancelledException {
         return getPermission(permission).map(current -> setPermission(current, value)).orElseGet(() -> {
             PermissionNode newPermission = new PermissionNode(permission, this, value, new TemporalData());
-            return setPermission(permission);
+            return setPermission(newPermission);
         });
     }
 
@@ -74,7 +71,7 @@ public abstract class KissenPermissionEntry<T, X extends AbstractPermission> ext
 
     @Override
     public boolean unsetPermission(@NotNull String permission) {
-        return getRepository().getList("permission_list", PermissionNode.class).map(list -> list.removeIf(node -> node.name().equals(permission))).orElse(false);
+        return getRepository().getList("permission_list", PermissionNode.class).map(list -> list.removeIf(node -> Objects.equals(node.name(), permission))).orElse(false);
     }
 
     @Override
@@ -242,21 +239,12 @@ public abstract class KissenPermissionEntry<T, X extends AbstractPermission> ext
      */
     private @NotNull X internSetPermission(@NotNull PermissionNode permissionNode) {
         getRepository().getListNotNull("permission_list", PermissionNode.class).replaceOrInsert(permissionNode);
-        return translatePermission(permissionNode, permissionWriter());
+        return translatePermission(permissionNode, this::internSetPermission);
     }
 
-    /**
-     * Translates a Kissen permission node into the appropriate permission representation.
-     * <p>
-     * This method serves as a convenient wrapper, utilizing the provided permission writer obtained from {@link #permissionWriter()},
-     * to perform the actual translation of the given {@link PermissionNode}. The translated permission is then returned.
-     *
-     * @param permissionNode the{@link PermissionNode} to be translated. Must not be null.
-     * @return A non-null value representing the translated permission result.
-     * @see #translatePermission(PermissionNode, DataWriter)
-     */
+
     private @NotNull X translatePermission(@NotNull PermissionNode permissionNode) {
-        return translatePermission(permissionNode, permissionWriter());
+        return translatePermission(permissionNode, this::internSetPermission);
     }
 
     /**
@@ -270,19 +258,6 @@ public abstract class KissenPermissionEntry<T, X extends AbstractPermission> ext
      * @return A non-null value representing the translated permission result.
      */
     protected abstract @NotNull X translatePermission(@NotNull PermissionNode permissionNode, @Nullable DataWriter<PermissionNode> dataWriter);
-
-
-    /**
-     * Retrieves a data writer for saving changes made to permission data.
-     * <p>
-     * This method provides a data writer that facilitates the process of saving changes to permission data after it has been modified.
-     * It returns a non-null data writer instance that can be used to store changes in the context of the system's permission management.
-     *
-     * @return A non-null data writer instance for saving permission changes.
-     */
-    private @NotNull DataWriter<PermissionNode> permissionWriter() {
-        return this::internSetPermission;
-    }
 
     @Override
     public int softDelete() throws BackendException {
