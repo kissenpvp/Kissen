@@ -4,215 +4,6 @@ Date: Mon, 11 Sep 2023 01:08:59 +0200
 Subject: [PATCH] Integrated player system from kissen into paper
 
 
-diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperBan.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperBan.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..3665cb5da0501f7cda075a633bab7cadf2dda10d
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperBan.java
-@@ -0,0 +1,33 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.ban;
-+
-+import net.kissenpvp.core.api.ban.Ban;
-+
-+/**
-+ * Interface for a Paper-specific ban.
-+ * <p>
-+ * This interface extends the {@link Ban} and doesn't introduce any new methods; it merely represents a
-+ * specialized version of a ban within the context of the Paper API.
-+ * <p>
-+ * All methods inherited from {@link Ban} maintain their original functionality in the Paper API context.
-+ *
-+ * @see Ban
-+ */
-+public interface PaperBan extends Ban {}
-diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..80a250a61e514ae4186171404c1155427b4e0c81
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperBanImplementation.java
-@@ -0,0 +1,108 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.ban;
-+
-+import net.kissenpvp.core.api.ban.*;
-+import net.kissenpvp.core.api.database.meta.BackendException;
-+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
-+import net.kissenpvp.paper.api.base.Context;
-+import net.kyori.adventure.text.Component;
-+import org.bukkit.ban.ProfileBanList;
-+import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Nullable;
-+import org.jetbrains.annotations.Unmodifiable;
-+
-+import java.util.Optional;
-+import java.util.Set;
-+import java.util.UUID;
-+
-+/**
-+ * Interface for Paper-specific ban implementation.
-+ * <p>
-+ * This interface extends the {@link BanImplementation} and specializes the type for {@link PaperBan} and {@link PaperPunishment}.
-+ * This interface further defines methods to get punishment details within a Paper context.
-+ *
-+ * @see BanImplementation
-+ * @see PaperBan
-+ * @see PaperPunishment
-+ */
-+public interface PaperBanImplementation extends BanImplementation<PaperBan, PaperPunishment>, ProfileBanList
-+{
-+    /**
-+     * Returns an unmodifiable set of all punishments applied in the specified context.
-+     *
-+     * @param context The context from which to retrieve punishments.
-+     * @return An unmodifiable set containing all punishments in the context.
-+     * @throws BackendException if an error occurs when retrieving the punishment data.
-+     */
-+    @NotNull @Unmodifiable Set<PaperPunishment> getPunishmentSet(@NotNull Context context) throws BackendException;
-+
-+    /**
-+     * Returns an unmodifiable set of all punishments applied to the player with the given UUID within the specified context.
-+     *
-+     * @param totalID The UUID of the player for whom to retrieve the punishment data.
-+     * @param context The context from which to retrieve punishments.
-+     * @return An unmodifiable set containing all punishments for the player in the context.
-+     * @throws BackendException if an error occurs when retrieving the punishment data.
-+     */
-+    @NotNull @Unmodifiable Set<PaperPunishment> getPunishmentSet(@NotNull UUID totalID, @NotNull Context context) throws BackendException;
-+
-+    /**
-+     * Returns the most recent punishment applied to the player with the given UUID within the specified context, if such a punishment exists.
-+     *
-+     * @param totalID The UUID of the player for whom to retrieve the latest punishment.
-+     * @param context The context from which to retrieve the punishment.
-+     * @return An Optional containing the latest punishment if it exists, or Optional.empty() otherwise.
-+     * @throws BackendException if an error occurs when retrieving the punishment data.
-+     */
-+    @NotNull Optional<PaperPunishment> getLatestPunishment(@NotNull UUID totalID, @NotNull Context context) throws BackendException;
-+
-+    /**
-+     * Returns the most recent punishment of the specified type applied to the player with the given UUID within the specified context, if such a punishment exists.
-+     *
-+     * @param totalID The UUID of the player for whom to retrieve the latest punishment.
-+     * @param banType The type of ban to search for.
-+     * @param context The context from which to retrieve the punishment.
-+     * @return An Optional containing the latest punishment of the required type if it exists, or Optional.empty() otherwise.
-+     * @throws BackendException if an error occurs when retrieving the punishment data.
-+     */
-+    @NotNull Optional<PaperPunishment> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType, @NotNull Context context) throws BackendException;
-+
-+    /**
-+     * Applies a punishment to the player with the specified UUID.
-+     * <p>
-+     * This method creates and returns a new instance of {@link PaperPunishment} on the specified player,
-+     * based on the given parameters. The new punishment is persistently stored in the backend.
-+     *
-+     * @param totalID The UUID of the player to be punished.
-+     * @param ban The {@link PaperBan} instance representing the specifications of the punishment.
-+     * @param banOperator The operator who is applying the punishment.
-+     * @param reason The reason for the punishment. This can be null.
-+     * @param context The context in which the punishment is being applied.
-+     * @return The created {@link PaperPunishment} instance.
-+     * @throws BackendException if an error occurs when trying to create or persist the punishment in the backend.
-+     */
-+    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, @Nullable Component reason, @NotNull Context context) throws BackendException;
-+
-+    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, @NotNull Context context) throws BackendException;
-+
-+    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, boolean apply, @NotNull Context context) throws BackendException;
-+
-+    @NotNull PaperPunishment punish(@NotNull UUID totalID, @NotNull PaperBan ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason, @NotNull Context context) throws BackendException;
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java b/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..c59ee172bafb18359c227145de4e7f311f51aabb
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/ban/PaperPunishment.java
-@@ -0,0 +1,38 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.ban;
-+
-+import com.destroystokyo.paper.profile.PlayerProfile;
-+import net.kissenpvp.core.api.ban.Punishment;
-+import org.bukkit.BanEntry;
-+import org.bukkit.entity.Player;
-+
-+/**
-+ * Represents a punishment applied to a Player within Paper-specific context.
-+ * <p>
-+ * This interface is an extension of the {@link Punishment} interface specific to Player instances.
-+ * It defines the contract for any kind of punishment that can be applied to a Player in the game
-+ * or application built on the Paper platform.
-+ * <p>
-+ * The specific methods of punishment and their behaviour on a Player are defined in the classes that
-+ * implement this interface, in accordance with the specifications of the {@link Punishment} interface.
-+ *
-+ * @see Punishment
-+ */
-+public interface PaperPunishment extends Punishment<Player>, BanEntry<PlayerProfile> {}
-diff --git a/src/main/java/net/kissenpvp/paper/api/ban/warn/PaperWarn.java b/src/main/java/net/kissenpvp/paper/api/ban/warn/PaperWarn.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..16d48f82197079800c347a536dc29f6ee15644c3
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/ban/warn/PaperWarn.java
-@@ -0,0 +1,6 @@
-+package net.kissenpvp.paper.api.ban.warn;
-+
-+import net.kissenpvp.core.api.user.Warn;
-+import net.kissenpvp.paper.api.ban.PaperBan;
-+
-+public interface PaperWarn extends Warn<PaperBan> {}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java b/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..ce61bd83bfcfb2dc09764f89b9bd1d1f48728e02
@@ -254,7 +45,7 @@ index 0000000000000000000000000000000000000000..ce61bd83bfcfb2dc09764f89b9bd1d1f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..13e996d4dca6fb8638d8ba7a9e86b109762f109b
+index 0000000000000000000000000000000000000000..31072db8ac04fdb0b88a56d536e09252e445d5c1
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java
 @@ -0,0 +1,28 @@
@@ -279,19 +70,19 @@ index 0000000000000000000000000000000000000000..13e996d4dca6fb8638d8ba7a9e86b109
 +package net.kissenpvp.paper.api.networking.client.entity;
 +
 +import net.kissenpvp.core.api.networking.client.entitiy.OnlinePlayerClient;
-+import net.kissenpvp.paper.api.ban.PaperPunishment;
-+import net.kissenpvp.paper.api.permission.PaperPermission;
-+import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
++import net.kissenpvp.paper.api.ban.Punishment;
++import net.kissenpvp.paper.api.permission.Permission;
++import net.kissenpvp.paper.api.user.rank.PlayerRank;
 +
-+public interface PaperOnlinePlayerClient extends OnlinePlayerClient<PaperPermission, PaperPlayerRank, PaperPunishment> {
++public interface PaperOnlinePlayerClient extends OnlinePlayerClient<Permission, PlayerRank, Punishment> {
 +
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..aaec135ce81a8f6adae5856f8dc61bf8b8981402
+index 0000000000000000000000000000000000000000..b4dcbd72371ee6a9e55ed58c0d08700f0faec8ea
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,66 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -312,114 +103,55 @@ index 0000000000000000000000000000000000000000..aaec135ce81a8f6adae5856f8dc61bf8
 +
 +package net.kissenpvp.paper.api.networking.client.entity;
 +
-+import net.kissenpvp.core.api.ban.Ban;
-+import net.kissenpvp.core.api.event.EventCancelledException;
++import net.kissenpvp.core.api.ban.AbstractBan;
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.user.User;
-+import net.kissenpvp.core.api.user.suffix.Suffix;
-+import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
-+import net.kissenpvp.core.api.user.usersetttings.BoundPlayerSetting;
-+import net.kissenpvp.paper.api.ban.PaperPunishment;
++import net.kissenpvp.paper.api.ban.Punishment;
 +import net.kissenpvp.paper.api.ban.warn.PaperWarn;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.permission.PaperPermissible;
-+import net.kissenpvp.paper.api.permission.PaperPermission;
 +import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
-+import net.kissenpvp.paper.api.user.rank.PaperPlayerRank;
++import net.kissenpvp.paper.api.permission.Permission;
++import net.kissenpvp.paper.api.user.playersetting.BoundPlayerSetting;
++import net.kissenpvp.paper.api.user.playersetting.PlayerSetting;
++import net.kissenpvp.paper.api.user.rank.PlayerRank;
 +import net.kyori.adventure.text.Component;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.time.Instant;
 +import java.util.List;
-+import java.util.Optional;
 +import java.util.Set;
 +
 +
-+public interface PaperPlayerClient extends PlayerClient<PaperPermission, PaperPlayerRank, PaperPunishment> {
++public interface PaperPlayerClient extends PlayerClient<Permission, PlayerRank, Punishment> {
 +
 +    @NotNull @Unmodifiable Set<@NotNull PaperOnlinePlayerClient> getOnlineAltAccounts();
 +
-+    @NotNull Set<Suffix> getSuffixSet(@NotNull Context context);
-+
-+    @NotNull Optional<Suffix> getSuffix(@NotNull String name, @NotNull Context context);
-+
-+    @NotNull Suffix grantSuffix(@NotNull String name, @NotNull Component content, @NotNull Context context) throws EventCancelledException;
-+
-+    boolean revokeSuffix(@NotNull String name, @NotNull Context context);
-+
-+    @NotNull AccurateDuration getOnlineTime(@NotNull Context context);
++    @NotNull
++    AccurateDuration getOnlineTime(@NotNull Context context);
 +
 +    @NotNull User getUser(@NotNull Context context);
 +
 +    @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException;
 +
++    <X> @NotNull BoundPlayerSetting<X> getSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass);
 +
-+    <X> @NotNull BoundPlayerSetting<X> getUserSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context);
++    <X> @NotNull BoundPlayerSetting<X> getSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context);
 +
-+    @NotNull PaperWarn warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator);
++    @NotNull PaperWarn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator);
 +
-+    @NotNull PaperWarn warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator, @Nullable Component reason);
++    @NotNull PaperWarn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator, @Nullable Component reason);
 +
 +    @NotNull @Unmodifiable List<PaperWarn> getWarnHistory();
 +
 +    void clearActiveWarns();
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperGroupablePermissionEntry.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperGroupablePermissionEntry.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..890c2895a3298e0810c92c32f3432012e61e1a02
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperGroupablePermissionEntry.java
-@@ -0,0 +1,43 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.permission;
-+
-+import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
-+import net.kissenpvp.core.api.permission.PermissionGroup;
-+import net.kissenpvp.paper.api.base.Context;
-+import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Unmodifiable;
-+
-+import java.util.List;
-+import java.util.Optional;
-+import java.util.Set;
-+
-+public interface PaperGroupablePermissionEntry extends GroupablePermissionEntry<PaperPermission>, PaperPermissionEntry {
-+    @NotNull @Unmodifiable Set<PaperPermission> getOwnPermissions(@NotNull Context context);
-+
-+    @NotNull Optional<PaperPermission> getOwnPermission(@NotNull String permission, @NotNull Context context);
-+
-+    @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getOwnPermissionsGroups(@NotNull Context context);
-+
-+    @NotNull @Unmodifiable List<PermissionGroup<PaperPermission>> getPermissionGroups(@NotNull Context context);
-+
-+    boolean inGroup(@NotNull PermissionGroup<PaperPermission> permissionGroup, @NotNull Context context);
-+
-+    int wipeGroups(@NotNull Context context);
-+}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissible.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissible.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d1db0375dac28fa48732ece20f30898d44296957
+index 0000000000000000000000000000000000000000..3b7def2bcddf00f6a5ce533eea99577f546faa9e
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissible.java
 @@ -0,0 +1,25 @@
@@ -445,249 +177,8 @@ index 0000000000000000000000000000000000000000..d1db0375dac28fa48732ece20f30898d
 +
 +import org.bukkit.permissions.Permissible;
 +
-+public interface PaperPermissible extends Permissible, PaperPermissionEntry {
++public interface PaperPermissible extends Permissible, PermissionEntry {
 +
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermission.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermission.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..0d6bdc0f1ad62680bb90f497772944a044ba4f63
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermission.java
-@@ -0,0 +1,24 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.permission;
-+
-+import net.kissenpvp.core.api.permission.Permission;
-+
-+public interface PaperPermission extends Permission {
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionEntry.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionEntry.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..3e57bf604bdac866e92a0ee0ea1838592fd4be17
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionEntry.java
-@@ -0,0 +1,47 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.permission;
-+
-+import net.kissenpvp.core.api.event.EventCancelledException;
-+import net.kissenpvp.core.api.permission.PermissionEntry;
-+import net.kissenpvp.paper.api.base.Context;
-+import org.bukkit.permissions.Permissible;
-+import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Unmodifiable;
-+
-+import java.util.Optional;
-+import java.util.Set;
-+
-+public interface PaperPermissionEntry extends PermissionEntry<PaperPermission>, Permissible {
-+    @NotNull PaperPermission setPermission(@NotNull String permission, @NotNull Context context) throws EventCancelledException;
-+
-+    @NotNull PaperPermission setPermission(@NotNull String permission, boolean value, @NotNull Context context) throws EventCancelledException;
-+
-+    @NotNull PaperPermission setPermission(@NotNull PaperPermission permission, @NotNull Context context) throws EventCancelledException;
-+
-+    boolean unsetPermission(@NotNull String permission, @NotNull Context context);
-+
-+    @NotNull @Unmodifiable Set<PaperPermission> getPermissionList(@NotNull Context context);
-+
-+    @NotNull Optional<PaperPermission> getPermission(@NotNull String permission, @NotNull Context context);
-+
-+    boolean hasPermission(@NotNull String permission, @NotNull Context context);
-+
-+    int wipePermissions(@NotNull Context context);
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..516e192ea12561ebb6212c592e5640a3d3fb330d
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionGroup.java
-@@ -0,0 +1,39 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.permission;
-+
-+import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
-+import net.kissenpvp.core.api.permission.PermissionGroup;
-+import net.kissenpvp.paper.api.base.Context;
-+import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Unmodifiable;
-+
-+import java.util.Set;
-+
-+public interface PaperPermissionGroup extends PermissionGroup<PaperPermission>, PaperGroupablePermissionEntry
-+{
-+
-+    @NotNull @Unmodifiable Set<String> getMember(@NotNull Context context);
-+
-+    @NotNull @Unmodifiable Set<String> getOwnMember(@NotNull Context context);
-+
-+    boolean addMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry, @NotNull Context context);
-+
-+    boolean removeMember(@NotNull GroupablePermissionEntry<?> groupablePermissionEntry, @NotNull Context context);
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionImplementation.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..b4fd64e21c9e8abf2d1b885e3625a98ada5b147b
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissionImplementation.java
-@@ -0,0 +1,36 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.permission;
-+
-+import net.kissenpvp.core.api.base.Implementation;
-+import net.kissenpvp.core.api.event.EventCancelledException;
-+import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Unmodifiable;
-+
-+import java.util.Optional;
-+import java.util.Set;
-+
-+public interface PaperPermissionImplementation extends Implementation {
-+
-+    @NotNull @Unmodifiable Set<PaperPermissionGroup> getGroups();
-+
-+    @NotNull Optional<PaperPermissionGroup> getGroup(@NotNull String group);
-+
-+    @NotNull PaperPermissionGroup getGroupNotNull(@NotNull String group) throws EventCancelledException;
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPrivatePermissionGroup.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPrivatePermissionGroup.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..813f723025d1a140c7f74916d0aef6189dd232c5
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPrivatePermissionGroup.java
-@@ -0,0 +1,30 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.permission;
-+
-+import net.kissenpvp.core.api.permission.PermissionGroup;
-+import org.jetbrains.annotations.NotNull;
-+
-+import java.util.Optional;
-+
-+public interface PaperPrivatePermissionGroup extends PermissionGroup<PaperPermission>
-+{
-+    @NotNull Optional<PermissionGroup<PaperPermission>> getPublicGroup();
-+
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPublicPermissionGroup.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPublicPermissionGroup.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..8c61c60e837da6cd5054c2281ede692905a00aad
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPublicPermissionGroup.java
-@@ -0,0 +1,29 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.permission;
-+
-+import net.kissenpvp.core.api.permission.PermissionGroup;
-+import org.jetbrains.annotations.NotNull;
-+
-+import java.util.Optional;
-+
-+public interface PaperPublicPermissionGroup extends PermissionGroup<PaperPermission>
-+{
-+    @NotNull Optional<PermissionGroup<PaperPermission>> getPrivateGroup();
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PermissibleOverriddenException.java b/src/main/java/net/kissenpvp/paper/api/permission/PermissibleOverriddenException.java
 new file mode 100644
@@ -730,121 +221,16 @@ index 0000000000000000000000000000000000000000..bd15a61250250418eb9dceb7aa2acaa6
 +import org.jetbrains.annotations.NotNull;
 +
 +public record VisualChangeEvent(@NotNull Player player) implements EventClass { }
-diff --git a/src/main/java/net/kissenpvp/paper/api/user/rank/PaperPlayerRank.java b/src/main/java/net/kissenpvp/paper/api/user/rank/PaperPlayerRank.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..ba0970a4eba9afafe7919fbb0318777590f70e67
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/user/rank/PaperPlayerRank.java
-@@ -0,0 +1,23 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.user.rank;
-+
-+import net.kissenpvp.core.api.user.rank.PlayerRank;
-+
-+public interface PaperPlayerRank extends PlayerRank<PaperRank> { }
-diff --git a/src/main/java/net/kissenpvp/paper/api/user/rank/PaperRank.java b/src/main/java/net/kissenpvp/paper/api/user/rank/PaperRank.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..b01bdcd42f31cde098b841b0c3319f926ed322a6
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/user/rank/PaperRank.java
-@@ -0,0 +1,33 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.user.rank;
-+
-+import net.kissenpvp.core.api.user.rank.Rank;
-+import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
-+import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Unmodifiable;
-+
-+import java.util.Set;
-+
-+public interface PaperRank extends Rank
-+{
-+
-+    @NotNull @Unmodifiable Set<PaperPlayerClient> getPlayers();
-+
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/api/user/rank/PaperRankImplementation.java b/src/main/java/net/kissenpvp/paper/api/user/rank/PaperRankImplementation.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..f89bc619e02de3fd4c4bb000df66a11cee650ecc
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/user/rank/PaperRankImplementation.java
-@@ -0,0 +1,23 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.api.user.rank;
-+
-+import net.kissenpvp.core.api.user.rank.RankImplementation;
-+
-+public interface PaperRankImplementation extends RankImplementation<PaperRank> { }
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index 30298a629b39bd43ce14b414fc697b2dfcbea89c..2a894d8f4ff12c05549b48579db00d31a3951258 100644
+index 30298a629b39bd43ce14b414fc697b2dfcbea89c..47c7bbd5c31d7c24f1b788b243715c8b8eafa69d 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
 +++ b/src/main/java/org/bukkit/OfflinePlayer.java
-@@ -4,6 +4,7 @@ import java.time.Duration;
- import java.time.Instant;
- import java.util.Date;
- import java.util.UUID;
-+
- import org.bukkit.ban.ProfileBanList;
- import org.bukkit.configuration.serialization.ConfigurationSerializable;
- import org.bukkit.entity.AnimalTamer;
-@@ -19,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
+@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
   * player that is stored on the disk and can, thus, be retrieved without the
   * player needing to be online.
   */
 -public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
-+public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient, net.kissenpvp.paper.api.permission.PaperGroupablePermissionEntry { // KissenPaper
++public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient, net.kissenpvp.paper.api.permission.GroupablePermissionEntry { // KissenPaper
  
      /**
       * Checks if this player is currently online
@@ -893,21 +279,14 @@ index f309c2ed39bcc700e5b491ff549bf0608a07aab8..5f9b1cd1fc2b9f81780e48c2966f839e
 +public interface ConsoleCommandSender extends CommandSender, Conversable, net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient { // KissenPaper
  }
 diff --git a/src/main/java/org/bukkit/command/MessageCommandSender.java b/src/main/java/org/bukkit/command/MessageCommandSender.java
-index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..72227c4175f588f2f9181ca4d5647d75e568b917 100644
+index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..ae48198d53702f3234dbb2c2468d3500db08ebc6 100644
 --- a/src/main/java/org/bukkit/command/MessageCommandSender.java
 +++ b/src/main/java/org/bukkit/command/MessageCommandSender.java
-@@ -132,4 +132,32 @@ public interface MessageCommandSender extends CommandSender {
+@@ -132,4 +132,25 @@ public interface MessageCommandSender extends CommandSender {
          throw new UnsupportedOperationException();
      }
  
 +    // KissenPaper start
-+    @org.jetbrains.annotations.NotNull
-+    @Override
-+    default net.kissenpvp.core.api.message.Theme getTheme()
-+    {
-+        return Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.MessageImplementation.class).getDefaultTheme();
-+    }
-+
 +    @Override
 +    default @NotNull java.util.Locale getCurrentLocale() {
 +        throw new UnsupportedOperationException();
@@ -943,7 +322,7 @@ index c6cb4f17469a8f2e60dd3e28d41402851ce5fb21..1b23eee19af240424697d0ab13573f47
      // Paper start
      @Override
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 93a42806aa3d66c42d213115e6971d1f221ce41e..12a61b53041e75a660dc6b34747eade301b5f483 100644
+index 93a42806aa3d66c42d213115e6971d1f221ce41e..ef2ca3c6c39bca8c690892b23026c33a90e9dcec 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
 @@ -322,6 +322,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
@@ -951,12 +330,12 @@ index 93a42806aa3d66c42d213115e6971d1f221ce41e..12a61b53041e75a660dc6b34747eade3
      void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
  
 -    // KissenPaper end
-+    void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin);
++    void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin);
  
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index dd5cf2e9c8535a101b5a8618624d4ce2e64e38e2..bffcad7f1efdf9802e0941303ebbc2a88a0f8515 100644
+index dd5cf2e9c8535a101b5a8618624d4ce2e64e38e2..df050559acff2e691f2bf064241920858b2b7d24 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 @@ -979,12 +979,15 @@ public final class SimplePluginManager implements PluginManager {
@@ -972,7 +351,7 @@ index dd5cf2e9c8535a101b5a8618624d4ce2e64e38e2..bffcad7f1efdf9802e0941303ebbc2a8
  
 -    // KissenPaper end
 +    @Override
-+    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin) {
++    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin) {
 +        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
 +    }
 +    // KissenPaper start

@@ -205,38 +205,6 @@ index 8f8a43fa4cefaa8a01c571f2ffc8fe35aa687d84..4299c924572408d95fba8cf8675406c1
          this.paperEventManager.registerEvent(event, listener, priority, executor, plugin, ignoreCancelled);
      }
  
-diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index 2a84b413edf6ab6d1146a8faf75cbdec703f47d7..4db1b0bede75d6e1db7e9c4061234ce52d349f74 100644
---- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-+++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -25,7 +25,9 @@ import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
- import net.kissenpvp.core.api.database.meta.ObjectMeta;
- import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
- import net.kissenpvp.core.base.KissenCore;
-+import net.kissenpvp.core.event.EventImplementation;
- import net.kissenpvp.paper.api.base.PaperKissen;
-+<<<<<<< HEAD
- import net.kissenpvp.paper.database.KissenPaperConfigurationImplementation;
- import net.kissenpvp.paper.database.PrivateDatabaseDns;
- import net.kissenpvp.paper.database.UsePrivate;
-@@ -39,6 +41,9 @@ import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplement
- import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
- import net.kissenpvp.paper.user.KissenPaperUserImplementation;
- import net.kissenpvp.paper.user.rank.KissenPaperRankImplementation;
-+=======
-+import net.kissenpvp.paper.event.KissenEventImplementation;
-+>>>>>>> ff6499c85 (Integrated event system from kissen into paper)
- import org.bukkit.Bukkit;
- import org.bukkit.craftbukkit.scheduler.CraftScheduler;
- import org.bukkit.plugin.Plugin;
-@@ -79,6 +84,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
-         loader.put(BanImplementation.class, new KissenPaperBanImplementation());
-         loader.put(KissenConfirmationImplementation.class, new KissenPaperConfirmationImplementation());
-         loader.put(KissenPaperAdvancementImplementation.class, new KissenPaperAdvancementImplementation());
-+        loader.put(EventImplementation.class, new KissenEventImplementation());
-         super.loadImplementations(loader);
-     }
- 
 diff --git a/src/main/java/net/kissenpvp/paper/event/KissenEventImplementation.java b/src/main/java/net/kissenpvp/paper/event/KissenEventImplementation.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..715d1f9d2a8bcbf2c01ef90c64279d2b12adac17
