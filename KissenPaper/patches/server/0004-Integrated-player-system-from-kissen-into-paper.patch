@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated player system from kissen into paper
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
-index daa157eaa021d039f9a092bea0b78f7c1f746e3b..2445edc12487678c2db1f6b274f95a77eb4663c1 100644
+index 68c99e29450e318d2b6eb83099e3e4012b6f0c01..f7a8ca0fd5fac3793925298af8dacf5450b3a711 100644
 --- a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 +++ b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 @@ -31,6 +31,10 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
@@ -19,7 +19,7 @@ index daa157eaa021d039f9a092bea0b78f7c1f746e3b..2445edc12487678c2db1f6b274f95a77
      public CraftPlayerProfile(CraftPlayer player) {
          this.profile = player.getHandle().getGameProfile();
      }
-@@ -406,4 +410,12 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
+@@ -409,4 +413,12 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
              }
          }
      }
@@ -3890,10 +3890,10 @@ index 0000000000000000000000000000000000000000..73128f8b8697090414c919793d907c3e
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
-index 61840cfd64caba6595dfc99c91c76a195638d4ee..ea772cb2288726632fb5d8ab8f1b5fd07990236a 100644
+index bc391d27399d8c22e78735ca39aa8ab45efb6413..0c67a9ecfdd120edc05e15df0cc1554fb57b0c20 100644
 --- a/src/main/java/net/minecraft/server/Main.java
 +++ b/src/main/java/net/minecraft/server/Main.java
-@@ -190,15 +190,17 @@ public class Main {
+@@ -179,15 +179,17 @@ public class Main {
              org.spigotmc.SpigotConfig.disabledAdvancements = spigotConfiguration.getStringList("advancements.disabled"); // Paper - fix SPIGOT-5885, must be set early in init
              // Paper start - fix SPIGOT-5824
              File file;
@@ -3915,10 +3915,10 @@ index 61840cfd64caba6595dfc99c91c76a195638d4ee..ea772cb2288726632fb5d8ab8f1b5fd0
              String s = (String) Optional.ofNullable((String) optionset.valueOf("world")).orElse(dedicatedserversettings.getProperties().levelName);
              LevelStorageSource convertable = LevelStorageSource.createDefault(file.toPath());
 diff --git a/src/main/java/net/minecraft/server/Services.java b/src/main/java/net/minecraft/server/Services.java
-index d89c624554ab08bd1b33a3f62b52aa57aaafb8b4..bcf7dae94dd64b06d55dc4e7a5e6cb10ed35220f 100644
+index 33e3815a0c979609d4c7ab83ad91e87ac07a556d..f5d03be7adf7e8cc478ddf6ae972ed85829cd880 100644
 --- a/src/main/java/net/minecraft/server/Services.java
 +++ b/src/main/java/net/minecraft/server/Services.java
-@@ -24,10 +24,10 @@ public record Services(MinecraftSessionService sessionService, ServicesKeySet se
+@@ -26,10 +26,10 @@ public record Services(
      // Paper end - add paper configuration files
      public static final String USERID_CACHE_FILE = "usercache.json"; // Paper - private -> public
  
@@ -3932,7 +3932,7 @@ index d89c624554ab08bd1b33a3f62b52aa57aaafb8b4..bcf7dae94dd64b06d55dc4e7a5e6cb10
          final java.nio.file.Path legacyConfigPath = ((File) optionSet.valueOf("paper-settings")).toPath();
          final java.nio.file.Path configDirPath = ((File) optionSet.valueOf("paper-settings-directory")).toPath();
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedPlayerList.java b/src/main/java/net/minecraft/server/dedicated/DedicatedPlayerList.java
-index 1c9cf5e1c4ee05724ffcdbd77a19bca1ab2be4d3..f66c5066683cd51f31fc97894af04ac1189521b5 100644
+index 22c4f8dea99f92a1eb3da2baf0a15bf9d2ca0462..8eaeb2f6096e1b1310022aa494257aac4aa15a8b 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedPlayerList.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedPlayerList.java
 @@ -30,7 +30,7 @@ public class DedicatedPlayerList extends PlayerList {
@@ -3943,9 +3943,9 @@ index 1c9cf5e1c4ee05724ffcdbd77a19bca1ab2be4d3..f66c5066683cd51f31fc97894af04ac1
 +        if (/*!this.getWhiteList().getFile().exists()*/ true) { // KissenPaper
              this.saveWhiteList();
          }
- 
+     }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 58591bf2f63b9c5e97d9ce4188dff3366968a178..367de077620db87bc035fc0927720ce2559b3348 100644
+index b3781efbd3edcf102fe1bda5d6149915dc1127c6..359210fde680444ca4c92a30eb530c887075783a 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -2084,17 +2084,22 @@ public class ServerPlayer extends Player {
@@ -4681,10 +4681,10 @@ index 1e3091687735b461d3b6a313ab8761127981d3e8..fb8c7e4e78b9ceb11e61f769cba085d7
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-index 0b5a31477e3b76833fb97a455842316193663c8e..0ec7eb7dd1389784ef0f1a629925f8ded9d7e580 100644
+index e8e4489bcd64fde1b3226bdc7a7cc612508bda3f..41addda7c1e5a05db60daf89a663e5410bf519db 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-@@ -1228,4 +1228,21 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1270,4 +1270,21 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          return this.getHandle().getScoreboardName();
      }
      // Paper end - entity scoreboard name
@@ -4707,10 +4707,10 @@ index 0b5a31477e3b76833fb97a455842316193663c8e..0ec7eb7dd1389784ef0f1a629925f8de
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-index acbb64010cd59668aa1bcb52ff1220789cadb1d3..56383900e594602dbaa5223aeb0a1616e31e4c5c 100644
+index 7984365c8290ac9e526a413b56e1c8c0841e330c..2c8377c3e7588099d84ee804565ecb8718bbd090 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-@@ -71,7 +71,7 @@ import org.bukkit.plugin.Plugin;
+@@ -72,7 +72,7 @@ import org.bukkit.plugin.Plugin;
  public class CraftHumanEntity extends CraftLivingEntity implements HumanEntity {
      private CraftInventoryPlayer inventory;
      private final CraftInventory enderChest;
@@ -4720,7 +4720,7 @@ index acbb64010cd59668aa1bcb52ff1220789cadb1d3..56383900e594602dbaa5223aeb0a1616
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 616d2e479d91673695ade0db151a0099b568904f..81d62fec2a22d472f7dad2eb681a98fbe09f5385 100644
+index 44f4665db613c558078df5bb49106e4ca5679dfe..a9a80cddf2a183a054df2b6c071ba5061b67622e 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -180,6 +180,30 @@ import org.jetbrains.annotations.NotNull;
@@ -4825,7 +4825,7 @@ index 616d2e479d91673695ade0db151a0099b568904f..81d62fec2a22d472f7dad2eb681a98fb
          }
  
          // Paper start
-@@ -3427,4 +3479,353 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3456,4 +3508,353 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void setSendViewDistance(final int viewDistance) {
          this.getHandle().setSendViewDistance(viewDistance);
      }

@@ -1,15 +1,15 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Groldi <chniucg@gmail.com>
-Date: Sun, 10 Sep 2023 15:52:02 +0200
-Subject: [PATCH] Adjusted gradle script
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Wed, 24 Apr 2024 21:30:06 +0200
+Subject: [PATCH] Adjusted gradle script to integrate into kissen
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index bf01892c248b988531d21d9fb0f74d0adf2205ac..8e022c42acd75995454ab50fcc876f1cb946b4b6 100644
+index 04853c43b99951bf0d4c96ef73724625bdaf018f..d6be76815f0d680642e1c1015ec81df5f4541878 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -56,6 +56,10 @@ dependencies {
-     implementation("org.ow2.asm:asm-commons:9.5")
+     implementation("org.ow2.asm:asm-commons:9.7")
      // Paper end
  
 +    // KissenPaper start
@@ -20,7 +20,7 @@ index bf01892c248b988531d21d9fb0f74d0adf2205ac..8e022c42acd75995454ab50fcc876f1c
      compileOnly("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.18")
      compileOnly("org.apache.maven.resolver:maven-resolver-transport-http:1.9.18")
 @@ -77,8 +81,8 @@ dependencies {
-     testImplementation("org.ow2.asm:asm-tree:9.5")
+     testImplementation("org.ow2.asm:asm-tree:9.7")
  }
  
 -// Paper start

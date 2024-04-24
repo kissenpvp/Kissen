@@ -5,7 +5,7 @@ plugins {
     java
     `maven-publish`
     id("com.github.johnrengelman.shadow") version "8.1.1" apply false
-    id("io.papermc.paperweight.patcher") version "1.5.7-SNAPSHOT"
+    id("io.papermc.paperweight.patcher") version "1.5.15"
 }
 
 allprojects {
@@ -43,7 +43,7 @@ subprojects {
     repositories {
         mavenCentral()
         maven(paperMavenPublicUrl)
-        mavenLocal()
+        maven("https://jitpack.io")
     }
 }
 
@@ -54,12 +54,11 @@ repositories {
             onlyForConfigurations(configurations.paperclip.name)
         }
     }
-    mavenLocal()
 }
 
 dependencies {
-    remapper("net.fabricmc:tiny-remapper:0.8.6:fat")
-    decompiler("net.minecraftforge:forgeflower:2.0.627.2")
+    remapper("net.fabricmc:tiny-remapper:0.10.1:fat")
+    decompiler("org.vineflower:vineflower:1.10.1")
     paperclip("io.papermc:paperclip:3.0.3")
 }
 

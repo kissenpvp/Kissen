@@ -1,32 +1,31 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Initial Source <auto@mated.null>
-Date: Wed, 18 Oct 2023 13:50:57 +0200
-Subject: [PATCH] Adjusted gradle script
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Wed, 24 Apr 2024 21:28:13 +0200
+Subject: [PATCH] Adjusted gradle script to integrate into kissen
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 444ff797c70b0e285d4272ea2ce3d72453c9bda5..e6cc90595e210640c50eedc5517d5ce80ddd2f2a 100644
+index bcfe59b6efb628ee1e7f9d60667360d4d885fb6a..911889a65e21d73aced49600d63513528aef8a27 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
-@@ -13,8 +13,15 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
+@@ -13,8 +13,14 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
  val alsoShade: Configuration by configurations.creating
  
  dependencies {
 -    implementation(project(":paper-api"))
 -    implementation(project(":paper-mojangapi"))
 +    // KissenPaper start
-+//    implementation(project(":paper-api"))
-+//    implementation(project(":paper-mojangapi"))
++    //implementation(project(":paper-api"))
++    //implementation(project(":paper-mojangapi"))
 +    implementation(project(":kissenpaper:kissenpaper-api"))
 +    implementation("io.papermc.paper:paper-mojangapi:${project.version}") {
 +        exclude("io.papermc.paper", "paper-api")
 +    }
 +    // KissenPaper end
-+
      // Paper start
      implementation("org.jline:jline-terminal-jansi:3.21.0")
      implementation("net.minecrell:terminalconsoleappender:1.3.0")
-@@ -50,6 +57,11 @@ dependencies {
+@@ -50,6 +56,11 @@ dependencies {
      runtimeOnly("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.18")
      runtimeOnly("org.apache.maven.resolver:maven-resolver-transport-http:1.9.18")
  

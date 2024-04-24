@@ -5,10 +5,10 @@ Subject: [PATCH] Integrated ban system from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
-index e4fd372a1d585887287253a02531cd192929377b..5ad9e4c034c317eef3e723f0b420e315ef9a666f 100644
+index 1d78e8beacbc93ef2cd6beb418edca843f8a5429..7d0b85e02b9dc6bc2dee2cc7bd40a3b4fb8e627d 100644
 --- a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
 +++ b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
-@@ -175,9 +175,14 @@ public final class ChatProcessor {
+@@ -145,9 +145,14 @@ public final class ChatProcessor {
      }
  
      private void processModern(final ChatRenderer renderer, final Set<Audience> viewers, final Component message, final Player player, final boolean cancelled) {
@@ -24,7 +24,7 @@ index e4fd372a1d585887287253a02531cd192929377b..5ad9e4c034c317eef3e723f0b420e315
          this.post(ae);
          final boolean listenersOnSyncEvent = canYouHearMe(ChatEvent.getHandlerList());
          if (listenersOnSyncEvent) {
-@@ -188,13 +193,22 @@ public final class ChatProcessor {
+@@ -158,13 +163,22 @@ public final class ChatProcessor {
                      se.setCancelled(ae.isCancelled()); // propagate cancelled state
                      ChatProcessor.this.post(se);
                      ChatProcessor.this.readModernModifications(se, renderer);
@@ -49,7 +49,7 @@ index e4fd372a1d585887287253a02531cd192929377b..5ad9e4c034c317eef3e723f0b420e315
          }
      }
  
-@@ -419,4 +433,33 @@ public final class ChatProcessor {
+@@ -381,4 +395,33 @@ public final class ChatProcessor {
      static boolean canYouHearMe(final HandlerList handlers) {
          return handlers.getRegisteredListeners().length > 0;
      }
