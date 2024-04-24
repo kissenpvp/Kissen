@@ -28,7 +28,7 @@ import net.kissenpvp.core.api.command.annotations.IgnoreQuote;
 import net.kissenpvp.core.api.command.exception.ArgumentParserAbsentException;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.command.CommandImplementation;
+import net.kissenpvp.core.command.InternalCommandImplementation;
 import net.kissenpvp.core.command.parser.EnumParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
@@ -69,7 +69,7 @@ public class MethodEvaluator<S extends ServerEntity> {
 
     public @NotNull @Unmodifiable List<Argument<?, S>> evaluateMethod(@NotNull Method method) {
         List<Argument<?, S>> argumentList = new ArrayList<>();
-        CommandImplementation<?> command = getCommandImplementation();
+        InternalCommandImplementation<?> command = getCommandImplementation();
 
         for (Parameter parameter : method.getParameters()) {
             argumentList.addAll(processParameter(getArgumentSupplier().get(), method, parameter));
@@ -79,16 +79,16 @@ public class MethodEvaluator<S extends ServerEntity> {
     }
 
     /**
-     * Retrieves the {@link CommandImplementation} singleton instance that exists within the {@link KissenCore}.
+     * Retrieves the {@link InternalCommandImplementation} singleton instance that exists within the {@link KissenCore}.
      * <p>
-     * This function provides a simple and direct way of accessing the {@link CommandImplementation} instance.
+     * This function provides a simple and direct way of accessing the {@link InternalCommandImplementation} instance.
      * It's like a convenience proxy that simplifies the retrieval of the singleton instance by avoiding the need
      * to always use the full {@code KissenCore.getInstance().getImplementation(KissenCommandImplementation.class)} expression.
      *
-     * @return The {@link CommandImplementation} singleton instance that exists within the {@link KissenCore}.
+     * @return The {@link InternalCommandImplementation} singleton instance that exists within the {@link KissenCore}.
      */
-    private @NotNull CommandImplementation<?> getCommandImplementation() {
-        return KissenCore.getInstance().getImplementation(CommandImplementation.class);
+    private @NotNull InternalCommandImplementation<?> getCommandImplementation() {
+        return KissenCore.getInstance().getImplementation(InternalCommandImplementation.class);
     }
 
     private @Unmodifiable <T> @NotNull List<Argument<T, S>> processParameter(@NotNull Map<Class<?>, AbstractArgumentParser<?, S>> parserMap, @NotNull Method method, @NotNull Parameter parameter)

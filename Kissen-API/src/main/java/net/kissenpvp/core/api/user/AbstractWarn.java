@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public interface Warn<T extends AbstractBan> extends TemporalObject
+public interface AbstractWarn<T extends AbstractBan> extends TemporalObject
 {
     @NotNull Optional<T> getBan();
 

@@ -25,7 +25,7 @@ import net.kissenpvp.core.api.command.exception.deserialization.DeserializationE
 import net.kissenpvp.core.api.command.exception.deserialization.TemporaryDeserializationException;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.command.CommandImplementation;
+import net.kissenpvp.core.command.InternalCommandImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -57,7 +57,7 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
 
         Object[] parameters = new Object[0];
         AtomicInteger currentArgumentIndex = new AtomicInteger(0);
-        CommandImplementation<?> commandImplementation = KissenCore.getInstance().getImplementation(CommandImplementation.class);
+        InternalCommandImplementation<?> commandImplementation = KissenCore.getInstance().getImplementation(InternalCommandImplementation.class);
 
         for (Argument<?, S> argument : arguments) {
             if (CommandPayload.class.isAssignableFrom(argument.type())) {
@@ -102,7 +102,7 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
 
         currentArgumentIndex.incrementAndGet();
         return KissenCore.getInstance()
-                .getImplementation(CommandImplementation.class)
+                .getImplementation(InternalCommandImplementation.class)
                 .add(parameters, argument.defaultValue());
     }
 
@@ -119,7 +119,7 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
 
         do {
             object = KissenCore.getInstance()
-                    .getImplementation(CommandImplementation.class)
+                    .getImplementation(InternalCommandImplementation.class)
                     .add(
                             (Object[]) object,
                             deserialize(argumentValue, argument.argumentParser())

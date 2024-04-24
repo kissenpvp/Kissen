@@ -46,7 +46,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Getter
-public abstract class CommandImplementation<S extends ServerEntity> implements KissenImplementation
+public abstract class InternalCommandImplementation<S extends ServerEntity> implements KissenImplementation
 {
     private final Set<PluginCommandHandler<S, ?>> handler;
     private final InternalCommandHandler<S, ?> internalHandler;
@@ -57,7 +57,7 @@ public abstract class CommandImplementation<S extends ServerEntity> implements K
      * Initializes the parserList with an empty HashMap.
      * Initializes the exceptionHandlers with an empty HashSet.
      */
-    public CommandImplementation() {
+    public InternalCommandImplementation() {
         this.handler = new HashSet<>();
         this.internalHandler = constructInternalHandler();
         this.targetValidator = new TargetValidator();

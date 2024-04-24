@@ -4,6 +4,7 @@ import net.kissenpvp.core.api.ban.AbstractBan;
 import net.kissenpvp.core.api.ban.AbstractBanImplementation;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.time.KissenTemporalObject;
+import net.kissenpvp.core.api.user.AbstractWarn;
 import net.kissenpvp.core.base.KissenCore;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -12,11 +13,11 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Instant;
 import java.util.Optional;
 
-public class Warn<T extends AbstractBan> extends KissenTemporalObject implements net.kissenpvp.core.api.user.Warn<T>
+public class KissenAbstractWarn<T extends AbstractBan> extends KissenTemporalObject implements AbstractWarn<T>
 {
     private final WarnNode warnNode;
 
-    public Warn(@NotNull WarnNode warnNode)
+    public KissenAbstractWarn(@NotNull WarnNode warnNode)
     {
         super(warnNode.temporalMeasure());
         this.warnNode = warnNode;

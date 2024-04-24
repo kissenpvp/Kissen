@@ -8,7 +8,7 @@ import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.command.CommandHolder;
-import net.kissenpvp.core.command.CommandImplementation;
+import net.kissenpvp.core.command.InternalCommandImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -24,7 +24,7 @@ public abstract class PluginCommandHandler<S extends ServerEntity, C extends Com
     public @NotNull Map<Class<?>, AbstractArgumentParser<?, S>> getParser()
     {
         KissenCore kissen = KissenCore.getInstance();
-        CommandImplementation<S> command = kissen.getImplementation(CommandImplementation.class);
+        InternalCommandImplementation<S> command = kissen.getImplementation(InternalCommandImplementation.class);
         Map<Class<?>, AbstractArgumentParser<?, S>> parserMap = new HashMap<>(command.getInternalHandler().getParser());
         parserMap.putAll(super.getParser());
         return Collections.unmodifiableMap(parserMap);
@@ -34,7 +34,7 @@ public abstract class PluginCommandHandler<S extends ServerEntity, C extends Com
     public @NotNull @Unmodifiable Set<ExceptionHandler<?>> getExceptionHandler()
     {
         KissenCore kissen = KissenCore.getInstance();
-        CommandImplementation<S> command = kissen.getImplementation(CommandImplementation.class);
+        InternalCommandImplementation<S> command = kissen.getImplementation(InternalCommandImplementation.class);
         Set<ExceptionHandler<?>> exceptionHandlers = new HashSet<>(super.getExceptionHandler());
         exceptionHandlers.addAll(command.getInternalHandler().getExceptionHandler());
         return exceptionHandlers;

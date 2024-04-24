@@ -24,7 +24,6 @@ import net.kissenpvp.core.api.base.ImplementationAbsentException;
 import net.kissenpvp.core.api.base.Kissen;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
-import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
@@ -33,7 +32,8 @@ import net.kissenpvp.core.api.networking.APIRequestImplementation;
 import net.kissenpvp.core.api.reflection.ReflectionImplementation;
 import net.kissenpvp.core.api.time.TimeImplementation;
 import net.kissenpvp.core.api.util.PageImplementation;
-import net.kissenpvp.core.command.CommandImplementation;
+import net.kissenpvp.core.command.InternalCommandImplementation;
+import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
 import net.kissenpvp.core.config.KissenConfigurationImplementation;
 import net.kissenpvp.core.database.savable.KissenStorageImplementation;
 import net.kissenpvp.core.database.settings.DatabaseDns;
@@ -114,7 +114,7 @@ public abstract class KissenCore implements Kissen {
      */
     public void start() {
         getKissenImplementations().forEach(KissenImplementation::setupComplete);
-        getImplementation(CommandImplementation.class).getInternalHandler().registerCachedCommands();
+        getImplementation(InternalCommandImplementation.class).getInternalHandler().registerCachedCommands();
     }
 
     /**

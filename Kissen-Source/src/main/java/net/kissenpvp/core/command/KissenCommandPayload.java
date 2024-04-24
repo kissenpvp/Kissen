@@ -88,7 +88,7 @@ public abstract class KissenCommandPayload<S extends ServerEntity> implements ne
     @Override
     public <T> @NotNull T[] getArgument(int from, int to, @NotNull Class<T> type) throws ArrayIndexOutOfBoundsException {
 
-        CommandImplementation<S> command = KissenCore.getInstance().getImplementation(CommandImplementation.class);
+        InternalCommandImplementation<S> command = KissenCore.getInstance().getImplementation(InternalCommandImplementation.class);
 
 
         final AbstractArgumentParser<?, ?> adapter = ((AbstractCommandHandler<S, ?>) getHandler()).getParser().get(type);
@@ -111,7 +111,7 @@ public abstract class KissenCommandPayload<S extends ServerEntity> implements ne
             }
         }
 
-        CommandImplementation<S> command = KissenCore.getInstance().getImplementation(CommandImplementation.class);
+        InternalCommandImplementation<S> command = KissenCore.getInstance().getImplementation(InternalCommandImplementation.class);
         return command.getTargetValidator().validate(getTarget(), serverEntity);
     }
 
