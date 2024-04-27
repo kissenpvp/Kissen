@@ -102,9 +102,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public void setCause(@Nullable Component cause) throws EventCancelledException {
-        if (dataWriter==null) {
-            throw new EventCancelledException();
-        }
+        DataWriter.validate(dataWriter, new EventCancelledException());
 
         PunishmentAlterCauseEvent<?> punishmentAlterCauseEvent = new PunishmentAlterCauseEvent<>(this, getCause().orElse(null), cause);
         if (!KissenCore.getInstance().getImplementation(EventImplementation.class).call(punishmentAlterCauseEvent)) {
@@ -122,9 +120,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public @NotNull Comment addComment(@NotNull ServerEntity sender, @NotNull Component comment) throws EventCancelledException {
-        if (dataWriter==null) {
-            throw new EventCancelledException();
-        }
+        DataWriter.validate(dataWriter, new EventCancelledException());
 
         AtomicReference<CommentNode> tempCommentNode = new AtomicReference<>(constructComment(sender, comment));
         KissenComment currentComment = new KissenComment(tempCommentNode.get(), tempCommentNode::set);
@@ -142,9 +138,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public void setEnd(@Nullable Instant end) throws EventCancelledException {
-        if (dataWriter==null) {
-            throw new EventCancelledException();
-        }
+        DataWriter.validate(dataWriter, new EventCancelledException());
 
         PunishmentAlterEndEvent<?> punishmentAlterEndEvent = new PunishmentAlterEndEvent<>(this, getEnd().orElse(null), end);
         if (!KissenCore.getInstance().getImplementation(EventImplementation.class).call(punishmentAlterEndEvent)) {
@@ -157,14 +151,6 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public @Unmodifiable Set<UUID> getAffectedPlayers() {
-        Class<KissenUserImplementation> clazz = KissenUserImplementation.class;
-        KissenUserImplementation userSystem = KissenCore.getInstance().getImplementation(clazz);
-
-        String saveID = userSystem.getUserSaveID();
-        Function<String, UUID> toUUID = data -> UUID.fromString(data.substring(userSystem.getUserSaveID().length()));
-
-        ObjectMeta userMeta = userSystem.getMeta();
-        QuerySelect query = userMeta.select(Column.TOTAL_ID).where(Column.TOTAL_ID, "^" + saveID).and(Column.KEY, "total_id").and(Column.VALUE, getTotalID().toString());
         return Collections.emptySet(); //TODO
     }
 
