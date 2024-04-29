@@ -23,7 +23,7 @@ import lombok.Getter;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
 import net.kissenpvp.core.api.database.savable.SavableMap;
@@ -62,7 +62,7 @@ public abstract class KissenSavable<T> extends HashMap<KissenPlugin, SavableMap>
 
     @Override
     public @NotNull SavableMap getRepository(@NotNull KissenPlugin plugin) {
-        ObjectMeta meta = getTable().registerMeta(plugin);
+        Meta meta = getTable().registerMeta(plugin);
         return super.computeIfAbsent(plugin, (key) -> {
             Map<String, Object> fetched = meta.getData(getDatabaseID()).join();
             return new KissenSavableMap(getDatabaseID(), meta, fetched);

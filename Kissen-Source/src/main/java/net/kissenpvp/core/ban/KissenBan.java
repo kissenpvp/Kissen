@@ -21,7 +21,7 @@ package net.kissenpvp.core.ban;
 import net.kissenpvp.core.api.ban.AbstractBan;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.event.EventCancelledException;
@@ -61,7 +61,7 @@ public abstract class KissenBan extends KissenSavable<Integer> implements Abstra
 
     @Override
     protected @NotNull SavableMap createRepository(@Nullable Map<String, Object> data) {
-        ObjectMeta meta = KissenCore.getInstance().getImplementation(KissenBanImplementation.class).getInternalMeta();
+        Meta meta = KissenCore.getInstance().getImplementation(KissenBanImplementation.class).getInternalMeta();
         return new KissenSavableMap(getDatabaseID(), meta, Objects.requireNonNullElseGet(data, meta.getData(getDatabaseID())::join));
     }
 

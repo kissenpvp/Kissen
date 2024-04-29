@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * The MetaWriter interface represents a writer for storing meta values in a database.
@@ -792,4 +793,17 @@ public interface MetaWriter extends Serializable {
      */
     @NotNull
     QueryUpdate.RootQueryUpdate update(@NotNull Update... update);
+
+    /**
+     * Adds data to the object with the specified ID.
+     *
+     * <p>The ID parameter represents the unique identifier of the object to which the data will be added.
+     * It is a non-null string that uniquely identifies the object within the system.
+     * The data parameter is an optional map containing key-value pairs representing the data to be added to the object.
+     * If the data parameter is null or an empty map, no data will be added to the object.
+     *
+     * @param id   the ID of the object to which the data will be added.
+     * @param data a map containing the data to be added to the object.
+     */
+    void addMap(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> data);
 }

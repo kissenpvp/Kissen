@@ -18,7 +18,7 @@
 
 package net.kissenpvp.core.permission;
 
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.permission.*;
 import net.kissenpvp.core.api.user.User;
@@ -152,7 +152,7 @@ public abstract class KissenPermissionGroup<T extends AbstractPermission> extend
 
     @Override
     protected @NotNull SavableMap createRepository(@Nullable Map<String, Object> data) {
-        ObjectMeta meta = KissenCore.getInstance().getImplementation(InternalKissenPermissionImplementation.class).getMeta();
+        Meta meta = KissenCore.getInstance().getImplementation(InternalKissenPermissionImplementation.class).getMeta();
         return new KissenSavableMap(getDatabaseID(), meta, Objects.requireNonNullElseGet(data, meta.getData(getDatabaseID())::join));
     }
 

@@ -20,7 +20,9 @@ package net.kissenpvp.core.database.mongodb;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.WriteModel;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Table;
@@ -32,10 +34,13 @@ import net.kissenpvp.core.database.KissenBaseMeta;
 import net.kissenpvp.core.database.mongodb.query.MongoSelectQueryExecutor;
 import net.kissenpvp.core.database.mongodb.query.MongoUpdateQueryExecutor;
 import org.bson.Document;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public abstract class KissenMongoMeta extends KissenBaseMeta {
 
@@ -46,6 +51,12 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
     @Override
     public void purge(@NotNull String totalID) {
         getCollection().deleteMany(new Document(getTable().getColumn(Column.TOTAL_ID), totalID));
+    }
+
+    @Override
+    public void addMap(@NotNull String id, final @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException {
+        getCollection().bulkWrite(data.entrySet().stream().map(buildUpdateQuery(id)).toList());
+        KissenCore.getInstance().getLogger().debug("Insert map {} with id {}.", data, id);
     }
 
     @Override
@@ -76,6 +87,22 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
     @Override
     protected @NotNull CompletableFuture<Long> execute(@NotNull QueryUpdate queryUpdate) throws BackendException {
         return CompletableFuture.supplyAsync(new MongoUpdateQueryExecutor(queryUpdate, this)::execute);
+    }
+
+    @Contract(pure = true)
+    private @NotNull Function<Map.Entry<String, Object>, WriteModel<Document>> buildUpdateQuery(@NotNull String id) {
+        return value -> {
+            Document document = new Document();
+            document.append(getTable().getColumn(Column.TOTAL_ID), id);
+            document.append(getTable().getColumn(Column.KEY), value.getKey());
+
+            String[] serialized = serialize(value.getValue());
+            document.append(getTable().getPluginColumn(), getPluginName());
+            document.append(getTable().getTypeColumn(), serialized[0]); // type
+            document.append(getTable().getColumn(Column.VALUE), serialized[1]); // value
+
+            return new UpdateOneModel<>(Filters.and(Filters.eq(getTable().getColumn(Column.TOTAL_ID), id), Filters.eq(getTable().getColumn(Column.KEY), value.getKey())), new Document("$set", document), new UpdateOptions().upsert(true));
+        };
     }
 
     public abstract @NotNull MongoCollection<Document> getCollection();

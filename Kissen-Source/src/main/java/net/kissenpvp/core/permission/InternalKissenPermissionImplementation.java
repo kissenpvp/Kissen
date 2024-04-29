@@ -2,7 +2,7 @@ package net.kissenpvp.core.permission;
 
 import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
@@ -29,7 +29,7 @@ public abstract class InternalKissenPermissionImplementation<T extends AbstractP
         return publicTable;
     }
 
-    public @NotNull ObjectMeta getMeta() {
+    public @NotNull Meta getMeta() {
         return getTable().setupMeta(null);
     }
 

@@ -21,7 +21,7 @@ package net.kissenpvp.core.database.savable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.database.savable.list.KissenMetaList;
@@ -64,8 +64,7 @@ import java.util.*;
 public class KissenSavableMap extends HashMap<String, Object> implements SavableMap {
 
     private final String id;
-    private final ObjectMeta meta;
-    private final boolean internal;
+    private final Meta meta;
 
 
     /**
@@ -76,12 +75,11 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
      * @param id   the ID to associate with the new KissenSavableMap
      * @param meta the ObjectMeta to associate with the new KissenSavableMap
      */
-    public KissenSavableMap(@NotNull String id, @NotNull ObjectMeta meta, @NotNull Map<String, Object> copy) {
+    public KissenSavableMap(@NotNull String id, @NotNull Meta meta, @NotNull Map<String, Object> copy) {
         super.putAll(copy);
 
         this.id = id;
         this.meta = meta;
-        this.internal = false;
     }
 
     @Override

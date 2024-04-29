@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.api.base;
 
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;

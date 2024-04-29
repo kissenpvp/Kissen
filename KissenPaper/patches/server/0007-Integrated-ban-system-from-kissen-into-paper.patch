@@ -121,10 +121,36 @@ index 0000000000000000000000000000000000000000..aa933e5bfb91819c1b0e5d9eba415134
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-index dc6bc76ed46223745f235f1c8f03661e6d565a08..52fd271f084dd796479dfb175dbe86d1e7b8c302 100644
+index dc6bc76ed46223745f235f1c8f03661e6d565a08..dbbeb0ad45afa253b04977eef75e529759381fbf 100644
 --- a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -268,6 +268,7 @@ public class KissenPaperBanImplementation extends KissenBanImplementation<Ban, P
+@@ -26,7 +26,6 @@ import net.kissenpvp.core.api.database.connection.DatabaseConnection;
+ import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
+ import net.kissenpvp.core.api.database.meta.BackendException;
+ import net.kissenpvp.core.api.database.meta.Meta;
+-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+ import net.kissenpvp.core.api.database.savable.SavableMap;
+ import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
+ import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+@@ -206,7 +205,7 @@ public class KissenPaperBanImplementation extends KissenBanImplementation<Ban, P
+      * @param context The context to determine which meta information to retrieve.
+      * @return The meta information based on the provided context.
+      */
+-    protected @NotNull @Unmodifiable ObjectMeta getMeta(@NotNull Context context) {
++    protected @NotNull @Unmodifiable Meta getMeta(@NotNull Context context) {
+         return getTable(context).setupMeta(null);
+     }
+ 
+@@ -237,7 +236,7 @@ public class KissenPaperBanImplementation extends KissenBanImplementation<Ban, P
+      * @throws BackendException If there is an error querying the ban stream, this exception
+      *                          will be thrown. It signifies an issue with the backend operation.
+      */
+-    private @NotNull Stream<Ban> queryBanStream(@NotNull ObjectMeta meta) {
++    private @NotNull Stream<Ban> queryBanStream(@NotNull Meta meta) {
+         return meta.getData(new KissenPaperBan()).thenApply(Map::values).thenApply(Collection::stream).thenApply(s -> s.map(banProcessor())).join();
+     }
+ 
+@@ -268,6 +267,7 @@ public class KissenPaperBanImplementation extends KissenBanImplementation<Ban, P
          return getLatestPunishment(Objects.requireNonNull(target.getId())).orElse(null);
      }
  
@@ -1128,7 +1154,7 @@ index 4e9dd6cb54aa7f3e6f7ea0dd74beedd75232d47b..2267da3befed100a6b4c338515d83b9d
      }
  
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
-index 73b6c2ce091dc9e1a26ce4df5804938be78d0be5..aa751cf45091f3c4ead54ade1cf414b33451929e 100644
+index f73d22316817f7ce487d6d48c726ff8460a3f620..8604fb5b7950590f0366a538e0f2f629bca9d912 100644
 --- a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 @@ -39,6 +39,7 @@ import net.kissenpvp.paper.api.permission.Permission;

@@ -21,10 +21,14 @@ package net.kissenpvp.core.api.database.meta;
 import net.kissenpvp.core.api.database.queryapi.*;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
+import net.kissenpvp.core.api.database.savable.Savable;
+import net.kissenpvp.core.api.database.savable.SavableMap;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -786,4 +790,38 @@ public interface MetaReader extends Serializable {
      */
     @NotNull
     QuerySelect.RootQuerySelect select(@NotNull Column... columns);
+
+    /**
+     * Retrieves the data associated with the object identified by the specified total ID.
+     *
+     * <p>The totalId parameter represents the total ID of the object for which the data will be retrieved.
+     * It is a non-null string that uniquely identifies the object across the system.
+     * The method returns an optional SavableMap object that contains the data associated with the object.
+     * If no data is found for the specified total ID, an empty optional will be returned.
+     *
+     * @param totalId the total ID of the object for which the data will be retrieved.
+     * @return an optional SavableMap object containing the data associated with the object, or an empty optional if
+     * no data is found.
+     */
+    @NotNull CompletableFuture<SavableMap> getData(@NotNull String totalId);
+
+    /**
+     * Retrieves the data associated with the specified Savable object.
+     *
+     * <p>The savable parameter represents a Savable object for which the data will be retrieved.
+     * It should be a non-null object implementing the Savable interface.
+     * The method returns a map of SavableMap objects that represent the data associated with the specified Savable
+     * object.
+     * The map contains mappings between string IDs and their corresponding SavableMap objects.
+     * If no data is found for the specified Savable object, an empty map will be returned.
+     * The returned map is unmodifiable to maintain data integrity and prevent unauthorized modifications.
+     *
+     * @param savable the Savable object for which the data will be retrieved.
+     * @param <T>     the type of the Savable object.
+     * @return an unmodifiable map of SavableMap objects representing the data associated with the specified Savable
+     * object.
+     * If no data is found for the specified Savable object, an empty map is returned.
+     * @see Savable
+     */
+    @NotNull CompletableFuture<@Unmodifiable Map<@NotNull String, @NotNull SavableMap>> getData(@NotNull Savable<?> savable);
 }

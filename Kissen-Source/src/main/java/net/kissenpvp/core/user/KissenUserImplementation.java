@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.event.EventCancelledException;
@@ -239,7 +239,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
         return userInfos;
     }
 
-    public @NotNull ObjectMeta getMeta() {
+    public @NotNull Meta getMeta() {
         return getTable().setupMeta(null);
     }
 

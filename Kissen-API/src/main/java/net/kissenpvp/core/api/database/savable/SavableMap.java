@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.api.database.savable;
 
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

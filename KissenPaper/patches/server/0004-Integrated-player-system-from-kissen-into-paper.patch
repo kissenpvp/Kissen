@@ -204,7 +204,7 @@ index 0000000000000000000000000000000000000000..7b1b95202c1fd999a6a5c339526a8f3f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..73b6c2ce091dc9e1a26ce4df5804938be78d0be5
+index 0000000000000000000000000000000000000000..f73d22316817f7ce487d6d48c726ff8460a3f620
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 @@ -0,0 +1,150 @@
@@ -346,7 +346,7 @@ index 0000000000000000000000000000000000000000..73b6c2ce091dc9e1a26ce4df5804938b
 +
 +        WarnNode node = new WarnNode(ban.getID(), warnOperator.getName(), reason, temporalData);
 +        nodes.add(node);
-+        return (Warn) transformWarn().apply(node);
++        return transformWarn().apply(node);
 +    }
 +
 +    public @NotNull KissenPaperPermissible getPermissionContext() throws PermissibleOverriddenException {
@@ -758,10 +758,10 @@ index 0000000000000000000000000000000000000000..87e6013e84b547e09037dc7e2e6f172f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..43495e1323844733d64b4b80d44068a31274d87e
+index 0000000000000000000000000000000000000000..2562459db6ca32b0123088bc99bae6e7fe6a9a88
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
-@@ -0,0 +1,318 @@
+@@ -0,0 +1,319 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -783,12 +783,12 @@ index 0000000000000000000000000000000000000000..43495e1323844733d64b4b80d44068a3
 +package net.kissenpvp.paper.permission;
 +
 +import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
-+import net.kissenpvp.core.api.database.meta.ObjectMeta;
++import net.kissenpvp.core.api.database.meta.Meta;
 +import net.kissenpvp.core.api.event.EventCancelledException;
 +import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
 +import net.kissenpvp.core.base.KissenCore;
 +import net.kissenpvp.core.base.KissenImplementation;
-+import net.kissenpvp.core.command.CommandImplementation;
++import net.kissenpvp.core.command.InternalCommandImplementation;
 +import net.kissenpvp.core.database.KissenTable;
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 +import net.kissenpvp.core.permission.InternalKissenPermissionImplementation;
@@ -809,6 +809,7 @@ index 0000000000000000000000000000000000000000..43495e1323844733d64b4b80d44068a3
 +import java.util.*;
 +import java.util.stream.Collectors;
 +
++@SuppressWarnings("unchecked")
 +public class KissenPaperPermissionImplementation extends InternalKissenPermissionImplementation<Permission> implements PermissionImplementation, InternalPermissionImplementation<Permission>, KissenImplementation {
 +
 +    private final Set<GroupHolder> cachedHolder;
@@ -850,7 +851,7 @@ index 0000000000000000000000000000000000000000..43495e1323844733d64b4b80d44068a3
 +        localize.register("server.permission.groups.clear", new MessageFormat(prefix + " is no part of any groups ({1} groups removed)."));
 +        localize.register("server.permission.permissions.clear", new MessageFormat(prefix + " has no more permissions ({1} permissions removed)."));
 +
-+        CommandImplementation<CommandSender> command = Bukkit.getKissen().getImplementation(CommandImplementation.class);
++        InternalCommandImplementation<CommandSender> command = Bukkit.getKissen().getImplementation(InternalCommandImplementation.class);
 +        command.getInternalHandler().registerParser(PermissionGroup.class, new PermissionGroupParser());
 +        command.getInternalHandler().registerParser(PermissionParser.PermissionArgument.class, new PermissionParser());
 +        return PermissionImplementation.super.start();
@@ -864,7 +865,7 @@ index 0000000000000000000000000000000000000000..43495e1323844733d64b4b80d44068a3
 +
 +    @Override
 +    public void setupComplete() {
-+        CommandImplementation<CommandSender> command = Bukkit.getKissen().getImplementation(CommandImplementation.class);
++        InternalCommandImplementation<CommandSender> command = Bukkit.getKissen().getImplementation(InternalCommandImplementation.class);
 +        command.getInternalHandler().registerCommand(new PermissionCommand());
 +    }
 +
@@ -917,7 +918,7 @@ index 0000000000000000000000000000000000000000..43495e1323844733d64b4b80d44068a3
 +        };
 +    }
 +
-+    public @NotNull ObjectMeta getMeta(@NotNull Context context) {
++    public @NotNull Meta getMeta(@NotNull Context context) {
 +        return getTable(context).setupMeta(null);
 +    }
 +
@@ -2199,7 +2200,7 @@ index 0000000000000000000000000000000000000000..f8344bec3cd20dbd76e5c23edeeed196
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..27f52f923b7b6715e2903d51c9e389ba16890d36
+index 0000000000000000000000000000000000000000..03218b3d105fd1416b031c8f503b9fd082a60cc1
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 @@ -0,0 +1,239 @@
@@ -2226,7 +2227,7 @@ index 0000000000000000000000000000000000000000..27f52f923b7b6715e2903d51c9e389ba
 +import net.kissenpvp.core.api.database.DataWriter;
 +import net.kissenpvp.core.api.database.StorageImplementation;
 +import net.kissenpvp.core.api.database.meta.BackendException;
-+import net.kissenpvp.core.api.database.meta.ObjectMeta;
++import net.kissenpvp.core.api.database.meta.Meta;
 +import net.kissenpvp.core.api.database.meta.list.MetaList;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
@@ -2321,7 +2322,7 @@ index 0000000000000000000000000000000000000000..27f52f923b7b6715e2903d51c9e389ba
 +
 +    @Override
 +    protected @NotNull SavableMap createRepository(@Nullable Map<String, Object> data) {
-+        ObjectMeta meta = Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getMeta(Context.GLOBAL);
++        Meta meta = Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getMeta(Context.GLOBAL);
 +        return new KissenSavableMap(getDatabaseID(), meta, Objects.requireNonNullElseGet(data, meta.getData(getDatabaseID())::join));
 +    }
 +
@@ -2418,7 +2419,7 @@ index 0000000000000000000000000000000000000000..27f52f923b7b6715e2903d51c9e389ba
 +
 +        @Override
 +        protected @NotNull SavableMap createRepository(@Nullable Map<String, Object> data) {
-+            ObjectMeta meta = Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getMeta(Context.LOCAL);
++            Meta meta = Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getMeta(Context.LOCAL);
 +            return new KissenSavableMap(getDatabaseID(), meta, Objects.requireNonNullElseGet(data, meta.getData(getDatabaseID())::join));
 +        }
 +
@@ -2444,7 +2445,7 @@ index 0000000000000000000000000000000000000000..27f52f923b7b6715e2903d51c9e389ba
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..2ba94dda328a36269f53ec1ab26d6c68ea783779
+index 0000000000000000000000000000000000000000..7b0b9fef0bfbd82bcab786bed913f512977e717d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 @@ -0,0 +1,164 @@
@@ -2471,12 +2472,12 @@ index 0000000000000000000000000000000000000000..2ba94dda328a36269f53ec1ab26d6c68
 +import net.kissenpvp.core.api.database.connection.DatabaseConnection;
 +import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 +import net.kissenpvp.core.api.database.meta.BackendException;
-+import net.kissenpvp.core.api.database.meta.ObjectMeta;
++import net.kissenpvp.core.api.database.meta.Meta;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
 +import net.kissenpvp.core.api.networking.client.entitiy.UnknownPlayerException;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.base.KissenImplementation;
-+import net.kissenpvp.core.command.CommandImplementation;
++import net.kissenpvp.core.command.InternalCommandImplementation;
 +import net.kissenpvp.core.database.KissenTable;
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 +import net.kissenpvp.core.user.KissenUserImplementation;
@@ -2523,7 +2524,7 @@ index 0000000000000000000000000000000000000000..2ba94dda328a36269f53ec1ab26d6c68
 +        KissenPaperUserImplementation.profileCache = profileCache;
 +    }
 +
-+    public @NotNull ObjectMeta getPrivateMeta() {
++    public @NotNull Meta getPrivateMeta() {
 +        return privateMeta.setupMeta(null);
 +    }
 +
@@ -2538,7 +2539,7 @@ index 0000000000000000000000000000000000000000..2ba94dda328a36269f53ec1ab26d6c68
 +
 +    @Override
 +    public boolean start() {
-+        CommandImplementation<?> commandImplementation = Bukkit.getKissen().getImplementation(CommandImplementation.class);
++        InternalCommandImplementation<?> commandImplementation = Bukkit.getKissen().getImplementation(InternalCommandImplementation.class);
 +        commandImplementation.getInternalHandler().registerExceptionHandler(new PlayerSettingCommand());
 +
 +        KissenLocalizationImplementation localize = Bukkit.getKissen().getImplementation(KissenLocalizationImplementation.class);
@@ -2557,7 +2558,7 @@ index 0000000000000000000000000000000000000000..2ba94dda328a36269f53ec1ab26d6c68
 +
 +    @Override
 +    public void setupComplete() {
-+        CommandImplementation<?> commandImplementation = Bukkit.getKissen().getImplementation(CommandImplementation.class);
++        InternalCommandImplementation<?> commandImplementation = Bukkit.getKissen().getImplementation(InternalCommandImplementation.class);
 +        commandImplementation.getInternalHandler().registerCommand(new PlayerSettingCommand());
 +    }
 +
@@ -2605,7 +2606,7 @@ index 0000000000000000000000000000000000000000..2ba94dda328a36269f53ec1ab26d6c68
 +     * @return ObjectMeta instance representing User's metadata. If context is GLOBAL, the metadata is retrieved by getUserMeta(),
 +     * otherwise for LOCAL context, Returns the private metadata available in Bukkit's 'Kissen'.
 +     */
-+    public @NotNull ObjectMeta getMeta(@NotNull Context context) {
++    public @NotNull Meta getMeta(@NotNull Context context) {
 +        return switch (context) {
 +            case GLOBAL -> super.getMeta();
 +            case LOCAL -> getPrivateMeta();
@@ -2752,7 +2753,7 @@ index 0000000000000000000000000000000000000000..74477d0a2bdd4df9f09bab3cbaec1ce7
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8a5a9c0dfa8e0e656aac9f1fd33d5b865ee369c2
+index 0000000000000000000000000000000000000000..b09f063fb5b9cd702fc359fd9c517d209f164915
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserOperatorList.java
 @@ -0,0 +1,247 @@
@@ -2760,7 +2761,7 @@ index 0000000000000000000000000000000000000000..8a5a9c0dfa8e0e656aac9f1fd33d5b86
 +
 +import com.google.gson.JsonObject;
 +import com.mojang.authlib.GameProfile;
-+import net.kissenpvp.core.api.database.meta.ObjectMeta;
++import net.kissenpvp.core.api.database.meta.Meta;
 +import net.kissenpvp.core.api.database.meta.list.MetaList;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.UserInfo;
@@ -2903,7 +2904,7 @@ index 0000000000000000000000000000000000000000..8a5a9c0dfa8e0e656aac9f1fd33d5b86
 +     *
 +     * @return object meta of the local user.
 +     */
-+    protected @NotNull ObjectMeta getMeta() {
++    protected @NotNull Meta getMeta() {
 +        return Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getMeta(Context.LOCAL);
 +    }
 +
@@ -3005,15 +3006,14 @@ index 0000000000000000000000000000000000000000..8a5a9c0dfa8e0e656aac9f1fd33d5b86
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..21ed3262fdb4b11c1073616a8151f14c27bf57ee
+index 0000000000000000000000000000000000000000..d8c589da70c14e03f7b6a4b59d4d8938867f864d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenUserWhiteList.java
-@@ -0,0 +1,164 @@
+@@ -0,0 +1,142 @@
 +package net.kissenpvp.paper.user;
 +
 +import com.google.gson.JsonObject;
 +import com.mojang.authlib.GameProfile;
-+import net.kissenpvp.core.api.database.meta.ObjectMeta;
 +import net.kissenpvp.core.api.database.meta.list.MetaList;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.api.user.UserInfo;
@@ -3024,8 +3024,6 @@ index 0000000000000000000000000000000000000000..21ed3262fdb4b11c1073616a8151f14c
 +import org.bukkit.Bukkit;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
-+import org.slf4j.Logger;
-+import org.slf4j.LoggerFactory;
 +
 +import java.io.File;
 +import java.io.IOException;
@@ -3048,7 +3046,6 @@ index 0000000000000000000000000000000000000000..21ed3262fdb4b11c1073616a8151f14c
 + */
 +public class KissenUserWhiteList extends UserWhiteList {
 +
-+    private static final Logger log = LoggerFactory.getLogger(KissenUserWhiteList.class);
 +    private MetaList<UUID> whitelisted;
 +
 +    /**
@@ -3137,7 +3134,7 @@ index 0000000000000000000000000000000000000000..21ed3262fdb4b11c1073616a8151f14c
 +
 +    @Override
 +    public void load() throws IOException {
-+        whitelisted = getLocalUserMeta().getCollection("whitelisted_players", UUID.class).join();
++        whitelisted = getImplementation().getMeta(Context.LOCAL).getCollection("whitelisted_players", UUID.class).join();
 +    }
 +
 +    /**
@@ -3153,24 +3150,6 @@ index 0000000000000000000000000000000000000000..21ed3262fdb4b11c1073616a8151f14c
 +        UserImplementation user = getImplementation();
 +        Function<UUID, Stream<UserInfo>> toUser = uuid -> user.getCachedUserProfile(uuid).stream();
 +        return whitelisted.stream().flatMap(toUser).collect(Collectors.toUnmodifiableSet());
-+    }
-+
-+    /**
-+     * Retrieves implementation of {@link KissenPaperUserImplementation} for {@link Context#LOCAL} and gets User Metadata.
-+     *
-+     * @return object meta of the local user.
-+     */
-+    private @NotNull ObjectMeta getLocalUserMeta() {
-+        return getImplementation().getMeta(Context.LOCAL);
-+    }
-+
-+    /**
-+     * Retrieves the local user save ID. This is typically used for persisting user data in the {@link Context#LOCAL}.
-+     *
-+     * @return saved ID of the local user.
-+     */
-+    private @NotNull String getLocalUserSaveID() {
-+        return getImplementation().getUserSaveID(Context.LOCAL);
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/PlayerSettingCommand.java b/src/main/java/net/kissenpvp/paper/user/PlayerSettingCommand.java
@@ -3493,7 +3472,7 @@ index 0000000000000000000000000000000000000000..1e16ed5f466a8d840b9a05a19288ca5c
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRank.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRank.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..4bd27bb06db7eb2f318c2952dc18355c82bdf197
+index 0000000000000000000000000000000000000000..61ea896ac5e41ff83b37552841797fc8173d838d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRank.java
 @@ -0,0 +1,82 @@
@@ -3517,7 +3496,7 @@ index 0000000000000000000000000000000000000000..4bd27bb06db7eb2f318c2952dc18355c
 +
 +package net.kissenpvp.paper.user.rank;
 +
-+import net.kissenpvp.core.api.database.meta.ObjectMeta;
++import net.kissenpvp.core.api.database.meta.Meta;
 +import net.kissenpvp.core.api.database.meta.Table;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
 +import net.kissenpvp.core.api.event.EventCancelledException;
@@ -3543,7 +3522,7 @@ index 0000000000000000000000000000000000000000..4bd27bb06db7eb2f318c2952dc18355c
 +{
 +    @Override
 +    protected @NotNull SavableMap createRepository(@Nullable Map<String, Object> data) {
-+        ObjectMeta meta = Bukkit.getKissen().getImplementation(KissenRankImplementation.class).getMeta();
++        Meta meta = Bukkit.getKissen().getImplementation(KissenRankImplementation.class).getMeta();
 +        return new KissenSavableMap(getDatabaseID(), meta, Objects.requireNonNullElseGet(data, meta.getData(getDatabaseID())::join));
 +    }
 +
@@ -3581,7 +3560,7 @@ index 0000000000000000000000000000000000000000..4bd27bb06db7eb2f318c2952dc18355c
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRankImplementation.java b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRankImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ff3b371201bc0fa45641f1f5c3d3e4da2cb4e52d
+index 0000000000000000000000000000000000000000..0e66395f1cc09ea8f3f78d8a82eb8a19b9968f21
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/rank/KissenPaperRankImplementation.java
 @@ -0,0 +1,59 @@
@@ -3589,7 +3568,7 @@ index 0000000000000000000000000000000000000000..ff3b371201bc0fa45641f1f5c3d3e4da
 +
 +import net.kissenpvp.core.api.database.savable.Savable;
 +import net.kissenpvp.core.base.KissenImplementation;
-+import net.kissenpvp.core.command.CommandImplementation;
++import net.kissenpvp.core.command.InternalCommandImplementation;
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 +import net.kissenpvp.core.user.rank.KissenRankImplementation;
 +import net.kissenpvp.paper.api.user.rank.Rank;
@@ -3600,6 +3579,7 @@ index 0000000000000000000000000000000000000000..ff3b371201bc0fa45641f1f5c3d3e4da
 +
 +import java.text.MessageFormat;
 +
++@SuppressWarnings("unchecked")
 +public class KissenPaperRankImplementation extends KissenRankImplementation<Rank> implements KissenImplementation
 +{
 +
@@ -3619,21 +3599,20 @@ index 0000000000000000000000000000000000000000..ff3b371201bc0fa45641f1f5c3d3e4da
 +        localize.register("server.rank.created", new MessageFormat("The rank {0} has been created with the priority {1}."));
 +        localize.register("server.rank.deleted", new MessageFormat("The rank {0} has been deleted."));
 +
-+        CommandImplementation<CommandSender> commandImplementation = Bukkit.getKissen().getImplementation(
-+                CommandImplementation.class);
-+        commandImplementation.getInternalHandler().registerParser(Rank.class, new RankParser());
++        InternalCommandImplementation<CommandSender> command = Bukkit.getKissen().getImplementation(InternalCommandImplementation.class);
++        command.getInternalHandler().registerParser(Rank.class, new RankParser());
 +        return super.start();
 +    }
 +
 +    @Override
 +    public void setupComplete()
 +    {
-+        CommandImplementation<CommandSender> commandImplementation = Bukkit.getKissen().getImplementation(CommandImplementation.class);
++        InternalCommandImplementation<CommandSender> commandImplementation = Bukkit.getKissen().getImplementation(InternalCommandImplementation.class);
 +        commandImplementation.getInternalHandler().registerCommand(new RankCommand());
 +    }
 +
 +    @Override
-+    protected @NotNull Savable getSavableType()
++    protected @NotNull Savable<String> getSavableType()
 +    {
 +        return new KissenPaperRank();
 +    }

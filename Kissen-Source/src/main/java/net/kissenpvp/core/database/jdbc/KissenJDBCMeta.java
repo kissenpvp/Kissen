@@ -36,6 +36,7 @@ import org.jetbrains.annotations.Nullable;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
@@ -131,6 +132,23 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             getPreparedStatement(sql, executor.executeStatement(total, count));
             return count.get();
         }).handle(logExceptions()).thenApply((data) -> data);
+    }
+
+    @Override
+    public void addMap(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException {
+        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s, %s, %s) VALUES (?, ?, ?, ?, ?);", getTable(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY), getTable().getPluginColumn(), getTable().getTypeColumn(), getTable().getColumn(Column.VALUE)), preparedStatement -> {
+            for (Map.Entry<String, Object> current : data.entrySet()) {
+                preparedStatement.setString(1, id);
+                preparedStatement.setString(2, current.getKey());
+                preparedStatement.setString(3, getPluginName());
+
+                String[] serialized = serialize(current.getValue());
+                preparedStatement.setString(4, serialized[0]);
+                preparedStatement.setString(5, serialized[1]);
+                preparedStatement.addBatch();
+            }
+            preparedStatement.executeBatch();
+        });
     }
 
     /**

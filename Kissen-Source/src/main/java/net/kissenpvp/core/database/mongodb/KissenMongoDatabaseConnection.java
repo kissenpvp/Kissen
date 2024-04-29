@@ -30,7 +30,7 @@ import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.connection.DatabaseDriver;
 import net.kissenpvp.core.api.database.connection.MongoDatabaseConnection;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.database.KissenTable;
 import org.bson.BsonInt64;
@@ -90,8 +90,8 @@ public class KissenMongoDatabaseConnection implements MongoDatabaseConnection {
     public @NotNull Table createTable(@NotNull String table, @NotNull String idColumn, @NotNull String keyColumn, @NotNull String pluginColumn, @NotNull String typeColumn, @NotNull String valueColumn) {
         return new KissenTable(table, idColumn, keyColumn, pluginColumn, typeColumn, valueColumn) {
             @Override
-            public @NotNull ObjectMeta setupMeta(@Nullable KissenPlugin kissenPlugin) {
-                return new KissenObjectMongoMeta(this, kissenPlugin) {
+            public @NotNull Meta setupMeta(@Nullable KissenPlugin kissenPlugin) {
+                return new KissenNativeMongoMeta(this, kissenPlugin) {
                     @Override
                     public @NotNull MongoCollection<Document> getCollection() {
                         return getDatabase().getCollection(getTable().getTable());

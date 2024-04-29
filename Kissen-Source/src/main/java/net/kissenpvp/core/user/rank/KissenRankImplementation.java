@@ -20,7 +20,7 @@ package net.kissenpvp.core.user.rank;
 
 import lombok.Getter;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.user.rank.AbstractRank;
@@ -151,7 +151,7 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
      */
     protected abstract @NotNull T getFallbackRank();
 
-    public @NotNull ObjectMeta getMeta() {
+    public @NotNull Meta getMeta() {
         return getTable().setupMeta(null);
     }
 }

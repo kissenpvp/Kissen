@@ -9,7 +9,7 @@ import java.io.Serializable;
 public interface Table extends Serializable {
 
     @NotNull
-    ObjectMeta registerMeta(@NotNull KissenPlugin kissenPlugin);
+    Meta registerMeta(@NotNull KissenPlugin kissenPlugin);
 
     /**
      * Retrieves the name of the table associated with the meta.

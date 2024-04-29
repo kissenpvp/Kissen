@@ -22,7 +22,6 @@ import net.kissenpvp.core.api.ban.*;
 import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.Meta;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
@@ -429,7 +428,7 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
         return node -> translatePunishment(totalID, node, meta);
     }
 
-    protected @NotNull ObjectMeta getInternalMeta() {
+    protected @NotNull Meta getInternalMeta() {
         return getTable().setupMeta(null);
     }
 }

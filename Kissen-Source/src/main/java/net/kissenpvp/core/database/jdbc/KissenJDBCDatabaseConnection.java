@@ -24,7 +24,7 @@ import net.kissenpvp.core.api.database.connection.DatabaseDriver;
 import net.kissenpvp.core.api.database.connection.MYSQLDatabaseConnection;
 import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.base.KissenCore;
@@ -92,7 +92,7 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     public @NotNull Table createTable(@NotNull String table, @NotNull String idColumn, @NotNull String keyColumn, @NotNull String pluginColumn, @NotNull String typeColumn, @NotNull String valueColumn) {
         Table kissenTable = new KissenTable(table, idColumn, keyColumn, pluginColumn, typeColumn, valueColumn) {
             @Override
-            public @NotNull ObjectMeta setupMeta(@Nullable KissenPlugin kissenPlugin) {
+            public @NotNull Meta setupMeta(@Nullable KissenPlugin kissenPlugin) {
                 return objectMeta(this, kissenPlugin);
             }
         };
@@ -106,8 +106,8 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     }
 
     @Contract(pure = true, value = "_, _ -> new")
-    private @NotNull ObjectMeta objectMeta(@NotNull Table table, @Nullable KissenPlugin kissenPlugin) {
-        return new KissenObjectJDBCMeta(table, kissenPlugin) {
+    private @NotNull Meta objectMeta(@NotNull Table table, @Nullable KissenPlugin kissenPlugin) {
+        return new KissenNativeJDBCMeta(table, kissenPlugin) {
             @Override
             public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
                 executeStatement(query, preparedStatementExecutor);

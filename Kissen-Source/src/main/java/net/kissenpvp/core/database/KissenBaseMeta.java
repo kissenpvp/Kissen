@@ -30,19 +30,23 @@ import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
 import net.kissenpvp.core.api.database.queryapi.update.Update;
+import net.kissenpvp.core.api.database.savable.Savable;
+import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.queryapi.KissenQuerySelect;
 import net.kissenpvp.core.database.queryapi.KissenQueryUpdate;
+import net.kissenpvp.core.database.savable.KissenSavableMap;
 import net.kissenpvp.core.database.savable.list.KissenMetaList;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 
 @AllArgsConstructor
 @Getter
@@ -81,7 +85,7 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     protected @Nullable String getPluginName() {
-        return getPlugin()==null ? null:getPlugin().getName();
+        return getPlugin() == null ? null : getPlugin().getName();
     }
 
     @Override
@@ -321,13 +325,7 @@ public abstract class KissenBaseMeta implements Meta {
             if (Objects.nonNull(data)) {
                 metaList.addAll(Arrays.stream((T[]) data).toList());
             }
-            metaList.setListAction((o1, o2, o3) -> {
-                try {
-                    setCollection(totalID, key, metaList);
-                } catch (Exception backendException) {
-                    backendException.printStackTrace(); //TODO
-                }
-            });
+            metaList.setListAction((o1, o2, o3) -> setCollection(totalID, key, metaList));
             return metaList;
         });
     }
@@ -366,7 +364,7 @@ public abstract class KissenBaseMeta implements Meta {
      */
     protected @NotNull CompletableFuture<?> getJson(@NotNull String totalID, @NotNull String key) {
         return getDefaultQuery(totalID, key).execute().thenApply(data -> {
-            if (data.length==0 || data[0].length==0) {
+            if (data.length == 0 || data[0].length == 0) {
                 throw new NullPointerException();
             }
 
@@ -396,7 +394,7 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     public @Nullable String[] serialize(@Nullable Object object) {
-        if (object==null || (object instanceof Collection<?> collection && collection.isEmpty())) {
+        if (object == null || (object instanceof Collection<?> collection && collection.isEmpty())) {
             return null;
         }
 
@@ -449,7 +447,35 @@ public abstract class KissenBaseMeta implements Meta {
      */
     protected abstract @NotNull CompletableFuture<@NotNull Long> execute(@NotNull QueryUpdate queryUpdate);
 
+    @Override
+    public @NotNull CompletableFuture<SavableMap> getData(@NotNull String totalId) {
+        return select(Column.KEY, Column.VALUE).whereExact(Column.TOTAL_ID, totalId).execute().thenApply(data ->
+        {
+            IntStream.range(0, data.length).forEach(i -> { // forcefully inject totalId into first index
+                Object[] old = data[i];
+                data[i] = new Object[]{totalId, old[0], old[1]};
+            });
+
+            Map<String, SavableMap> merged = mergeData(data);
+            return merged.getOrDefault(totalId, new KissenSavableMap(totalId, this, Collections.emptyMap()));
+        });
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@Unmodifiable Map<@NotNull String, @NotNull SavableMap>> getData(@NotNull Savable<?> savable) {
+        return select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, String.format("^%s", savable.getSaveID())).execute().thenApply(this::mergeData);
+    }
+
     protected @NotNull Class<?> loadClass(@NotNull String name) {
         return KissenCore.getInstance().getImplementation(KissenDatabaseImplementation.class).loadClass(name);
+    }
+
+    private @NotNull Map<String, SavableMap> mergeData(@NotNull Object @NotNull [] @NotNull [] data) {
+        Map<String, SavableMap> dataContainer = new HashMap<>();
+        for (Object[] current : data) {
+            Function<String, SavableMap> generateMap = (id) -> new KissenSavableMap(id, this, Collections.emptyMap());
+            dataContainer.computeIfAbsent(current[0].toString(), generateMap).put(current[1].toString(), current[2]);
+        }
+        return dataContainer;
     }
 }

@@ -2,7 +2,7 @@ package net.kissenpvp.core.database;
 
 import lombok.RequiredArgsConstructor;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import org.jetbrains.annotations.NotNull;
@@ -14,11 +14,11 @@ public abstract class KissenTable implements Table {
     private final String table, totalIDColumn, keyColumn, pluginColum, typeColumn, valueColumn;
 
     @Override
-    public @NotNull ObjectMeta registerMeta(@NotNull KissenPlugin kissenPlugin) {
+    public @NotNull Meta registerMeta(@NotNull KissenPlugin kissenPlugin) {
         return setupMeta(kissenPlugin);
     }
 
-    public abstract @NotNull ObjectMeta setupMeta(@Nullable KissenPlugin kissenPlugin);
+    public abstract @NotNull Meta setupMeta(@Nullable KissenPlugin kissenPlugin);
 
     @Override
     public @NotNull String getTable() {
