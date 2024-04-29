@@ -272,7 +272,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @return boolean indicating whether user data was successfully loaded into online users (true if loaded, otherwise false)
      */
     public boolean loadUser(@NotNull User user) {
-        Optional<User> userOptional = getOnlineUser((UUID) user.getRawID());
+        Optional<User> userOptional = getOnlineUser(user.getRawID());
         if (userOptional.isPresent()) {
             onlineUserSet.removeIf(currentUser -> currentUser.getRawID().equals(user.getRawID()));
         }
@@ -301,7 +301,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @return true if the user was successfully logged out, false otherwise
      */
     public boolean logoutUser(@NotNull User user) {
-        if (getOnlineUser((UUID) user.getRawID()).isPresent()) {
+        if (getOnlineUser(user.getRawID()).isPresent()) {
             ((KissenUser<?>) user).logout();
             return onlineUserSet.removeIf(userEntry -> userEntry.getRawID().equals(user.getRawID()));
         }

@@ -141,8 +141,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * or performing other storage-specific operations.</p>
      *
      * @param key the key of the object to be deleted
-     * @return
-     * @throws NullPointerException if the specified key is `null`
+     * @return the value previously associated with this key, or {@code null} if not present.
      */
     @Nullable Object delete(@NotNull String key);
 
@@ -288,7 +287,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      *
      * @param key the key of the list to retrieve
      * @return the List of Strings associated with the key, if it exists, or a new empty list if it doesn't
-     * @throws NullPointerException if the specified key is `null`
+     * @throws NullPointerException if the specified key is {@code null}
      * @see MetaList
      */
     @NotNull <T> MetaList<T> getListNotNull(@NotNull String key, @NotNull Class<T> type);
@@ -321,7 +320,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * @param key   the key to associate with the list
      * @param value the List of Strings to be inserted
      * @return the SavableList associated with the key
-     * @throws NullPointerException if the specified key is `null`
+     * @throws NullPointerException if the specified key is {@code null}
      * @see #setList(String, Collection)
      */
     <T> @Nullable Object putList(@NotNull String key, @Nullable Collection<T> value);
@@ -527,8 +526,8 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * </pre>
      *
      * @param key the key associated with the list to be removed
-     * @return
-     * @throws NullPointerException if the specified key is `null`
+     * @return whether a list was removed with the given key.
+     * @throws NullPointerException if the specified key is {@code null}
      * @see #deleteList(String)
      */
     boolean removeList(@NotNull String key);
@@ -568,7 +567,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      *
      * @param key   the key associated with the list
      * @param value the value to remove from the list
-     * @throws NullPointerException if the specified key or value is `null`
+     * @throws NullPointerException if the specified key or value is {@code null}
      * @see #deleteListValue(String, T)
      */
     <T> boolean removeListValue(@NotNull String key, @NotNull T value);
@@ -604,7 +603,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      *
      * @param key   the key associated with the list
      * @param value the value to remove from the list
-     * @throws NullPointerException if the specified key or value is `null`
+     * @throws NullPointerException if the specified key or value is {@code null}
      * @see #removeListValue(String, T)
      */
     <T> boolean deleteListValue(@NotNull String key, @NotNull T value);
@@ -637,7 +636,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * </pre>
      *
      * @param key the key associated with the list to be removed
-     * @throws NullPointerException if the specified key is `null`
+     * @throws NullPointerException if the specified key is {@code null}
      * @see #removeList(String)
      */
     boolean deleteList(@NotNull String key);

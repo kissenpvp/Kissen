@@ -123,7 +123,7 @@ public abstract class KissenSavable<T> extends HashMap<KissenPlugin, SavableMap>
         if (this==o) {
             return true;
         }
-        if (!(o instanceof KissenSavable that)) {
+        if (!(o instanceof KissenSavable<?> that)) {
             return false;
         }
         if (!super.equals(o)) {

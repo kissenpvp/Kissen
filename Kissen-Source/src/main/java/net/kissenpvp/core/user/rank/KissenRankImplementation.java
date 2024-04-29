@@ -141,7 +141,7 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
      *
      * @return An instance of Savable representing the type associated with the ranks.
      */
-    protected abstract @NotNull Savable getSavableType();
+    protected abstract @NotNull Savable<String> getSavableType();
 
     /**
      * Retrieves a fallback rank in case of errors or when a specific rank is not found.
