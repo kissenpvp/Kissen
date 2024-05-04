@@ -19,8 +19,8 @@
 package net.kissenpvp.core.user.rank;
 
 import net.kissenpvp.core.api.time.AccurateDuration;
-import net.kissenpvp.core.api.user.rank.PlayerRank;
-import net.kissenpvp.core.api.user.rank.Rank;
+import net.kissenpvp.core.api.user.rank.AbstractPlayerRank;
+import net.kissenpvp.core.api.user.rank.AbstractRank;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 
-public abstract class KissenPlayerFallBackRank<T extends Rank> implements PlayerRank<T>
+public abstract class KissenPlayerFallBackRank<T extends AbstractRank> implements AbstractPlayerRank<T>
 {
 
     @Override public @NotNull String getID()

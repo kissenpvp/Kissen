@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.api.base;
 
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
@@ -82,26 +81,6 @@ public interface Kissen {
      * @see Implementation
      */
     @NotNull <T extends Implementation> T getImplementation(@NotNull Class<T> implementation) throws ImplementationAbsentException;
-
-    /**
-     * Retrieves the public metadata from the underlying database accessed by the {@code Kissen} instance.
-     * <p>This method returns an {@code ObjectMeta} interface that serves as an abstraction layer for interacting
-     * with the database and accessing its metadata.</p>
-     * <p>The public metadata represents essential information stored in the database, such as user data, current
-     * game scores, and other relevant details.</p>
-     * <p>It is important to note that the returned {@code ObjectMeta} interface provides methods and operations to
-     * query and manipulate the database, but does not contain the actual data itself. Instead, it acts as a gateway
-     * to the database's metadata.</p>
-     * <p>Accessing the public metadata through the {@code ObjectMeta} interface can be useful for performing
-     * database operations, retrieving statistics, or making informed decisions based on the stored information.</p>
-     * <p>Implementation Note:</p>
-     * <p>The concrete implementation of this method may vary depending on the specific {@code Kissen} implementation
-     * being used.</p>
-     *
-     * @return the {@code ObjectMeta} interface representing the public metadata accessed from the underlying database.
-     * @see ObjectMeta
-     */
-    @NotNull ObjectMeta getPublicMeta();
 
     /**
      * Returns the port on which the server is running.

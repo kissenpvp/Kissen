@@ -24,7 +24,6 @@ import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.config.Option;
 import net.kissenpvp.core.api.config.UnregisteredException;
-import net.kissenpvp.core.api.message.settings.*;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.base.KissenImplementation;
 import net.kissenpvp.core.database.settings.DatabaseDns;
@@ -50,12 +49,6 @@ public abstract class KissenConfigurationImplementation implements Configuration
         internalSettings = new HashSet<>();
 
         registerInternalSetting(new DatabaseDns());
-        registerInternalSetting(new GeneralColor());
-        registerInternalSetting(new DefaultDisabledColor());
-        registerInternalSetting(new DefaultEnabledColor());
-        registerInternalSetting(new DefaultLanguage());
-        registerInternalSetting(new DefaultPrimaryColor());
-        registerInternalSetting(new DefaultSecondaryColor());
         registerInternalSetting(new HighlightVariables());
         registerInternalSetting(new InsertMissingTranslation());
         registerInternalSetting(new ServerName());

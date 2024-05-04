@@ -10,6 +10,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -27,27 +29,36 @@ import java.util.stream.IntStream;
 @AllArgsConstructor
 public class JDBCQueryExecutor {
 
+    protected static final String WHERE = "(%s) AND %s = ?";
+    protected static final String WHERE_NO_FILTER = "%s = ?";
+    protected static final String WHERE_INTERNAL = "(%s) AND %s IS NULL";
+    protected static final String WHERE_NO_FILTER_INTERNAL = "%s = IS NULL";
     private final KissenJDBCMeta meta;
 
-    /**
-     * Sets values for the parameters of the provided {@link PreparedStatement}.
-     * <p>
-     * This method sets values for the parameters of the provided {@link PreparedStatement} using the specified array of parameter values.
-     * It iterates through each parameter value in the array and sets it to the corresponding parameter index in the prepared statement.
-     * <p>
-     * This method mutates the provided {@code preparedStatement} by setting parameter values.
-     *
-     * @param preparedStatement the {@link PreparedStatement} to set parameter values for
-     * @param parameterValues an array of {@link String} representing the parameter values
-     * @throws SQLException if a database access error occurs or if one of the given parameters is not a valid parameter index
-     * @throws NullPointerException if either {@code preparedStatement} or {@code parameterValues} is {@code null}
-     * @see PreparedStatement
-     */
-    @Contract(mutates = "param1")
-    protected static void setStatementValues(@NotNull PreparedStatement preparedStatement, @NotNull String @NotNull [] parameterValues) throws SQLException {
+    protected void setStatementValues(@NotNull PreparedStatement preparedStatement, @NotNull String @NotNull [] parameterValues) throws SQLException {
         for (int i = 0; i < parameterValues.length; i++) {
             preparedStatement.setString(i + 1, parameterValues[i]);
         }
+    }
+
+    protected @NotNull String where(@NotNull List<String> values, @NotNull FilterQuery @NotNull ... filterQueries)
+    {
+        String pluginColumn = getMeta().getTable().getPluginColumn();
+        String where = internalWhere(values, filterQueries);
+        boolean noFilter = filterQueries.length==0;
+
+        if (Objects.isNull(getMeta().getPlugin())) {
+            if (noFilter) {
+                return String.format(WHERE_NO_FILTER_INTERNAL, pluginColumn);
+            }
+            return String.format(WHERE_INTERNAL, where, pluginColumn);
+        }
+
+        values.add(getMeta().getPlugin().getName());
+        if (noFilter) {
+            return String.format(WHERE_NO_FILTER, pluginColumn);
+        }
+        return String.format(WHERE, where, pluginColumn);
     }
 
     /**
@@ -63,7 +74,7 @@ public class JDBCQueryExecutor {
      * @throws NullPointerException if the array of values or filter queries is {@code null}
      * @see FilterQuery
      */
-    protected @NotNull String where(@NotNull String[] values, @NotNull FilterQuery @NotNull ... filterQueries) {
+    private @NotNull String internalWhere(@NotNull List<String> values, @NotNull FilterQuery @NotNull ... filterQueries) {
         int length = filterQueries.length;
         return IntStream.range(0, length).mapToObj(whereEntry(values, filterQueries)).collect(Collectors.joining());
     }
@@ -83,7 +94,7 @@ public class JDBCQueryExecutor {
      * @see FilterQuery
      */
     @Contract(pure = true, value = "_, _ -> new")
-    private @NotNull IntFunction<String> whereEntry(@NotNull String[] values, @NotNull FilterQuery[] filterQueries) {
+    private @NotNull IntFunction<String> whereEntry(@NotNull List<String> values, @NotNull FilterQuery[] filterQueries) {
         final String pattern = "%s REGEXP ?";
         return i -> {
             FilterQuery filterQuery = filterQueries[i];
@@ -92,10 +103,10 @@ public class JDBCQueryExecutor {
             if (filterQuery.getColumn().equals(Column.VALUE)) {
                 serialized = getMeta().serialize(filterQuery.getValue())[1]; // [0] is not required;
             }
-            values[i] = serialized;
+            values.add(serialized);
 
-            String clause = pattern.formatted(getMeta().getColumn(filterQuery.getColumn()));
-            return i == 0 ? clause : " " + filterQuery.getFilterOperator() + " " + clause;
+            String clause = pattern.formatted(getMeta().getTable().getColumn(filterQuery.getColumn()));
+            return i==0 ? clause:" " + filterQuery.getFilterOperator() + " " + clause;
         };
     }
 }

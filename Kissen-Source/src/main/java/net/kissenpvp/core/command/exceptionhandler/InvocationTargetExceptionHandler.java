@@ -1,13 +1,13 @@
 package net.kissenpvp.core.command.exceptionhandler;
 
 import net.kissenpvp.core.api.command.CommandPayload;
-import net.kissenpvp.core.api.command.exception.CommandExceptionHandler;
+import net.kissenpvp.core.api.command.exception.AbstractCommandExceptionHandler;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.InvocationTargetException;
 
-public class InvocationTargetExceptionHandler<S extends ServerEntity> implements CommandExceptionHandler<InvocationTargetException, S> {
+public class InvocationTargetExceptionHandler<S extends ServerEntity> implements AbstractCommandExceptionHandler<InvocationTargetException, S> {
     @Override
     public boolean handle(@NotNull CommandPayload<S> commandPayload, java.lang.reflect.@NotNull InvocationTargetException throwable) {
         /* TODO return Optional.ofNullable(throwable.getCause()).map(cause -> KissenCore.getInstance().getImplementation(

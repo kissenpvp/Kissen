@@ -20,20 +20,16 @@ package net.kissenpvp.core.user.rank;
 
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.savable.Savable;
-import net.kissenpvp.core.api.user.rank.Rank;
+import net.kissenpvp.core.api.user.rank.AbstractRank;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.KissenSavable;
 import net.kissenpvp.core.database.savable.SerializableSavableHandler;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
-import java.util.Optional;
 
 
-public abstract class KissenRank extends KissenSavable implements Savable, Rank {
+public abstract class KissenRank extends KissenSavable<String> implements AbstractRank {
     @Override
     public final @NotNull String getSaveID() {
         return "rank";
@@ -41,7 +37,7 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
 
     @Override
     public String[] getKeys() {
-        return new String[]{"priority", "chat_color"};
+        return new String[]{"priority"};
     }
 
     @Override
@@ -49,53 +45,14 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
         return getRawID();
     }
 
-
     @Override
     public int getPriority() {
-        return getNotNull("priority", Integer.class);
+        return getRepository().getNotNull("priority", Integer.class);
     }
 
     @Override
     public void setPriority(int priority) {
-        set("priority", priority);
-    }
-
-    @Override
-    public @NotNull Optional<Component> getPrefix() {
-        return get("prefix", Component.class);
-    }
-
-    @Override
-    public void setPrefix(@Nullable Component prefix) {
-        if (prefix == null) {
-            delete("prefix");
-            return;
-        }
-        set("prefix", prefix);
-    }
-
-    @Override
-    public @NotNull TextColor getChatColor() {
-        return getNotNull("chat_color", TextColor.class);
-    }
-
-    @Override
-    public void setChatColor(@NotNull TextColor chatColor) {
-        set("chat_color", chatColor);
-    }
-
-    @Override
-    public @NotNull Optional<Component> getSuffix() {
-        return get("suffix", Component.class);
-    }
-
-    @Override
-    public void setSuffix(@Nullable Component suffix) {
-        if (suffix == null) {
-            delete("suffix");
-            return;
-        }
-        set("suffix", suffix);
+        getRepository().set("priority", priority);
     }
 
     @Override
@@ -111,6 +68,6 @@ public abstract class KissenRank extends KissenSavable implements Savable, Rank 
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDatabaseID(), getPriority(), getPrefix(), getChatColor().asHexString(), getSuffix());
+        return Objects.hash(getDatabaseID(), getPriority());
     }
 }

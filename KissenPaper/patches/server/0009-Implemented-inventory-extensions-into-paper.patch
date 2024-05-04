@@ -155,44 +155,6 @@ index 0000000000000000000000000000000000000000..8b1622e88272d74cc62f78bcab5cf819
 +        this.disallowDrag = disallowDragging;
 +    }
 +}
-diff --git a/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-index 87e5ee042ab2c052d25ab4c2521a68cf2e2d67b6..640519654916f038e012871e3ee2dee72a2e0f10 100644
---- a/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-+++ b/src/main/java/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-@@ -3101,9 +3101,33 @@ public class ServerGamePacketListenerImpl extends ServerCommonPacketListenerImpl
-                             }
-                         }
- 
-+                        // KissenPaper start - hook custom inventory
-+                        if (inventory.getTopInventory() instanceof net.kissenpvp.paper.api.inventory.InteractableInventory interactableInventory) {
-+                            net.kissenpvp.paper.api.inventory.InventoryPart description = interactableInventory.getBottom();
-+                            if(Objects.equals(event.getClickedInventory(), interactableInventory))
-+                            {
-+                                description = interactableInventory.getTop();
-+                            }
-+                            cancelled = description.disallowClick();
-+                        }
-+                        // KissenPaper end - hook custom inventory
-+
-                         event.setCancelled(cancelled);
-                         AbstractContainerMenu oldContainer = this.player.containerMenu; // SPIGOT-1224
-                         this.cserver.getPluginManager().callEvent(event);
-+
-+                        // KissenPaper start - hook custom inventory
-+                        if (inventory.getTopInventory() instanceof net.kissenpvp.paper.api.inventory.InteractableInventory interactableInventory) {
-+                            net.kissenpvp.paper.api.inventory.InventoryPart description = interactableInventory.getBottom();
-+                            if(Objects.equals(event.getClickedInventory(), interactableInventory))
-+                            {
-+                                description = interactableInventory.getTop();
-+                            }
-+                            final InventoryClickEvent clickEvent = event;
-+                            description.onClick().ifPresent(listener -> listener.call(clickEvent));
-+                        }
-+                        // KissenPaper end - hook custom inventory
-+
-                         if (this.player.containerMenu != oldContainer) {
-                             return;
-                         }
 diff --git a/src/main/java/net/minecraft/world/inventory/AbstractContainerMenu.java b/src/main/java/net/minecraft/world/inventory/AbstractContainerMenu.java
 index 48f634a7521d31c1e9dfd3cfc83139d428dbd37a..db48536f8bc75398abb7736552509dbbad6ab017 100644
 --- a/src/main/java/net/minecraft/world/inventory/AbstractContainerMenu.java
@@ -240,10 +202,10 @@ index 48f634a7521d31c1e9dfd3cfc83139d428dbd37a..db48536f8bc75398abb7736552509dbb
                      boolean needsUpdate = event.getResult() != Result.DEFAULT;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-index cb3e9672f375a1a660757a05362729ddb5ca7504..8663fc3fdbba2e05aaf404787d2f731b4fbac97c 100644
+index c0823c612de9dc2a64cc797f061eef25c5f31359..245eb68684b056bbc038f74e849c16f873b7d725 100644
 --- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 +++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-@@ -1427,6 +1427,13 @@ public class CraftEventFactory {
+@@ -1428,6 +1428,13 @@ public class CraftEventFactory {
          event.setCancelled(cancelled);
          server.getPluginManager().callEvent(event);
  
@@ -257,7 +219,7 @@ index cb3e9672f375a1a660757a05362729ddb5ca7504..8663fc3fdbba2e05aaf404787d2f731b
          if (event.isCancelled()) {
              container.transferTo(player.containerMenu, craftPlayer);
              return com.mojang.datafixers.util.Pair.of(null, null); // Paper - Add titleOverride to InventoryOpenEvent
-@@ -1624,6 +1631,14 @@ public class CraftEventFactory {
+@@ -1625,6 +1632,14 @@ public class CraftEventFactory {
          // Paper end
          InventoryCloseEvent event = new InventoryCloseEvent(human.containerMenu.getBukkitView(), reason); // Paper
          human.level().getCraftServer().getPluginManager().callEvent(event);

@@ -20,7 +20,7 @@ package net.kissenpvp.core.message;
 
 import net.kissenpvp.core.api.message.Comment;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
-import net.kissenpvp.core.database.DataWriter;
+import net.kissenpvp.core.api.database.DataWriter;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

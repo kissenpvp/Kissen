@@ -18,7 +18,7 @@
 
 package net.kissenpvp.core.command.parser;
 
-import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.command.InvalidColorException;
@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.Objects;
 
-public class NamedTextColorParser <S extends ServerEntity> implements ArgumentParser<NamedTextColor, S> {
+public class NamedTextColorParser <S extends ServerEntity> implements AbstractArgumentParser<NamedTextColor, S> {
     @Override
     public @NotNull String serialize(@NotNull NamedTextColor object) {
         return object.examinableName();

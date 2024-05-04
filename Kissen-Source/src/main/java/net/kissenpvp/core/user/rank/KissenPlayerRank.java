@@ -20,12 +20,12 @@ package net.kissenpvp.core.user.rank;
 
 import lombok.Getter;
 import net.kissenpvp.core.api.event.EventCancelledException;
-import net.kissenpvp.core.api.user.rank.PlayerRank;
-import net.kissenpvp.core.api.user.rank.Rank;
-import net.kissenpvp.core.api.user.rank.RankImplementation;
+import net.kissenpvp.core.api.time.KissenTemporalObject;
+import net.kissenpvp.core.api.user.rank.AbstractPlayerRank;
+import net.kissenpvp.core.api.user.rank.AbstractRank;
+import net.kissenpvp.core.api.user.rank.AbstractRankImplementation;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.database.DataWriter;
-import net.kissenpvp.core.time.KissenTemporalObject;
+import net.kissenpvp.core.api.database.DataWriter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,14 +33,14 @@ import java.time.Instant;
 import java.util.Objects;
 
 
-public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject implements PlayerRank<T> {
+public class KissenPlayerRank<T extends AbstractRank> extends KissenTemporalObject implements AbstractPlayerRank<T> {
 
     private final @Getter
     @NotNull PlayerRankNode playerRankNode;
     private final @Nullable DataWriter<PlayerRankNode> dataWriter;
 
     public KissenPlayerRank(@NotNull PlayerRankNode playerRankNode, @Nullable DataWriter<PlayerRankNode> dataWriter) {
-        super(playerRankNode.temporalMeasureNode());
+        super(playerRankNode.temporalData());
         this.playerRankNode = playerRankNode;
         this.dataWriter = dataWriter;
     }
@@ -59,7 +59,7 @@ public class KissenPlayerRank<T extends Rank> extends KissenTemporalObject imple
     @Override
     public @NotNull T getSource()
     {
-        RankImplementation<T> rankImplementation = KissenCore.getInstance().getImplementation(RankImplementation.class);
+        AbstractRankImplementation<T> rankImplementation = KissenCore.getInstance().getImplementation(AbstractRankImplementation.class);
         return rankImplementation.getRank(playerRankNode.rankID()).orElseThrow(NullPointerException::new);
     }
 

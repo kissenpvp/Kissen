@@ -3,12 +3,12 @@ package net.kissenpvp.core.command.handler;
 import lombok.AccessLevel;
 import lombok.Getter;
 import net.kissenpvp.core.api.base.ExceptionHandler;
-import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.command.CommandHandler;
 import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.annotations.CommandData;
 import net.kissenpvp.core.api.command.annotations.TabCompleter;
-import net.kissenpvp.core.api.command.exception.CommandExceptionHandler;
+import net.kissenpvp.core.api.command.exception.AbstractCommandExceptionHandler;
 import net.kissenpvp.core.api.command.executor.CommandExecutor;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
@@ -16,7 +16,7 @@ import net.kissenpvp.core.command.CommandHolder;
 import net.kissenpvp.core.command.argument.MethodEvaluator;
 import net.kissenpvp.core.command.executor.KissenCommandExecutor;
 import net.kissenpvp.core.command.executor.KissenPaperCompleteExecutor;
-import net.kissenpvp.core.permission.PermissionImplementation;
+import net.kissenpvp.core.permission.InternalPermissionImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -27,32 +27,26 @@ import java.util.*;
 public abstract class AbstractCommandHandler<S extends ServerEntity, C extends CommandHolder<S, ? extends C>> implements CommandHandler<S, C> {
     @Getter(AccessLevel.PROTECTED)
     private final Set<C> commands;
-    private final Map<Class<?>, ArgumentParser<?, S>> parser;
+    private final Map<Class<?>, AbstractArgumentParser<?, S>> parser;
     private final Set<ExceptionHandler<?>> exceptionHandler;
     private final MethodEvaluator<S> evaluator;
+    private final Set<Object> cached;
+    private boolean initialized;
 
     public AbstractCommandHandler() {
+        this.cached = new HashSet<>();
         this.commands = new HashSet<>();
         this.parser = new HashMap<>();
         this.exceptionHandler = new HashSet<>();
+        this.initialized = false;
         this.evaluator = new MethodEvaluator<>(this::getParser);
-    }
-
-    public void unregister()
-    {
-        for (C command : getCommands()) {
-            if(command.getPosition() == 0)
-            {
-                unregisterCommand(command);
-            }
-        }
     }
 
     public @NotNull @Unmodifiable Set<ExceptionHandler<?>> getExceptionHandler() {
         return Collections.unmodifiableSet(exceptionHandler);
     }
 
-    public @NotNull @Unmodifiable Map<Class<?>, ArgumentParser<?, S>> getParser() {
+    public @NotNull @Unmodifiable Map<Class<?>, AbstractArgumentParser<?, S>> getParser() {
         return Collections.unmodifiableMap(parser);
     }
 
@@ -63,12 +57,10 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
 
     @Override
     public void registerCommand(@NotNull Object @NotNull ... objects) {
-        KissenCore.getInstance().getLogger().debug("Class(es) {} has been registered as command holder from handler {}..", Arrays.toString(objects), getHandlerName());
-        for (Object object : objects) {
-            for (Method method : object.getClass().getDeclaredMethods()) {
-                injectMethod(object, method);
-            }
+        if (isInitialized()) {
+            throw new IllegalStateException("Handler is already initialized.");
         }
+        cached.addAll(List.of(objects));
     }
 
     @Override
@@ -81,12 +73,28 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
     }
 
     @Override
-    public <T> void registerParser(@NotNull Class<T> type, @NotNull ArgumentParser<T, S> parser) {
+    public <T> void registerParser(@NotNull Class<T> type, @NotNull AbstractArgumentParser<T, S> parser) {
         if (this.parser.containsKey(type)) {
             throw new IllegalArgumentException(String.format("Parser type %s is already registered.", type.getSimpleName()));
         }
         KissenCore.getInstance().getLogger().debug("Register parser for type {} with handler {}.", type, getHandlerName());
         this.parser.put(type, parser);
+    }
+
+    public void registerCachedCommands() {
+        for (Object object : cached) {
+            for (Method method : object.getClass().getDeclaredMethods()) {
+                injectMethod(object, method);
+            }
+        }
+        KissenCore.getInstance().getLogger().debug("Class(es) {} has been registered as command holder from handler {}..", cached, getHandlerName());
+        cached.clear();
+        initialized = true;
+    }
+
+    public void unregister()
+    {
+        getCommands().stream().filter(command -> command.getPosition()==0).forEach(this::unregisterCommand);
     }
 
     protected abstract void registerCommand(@NotNull C command);
@@ -132,7 +140,7 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
     private void addPermissions(@NotNull C command) {
         if (command.getPermission() != null) {
             for (String permission : command.getPermission().split(";")) {
-                PermissionImplementation<?> implementation = KissenCore.getInstance().getImplementation(PermissionImplementation.class);
+                InternalPermissionImplementation<?> implementation = KissenCore.getInstance().getImplementation(InternalPermissionImplementation.class);
                 implementation.addPermission(permission);
             }
         }
@@ -152,14 +160,14 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
     }
 
     private <T extends Throwable> boolean handleExceptionHandler(@NotNull ExceptionHandler<T> handler, @NotNull CommandPayload<S> commandPayload, @NotNull Throwable throwable) {
-        if (handler instanceof CommandExceptionHandler) {
-            return handleCommandExceptionHandler((CommandExceptionHandler<T, S>) handler, commandPayload, (T) throwable);
+        if (handler instanceof AbstractCommandExceptionHandler) {
+            return handleCommandExceptionHandler((AbstractCommandExceptionHandler<T, S>) handler, commandPayload, (T) throwable);
         } else {
             return handler.handle((T) throwable);
         }
     }
 
-    private <T extends Throwable> boolean handleCommandExceptionHandler(@NotNull CommandExceptionHandler<T, S> exceptionHandler, @NotNull CommandPayload<S> commandPayload, @NotNull T throwable) {
+    private <T extends Throwable> boolean handleCommandExceptionHandler(@NotNull AbstractCommandExceptionHandler<T, S> exceptionHandler, @NotNull CommandPayload<S> commandPayload, @NotNull T throwable) {
         return exceptionHandler.handle(commandPayload, throwable);
     }
 }

@@ -45,12 +45,12 @@ public interface QueryComponent<T extends QueryComponent<?>> {
      */
     @NotNull FilterQuery[] getFilterQueries();
 
-    @NotNull T or(@NotNull Column column, @NotNull String value);
+    @NotNull T or(@NotNull Column column, @NotNull Object value);
 
     @NotNull
     T orExact(@NotNull Column column, @NotNull String value);
 
-    @NotNull T and(@NotNull Column column, @NotNull String value);
+    @NotNull T and(@NotNull Column column, @NotNull Object value);
 
     @NotNull
     T andExact(@NotNull Column column, @NotNull String value);

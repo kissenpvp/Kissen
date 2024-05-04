@@ -18,9 +18,11 @@
 
 package net.kissenpvp.core.database.jdbc;
 
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
+import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
@@ -33,12 +35,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * The {@code KissenMeta} class is an abstract class that provides a common base for classes representing metadata
@@ -71,19 +72,15 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
      * then generates the database table if it does not already exist.</p>
      *
      * @param table the name of the database table
-     * @param totalIDColumn the name of the column containing the total ID
-     * @param keyColumn the name of the column containing the key
-     * @param valueColumn the name of the column containing the value
      * @see BackendException
      */
-    public KissenJDBCMeta(@NotNull String table, @NotNull String totalIDColumn, @NotNull String keyColumn, @NotNull String valueColumn) {
-        super(table, totalIDColumn, keyColumn, valueColumn, "type");
-        generateTable();
+    public KissenJDBCMeta(@NotNull Table table, @Nullable KissenPlugin kissenPlugin) {
+        super(table, kissenPlugin);
     }
 
     @Override
     public void purge(@NotNull String totalID) throws BackendException {
-        getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ?;", getTable(), getTotalIDColumn()), preparedStatement -> {
+        getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ?;", getTable(), getTable().getColumn(Column.TOTAL_ID)), preparedStatement -> {
             preparedStatement.setString(1, totalID);
             preparedStatement.executeUpdate();
         });
@@ -92,8 +89,8 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     @Override
     protected void setJson(@NotNull String totalID, @NotNull String key, @Nullable Object object) {
         String[] serialized = serialize(object);
-        if (serialized == null) {
-            getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND %s = ?;", getTable(), getTotalIDColumn(), getKeyColumn()), (preparedStatement -> {
+        if (serialized==null) {
+            getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND %s = ?;", getTable(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY)), (preparedStatement -> {
                 preparedStatement.setString(1, totalID);
                 preparedStatement.setString(2, key);
                 preparedStatement.executeUpdate();
@@ -101,10 +98,10 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             return;
         }
 
-        assert object != null;
+        assert object!=null;
         Update update = new Update(Column.VALUE, object);
         QueryUpdate queryUpdate = update(update).where(Column.TOTAL_ID, totalID).and(Column.KEY, key);
-        if (queryUpdate.execute().exceptionally((t) -> 0L).join() == 0) {
+        if (queryUpdate.execute().exceptionally((t) -> 0L).join()==0) {
             insert(totalID, key, serialized);
         }
     }
@@ -112,12 +109,13 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     @Override
     protected @NotNull CompletableFuture<Object[][]> execute(@NotNull QuerySelect select) {
         JDBCSelectQueryExecutor executor = new JDBCSelectQueryExecutor(select, this);
+
         return CompletableFuture.supplyAsync(() -> {
             List<Object[]> array = new ArrayList<>();
 
-            String[] values = new String[select.getFilterQueries().length];
-            getPreparedStatement(executor.constructSQL(values), executor.executeStatement(array, values, select.getColumns()));
-
+            List<String> values = new ArrayList<>();
+            String sql = executor.constructSQL(values);
+            getPreparedStatement(sql, executor.executeStatement(array, values.toArray(String[]::new)));
             return array.toArray(new Object[0][]);
         }).handle(logExceptions());
     }
@@ -126,21 +124,31 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     protected @NotNull CompletableFuture<Long> execute(@NotNull QueryUpdate update) {
         JDBCUpdateQueryExecutor executor = new JDBCUpdateQueryExecutor(update, this);
         return CompletableFuture.supplyAsync(() -> {
-            Predicate<Update> isValue = (directive) -> Objects.equals(directive.column(), Column.VALUE);
-            int valueColumns = (int) Arrays.stream(update.getColumns()).filter(isValue).count();
-
-            String[] updateValues = new String[update.getColumns().length + valueColumns];
-            String[] whereValues = new String[update.getFilterQueries().length];
+            List<String> updateValues = new ArrayList<>(), whereValues = new ArrayList<>();
             String sql = executor.constructSQL(updateValues, whereValues);
-
-            String[] total = new String[updateValues.length + whereValues.length];
-            System.arraycopy(updateValues, 0, total, 0, updateValues.length);
-            System.arraycopy(whereValues, 0, total, updateValues.length, whereValues.length);
+            String[] total = Stream.concat(updateValues.stream(), whereValues.stream()).toArray(String[]::new);
 
             AtomicLong count = new AtomicLong();
-            getPreparedStatement(sql, executor.executeStatement(sql, total, count));
+            getPreparedStatement(sql, executor.executeStatement(total, count));
             return count.get();
-        }).handle(logExceptions());
+        }).handle(logExceptions()).thenApply((data) -> data);
+    }
+
+    @Override
+    public void addMap(@NotNull String id, @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException {
+        getPreparedStatement(String.format("INSERT INTO %s (%s, %s, %s, %s, %s) VALUES (?, ?, ?, ?, ?);", getTable(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY), getTable().getPluginColumn(), getTable().getTypeColumn(), getTable().getColumn(Column.VALUE)), preparedStatement -> {
+            for (Map.Entry<String, Object> current : data.entrySet()) {
+                preparedStatement.setString(1, id);
+                preparedStatement.setString(2, current.getKey());
+                preparedStatement.setString(3, getPluginName());
+
+                String[] serialized = serialize(current.getValue());
+                preparedStatement.setString(4, serialized[0]);
+                preparedStatement.setString(5, serialized[1]);
+                preparedStatement.addBatch();
+            }
+            preparedStatement.executeBatch();
+        });
     }
 
     /**
@@ -151,37 +159,24 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
      * then prepares and executes the statement with the provided values.</p>
      *
      * @param totalID the total ID for the record
-     * @param key the key for the record
-     * @param values an array containing the type and value for the record
+     * @param key     the key for the record
+     * @param values  an array containing the type and value for the record
      * @throws NullPointerException if any of the parameters or values array is `null`
      */
     private void insert(@NotNull String totalID, @NotNull String key, @NotNull String[] values) {
-        String insert = "INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?);";
-        getPreparedStatement(insert.formatted(getTable(), getTotalIDColumn(), getKeyColumn(), getTypeColumn(), getValueColumn()), (preparedStatement -> {
+        String insert = "INSERT INTO %s (%s, %s, %s, %s, %s) VALUES (?, ?, ?, ?, ?);";
+        Object[] arguments = {getTable().getTable(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY), getTable().getPluginColumn(), // plugin
+                getTable().getTypeColumn(), // type
+                getTable().getColumn(Column.VALUE)};
+
+        getPreparedStatement(String.format(insert, arguments), (preparedStatement -> {
             preparedStatement.setString(1, totalID);
             preparedStatement.setString(2, key);
-            preparedStatement.setString(3, values[0]); // type
-            preparedStatement.setString(4, values[1]); // value
+            preparedStatement.setString(3, getPluginName());
+            preparedStatement.setString(4, values[0]); // type
+            preparedStatement.setString(5, values[1]); // value
             preparedStatement.executeUpdate();
         }));
-    }
-
-    /**
-     * Generates the database table if it does not already exist.
-     *
-     * <p>This method generates the database table if it does not already exist.
-     * It executes a SQL query to create the table with the specified columns,
-     * including a check constraint to ensure the validity of JSON data in the value column.</p>
-     *
-     * @see #getTable()
-     * @see #getTotalIDColumn()
-     * @see #getKeyColumn()
-     * @see #getTypeColumn()
-     * @see #getValueColumn()
-     */
-    protected void generateTable() {
-        String query = "CREATE TABLE IF NOT EXISTS %s (%s VARCHAR(100) NOT NULL, %s VARCHAR(100) NOT NULL, %s TINYTEXT NOT NULL, %s JSON NOT NULL CHECK (JSON_VALID(%s)));";
-        getPreparedStatement(query.formatted(getTable(), getTotalIDColumn(), getKeyColumn(), getTypeColumn(), getValueColumn(), getValueColumn()), PreparedStatement::executeUpdate);
     }
 
     /**
@@ -190,7 +185,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
      * <p>This method prepares a {@link PreparedStatement} for the specified query and executes it using the provided {@link PreparedStatementExecutor}.
      * The {@link PreparedStatement} and any associated resources are managed by the implementation of this method.</p>
      *
-     * @param query the SQL query string to be prepared
+     * @param query                     the SQL query string to be prepared
      * @param preparedStatementExecutor the {@link PreparedStatementExecutor} to execute the prepared statement
      * @throws NullPointerException if either the query or the {@link PreparedStatementExecutor} is {@code null}
      * @see PreparedStatement

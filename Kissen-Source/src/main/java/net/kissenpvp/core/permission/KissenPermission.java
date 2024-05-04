@@ -18,18 +18,11 @@
 
 package net.kissenpvp.core.permission;
 
+import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.api.event.EventCancelledException;
-import net.kissenpvp.core.api.permission.Permission;
-import net.kissenpvp.core.api.permission.PermissionEntry;
-import net.kissenpvp.core.api.permission.event.PermissionEndUpdateEvent;
-import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.database.DataWriter;
-import net.kissenpvp.core.event.EventImplementation;
-import net.kissenpvp.core.permission.event.KissenPermissionEndUpdateEvent;
-import net.kissenpvp.core.permission.event.KissenPermissionOptionDeleteEvent;
-import net.kissenpvp.core.permission.event.KissenPermissionOptionSetEvent;
-import net.kissenpvp.core.permission.event.KissenPermissionValueUpdateEvent;
-import net.kissenpvp.core.time.KissenTemporalObject;
+import net.kissenpvp.core.api.permission.AbstractPermission;
+import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
+import net.kissenpvp.core.api.time.KissenTemporalObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -40,14 +33,14 @@ import java.util.Map;
 import java.util.Objects;
 
 
-public class KissenPermission extends KissenTemporalObject implements Permission {
+public class KissenPermission extends KissenTemporalObject implements AbstractPermission {
 
     protected final PermissionNode permissionNode;
-    protected final PermissionEntry<? extends Permission> permissionEntry;
+    protected final AbstractPermissionEntry<? extends AbstractPermission> permissionEntry;
     protected final DataWriter<PermissionNode> dataWriter;
 
-    public KissenPermission(@NotNull PermissionNode permissionNode, @NotNull PermissionEntry<? extends Permission> permissionEntry, @Nullable DataWriter<PermissionNode> dataWriter) {
-        super(permissionNode.temporalMeasureNode());
+    public KissenPermission(@NotNull PermissionNode permissionNode, @NotNull AbstractPermissionEntry<? extends AbstractPermission> permissionEntry, @Nullable DataWriter<PermissionNode> dataWriter) {
+        super(permissionNode.temporalData());
         this.permissionNode = permissionNode;
         this.permissionEntry = permissionEntry;
         this.dataWriter = dataWriter;
@@ -59,59 +52,45 @@ public class KissenPermission extends KissenTemporalObject implements Permission
     }
 
     @Override
-    public @NotNull PermissionEntry<? extends Permission> getOwner() {
+    public @NotNull AbstractPermissionEntry<? extends AbstractPermission> getOwner() {
         return permissionEntry;
     }
 
     @Override
     public boolean getValue() {
-        return permissionNode.value().getValue();
+        return Boolean.TRUE.equals(permissionNode.value().getValue());
     }
 
     @Override
     public void setValue(boolean value) throws EventCancelledException {
-        if (dataWriter == null) {
+        if (dataWriter==null) {
             throw new EventCancelledException("This object is immutable.", new IllegalStateException());
         }
 
-        KissenPermissionValueUpdateEvent kissenPermissionValueUpdateEvent = new KissenPermissionValueUpdateEvent(this, value);
-        if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(kissenPermissionValueUpdateEvent) && getValue() != kissenPermissionValueUpdateEvent.isValue()) {
-            permissionNode.value().setValue(kissenPermissionValueUpdateEvent.isValue());
-            dataWriter.update(permissionNode);
-            return;
-        }
-        throw new EventCancelledException();
+        permissionNode.value().setValue(value);
+        dataWriter.update(permissionNode);
     }
 
     @Override
     public void setOption(@NotNull String key, @NotNull String data) throws EventCancelledException {
-        if (dataWriter == null) {
+        if (dataWriter==null) {
             throw new EventCancelledException("This object is immutable.", new IllegalStateException());
         }
-        KissenPermissionOptionSetEvent kissenPermissionOptionSetEvent = new KissenPermissionOptionSetEvent(this, permissionNode.additionalData().containsKey(key), key, data);
-        if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(kissenPermissionOptionSetEvent)) {
-            permissionNode.additionalData().remove(kissenPermissionOptionSetEvent.getKey());
-            permissionNode.additionalData().put(kissenPermissionOptionSetEvent.getKey(), kissenPermissionOptionSetEvent.getData());
-            dataWriter.update(permissionNode);
-            return;
-        }
-        throw new EventCancelledException();
+        permissionNode.additionalData().remove(key);
+        permissionNode.additionalData().put(key, data);
+        dataWriter.update(permissionNode);
     }
 
     @Override
     public boolean deleteOption(@NotNull String key) throws EventCancelledException {
-        if (dataWriter == null) {
+        if (dataWriter==null) {
             throw new EventCancelledException("This object is immutable.", new IllegalStateException());
         }
 
         if (permissionNode.additionalData().containsKey(key)) {
-            KissenPermissionOptionDeleteEvent kissenPermissionOptionDeleteEvent = new KissenPermissionOptionDeleteEvent(this, key, Objects.requireNonNull(getOption(key)));
-            if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(kissenPermissionOptionDeleteEvent)) {
-                permissionNode.additionalData().remove(key);
-                dataWriter.update(permissionNode);
-                return true;
-            }
-            throw new EventCancelledException();
+            permissionNode.additionalData().remove(key);
+            dataWriter.update(permissionNode);
+            return true;
         }
 
         return false;
@@ -128,23 +107,17 @@ public class KissenPermission extends KissenTemporalObject implements Permission
     }
 
     @Override
-    public void setEnd(Instant end) throws EventCancelledException {
-        if (dataWriter == null) {
+    public void setEnd(@Nullable Instant end) throws EventCancelledException {
+        if (dataWriter==null) {
             throw new EventCancelledException("This object is immutable.", new IllegalStateException());
         }
 
-        PermissionEndUpdateEvent permissionEndUpdateEvent = new KissenPermissionEndUpdateEvent(this, end);
-        if (KissenCore.getInstance().getImplementation(EventImplementation.class).call(permissionEndUpdateEvent)) {
-            rewriteEnd(permissionEndUpdateEvent.getEnd().orElse(null));
-            dataWriter.update(permissionNode);
-            return;
-        }
-        throw new EventCancelledException();
+        rewriteEnd(end);
+        dataWriter.update(permissionNode);
     }
 
     @Override
-    public boolean isValid()
-    {
+    public boolean isValid() {
         return getValue() && super.isValid();
     }
 
@@ -152,23 +125,20 @@ public class KissenPermission extends KissenTemporalObject implements Permission
         return permissionNode;
     }
 
-    public @Nullable DataWriter getDataWriter() {
+    public @Nullable DataWriter<PermissionNode> getDataWriter() {
         return dataWriter;
     }
 
     @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(Object o) {
+        if (this==o) return true;
+        if (o==null || getClass()!=o.getClass()) return false;
         KissenPermission that = (KissenPermission) o;
-        return Objects.equals(getKissenPermissionNode().name(),
-                that.getKissenPermissionNode().name()) && Objects.equals(permissionEntry, that.permissionEntry);
+        return Objects.equals(getKissenPermissionNode().name(), that.getKissenPermissionNode().name()) && Objects.equals(permissionEntry, that.permissionEntry);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hash(getKissenPermissionNode().name(), permissionEntry);
     }
 }

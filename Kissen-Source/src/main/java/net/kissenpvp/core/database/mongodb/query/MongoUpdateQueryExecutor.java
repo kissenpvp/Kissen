@@ -85,11 +85,11 @@ public class MongoUpdateQueryExecutor extends MongoQueryExecutor {
      */
     @Contract("_ -> new")
     private @NotNull Bson updateRow(@NotNull Update update) {
-        String columnName = getMeta().getColumn(update.column());
+        String columnName = getMeta().getTable().getColumn(update.column());
         if (Objects.equals(update.column(), Column.VALUE)) {
             return updateValue(update.value(), columnName);
         }
-        return Updates.set(getMeta().getColumn(update.column()), update.value());
+        return Updates.set(getMeta().getTable().getColumn(update.column()), update.value());
     }
 
     /**
@@ -105,6 +105,11 @@ public class MongoUpdateQueryExecutor extends MongoQueryExecutor {
     @Contract("_, _ -> new")
     private @NotNull Bson updateValue(@NotNull Object value, @NotNull String columnName) {
         String[] data = getMeta().serialize(value);
-        return Updates.combine(Updates.set(getMeta().getTypeColumn(), data[0]), Updates.set(columnName, data[1]));
+        Bson[] updates = { // updates
+                Updates.set(getMeta().getTable().getPluginColumn(), getMeta().getPlugin()==null ? null:getMeta().getPlugin().getName()),
+                Updates.set(getMeta().getTable().getTypeColumn(), data[0]), // class
+                Updates.set(columnName, data[1]) // value
+        };
+        return Updates.combine(updates);
     }
 }

@@ -1,0 +1,64 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Wed, 24 Apr 2024 21:28:13 +0200
+Subject: [PATCH] Adjusted gradle script to integrate into kissen
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index bcfe59b6efb628ee1e7f9d60667360d4d885fb6a..911889a65e21d73aced49600d63513528aef8a27 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -13,8 +13,14 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
+ val alsoShade: Configuration by configurations.creating
+ 
+ dependencies {
+-    implementation(project(":paper-api"))
+-    implementation(project(":paper-mojangapi"))
++    // KissenPaper start
++    //implementation(project(":paper-api"))
++    //implementation(project(":paper-mojangapi"))
++    implementation(project(":kissenpaper:kissenpaper-api"))
++    implementation("io.papermc.paper:paper-mojangapi:${project.version}") {
++        exclude("io.papermc.paper", "paper-api")
++    }
++    // KissenPaper end
+     // Paper start
+     implementation("org.jline:jline-terminal-jansi:3.21.0")
+     implementation("net.minecrell:terminalconsoleappender:1.3.0")
+@@ -50,6 +56,11 @@ dependencies {
+     runtimeOnly("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.18")
+     runtimeOnly("org.apache.maven.resolver:maven-resolver-transport-http:1.9.18")
+ 
++    // KissenPaper start
++    implementation(project(":kissen-api") )
++    implementation(project(":kissen-source") )
++    // KissenPaper end
++
+     testImplementation("io.github.classgraph:classgraph:4.8.47") // Paper - mob goal test
+     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+     testImplementation("org.hamcrest:hamcrest:2.2")
+diff --git a/src/main/resources/log4j2.xml b/src/main/resources/log4j2.xml
+index 675cd61221e807aadf28322b46c3daa1370241b5..fc2d8b61dab3bbe2164d57c68e743ae03dee2357 100644
+--- a/src/main/resources/log4j2.xml
++++ b/src/main/resources/log4j2.xml
+@@ -6,17 +6,17 @@
+         </Queue>
+         <TerminalConsole name="TerminalConsole">
+             <PatternLayout>
+-                <LoggerNamePatternSelector defaultPattern="%highlightError{[%d{HH:mm:ss} %level]: [%logger] %msg%n%xEx{full}}">
++                <LoggerNamePatternSelector defaultPattern="%highlightError{[%d{HH:mm:ss} %level] [%logger]: %msg%n%xEx{full}}">
+                     <!-- Log root, Minecraft, Mojang and Bukkit loggers without prefix -->
+                     <!-- Disable prefix for various plugins that bypass the plugin logger -->
+                     <PatternMatch key=",net.minecraft.,Minecraft,com.mojang.,com.sk89q.,ru.tehkode.,Minecraft.AWE"
+-                                  pattern="%highlightError{[%d{HH:mm:ss} %level]: %msg%n%xEx{full}}" />
++                                  pattern="%highlightError{[%d{HH:mm:ss} %level] [%thread]: %msg%n%xEx{full}}" />
+                 </LoggerNamePatternSelector>
+             </PatternLayout>
+         </TerminalConsole>
+         <RollingRandomAccessFile name="File" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
+             <PatternLayout>
+-                <LoggerNamePatternSelector defaultPattern="[%d{HH:mm:ss}] [%t/%level]: [%logger] %stripAnsi{%msg}%n%xEx{full}">
++                <LoggerNamePatternSelector defaultPattern="[%d{HH:mm:ss}] [%t/%level] [%logger]: %stripAnsi{%msg}%n%xEx{full}">
+                     <!-- Log root, Minecraft, Mojang and Bukkit loggers without prefix -->
+                     <!-- Disable prefix for various plugins that bypass the plugin logger -->
+                     <PatternMatch key=",net.minecraft.,Minecraft,com.mojang.,com.sk89q.,ru.tehkode.,Minecraft.AWE"

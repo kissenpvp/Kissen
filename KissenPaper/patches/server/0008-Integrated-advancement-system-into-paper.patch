@@ -1,0 +1,159 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Sun, 3 Mar 2024 09:34:37 +0100
+Subject: [PATCH] Integrated advancement system into paper
+
+Signed-off-by: Ivo Quiring <falk.quiring@gmail.com>
+
+diff --git a/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java b/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..252e4516e7dcf0bd128380cd08e4a12465b16307
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java
+@@ -0,0 +1,48 @@
++package net.kissenpvp.paper.advancement;
++
++import com.google.gson.JsonElement;
++import com.google.gson.JsonObject;
++import com.google.gson.JsonParseException;
++import com.mojang.datafixers.DataFixer;
++import com.mojang.serialization.JsonOps;
++import net.kissenpvp.core.api.user.User;
++import net.kissenpvp.paper.api.base.Context;
++import net.minecraft.Util;
++import net.minecraft.server.PlayerAdvancements;
++import net.minecraft.server.ServerAdvancementManager;
++import net.minecraft.server.level.ServerPlayer;
++import net.minecraft.server.players.PlayerList;
++import org.bukkit.Bukkit;
++import org.jetbrains.annotations.NotNull;
++
++import java.nio.file.Path;
++
++public class KissenPlayerAdvancement extends PlayerAdvancements {
++    
++    public KissenPlayerAdvancement(DataFixer dataFixer, PlayerList playerManager, ServerAdvancementManager advancementLoader, Path filePath, ServerPlayer owner) {
++        super(dataFixer, playerManager, advancementLoader, filePath, owner);
++    }
++
++    @Override
++    protected void load(@NotNull ServerAdvancementManager advancementLoader) {
++        User privateUser = getPlayer().getBukkitEntity().getUser(Context.LOCAL);
++        //JsonElement jsonElement = privateUser.get("advancements", JsonElement.class).orElseGet(JsonObject::new);
++        PlayerAdvancements.Data data = Util.getOrThrow(this.getCodec().parse(JsonOps.INSTANCE, new JsonObject()), JsonParseException::new);
++        this.applyFrom(advancementLoader, data);
++
++        this.checkForAutomaticTriggers(advancementLoader);
++        this.registerListeners(advancementLoader);
++    }
++
++    @Override
++    public void save() {
++        if (org.spigotmc.SpigotConfig.disableAdvancementSaving) return; // Spigot
++
++        JsonElement jsonelement = Util.getOrThrow(super.getCodec().encodeStart(JsonOps.INSTANCE, this.asData()), IllegalStateException::new);
++        //getPlayer().getBukkitEntity().getUser(Context.LOCAL).set("advancements", jsonelement);
++    }
++
++/*    private @NotNull KissenPaperAdvancementImplementation getImplementation() {
++        return Bukkit.getKissen().getImplementation(KissenPaperAdvancementImplementation.class);
++    }*/
++}
+diff --git a/src/main/java/net/minecraft/server/PlayerAdvancements.java b/src/main/java/net/minecraft/server/PlayerAdvancements.java
+index 24e5993b281448734eb67c7a8439a349bbf9fd72..85db6972a7e56ac72537f3f109129bc0521a56e8 100644
+--- a/src/main/java/net/minecraft/server/PlayerAdvancements.java
++++ b/src/main/java/net/minecraft/server/PlayerAdvancements.java
+@@ -103,7 +103,7 @@ public class PlayerAdvancements {
+         this.load(advancementLoader);
+     }
+ 
+-    private void registerListeners(ServerAdvancementManager advancementLoader) {
++    protected void registerListeners(ServerAdvancementManager advancementLoader) { // KissenPaper - make protected
+         Iterator iterator = advancementLoader.getAllAdvancements().iterator();
+ 
+         while (iterator.hasNext()) {
+@@ -114,7 +114,7 @@ public class PlayerAdvancements {
+ 
+     }
+ 
+-    private void checkForAutomaticTriggers(ServerAdvancementManager advancementLoader) {
++    protected void checkForAutomaticTriggers(ServerAdvancementManager advancementLoader) { // KissenPaper - make protected
+         Iterator iterator = advancementLoader.getAllAdvancements().iterator();
+ 
+         while (iterator.hasNext()) {
+@@ -129,7 +129,7 @@ public class PlayerAdvancements {
+ 
+     }
+ 
+-    private void load(ServerAdvancementManager advancementLoader) {
++    protected void load(ServerAdvancementManager advancementLoader) { // KissenPaper - make protected
+         if (Files.isRegularFile(this.playerSavePath, new LinkOption[0])) {
+             try {
+                 JsonReader jsonreader = new JsonReader(Files.newBufferedReader(this.playerSavePath, StandardCharsets.UTF_8));
+@@ -193,7 +193,7 @@ public class PlayerAdvancements {
+ 
+     }
+ 
+-    private void applyFrom(ServerAdvancementManager loader, PlayerAdvancements.Data progressMap) {
++    protected void applyFrom(ServerAdvancementManager loader, PlayerAdvancements.Data progressMap) { // KissenPaper - made protected
+         progressMap.forEach((minecraftkey, advancementprogress) -> {
+             AdvancementHolder advancementholder = loader.get(minecraftkey);
+ 
+@@ -208,7 +208,7 @@ public class PlayerAdvancements {
+         });
+     }
+ 
+-    private PlayerAdvancements.Data asData() {
++    protected PlayerAdvancements.Data asData() { // KissenPaper - made protected
+         Map<ResourceLocation, AdvancementProgress> map = new LinkedHashMap();
+ 
+         this.progress.forEach((advancementholder, advancementprogress) -> {
+@@ -416,14 +416,30 @@ public class PlayerAdvancements {
+         });
+     }
+ 
+-    private static record Data(Map<ResourceLocation, AdvancementProgress> map) {
++    protected record Data(Map<ResourceLocation, AdvancementProgress> map) { // KissenPaper - made protected and remove static
+ 
+         public static final Codec<PlayerAdvancements.Data> CODEC = Codec.unboundedMap(ResourceLocation.CODEC, AdvancementProgress.CODEC).xmap(PlayerAdvancements.Data::new, PlayerAdvancements.Data::map);
+ 
++        // KissenPaper start - add constructor because java defaults it to private
++        protected Data(Map<ResourceLocation, AdvancementProgress> map) {
++            this.map = map;
++        }
++        // KissenPaper end - add constructor because java defaults it to private
++
+         public void forEach(BiConsumer<ResourceLocation, AdvancementProgress> consumer) {
+             this.map.entrySet().stream().sorted(Entry.comparingByValue()).forEach((entry) -> {
+                 consumer.accept((ResourceLocation) entry.getKey(), (AdvancementProgress) entry.getValue());
+             });
+         }
+     }
++
++    // KissenPaper start - make player accessible from class children
++    protected @org.jetbrains.annotations.NotNull ServerPlayer getPlayer() {
++        return player;
++    }
++
++    public @org.jetbrains.annotations.NotNull Codec<Data> getCodec() {
++        return codec;
++    }
++    // KissenPaper end - make player accessible from class children
+ }
+diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
+index 96af226e2c613498203304166534ccd8b61b342a..7562e40d8a3a1f9636ea0ce70100d01eed0fb36f 100644
+--- a/src/main/java/net/minecraft/server/players/PlayerList.java
++++ b/src/main/java/net/minecraft/server/players/PlayerList.java
+@@ -1517,7 +1517,11 @@ public abstract class PlayerList {
+         if (advancementdataplayer == null) {
+             Path path = this.server.getWorldPath(LevelResource.PLAYER_ADVANCEMENTS_DIR).resolve(uuid + ".json");
+ 
+-            advancementdataplayer = new PlayerAdvancements(this.server.getFixerUpper(), this, this.server.getAdvancements(), path, player);
++            // KissenPaper start - make advancements being saved in the database
++            //advancementdataplayer = new PlayerAdvancements(this.server.getFixerUpper(), this, this.server.getAdvancements(), path, player);
++            advancementdataplayer = new net.kissenpvp.paper.advancement.KissenPlayerAdvancement(this.server.getFixerUpper(), this, this.server.getAdvancements(), path, player);
++            // KissenPaper end - make advancements being saved in the database
++
+             // this.advancements.put(uuid, advancementdataplayer); // CraftBukkit
+         }
+ 

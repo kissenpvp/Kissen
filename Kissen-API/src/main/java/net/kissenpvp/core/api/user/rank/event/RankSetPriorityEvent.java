@@ -1,5 +1,5 @@
 package net.kissenpvp.core.api.user.rank.event;
 
-import net.kissenpvp.core.api.user.rank.Rank;
+import net.kissenpvp.core.api.user.rank.AbstractRank;
 
-public interface RankSetPriorityEvent<T extends Rank> extends RankSetEvent<T, Integer> {}
+public interface RankSetPriorityEvent<T extends AbstractRank> extends RankSetEvent<T, Integer> {}

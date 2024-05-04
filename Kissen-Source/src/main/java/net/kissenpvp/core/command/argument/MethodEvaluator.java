@@ -20,8 +20,7 @@ package net.kissenpvp.core.command.argument;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import net.kissenpvp.core.api.base.plugin.KissenPlugin;
-import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.annotations.ArgumentName;
 import net.kissenpvp.core.api.command.annotations.Optional;
@@ -29,7 +28,7 @@ import net.kissenpvp.core.api.command.annotations.IgnoreQuote;
 import net.kissenpvp.core.api.command.exception.ArgumentParserAbsentException;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.command.CommandImplementation;
+import net.kissenpvp.core.command.InternalCommandImplementation;
 import net.kissenpvp.core.command.parser.EnumParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
@@ -53,7 +52,7 @@ import java.util.function.Supplier;
  * While processing each parameter, this class also ensures that array parameters follow the proper command syntax by being placed
  * last in the command.
  * <p>
- * If a parameter type has an associated {@link ArgumentParser}, it's used to deserialize default values (if any) to the
+ * If a parameter type has an associated {@link AbstractArgumentParser}, it's used to deserialize default values (if any) to the
  * appropriate type. If no such parser exists for a parameter's type, an {@link ArgumentParserAbsentException} is thrown.
  * <p>
  * The main public method provided by this class is {@link #evaluateMethod(Method)}, which processes a method and returns
@@ -61,16 +60,16 @@ import java.util.function.Supplier;
  */
 public class MethodEvaluator<S extends ServerEntity> {
 
-    @Getter(AccessLevel.PRIVATE) private final Supplier<Map<Class<?>, ArgumentParser<?, S>>> argumentSupplier;
+    @Getter(AccessLevel.PRIVATE) private final Supplier<Map<Class<?>, AbstractArgumentParser<?, S>>> argumentSupplier;
 
-    public MethodEvaluator(@NotNull Supplier<Map<Class<?>, ArgumentParser<?, S>>> argumentSupplier)
+    public MethodEvaluator(@NotNull Supplier<Map<Class<?>, AbstractArgumentParser<?, S>>> argumentSupplier)
     {
         this.argumentSupplier = argumentSupplier;
     }
 
     public @NotNull @Unmodifiable List<Argument<?, S>> evaluateMethod(@NotNull Method method) {
         List<Argument<?, S>> argumentList = new ArrayList<>();
-        CommandImplementation command = getCommandImplementation();
+        InternalCommandImplementation<?> command = getCommandImplementation();
 
         for (Parameter parameter : method.getParameters()) {
             argumentList.addAll(processParameter(getArgumentSupplier().get(), method, parameter));
@@ -80,19 +79,19 @@ public class MethodEvaluator<S extends ServerEntity> {
     }
 
     /**
-     * Retrieves the {@link CommandImplementation} singleton instance that exists within the {@link KissenCore}.
+     * Retrieves the {@link InternalCommandImplementation} singleton instance that exists within the {@link KissenCore}.
      * <p>
-     * This function provides a simple and direct way of accessing the {@link CommandImplementation} instance.
+     * This function provides a simple and direct way of accessing the {@link InternalCommandImplementation} instance.
      * It's like a convenience proxy that simplifies the retrieval of the singleton instance by avoiding the need
      * to always use the full {@code KissenCore.getInstance().getImplementation(KissenCommandImplementation.class)} expression.
      *
-     * @return The {@link CommandImplementation} singleton instance that exists within the {@link KissenCore}.
+     * @return The {@link InternalCommandImplementation} singleton instance that exists within the {@link KissenCore}.
      */
-    private @NotNull CommandImplementation getCommandImplementation() {
-        return KissenCore.getInstance().getImplementation(CommandImplementation.class);
+    private @NotNull InternalCommandImplementation<?> getCommandImplementation() {
+        return KissenCore.getInstance().getImplementation(InternalCommandImplementation.class);
     }
 
-    private @Unmodifiable <T> @NotNull List<Argument<T, S>> processParameter(@NotNull Map<Class<?>, ArgumentParser<?, S>> parserMap, @NotNull Method method, @NotNull Parameter parameter)
+    private @Unmodifiable <T> @NotNull List<Argument<T, S>> processParameter(@NotNull Map<Class<?>, AbstractArgumentParser<?, S>> parserMap, @NotNull Method method, @NotNull Parameter parameter)
     {
         Class<T> parameterType = (Class<T>) parameter.getType();
 
@@ -127,18 +126,18 @@ public class MethodEvaluator<S extends ServerEntity> {
         }
         boolean isEnum = parameterType.isEnum();
         builder.isEnum(isEnum);
-        ArgumentParser<T, S> argumentParser = (ArgumentParser<T, S>) (isEnum ? new EnumParser<>(parameterType) : parserMap.get(parameterType));
-        if(argumentParser != null)
+        AbstractArgumentParser<T, S> abstractArgumentParser = (AbstractArgumentParser<T, S>) (isEnum ? new EnumParser<>(parameterType) : parserMap.get(parameterType));
+        if(abstractArgumentParser!= null)
         {
-            builder.argumentParser(argumentParser);
+            builder.argumentParser(abstractArgumentParser);
 
             if(parameter.isAnnotationPresent(ArgumentName.class))
             {
                 builder.argumentName(parameter.getAnnotation(ArgumentName.class).value());
             }
-            else if (argumentParser.argumentName() != null)
+            else if (abstractArgumentParser.argumentName() != null)
             {
-                builder.argumentName(argumentParser.argumentName());
+                builder.argumentName(abstractArgumentParser.argumentName());
             }
             else
             {
@@ -155,13 +154,13 @@ public class MethodEvaluator<S extends ServerEntity> {
     }
 
 
-    private <T> Argument<T, S> createOptional(@NotNull Map<Class<?>, ArgumentParser<?, S>> parserMap, @NotNull Method method, @NotNull Class<T> type, ArgumentType isArray, @NotNull String[] def, @NotNull Argument.ArgumentBuilder<T, S> builder) {
+    private <T> Argument<T, S> createOptional(@NotNull Map<Class<?>, AbstractArgumentParser<?, S>> parserMap, @NotNull Method method, @NotNull Class<T> type, ArgumentType isArray, @NotNull String[] def, @NotNull Argument.ArgumentBuilder<T, S> builder) {
 
         if (type.isPrimitive() && def.length == 0) {
             throw new IllegalArgumentException(String.format("Use wrappers instead of primitive types for nullability, %s.", method.getName()));
         }
 
-        final ArgumentParser<?, ?> parser = parserMap.get(type);
+        final AbstractArgumentParser<?, ?> parser = parserMap.get(type);
         if (parser == null) {
             throw new ArgumentParserAbsentException(type);
         }
@@ -177,19 +176,19 @@ public class MethodEvaluator<S extends ServerEntity> {
     }
 
     /**
-     * Creates an array of objects by using an {@link ArgumentParser} to deserialize a given array of strings into specific types.
+     * Creates an array of objects by using an {@link AbstractArgumentParser} to deserialize a given array of strings into specific types.
      * <p>
      * This function is primarily used in the construction of nullable or optional {@link Argument}s that have an array of default values.
      * <p>
-     * Function iterates over the given array of string defaults, using the provided {@link ArgumentParser} to deserialize each string into an instance of the specified type.
+     * Function iterates over the given array of string defaults, using the provided {@link AbstractArgumentParser} to deserialize each string into an instance of the specified type.
      * An array of these instances is then created and returned.
      *
      * @param type    The class object of the type that each element in the returned array should be.
-     * @param adapter The {@link ArgumentParser} to be used for deserializing each string in the default values array.
+     * @param adapter The {@link AbstractArgumentParser} to be used for deserializing each string in the default values array.
      * @param def     The array of string default values to be deserialized into specific types.
      * @return An array of objects, where each object is an instance of the specified type.
      */
-    private Object[] createArray(Class<?> type, ArgumentParser<?, ?> adapter, String @NotNull [] def) {
+    private Object[] createArray(Class<?> type, AbstractArgumentParser<?, ?> adapter, String @NotNull [] def) {
         Object[] value = (Object[]) Array.newInstance(type, 0);
         for (String arg : def) {
             value = getCommandImplementation().add(value, getCommandImplementation().deserialize(arg, adapter));

@@ -28,7 +28,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -67,12 +66,12 @@ public class SerializableUserHandler implements SerializableSavableHandler {
 
     @Override
     public void set(String key, String value) {
-        getSavable().put(key, value);
+        //getSavable().put(key, value);
     }
 
     @Override
     public void setList(String key, List<String> value) {
-        getSavable().putList(key, value);
+        //getSavable().putList(key, value);
     }
 
     @Override

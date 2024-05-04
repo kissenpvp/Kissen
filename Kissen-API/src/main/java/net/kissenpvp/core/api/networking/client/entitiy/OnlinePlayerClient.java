@@ -19,15 +19,15 @@
 package net.kissenpvp.core.api.networking.client.entitiy;
 
 import io.netty.channel.Channel;
-import net.kissenpvp.core.api.ban.Punishment;
+import net.kissenpvp.core.api.ban.AbstractPunishment;
 import net.kissenpvp.core.api.base.KissenServer;
-import net.kissenpvp.core.api.permission.Permission;
-import net.kissenpvp.core.api.user.rank.PlayerRank;
+import net.kissenpvp.core.api.permission.AbstractPermission;
+import net.kissenpvp.core.api.user.rank.AbstractPlayerRank;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface OnlinePlayerClient<P extends Permission, R extends PlayerRank<?>, B extends Punishment<?>> extends PlayerClient<P, R, B>, MessageReceiver {
+public interface OnlinePlayerClient<P extends AbstractPermission, R extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> extends PlayerClient<P, R, B>, MessageReceiver {
 
     void kick(@NotNull String message);
 

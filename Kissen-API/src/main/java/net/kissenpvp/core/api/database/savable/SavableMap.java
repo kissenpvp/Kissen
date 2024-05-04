@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.api.database.savable;
 
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,39 +58,6 @@ import java.util.Optional;
  * @see Serializable
  */
 public interface SavableMap extends Map<String, Object>, Serializable {
-
-    /**
-     * Copies all the key-value pairs from the specified {@link SavableMap} to this map.
-     *
-     * <p>The {@code putAll(SavableMap)} method copies all the key-value pairs from the specified {@link SavableMap} to this map,
-     * effectively adding or updating the entries. Unlike the {@link #set(String, Object)} method, the {@code putAll(SavableMap)} method does not
-     * alter the underlying table or storage mechanism. It only affects the contents of this map.</p>
-     *
-     * <p>The specified {@link SavableMap} contains key-value pairs that will be copied to this map. If a key already
-     * exists in this map, the corresponding value will be updated. If a key does not exist, a new entry will
-     * be added to this map.</p>
-     *
-     * <p>Example usage:</p>
-     *
-     * <pre>
-     * {@code
-     * SavableMap sourceMap = new SomeSavableMapImplementation();
-     * sourceMap.put("key1", "value1");
-     * sourceMap.put("key2", "value2");
-     *
-     * SavableMap targetMap = new SomeSavableMapImplementation();
-     * targetMap.putAll(sourceMap);
-     *
-     * Optional<String> value = targetMap.get("key1");
-     * System.out.println(value.orElse(null)); // Output: "value1"
-     * }
-     * </pre>
-     *
-     * @param savableMap the {@link SavableMap} containing the key-value pairs to be copied to this map
-     * @throws NullPointerException if the specified {@link SavableMap} is `null`
-     * @see #put(Object, Object)
-     */
-    void putAll(@NotNull SavableMap savableMap);
 
     /**
      * Associates the specified value with the specified key in this map and saves the value within the database.
@@ -175,8 +141,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * or performing other storage-specific operations.</p>
      *
      * @param key the key of the object to be deleted
-     * @return
-     * @throws NullPointerException if the specified key is `null`
+     * @return the value previously associated with this key, or {@code null} if not present.
      */
     @Nullable Object delete(@NotNull String key);
 
@@ -322,7 +287,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      *
      * @param key the key of the list to retrieve
      * @return the List of Strings associated with the key, if it exists, or a new empty list if it doesn't
-     * @throws NullPointerException if the specified key is `null`
+     * @throws NullPointerException if the specified key is {@code null}
      * @see MetaList
      */
     @NotNull <T> MetaList<T> getListNotNull(@NotNull String key, @NotNull Class<T> type);
@@ -355,7 +320,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * @param key   the key to associate with the list
      * @param value the List of Strings to be inserted
      * @return the SavableList associated with the key
-     * @throws NullPointerException if the specified key is `null`
+     * @throws NullPointerException if the specified key is {@code null}
      * @see #setList(String, Collection)
      */
     <T> @Nullable Object putList(@NotNull String key, @Nullable Collection<T> value);
@@ -561,8 +526,8 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * </pre>
      *
      * @param key the key associated with the list to be removed
-     * @return
-     * @throws NullPointerException if the specified key is `null`
+     * @return whether a list was removed with the given key.
+     * @throws NullPointerException if the specified key is {@code null}
      * @see #deleteList(String)
      */
     boolean removeList(@NotNull String key);
@@ -602,7 +567,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      *
      * @param key   the key associated with the list
      * @param value the value to remove from the list
-     * @throws NullPointerException if the specified key or value is `null`
+     * @throws NullPointerException if the specified key or value is {@code null}
      * @see #deleteListValue(String, T)
      */
     <T> boolean removeListValue(@NotNull String key, @NotNull T value);
@@ -638,7 +603,7 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      *
      * @param key   the key associated with the list
      * @param value the value to remove from the list
-     * @throws NullPointerException if the specified key or value is `null`
+     * @throws NullPointerException if the specified key or value is {@code null}
      * @see #removeListValue(String, T)
      */
     <T> boolean deleteListValue(@NotNull String key, @NotNull T value);
@@ -671,50 +636,8 @@ public interface SavableMap extends Map<String, Object>, Serializable {
      * </pre>
      *
      * @param key the key associated with the list to be removed
-     * @throws NullPointerException if the specified key is `null`
+     * @throws NullPointerException if the specified key is {@code null}
      * @see #removeList(String)
      */
     boolean deleteList(@NotNull String key);
-
-    /**
-     * Returns a serializable version of the SavableMap.
-     *
-     * <p>The `toSerializable()` method allows you to obtain a serializable version of the SavableMap. This can be
-     * useful
-     * when you need to serialize the map and store it or transfer it over a network.</p>
-     *
-     * <p>The returned `SavableMap` object is a serializable representation of the original map. It contains the same
-     * key-value
-     * pairs and maintains any modifications made to the original map.</p>
-     *
-     * <p>Example usage:</p>
-     *
-     * <pre>
-     * {@code
-     * SavableMap savableMap = new SomeSavableMapImplementation();
-     * savableMap.set("key1", "value1");
-     * savableMap.set("key2", "value2");
-     *
-     * // Obtain the serializable version of the map
-     * SavableMap serializableMap = savableMap.toSerializable();
-     * }
-     * </pre>
-     *
-     * @return a serializable version of the SavableMap
-     */
-    @NotNull SavableMap serializeSavable();
-
-    /**
-     * Retrieves the metadata associated with the object.
-     *
-     * <p>The {@code getMeta} method returns an {@link ObjectMeta} that serves as an interface between a database table and
-     * Java. It provides a standardized approach for interacting with database tables.</p>
-     *
-     * <p>The {@link ObjectMeta} interface extends the {@link java.io.Serializable} interface, allowing instances of
-     * implementing classes to be serialized and deserialized.</p>
-     *
-     * @return the {@link ObjectMeta} associated with the object
-     * @see java.io.Serializable
-     */
-    @NotNull ObjectMeta getMeta();
 }

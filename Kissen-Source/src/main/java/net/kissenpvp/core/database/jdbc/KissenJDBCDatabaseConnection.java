@@ -19,14 +19,19 @@
 package net.kissenpvp.core.database.jdbc;
 
 import lombok.Getter;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.connection.DatabaseDriver;
 import net.kissenpvp.core.api.database.connection.MYSQLDatabaseConnection;
 import net.kissenpvp.core.api.database.connection.PreparedStatementExecutor;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Table;
+import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.database.KissenTable;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -49,7 +54,7 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     @Override
     public boolean isConnected() {
         try {
-            return connection != null && !connection.isClosed();
+            return connection!=null && !connection.isClosed();
         } catch (SQLException sqlException) {
             return false;
         }
@@ -84,28 +89,33 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     }
 
     @Override
-    public @NotNull ObjectMeta createObjectMeta(@NotNull String table) {
-        return new KissenObjectJDBCMeta(table) {
+    public @NotNull Table createTable(@NotNull String table, @NotNull String idColumn, @NotNull String keyColumn, @NotNull String pluginColumn, @NotNull String typeColumn, @NotNull String valueColumn) {
+        Table kissenTable = new KissenTable(table, idColumn, keyColumn, pluginColumn, typeColumn, valueColumn) {
             @Override
-            public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
-                KissenJDBCDatabaseConnection.this.getPreparedStatement(query, preparedStatementExecutor);
+            public @NotNull Meta setupMeta(@Nullable KissenPlugin kissenPlugin) {
+                return objectMeta(this, kissenPlugin);
             }
         };
+        generateTable(kissenTable);
+        return kissenTable;
     }
 
     @Override
-    public @NotNull Meta createMeta(@NotNull String table, @NotNull String uuidColumn, @NotNull String keyColumn, @NotNull String valueColumn) {
-        return new KissenJDBCMeta(table, uuidColumn, keyColumn, valueColumn) {
+    public @NotNull Table createTable(@NotNull String table) {
+        return createTable(table, "uuid", "identifier", "plugin", "type", "value");
+    }
+
+    @Contract(pure = true, value = "_, _ -> new")
+    private @NotNull Meta objectMeta(@NotNull Table table, @Nullable KissenPlugin kissenPlugin) {
+        return new KissenNativeJDBCMeta(table, kissenPlugin) {
             @Override
             public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
-                KissenJDBCDatabaseConnection.this.getPreparedStatement(query, preparedStatementExecutor);
+                executeStatement(query, preparedStatementExecutor);
             }
         };
     }
 
-    @SuppressWarnings("SqlSourceToSinkFlow") // prepared statement
-    public void getPreparedStatement(@NotNull String query, @NotNull PreparedStatementExecutor statementExecutor) {
-
+    private void executeStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
         if (!isConnected()) {
             disconnect(); // clean up broken connection
             connect(); // reconnect if possible
@@ -114,13 +124,17 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             KissenCore.getInstance().getLogger().debug("Run sql query {}.", query);
-            statementExecutor.execute(preparedStatement);
+            preparedStatementExecutor.execute(preparedStatement);
             preparedStatement.close();
         } catch (SQLException sqlException) {
-            if (!statementExecutor.handle(sqlException))
-            {
+            if (!preparedStatementExecutor.handle(sqlException)) {
                 throw new BackendException(sqlException);
             }
         }
+    }
+
+    private void generateTable(@NotNull Table table) {
+        String query = "CREATE TABLE IF NOT EXISTS %s (%s VARCHAR(100) NOT NULL, %s VARCHAR(100) NOT NULL, %s TINYTEXT, %s TINYTEXT NOT NULL, %s JSON NOT NULL CHECK (JSON_VALID(%s)));";
+        executeStatement(query.formatted(table, table.getColumn(Column.TOTAL_ID), table.getColumn(Column.KEY), table.getPluginColumn(), table.getTypeColumn(), table.getColumn(Column.VALUE), table.getColumn(Column.VALUE)), PreparedStatement::executeUpdate);
     }
 }

@@ -21,8 +21,8 @@ package net.kissenpvp.core.database.savable.list;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.database.meta.list.ListAction;
+import net.kissenpvp.core.api.database.meta.list.MetaList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -134,7 +134,7 @@ public class KissenMetaList<T> extends ArrayList<T> implements MetaList<T> {
 
     @Override
     public boolean[] invert(@NotNull T value) {
-        return !contains(value) ? new boolean[]{true, add(value)} : new boolean[]{false, remove(value)};
+        return !contains(value) ? new boolean[]{true, add(value)}:new boolean[]{false, remove(value)};
     }
 
     @Override
@@ -169,8 +169,7 @@ public class KissenMetaList<T> extends ArrayList<T> implements MetaList<T> {
 
     @Override
     public boolean replaceOrInsert(@NotNull Predicate<T> predicate, @NotNull T object) {
-        if(replace(predicate, object) == 0)
-        {
+        if (replace(predicate, object)==0) {
             return add(object);
         }
         return true;
@@ -179,14 +178,22 @@ public class KissenMetaList<T> extends ArrayList<T> implements MetaList<T> {
     /**
      * Invokes a method from the list and returns the type of value given.
      *
-     * @param method   to execute.
-     * @param <V>      the type of the return value from the given method.
+     * @param method to execute.
+     * @param <V>    the type of the return value from the given method.
      * @return the return type of the method given.
      */
     protected <V> V parseValue(@NotNull Supplier<V> method, @NotNull ListAction.ListExecutionType type) {
         List<T> copy = List.copyOf(this);
         V executed = method.get();
-        getListAction().ifPresent(action -> action.execute(type, copy, List.copyOf(this)));
+        if (getListAction().isPresent()) {
+            try {
+                getListAction().get().execute(type, copy, List.copyOf(this));
+            } catch (Throwable throwable) { // roll back in case of exception and pass exception on
+                super.clear();
+                super.addAll(copy);
+                throw throwable;
+            }
+        }
         return executed;
     }
 

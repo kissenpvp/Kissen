@@ -30,10 +30,11 @@ import java.net.Socket;
 public class ReceiveSavableDataProtocol extends MetaProtocol {
     @Override
     public Serializable[] execute(@NotNull SerializableSavableHandler savable, DataPackage dataPackage, Socket client) {
-        return new Serializable[]
+        return null;
+/*        return new Serializable[]
                 {
                         savable.getSavable().serializeSavable()
-                };
+                };*/
     }
 
     @Override

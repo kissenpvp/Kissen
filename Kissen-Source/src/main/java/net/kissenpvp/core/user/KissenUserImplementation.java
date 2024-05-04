@@ -24,22 +24,21 @@ import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.meta.ObjectMeta;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.event.EventCancelledException;
-import net.kissenpvp.core.message.playersettings.*;
-import net.kissenpvp.core.api.permission.Permission;
+import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.UserInfo;
-import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
+import net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting;
+import net.kissenpvp.core.api.user.playersettting.RegisteredPlayerSetting;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
-import net.kissenpvp.core.permission.PermissionImplementation;
-import net.kissenpvp.core.user.suffix.SuffixInChatSetting;
-import net.kissenpvp.core.user.suffix.SuffixSetting;
-import net.kissenpvp.core.user.usersettings.RegisteredPlayerSetting;
+import net.kissenpvp.core.database.KissenTable;
+import net.kissenpvp.core.permission.InternalPermissionImplementation;
+import net.kissenpvp.core.user.playersetting.KissenRegisteredPlayerSetting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -50,7 +49,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Abstract implementation of the UserImplementation interface.
@@ -64,21 +62,16 @@ import java.util.stream.Stream;
 @Slf4j
 public abstract class KissenUserImplementation implements UserImplementation {
 
-    @Getter
-    private final static Set<User> onlineUserSet;
-    @Getter(AccessLevel.PROTECTED)
-    private final Set<UserInfoNode> cachedProfiles;
-    private final Set<RegisteredPlayerSetting> pluginSettings;
-    private final Set<PlayerSetting<?>> internalSettings;
-    private final ScheduledExecutorService tickExecutor;
+    @Getter private final static Set<User> onlineUserSet;
 
     static {
         onlineUserSet = new HashSet<>(); // persist when reloading
     }
 
-    @Getter
-    private ObjectMeta userMeta;
-
+    @Getter(AccessLevel.PROTECTED) private final Set<UserInfoNode> cachedProfiles;
+    private final Set<KissenRegisteredPlayerSetting<?, ?>> pluginSettings;
+    private final ScheduledExecutorService tickExecutor;
+    @Getter private KissenTable Table;
 
     /**
      * Initializes the KissenUserImplementation instance.
@@ -93,28 +86,14 @@ public abstract class KissenUserImplementation implements UserImplementation {
     public KissenUserImplementation() {
         this.cachedProfiles = new HashSet<>();
         this.pluginSettings = new HashSet<>();
-        this.internalSettings = new HashSet<>();
         this.tickExecutor = Executors.newScheduledThreadPool(1);
     }
 
     @Override
     public boolean preStart() {
         DatabaseImplementation database = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
-        userMeta = database.getPrimaryConnection().createObjectMeta("kissen_user_data");
+        Table = (KissenTable) database.getPrimaryConnection().createTable("kissen_user_data");
         return UserImplementation.super.preStart();
-    }
-
-    @Override
-    public boolean start() {
-        registerInternalUserSetting(new KissenPrimaryUserColor());
-        registerInternalUserSetting(new KissenSecondaryUserColor());
-        registerInternalUserSetting(new KissenGeneralUserColor());
-        registerInternalUserSetting(new KissenEnabledUserColor());
-        registerInternalUserSetting(new KissenDisabledUserColor());
-        registerInternalUserSetting(new SuffixSetting());
-        registerInternalUserSetting(new SuffixInChatSetting());
-        registerInternalUserSetting(new KissenHighlightVariables());
-        return UserImplementation.super.start();
     }
 
     @Override
@@ -129,7 +108,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
         Runnable runnable = () -> {
             getOnlineUser().stream().filter(userEntry -> userEntry.getStorage().containsKey("tick")).forEach(user -> {
-                KissenUser<? extends Permission> casted = (KissenUser<? extends Permission>) user;
+                KissenUser<? extends AbstractPermission> casted = (KissenUser<? extends AbstractPermission>) user;
                 try {
                     casted.tick();
                 } catch (Exception exception) {
@@ -155,12 +134,12 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
     @Override
     public @NotNull Optional<User> getOnlineUser(@NotNull UUID uuid) {
-        return getOnlineUser().stream().filter(userEntry -> userEntry.getRawID().equals(uuid.toString())).findFirst();
+        return getOnlineUser().stream().filter(userEntry -> Objects.equals(userEntry.getRawID(), uuid)).findFirst();
     }
 
     @Override
     public @NotNull User getUser(@NotNull String name) throws BackendException {
-        return getOnlineUser().stream().filter(user -> user.getNotNull("name", String.class).equals(name)).findFirst().orElseGet(() -> {
+        return getOnlineUser().stream().filter(user -> Objects.equals(user.getPlayerClient().getName(), name)).findFirst().orElseGet(() -> {
             //TODO make this work someday
             throw new BackendException();
         });
@@ -197,57 +176,40 @@ public abstract class KissenUserImplementation implements UserImplementation {
     }
 
     @Override
-    public <T> void registerPlayerSetting(@NotNull KissenPlugin kissenPlugin, @NotNull PlayerSetting<T> playerSetting) throws EventCancelledException {
+    public <T> void registerPlayerSetting(@NotNull KissenPlugin kissenPlugin, @NotNull AbstractPlayerSetting<T, ?> playerSetting) throws EventCancelledException {
 
         if (isKeyTaken(playerSetting)) {
             String errorMessage = String.format("Settings key %s is already registered.", playerSetting.getKey());
             throw new EventCancelledException(new IllegalArgumentException(errorMessage));
         }
 
-        RegisteredPlayerSetting registeredPlayerSetting = new RegisteredPlayerSetting(kissenPlugin, playerSetting);
-        if (pluginSettings.add(registeredPlayerSetting)) {
-            addSettingPermissions(kissenPlugin.getName(), playerSetting);
+        KissenRegisteredPlayerSetting<?, ?> setting = new KissenRegisteredPlayerSetting<>(kissenPlugin, playerSetting);
+        if (pluginSettings.add(setting)) {
+            setting.getPermission().ifPresent(permission -> {
+                InternalPermissionImplementation<?> permissionImplementation = KissenCore.getInstance().getImplementation(InternalPermissionImplementation.class);
+                permissionImplementation.addPermission(permission);
+            });
             return;
         }
         throw new EventCancelledException();
     }
-
-    public <T> void registerInternalUserSetting(@NotNull PlayerSetting<T> playerSetting) {
-
-        if (isKeyTaken(playerSetting)) {
-            String errorMessage = String.format("Settings key %s is already registered.", playerSetting.getKey());
-            throw new EventCancelledException(new IllegalArgumentException(errorMessage));
-        }
-
-        if (internalSettings.add(playerSetting)) {
-            addSettingPermissions("kissen", playerSetting);
-            return;
-        }
-        throw new EventCancelledException();
-    }
-
-    private <T> void addSettingPermissions(@NotNull String prefix, @NotNull PlayerSetting<T> playerSetting) {
-        String permission = playerSetting.getPermission();
-        if (playerSetting.autoGeneratePermission()) {
-            permission = String.format("%s.setting.%s", prefix, playerSetting.getKey());
-        }
-
-        if (permission != null) {
-            PermissionImplementation<?> permissionImplementation = KissenCore.getInstance().getImplementation(PermissionImplementation.class);
-            permissionImplementation.addPermission(permission);
-        }
-    }
-
-    private boolean isKeyTaken(@NotNull PlayerSetting<?> playerSetting) {
-        Predicate<PlayerSetting<?>> present = currentSetting -> currentSetting.getKey().equals(playerSetting.getKey());
-        return getPlayerSettings().stream().anyMatch(present);
-    }
-
 
     @Override
-    public @NotNull @Unmodifiable Set<PlayerSetting<?>> getPlayerSettings() {
-        Stream<PlayerSetting<?>> settingStream = pluginSettings.stream().filter(plugin -> plugin.plugin().isEnabled()).map(RegisteredPlayerSetting::playerSetting);
-        return Stream.concat(internalSettings.stream(), settingStream).collect(Collectors.toSet());
+    public <T> @NotNull RegisteredPlayerSetting<T, ?> getPlayerSetting(@NotNull Class<? extends AbstractPlayerSetting<T, ?>> clazz) {
+        return (RegisteredPlayerSetting<T, ?>) getPlayerSettings().stream().filter(setting -> clazz.isAssignableFrom(setting.getParentClass())).findFirst().orElseThrow();
+    }
+
+    @Override
+    public @NotNull @Unmodifiable Set<RegisteredPlayerSetting<?, ?>> getPlayerSettings() {
+        Predicate<KissenRegisteredPlayerSetting<?, ?>> isEnabled = setting -> setting.plugin().isEnabled();
+        return pluginSettings.stream().filter(isEnabled).collect(Collectors.toUnmodifiableSet());
+    }
+
+    private boolean isKeyTaken(@NotNull AbstractPlayerSetting<?, ?> setting) {
+        return getPlayerSettings().stream().anyMatch(currentSetting -> {
+            String parentKey = currentSetting.getParent().getKey();
+            return Objects.equals(parentKey, setting.getKey());
+        });
     }
 
     /**
@@ -267,7 +229,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      */
     private @NotNull @Unmodifiable Set<UserInfoNode> fetchUserProfiles() {
         Set<UserInfoNode> userInfos = new HashSet<>();
-        QuerySelect querySelect = getUserMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, "^" + getUserSaveID()).and(Column.KEY, "name");
+        QuerySelect querySelect = getMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.TOTAL_ID, "^" + getUserSaveID()).and(Column.KEY, "name");
         Object[][] data = querySelect.execute().join();
         for (Object[] user : data) {
             UUID uuid = UUID.fromString(user[0].toString().substring(getUserSaveID().length()));
@@ -275,6 +237,10 @@ public abstract class KissenUserImplementation implements UserImplementation {
             userInfos.add(new UserInfoNode(uuid, name));
         }
         return userInfos;
+    }
+
+    public @NotNull Meta getMeta() {
+        return getTable().setupMeta(null);
     }
 
     /**
@@ -306,7 +272,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @return boolean indicating whether user data was successfully loaded into online users (true if loaded, otherwise false)
      */
     public boolean loadUser(@NotNull User user) {
-        Optional<User> userOptional = getOnlineUser(UUID.fromString(user.getRawID()));
+        Optional<User> userOptional = getOnlineUser(user.getRawID());
         if (userOptional.isPresent()) {
             onlineUserSet.removeIf(currentUser -> currentUser.getRawID().equals(user.getRawID()));
         }
@@ -320,7 +286,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @param user a User entity representing the user to login
      * @return true if the user was successfully logged in, false otherwise
      */
-    public boolean loginUser(User user) {
+    public boolean loginUser(@NotNull User user) {
         if (getOnlineUser().contains(user)) {
             ((KissenUser<?>) user).login();
             return true;
@@ -335,7 +301,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
      * @return true if the user was successfully logged out, false otherwise
      */
     public boolean logoutUser(@NotNull User user) {
-        if (getOnlineUser(UUID.fromString(user.getRawID())).isPresent()) {
+        if (getOnlineUser(user.getRawID()).isPresent()) {
             ((KissenUser<?>) user).logout();
             return onlineUserSet.removeIf(userEntry -> userEntry.getRawID().equals(user.getRawID()));
         }

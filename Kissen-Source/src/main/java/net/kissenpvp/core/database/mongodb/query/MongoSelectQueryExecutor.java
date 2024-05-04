@@ -21,6 +21,7 @@ import java.util.function.Consumer;
  * <p>
  * This class extends {@link MongoQueryExecutor}, providing functionality to execute select queries in MongoDB.
  * </p>
+ *
  * @see MongoQueryExecutor
  */
 @Slf4j
@@ -61,7 +62,7 @@ public class MongoSelectQueryExecutor extends MongoQueryExecutor {
      *
      * <p>This method executes a database query to find documents in the collection that match the specified filter. It then performs the specified action on each document found. The action is represented by the provided {@link Consumer}, which processes each document.</p>
      *
-     * @param filter the filter to apply when searching for documents
+     * @param filter  the filter to apply when searching for documents
      * @param consume the action to perform on each document found
      * @throws NullPointerException if either the filter or the consumer is `null`
      */
@@ -88,7 +89,7 @@ public class MongoSelectQueryExecutor extends MongoQueryExecutor {
                 }
                 data.add(result);
             } catch (ClassNotFoundException classNotFoundException) {
-                String clazz = document.getString(getMeta().getTypeColumn());
+                String clazz = document.getString(getMeta().getTable().getTypeColumn());
                 String exceptionMessage = "The class {} contains an invalid class and cannot be deserialized.";
                 log.debug(exceptionMessage, clazz, classNotFoundException);
             }
@@ -101,16 +102,17 @@ public class MongoSelectQueryExecutor extends MongoQueryExecutor {
      *
      * <p>This method extracts the value of the specified column from the document and returns it. If the column represents a serialized object, it deserializes the object before returning it.</p>
      *
-     * @param column the column for which to handle the response
+     * @param column   the column for which to handle the response
      * @param document the document from which to extract the column value
      * @return the value of the specified column
      * @throws ClassNotFoundException if the class specified in the document cannot be found during deserialization
      */
     private @NotNull Object handleResponse(@NotNull Column column, @NotNull Document document) throws ClassNotFoundException {
-        String columnName = getMeta().getColumn(column);
+        String columnName = getMeta().getTable().getColumn(column);
         if (Objects.equals(column, Column.VALUE)) {
-            Class<?> clazz = Class.forName(document.getString(getMeta().getTypeColumn()));
-            return getMeta().deserialize(clazz, document.getString(columnName));
+            String clazzName = document.getString(getMeta().getTable().getTypeColumn());
+            String plugin = document.getString(getMeta().getTable().getPluginColumn());
+            return getMeta().deserialize(clazzName, document.getString(columnName));
         }
         return document.getString(columnName);
     }

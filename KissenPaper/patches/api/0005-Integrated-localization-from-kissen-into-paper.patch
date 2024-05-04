@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated localization from kissen into paper
 
 
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 12a61b53041e75a660dc6b34747eade301b5f483..a8fc0544b1e5c5b4c46acef0609aa74b822129a2 100644
+index ef2ca3c6c39bca8c690892b23026c33a90e9dcec..9936f742519bd071956a925a650d3180a2296ff1 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
 @@ -319,10 +319,11 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
@@ -15,18 +15,18 @@ index 12a61b53041e75a660dc6b34747eade301b5f483..a8fc0544b1e5c5b4c46acef0609aa74b
 -
      void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
  
-     void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin);
+     void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin);
  
 +    void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin);
 +
      // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index bffcad7f1efdf9802e0941303ebbc2a88a0f8515..05a9d12c7371ee82163fb476caa5d455017cac8e 100644
+index df050559acff2e691f2bf064241920858b2b7d24..ae8739efb84eb681a933e7e4c43678e3b51beb59 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 @@ -989,5 +989,10 @@ public final class SimplePluginManager implements PluginManager {
-     public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin) {
+     public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
      }
 +

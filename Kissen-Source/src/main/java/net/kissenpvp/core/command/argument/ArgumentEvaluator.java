@@ -18,14 +18,14 @@
 
 package net.kissenpvp.core.command.argument;
 
-import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
 import net.kissenpvp.core.api.command.exception.deserialization.DeserializationException;
 import net.kissenpvp.core.api.command.exception.deserialization.TemporaryDeserializationException;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.command.CommandImplementation;
+import net.kissenpvp.core.command.InternalCommandImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -57,7 +57,7 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
 
         Object[] parameters = new Object[0];
         AtomicInteger currentArgumentIndex = new AtomicInteger(0);
-        CommandImplementation commandImplementation = KissenCore.getInstance().getImplementation(CommandImplementation.class);
+        InternalCommandImplementation<?> commandImplementation = KissenCore.getInstance().getImplementation(InternalCommandImplementation.class);
 
         for (Argument<?, S> argument : arguments) {
             if (CommandPayload.class.isAssignableFrom(argument.type())) {
@@ -102,7 +102,7 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
 
         currentArgumentIndex.incrementAndGet();
         return KissenCore.getInstance()
-                .getImplementation(CommandImplementation.class)
+                .getImplementation(InternalCommandImplementation.class)
                 .add(parameters, argument.defaultValue());
     }
 
@@ -119,7 +119,7 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
 
         do {
             object = KissenCore.getInstance()
-                    .getImplementation(CommandImplementation.class)
+                    .getImplementation(InternalCommandImplementation.class)
                     .add(
                             (Object[]) object,
                             deserialize(argumentValue, argument.argumentParser())
@@ -133,15 +133,15 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
      * This method is used to deserialize a string using an ArgumentParser.
      *
      * @param input          the input string to be deserialized
-     * @param argumentParser the parser to use for deserialization
+     * @param abstractArgumentParser the parser to use for deserialization
      * @return the object deserialized from the input
      * @throws TemporaryDeserializationException if any exception occurs during deserialization
      */
-    private @NotNull Object deserialize(@NotNull String input, @NotNull ArgumentParser<?, ?> argumentParser) {
+    private @NotNull Object deserialize(@NotNull String input, @NotNull AbstractArgumentParser<?, ?> abstractArgumentParser) {
         try {
-            return argumentParser.deserialize(input);
+            return abstractArgumentParser.deserialize(input);
         } catch (Exception exception) {
-            argumentParser.processError(input, exception);
+            abstractArgumentParser.processError(input, exception);
             if(exception instanceof DeserializationException deserializationException)
             {
                 throw deserializationException;

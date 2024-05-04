@@ -20,22 +20,21 @@ package net.kissenpvp.core.permission;
 
 import lombok.Getter;
 import net.kissenpvp.core.api.event.EventCancelledException;
-import net.kissenpvp.core.api.permission.GroupablePermissionEntry;
-import net.kissenpvp.core.api.permission.Permission;
-import net.kissenpvp.core.api.permission.PermissionGroup;
+import net.kissenpvp.core.api.permission.AbstractGroupablePermissionEntry;
+import net.kissenpvp.core.api.permission.AbstractPermission;
+import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.time.TemporalMeasureNode;
+import net.kissenpvp.core.api.time.TemporalData;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 import java.util.stream.Stream;
 
 @Getter
-public abstract class KissenGroupablePermissionEntry<T extends Permission> extends KissenPermissionEntry<T> implements GroupablePermissionEntry<T>
+public abstract class KissenGroupablePermissionEntry<T, X extends AbstractPermission> extends KissenPermissionEntry<T, X> implements AbstractGroupablePermissionEntry<X>
 {
-    private volatile Set<T> cache;
+    private volatile Set<X> cache;
     private volatile List<String> groupCache;
 
     public KissenGroupablePermissionEntry()
@@ -44,20 +43,20 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
     }
 
     @Override
-    public @NotNull T setPermission(@NotNull String permission, boolean value) throws EventCancelledException
+    public @NotNull X setPermission(@NotNull String permission, boolean value) throws EventCancelledException
     {
-        Optional<T> currentPermission = getOwnPermission(permission);
+        Optional<X> currentPermission = getOwnPermission(permission);
         return currentPermission.map(current -> setPermission(current, value)).orElseGet(
-                () -> setPermission(new PermissionNode(permission, this, value, new TemporalMeasureNode())));
+                () -> setPermission(new PermissionNode(permission, this, value, new TemporalData())));
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<T> getOwnPermissions() {
+    public @NotNull @Unmodifiable Set<X> getOwnPermissions() {
         return super.getPermissionList();
     }
 
     @Override
-    public @NotNull @Unmodifiable Optional<T> getOwnPermission(@NotNull String permission)
+    public @NotNull @Unmodifiable Optional<X> getOwnPermission(@NotNull String permission)
     {
         return getOwnPermissions().stream().filter(current -> current.getName().equals(permission)).findFirst();
     }
@@ -75,49 +74,49 @@ public abstract class KissenGroupablePermissionEntry<T extends Permission> exten
     }
 
     @Override
-    public @NotNull List<PermissionGroup<T>> getOwnPermissionGroups()
+    public @NotNull List<AbstractPermissionGroup<X>> getOwnPermissionGroups()
     {
-        PermissionImplementation<T> permission = KissenCore.getInstance().getImplementation(PermissionImplementation.class);
-        Stream<PermissionGroup<T>> groupStream = permission.getInternalGroups().stream();
+        InternalPermissionImplementation<X> permission = KissenCore.getInstance().getImplementation(InternalPermissionImplementation.class);
+        Stream<AbstractPermissionGroup<X>> groupStream = permission.getInternalGroups().stream();
         return groupStream.filter(group -> group.getOwnMember().contains(getPermissionID())).toList();
     }
 
     @Override
-    public @NotNull @Unmodifiable List<PermissionGroup<T>> getPermissionGroups()
+    public @NotNull @Unmodifiable List<AbstractPermissionGroup<X>> getPermissionGroups()
     {
-        List<PermissionGroup<T>> ownGroups = getOwnPermissionGroups();
-        List<PermissionGroup<T>> groups = new ArrayList<>(ownGroups);
+        List<AbstractPermissionGroup<X>> ownGroups = getOwnPermissionGroups();
+        List<AbstractPermissionGroup<X>> groups = new ArrayList<>(ownGroups);
         groups.addAll(ownGroups.stream().flatMap(group -> group.getPermissionGroups().stream()).toList());
         return groups;
     }
 
     @Override
-    public synchronized @NotNull @Unmodifiable Set<T> getPermissionList() {
+    public synchronized @NotNull @Unmodifiable Set<X> getPermissionList() {
         if (cache == null)
         {
-            Set<T> permissions = new KissenPermissionSet<>(getOwnPermissions());
-            getOwnPermissionGroups().stream().map(PermissionGroup::getPermissionList).forEach(permissions::addAll);
+            Set<X> permissions = new KissenPermissionSet<>(getOwnPermissions());
+            getOwnPermissionGroups().stream().map(AbstractPermissionGroup::getPermissionList).forEach(permissions::addAll);
             cache = permissions;
         }
         return Collections.unmodifiableSet(cache);
     }
 
     @Override
-    public boolean inGroup(@NotNull PermissionGroup<T> permissionGroup) {
+    public boolean inGroup(@NotNull AbstractPermissionGroup<X> permissionGroup) {
         return permissionGroup.getMember().contains(getPermissionID());
     }
 
-    @Override
+/*    @Override //TODO
     public <X> @Nullable Object putList(@NotNull String key, @Nullable Collection<X> value) {
         Object result = super.putList(key, value);
         if (key.equals("permission_group_list")) {
             permissionUpdate();
         }
         return result;
-    }
+    }*/
 
-    private @NotNull PermissionImplementation<T> getImplementation()
+    private @NotNull InternalPermissionImplementation<X> getImplementation()
     {
-        return KissenCore.getInstance().getImplementation(PermissionImplementation.class);
+        return KissenCore.getInstance().getImplementation(InternalPermissionImplementation.class);
     }
 }

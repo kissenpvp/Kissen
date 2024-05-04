@@ -18,7 +18,7 @@
 
 package net.kissenpvp.core.command.parser;
 
-import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.List;
 
-public class BooleanParser<S extends ServerEntity> implements ArgumentParser<Boolean, S> {
+public class BooleanParser<S extends ServerEntity> implements AbstractArgumentParser<Boolean, S> {
     @Override
     public @NotNull String serialize(@NotNull Boolean object) {
         return object.toString();

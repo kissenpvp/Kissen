@@ -23,7 +23,8 @@ import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
-import net.kissenpvp.core.api.user.usersetttings.PlayerSetting;
+import net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting;
+import net.kissenpvp.core.api.user.playersettting.RegisteredPlayerSetting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -259,21 +260,9 @@ public interface UserImplementation extends Implementation {
      */
     @Unmodifiable @NotNull Set<UserInfo> getCachedUserProfiles();
 
-    /**
-     * Registers a {@link PlayerSetting} that represents a user-configurable setting, such as the primary theme color.
-     * These settings can be accessed using {@link PlayerClient#getUserSetting(Class)} to retrieve the user's settings.
-     * If a setting with the same key already exists, the old setting will be deleted.
-     *
-     * <p>Note that this method should generally be called on server start and is not designed to inject new settings
-     * while
-     * the server is running.
-     *
-     * @param playerSetting The player setting to register, which provides information about the setting that the
-     *                      user can control.
-     * @param <T>           The type of the setting that can be adjusted.
-     * @return A set containing all player settings that were deleted while adding this setting.
-     */
-    <T> void registerPlayerSetting(@NotNull KissenPlugin kissenPlugin, @NotNull PlayerSetting<T> playerSetting) throws EventCancelledException;
+    <T> void registerPlayerSetting(@NotNull KissenPlugin kissenPlugin, @NotNull AbstractPlayerSetting<T, ?> abstractPlayerSetting) throws EventCancelledException;
+
+    <T> @NotNull RegisteredPlayerSetting<T, ?> getPlayerSetting(@NotNull Class<? extends AbstractPlayerSetting<T, ?>> clazz);
 
     /**
      * Retrieves all user settings that have been registered.
@@ -291,9 +280,9 @@ public interface UserImplementation extends Implementation {
      * @return A set of player settings that have been registered.
      * @throws UnsupportedOperationException if the operation to retrieve user settings is not supported by the
      *                                       implementation.
-     * @see PlayerSetting
-     * @see #registerPlayerSetting(KissenPlugin, PlayerSetting)
+     * @see AbstractPlayerSetting
+     * @see #registerPlayerSetting(KissenPlugin, AbstractPlayerSetting)
      */
-    @NotNull @Unmodifiable Set<PlayerSetting<?>> getPlayerSettings();
+    @NotNull @Unmodifiable Set<RegisteredPlayerSetting<?, ?>> getPlayerSettings();
 
 }

@@ -2,7 +2,7 @@ package net.kissenpvp.core.command.parser;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class EnumParser<T extends Enum<T>, S extends ServerEntity> implements ArgumentParser<T, S> {
+public class EnumParser<T extends Enum<T>, S extends ServerEntity> implements AbstractArgumentParser<T, S> {
 
     @Getter(AccessLevel.PRIVATE) private final Class<?> enumInstance;
 

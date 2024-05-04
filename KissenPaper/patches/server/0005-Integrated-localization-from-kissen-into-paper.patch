@@ -5,11 +5,11 @@ Subject: [PATCH] Integrated localization from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index f97d54d30e952c6d501f28ce48fd899190709884..7a1110f4c2491fb87575fbcf92380a0e15ef17a6 100644
+index 2f51a495944ac61cd44c6dfa52cbd1291d574a52..d0944b9f52f5d94d87d648e922820590afaab0f3 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 @@ -249,5 +249,10 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
-     public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.usersetttings.PlayerSetting<?> playerSetting, @NotNull Plugin plugin) {
+     public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
      }
 +
@@ -20,30 +20,22 @@ index f97d54d30e952c6d501f28ce48fd899190709884..7a1110f4c2491fb87575fbcf92380a0e
      // KissenPaper start
  }
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index 53a90d0cf29506cc1d5623949bac2de71406446e..316180e676430f6d06e1d15fd80d7875c25f202d 100644
+index b3cbcea7cdb3e7e56d82183592e69d2e5d47d6de..f320dd0709c6c2f10987d28533e8add87e2ff74f 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -23,6 +23,7 @@ import net.kissenpvp.core.api.base.plugin.KissenPlugin;
- import net.kissenpvp.core.api.config.ConfigurationImplementation;
- import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
- import net.kissenpvp.core.api.database.meta.ObjectMeta;
-+import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
- import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
- import net.kissenpvp.core.api.user.UserImplementation;
- import net.kissenpvp.core.api.user.rank.RankImplementation;
-@@ -35,6 +36,7 @@ import net.kissenpvp.paper.database.UsePrivate;
+@@ -37,6 +37,7 @@ import net.kissenpvp.paper.api.permission.PermissionImplementation;
+ import net.kissenpvp.paper.database.KissenPaperConfigurationImplementation;
+ import net.kissenpvp.paper.database.KissenPaperDatabaseImplementation;
  import net.kissenpvp.paper.event.KissenEventImplementation;
- import net.kissenpvp.core.permission.PermissionImplementation;
- import net.kissenpvp.paper.api.permission.PaperPermissionImplementation;
 +import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
  import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
  import net.kissenpvp.paper.user.KissenPaperUserImplementation;
  import net.kissenpvp.paper.user.rank.KissenPaperRankImplementation;
-@@ -73,6 +75,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+@@ -82,6 +83,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
          KissenPaperPermissionImplementation permissionImplementation = new KissenPaperPermissionImplementation();
+         loader.put(InternalPermissionImplementation.class, permissionImplementation);
          loader.put(PermissionImplementation.class, permissionImplementation);
-         loader.put(PaperPermissionImplementation.class, permissionImplementation);
-+        loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());
++        loader.put(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class, new net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation());
          super.loadImplementations(loader);
      }
  
@@ -112,7 +104,7 @@ index 0000000000000000000000000000000000000000..e085d4c120a323b555970b7643b7280a
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index bdba9fa1b597bfb4bbef1accdfa605b3af8d2b43..b3a23ba22fa741194f08f4c006e44057402d335b 100644
+index 367de077620db87bc035fc0927720ce2559b3348..6b86d723104125e210c6127b5c7bf7b7d9c1337c 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -2153,6 +2153,7 @@ public class ServerPlayer extends Player {
@@ -131,16 +123,16 @@ index bdba9fa1b597bfb4bbef1accdfa605b3af8d2b43..b3a23ba22fa741194f08f4c006e44057
 +    // KissenPaper start
 +    public void updateLocale(@org.jetbrains.annotations.NotNull String locale)
 +    {
-+        getBukkitEntity().getUser().set("locale", locale);
++        ((net.kissenpvp.core.user.KissenPublicUser<?>) getBukkitEntity().getUser()).updateLocale(locale);
 +    }
 +    // KissenPaper end
 +
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 5b567d4c28508baa20ef0f1f1ef2d5eae94e26bf..4ae7619bef562ffa481237d4497ba19dd5aad158 100644
+index 81d62fec2a22d472f7dad2eb681a98fbe09f5385..81a5e495a5eeb120961ed0e3f78d240104bbc2ff 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -3253,7 +3253,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3248,7 +3248,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      @Override
      public void openBook(final net.kyori.adventure.inventory.Book book) {

@@ -18,28 +18,35 @@
 
 package net.kissenpvp.core.database;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.SneakyThrows;
+import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.Meta;
-import net.kissenpvp.core.api.database.queryapi.*;
+import net.kissenpvp.core.api.database.meta.Table;
+import net.kissenpvp.core.api.database.meta.list.MetaList;
+import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.queryapi.update.QueryUpdate;
 import net.kissenpvp.core.api.database.queryapi.update.Update;
-import net.kissenpvp.core.api.database.meta.list.MetaList;
+import net.kissenpvp.core.api.database.savable.Savable;
+import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.queryapi.KissenQuerySelect;
 import net.kissenpvp.core.database.queryapi.KissenQueryUpdate;
+import net.kissenpvp.core.database.savable.KissenSavableMap;
 import net.kissenpvp.core.database.savable.list.KissenMetaList;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 
 @AllArgsConstructor
 @Getter
@@ -53,7 +60,33 @@ public abstract class KissenBaseMeta implements Meta {
         GSON = GsonComponentSerializer.gson().serializer();
     }
 
-    private final String table, totalIDColumn, keyColumn, valueColumn, typeColumn;
+    private final Table table;
+    private final KissenPlugin plugin;
+
+    /**
+     * Returns a {@link BiFunction} that logs exceptions caught during data fetching from the MySQL database.
+     *
+     * <p>The returned {@link BiFunction} is designed to be used in conjunction with asynchronous operations,
+     * such as CompletableFuture's exceptionally method. It logs any caught exceptions with a debug level message
+     * and returns the original object if no exception occurred.</p>
+     *
+     * @return a {@link BiFunction} logging exceptions and returning the original object
+     */
+    protected static <T> @NotNull BiFunction<T, Throwable, T> logExceptions() {
+        return (object, throwable) -> {
+            if (Objects.isNull(throwable)) {
+                return object;
+            }
+
+            String message = "There was an exception caught when fetching data from the database.";
+            KissenCore.getInstance().getLogger().debug(message, throwable);
+            return object;
+        };
+    }
+
+    protected @Nullable String getPluginName() {
+        return getPlugin() == null ? null : getPlugin().getName();
+    }
 
     @Override
     public @NotNull Gson getGson() {
@@ -257,7 +290,7 @@ public abstract class KissenBaseMeta implements Meta {
 
     @Override
     public @NotNull <T> CompletableFuture<T> getObject(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type) {
-        return getJson(totalID, key).thenApply(data -> (T) data);
+        return getJson(totalID, key).handle(logExceptions()).thenApply(data -> (T) data);
     }
 
     @Override
@@ -287,23 +320,12 @@ public abstract class KissenBaseMeta implements Meta {
 
     @Override
     public @NotNull <T> CompletableFuture<MetaList<T>> getCollection(@NotNull String totalID, @NotNull String key, @NotNull Class<T> type) {
-        return getObject(totalID, key, Object[].class).handle((data, throwable) ->
-        {
+        return getObject(totalID, key, Object[].class).handle((data, throwable) -> {
             MetaList<T> metaList = new KissenMetaList<>();
-            if(Objects.nonNull(data))
-            {
+            if (Objects.nonNull(data)) {
                 metaList.addAll(Arrays.stream((T[]) data).toList());
             }
-            metaList.setListAction((o1, o2, o3) ->
-            {
-                try {
-
-                    setCollection(totalID, key, metaList);
-                }catch (Exception backendException)
-                {
-                    backendException.printStackTrace(); //TODO
-                }
-            });
+            metaList.setListAction((o1, o2, o3) -> setCollection(totalID, key, metaList));
             return metaList;
         });
     }
@@ -314,23 +336,6 @@ public abstract class KissenBaseMeta implements Meta {
     }
 
     /**
-     * Retrieves the column name associated with the specified {@link Column}.
-     *
-     * <p>The {@code getColumn} method uses a switch statement to determine the column name based on the provided {@link Column}.
-     * It returns the corresponding column name for the given enumeration constant, such as total ID, key, or value.</p>
-     *
-     * @param column the {@link Column} for which to retrieve the column name
-     * @return the column name associated with the specified {@link Column}
-     */
-    public @NotNull String getColumn(@NotNull Column column) {
-        return switch (column) {
-            case TOTAL_ID -> getTotalIDColumn();
-            case KEY -> getKeyColumn();
-            case VALUE -> getValueColumn();
-        };
-    }
-
-    /**
      * Generates a default SELECT query for retrieving JSON data based on the specified total ID and key.
      *
      * <p>The {@code getDefaultQuery} method creates a default {@link QuerySelect} instance with the specified total ID and key,
@@ -338,7 +343,7 @@ public abstract class KissenBaseMeta implements Meta {
      * JSON data from a database.</p>
      *
      * @param totalID the total ID for the query
-     * @param key the key for the query
+     * @param key     the key for the query
      * @return a default {@link QuerySelect} for retrieving JSON data
      */
     protected @NotNull QuerySelect getDefaultQuery(@NotNull String totalID, @NotNull String key) {
@@ -353,7 +358,7 @@ public abstract class KissenBaseMeta implements Meta {
      * {@link NullPointerException}. The method uses the {@link #logExceptions()} handler to log any exceptions that may occur during execution.</p>
      *
      * @param totalID the total ID for the query
-     * @param key the key for the query
+     * @param key     the key for the query
      * @return a CompletableFuture containing the retrieved JSON data
      * @throws NullPointerException if the query result is empty
      */
@@ -374,12 +379,18 @@ public abstract class KissenBaseMeta implements Meta {
      * and object data. It then uses reflection to load the class and deserialize the object using GSON.</p>
      *
      * @param json the JSON string to deserialize
-     * @param <T> the type of the deserialized object
+     * @param <T>  the type of the deserialized object
      * @return an object deserialized from the JSON string
-     * @throws ClassNotFoundException if the class specified in the JSON string cannot be found
      */
-    public <T> @NotNull T deserialize(@NotNull Class<?> type, @NotNull String json) throws ClassNotFoundException {
-        return (T) getGson().fromJson(json, type);
+    @SneakyThrows
+    public <T> @NotNull T deserialize(@NotNull String clazz, @NotNull String json) {
+
+        ClassLoader classLoader = getClass().getClassLoader();
+        if (Objects.nonNull(getPlugin())) {
+            classLoader = getPlugin().getClass().getClassLoader();
+        }
+
+        return (T) getGson().fromJson(json, Class.forName(clazz, true, classLoader));
     }
 
     public @Nullable String[] serialize(@Nullable Object object) {
@@ -390,12 +401,11 @@ public abstract class KissenBaseMeta implements Meta {
         String clazz = object.getClass().getName();
 
         if (object instanceof Collection<?> collection) {
-            String typeName = collection.stream().findFirst().orElseThrow().getClass().getName();
-            clazz = ARRAY_PATTERN.formatted(typeName);
-            return new String[] {clazz, getGson().toJson(collection.toArray(Object[]::new))};
+            Class<?> type = collection.stream().findFirst().orElseThrow().getClass();
+            clazz = ARRAY_PATTERN.formatted(type.getName());
+            return new String[]{clazz, getGson().toJson(collection.toArray(Object[]::new))};
         }
-
-        return new String[] {clazz, getGson().toJson(object)};
+        return new String[]{clazz, getGson().toJson(object)};
     }
 
     /**
@@ -407,7 +417,6 @@ public abstract class KissenBaseMeta implements Meta {
      *
      * @param totalID the total ID identifying the JSON structure
      * @param key     the key to be set in the JSON structure
-     * @param object
      * @throws NullPointerException if {@code totalID} or {@code key} is {@code null}
      */
     protected abstract void setJson(@NotNull String totalID, @NotNull String key, @Nullable Object object);
@@ -438,25 +447,35 @@ public abstract class KissenBaseMeta implements Meta {
      */
     protected abstract @NotNull CompletableFuture<@NotNull Long> execute(@NotNull QueryUpdate queryUpdate);
 
-    /**
-     * Returns a {@link BiFunction} that logs exceptions caught during data fetching from the MySQL database.
-     *
-     * <p>The returned {@link BiFunction} is designed to be used in conjunction with asynchronous operations,
-     * such as CompletableFuture's exceptionally method. It logs any caught exceptions with a debug level message
-     * and returns the original object if no exception occurred.</p>
-     *
-     * @return a {@link BiFunction} logging exceptions and returning the original object
-     */
-    protected static <T> @NotNull BiFunction<T, Throwable, T> logExceptions() {
-        return (object, throwable) ->
+    @Override
+    public @NotNull CompletableFuture<SavableMap> getData(@NotNull String totalId) {
+        return select(Column.KEY, Column.VALUE).whereExact(Column.TOTAL_ID, totalId).execute().thenApply(data ->
         {
-            if (Objects.isNull(throwable)) {
-                return object;
-            }
+            IntStream.range(0, data.length).forEach(i -> { // forcefully inject totalId into first index
+                Object[] old = data[i];
+                data[i] = new Object[]{totalId, old[0], old[1]};
+            });
 
-            String message = "There was an exception caught when fetching data from the database.";
-            KissenCore.getInstance().getLogger().debug(message, throwable);
-            return object;
-        };
+            Map<String, SavableMap> merged = mergeData(data);
+            return merged.getOrDefault(totalId, new KissenSavableMap(totalId, this, Collections.emptyMap()));
+        });
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@Unmodifiable Map<@NotNull String, @NotNull SavableMap>> getData(@NotNull Savable<?> savable) {
+        return select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, String.format("^%s", savable.getSaveID())).execute().thenApply(this::mergeData);
+    }
+
+    protected @NotNull Class<?> loadClass(@NotNull String name) {
+        return KissenCore.getInstance().getImplementation(KissenDatabaseImplementation.class).loadClass(name);
+    }
+
+    private @NotNull Map<String, SavableMap> mergeData(@NotNull Object @NotNull [] @NotNull [] data) {
+        Map<String, SavableMap> dataContainer = new HashMap<>();
+        for (Object[] current : data) {
+            Function<String, SavableMap> generateMap = (id) -> new KissenSavableMap(id, this, Collections.emptyMap());
+            dataContainer.computeIfAbsent(current[0].toString(), generateMap).put(current[1].toString(), current[2]);
+        }
+        return dataContainer;
     }
 }

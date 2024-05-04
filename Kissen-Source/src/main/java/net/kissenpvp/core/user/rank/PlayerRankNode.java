@@ -18,21 +18,21 @@
 
 package net.kissenpvp.core.user.rank;
 
+import net.kissenpvp.core.api.time.TemporalData;
 import net.kissenpvp.core.api.time.TemporalObject;
-import net.kissenpvp.core.time.TemporalMeasureNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
 
-public record PlayerRankNode(@NotNull String id, @NotNull String rankID, @NotNull TemporalMeasureNode temporalMeasureNode)
+public record PlayerRankNode(@NotNull String id, @NotNull String rankID, @NotNull TemporalData temporalData)
 {
     public PlayerRankNode(@NotNull String id, @NotNull String rankID) {
-        this(id, rankID, new TemporalMeasureNode());
+        this(id, rankID, new TemporalData());
     }
 
     public PlayerRankNode(@NotNull String id, @NotNull String rankID, @NotNull TemporalObject temporalObject) {
-        this(id, rankID, new TemporalMeasureNode(temporalObject));
+        this(id, rankID, new TemporalData(temporalObject));
     }
 
     @Override public boolean equals(Object o)

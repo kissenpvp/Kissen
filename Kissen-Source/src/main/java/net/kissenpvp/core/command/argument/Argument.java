@@ -19,11 +19,11 @@
 package net.kissenpvp.core.command.argument;
 
 import lombok.Builder;
-import net.kissenpvp.core.api.command.ArgumentParser;
+import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 
 @Builder
 public record Argument<T, S extends ServerEntity>(String name, String argumentName, Class<?> type, T defaultValue,
-                                                  ArgumentParser<T, S> argumentParser, boolean isNullable, boolean isEnum, ArgumentType argumentType,
+                                                  AbstractArgumentParser<T, S> argumentParser, boolean isNullable, boolean isEnum, ArgumentType argumentType,
                                                   boolean ignoreQuote) {
 }

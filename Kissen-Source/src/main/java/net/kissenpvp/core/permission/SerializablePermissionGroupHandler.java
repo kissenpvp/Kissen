@@ -38,31 +38,25 @@ public class SerializablePermissionGroupHandler implements SerializableSavableHa
 
     @Override
     public Savable getSavable() {
-        return (Savable) KissenCore.getInstance()
-                .getImplementation(PermissionImplementation.class)
-                .getPermissionGroupSavable(permissionGroup).orElse(null);
+        return (Savable) KissenCore.getInstance().getImplementation(InternalPermissionImplementation.class).getPermissionGroupSavable(permissionGroup).orElse(null);
     }
 
     @Override
     public void set(@NotNull String key, @Nullable String value) {
-        getSavable().put(key, value);
+        //getSavable().put(key, value);
     }
 
     @Override
     public void setList(@NotNull String key, @Nullable List<String> value) {
-        getSavable().putList(key, value);
+        //getSavable().putList(key, value);
     }
 
     @Override
     public void create(@NotNull String name, @NotNull Map<String, String> data) {
         try {
-            KissenCore.getInstance()
-                    .getImplementation(PermissionImplementation.class)
-                    .create(name, data);
+            KissenCore.getInstance().getImplementation(InternalPermissionImplementation.class).create(name);
         } catch (BackendException backendException) {
-            KissenCore.getInstance()
-                    .getLogger()
-                    .error("The system was unable to create the permission group {} due to some backend issue. It is advised to shutdown the server to prevent data loss to the database.", name, backendException);
+            KissenCore.getInstance().getLogger().error("The system was unable to create the permission group {} due to some backend issue. It is advised to shutdown the server to prevent data loss to the database.", name, backendException);
         }
     }
 
