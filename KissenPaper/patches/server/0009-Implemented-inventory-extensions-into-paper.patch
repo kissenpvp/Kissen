@@ -202,10 +202,10 @@ index 32910f677b0522ac8ec513fa0d00b714b52cfae4..649af00dc8d0358ae23e94d2554b89d6
                      boolean needsUpdate = event.getResult() != Result.DEFAULT;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-index 547ab158cd0cbf51da06ea97740cfce34bca651b..91a0fcd7d65d68b8779f0848a275c98167ff3743 100644
+index 34b91eff3190848bae38b20e1d956ece497b1473..d97df16f516c4ac3b3702de9d6d52087bc8c0c91 100644
 --- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 +++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-@@ -1425,6 +1425,13 @@ public class CraftEventFactory {
+@@ -1422,6 +1422,13 @@ public class CraftEventFactory {
          event.setCancelled(cancelled);
          server.getPluginManager().callEvent(event);
  
@@ -219,7 +219,7 @@ index 547ab158cd0cbf51da06ea97740cfce34bca651b..91a0fcd7d65d68b8779f0848a275c981
          if (event.isCancelled()) {
              container.transferTo(player.containerMenu, craftPlayer);
              return com.mojang.datafixers.util.Pair.of(null, null); // Paper - Add titleOverride to InventoryOpenEvent
-@@ -1622,6 +1629,14 @@ public class CraftEventFactory {
+@@ -1619,6 +1626,14 @@ public class CraftEventFactory {
          // Paper end
          InventoryCloseEvent event = new InventoryCloseEvent(human.containerMenu.getBukkitView(), reason); // Paper
          human.level().getCraftServer().getPluginManager().callEvent(event);

@@ -375,7 +375,7 @@ index 0000000000000000000000000000000000000000..96674e6f20f94c065586c6d7823a8751
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 8dc2f9df367c849ca333bf1a1fd92ff91617b548..9cab59114fc14e1331e7d0569b467b7e37111ba1 100644
+index 39303bb4e336732db0ab19dee0c1f8b609bbb134..d1a4f2af08136de862166f4de46b30cb5b0a6b4d 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -195,7 +195,7 @@ import org.bukkit.event.server.ServerLoadEvent;
@@ -388,7 +388,7 @@ index 8dc2f9df367c849ca333bf1a1fd92ff91617b548..9cab59114fc14e1331e7d0569b467b7e
      private static MinecraftServer SERVER; // Paper
      public static final Logger LOGGER = LogUtils.getLogger();
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index eb4fc900164d1fb3a78653ae8bc42ea30323f5b7..e0aa53984cf51c22ff050712f5d7c1cb4f41d2ce 100644
+index 2eb9c584cc77237f1c82d880a51a3f8b51008d73..f593f830e766d4b407436f13662da833f28e5d9b 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -192,6 +192,13 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
@@ -418,10 +418,10 @@ index eb4fc900164d1fb3a78653ae8bc42ea30323f5b7..e0aa53984cf51c22ff050712f5d7c1cb
          // Paper end - fix converting txt to json file
          org.spigotmc.WatchdogThread.doStart(org.spigotmc.SpigotConfig.timeoutTime, org.spigotmc.SpigotConfig.restartOnCrash); // Paper - start watchdog thread
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 57db399bc1d3b6b015740b059987bc8d9bcc3101..6a74edbefeb786717fe1cce3daaef4ba6f310c0f 100644
+index da1aed63af837b193900bb85393611edbd56c363..1f8b1aaa133ff2c8af332b0feae937dd64a20701 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -268,7 +268,7 @@ import javax.annotation.Nullable; // Paper
+@@ -269,7 +269,7 @@ import javax.annotation.Nullable; // Paper
  import javax.annotation.Nonnull; // Paper
  
  public final class CraftServer implements Server {
@@ -430,7 +430,7 @@ index 57db399bc1d3b6b015740b059987bc8d9bcc3101..6a74edbefeb786717fe1cce3daaef4ba
      private final String serverVersion;
      private final String bukkitVersion = Versioning.getBukkitVersion();
      private final Logger logger = Logger.getLogger("Minecraft");
-@@ -548,7 +548,13 @@ public final class CraftServer implements Server {
+@@ -555,7 +555,13 @@ public final class CraftServer implements Server {
  
          for (Plugin plugin : plugins) {
              if ((!plugin.isEnabled()) && (plugin.getDescription().getLoad() == type)) {
@@ -444,8 +444,8 @@ index 57db399bc1d3b6b015740b059987bc8d9bcc3101..6a74edbefeb786717fe1cce3daaef4ba
              }
          }
  
-@@ -1022,6 +1028,12 @@ public final class CraftServer implements Server {
-             throw new IllegalStateException("A lifecycle event handler has been registered which makes reloading plugins not possible");
+@@ -1006,6 +1012,12 @@ public final class CraftServer implements Server {
+             throw new IllegalStateException(org.bukkit.command.defaults.ReloadCommand.RELOADING_DISABLED_MESSAGE);
          }
          // Paper end - lifecycle events
 +
@@ -457,7 +457,7 @@ index 57db399bc1d3b6b015740b059987bc8d9bcc3101..6a74edbefeb786717fe1cce3daaef4ba
          org.spigotmc.WatchdogThread.hasStarted = false; // Paper - Disable watchdog early timeout on reload
          this.reloadCount++;
          this.configuration = YamlConfiguration.loadConfiguration(this.getConfigFile());
-@@ -1081,6 +1093,11 @@ public final class CraftServer implements Server {
+@@ -1066,6 +1078,11 @@ public final class CraftServer implements Server {
              playerMetadata.removeAll(plugin);
          }
          // Paper end
@@ -469,10 +469,10 @@ index 57db399bc1d3b6b015740b059987bc8d9bcc3101..6a74edbefeb786717fe1cce3daaef4ba
          this.reloadData();
          org.spigotmc.SpigotConfig.registerCommands(); // Spigot
          io.papermc.paper.command.PaperCommands.registerCommands(this.console); // Paper
-@@ -1114,6 +1131,11 @@ public final class CraftServer implements Server {
-         this.enablePlugins(PluginLoadOrder.POSTWORLD);
+@@ -1105,6 +1122,11 @@ public final class CraftServer implements Server {
+         this.syncCommands(); // Refresh commands after event
+         // Paper end - brigadier command API
          this.getPluginManager().callEvent(new ServerLoadEvent(ServerLoadEvent.LoadType.RELOAD));
-         if (io.papermc.paper.plugin.PluginInitializerManager.instance().pluginRemapper != null) io.papermc.paper.plugin.PluginInitializerManager.instance().pluginRemapper.pluginsEnabled(); // Paper - Remap plugins
 +
 +        // KissenPaper start - reinitialize core
 +        currentCore.start();

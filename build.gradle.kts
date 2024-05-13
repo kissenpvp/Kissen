@@ -12,7 +12,7 @@ allprojects {
 
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(17))
+            languageVersion.set(JavaLanguageVersion.of(21))
         }
     }
 }
@@ -43,10 +43,8 @@ subprojects {
 
     dependencies {
         compileOnly("org.slf4j:slf4j-api:2.0.1")
-        compileOnly("org.jetbrains:annotations:24.0.0")
-        compileOnly("net.kyori:adventure-api:4.13.0")
         compileOnly("com.google.code.gson:gson:2.10.1")
-        implementation("io.netty:netty-all:4.1.87.Final")
+        implementation("io.netty:netty-codec-haproxy:4.1.97.Final")
 
         testCompileOnly("org.jetbrains:annotations:24.0.0")
     }

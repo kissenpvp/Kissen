@@ -32,6 +32,39 @@ index 72e232791efa2154c6c95d2158734a86480cb40d..8b079e9ab9ff4dcdb2897aac87eb3969
 +    }
 +    // KissenPaper end
  }
+diff --git a/src/main/java/io/papermc/paper/brigadier/NullCommandSender.java b/src/main/java/io/papermc/paper/brigadier/NullCommandSender.java
+index 367ef7e0769537e8c13c7fd818a1249e15a28a65..44a0449fe2fb6e120d44570d186f8e51205bb1b1 100644
+--- a/src/main/java/io/papermc/paper/brigadier/NullCommandSender.java
++++ b/src/main/java/io/papermc/paper/brigadier/NullCommandSender.java
+@@ -1,5 +1,6 @@
+ package io.papermc.paper.brigadier;
+ 
++import java.util.Locale;
+ import java.util.Set;
+ import java.util.UUID;
+ import net.kyori.adventure.text.Component;
+@@ -148,4 +149,21 @@ public final class NullCommandSender implements CommandSender {
+     @Override
+     public void setOp(final boolean value) {
+     }
++    
++    // KissenPaper start
++    @Override
++    public @NotNull Locale getCurrentLocale() {
++        return org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).getDefaultLocale();
++    }
++
++    @Override
++    public boolean isConnected() {
++        return true;
++    }
++
++    @Override
++    public boolean isClient() {
++        return true;
++    }
++    // KissenPaper end
+ }
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 index f4cce65cd6bb99768edd15ae7bf8f43b9cf2c817..da8a57253428efd0636b6f8265d79f0fe0dc6499 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
@@ -3924,7 +3957,7 @@ index 22c4f8dea99f92a1eb3da2baf0a15bf9d2ca0462..8eaeb2f6096e1b1310022aa494257aac
          }
      }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 8437316888c6056060a2780652147590b6fe7443..dbda39fe73329a13d0a8d384261cc7ca17e7b7b6 100644
+index c10401e587a710d49c4af481c1e531b4bf51f755..8d1d0754b50c1eea69db91126587b009009e1131 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -2178,17 +2178,22 @@ public class ServerPlayer extends Player {
@@ -4699,7 +4732,7 @@ index 41f3cdec7deabf34358b8087df77169f85a5b919..fb988ad444a8c57136ffa09f9a37e6a9
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 5f896948d158651cd9837364759dbfbcce6b7d21..920ca84bbb75bb1c24e2393a28563f1adf03a3a5 100644
+index 561a7a8e96e2d91bbb87fe6230e94b5f38073d27..a2669f47aa298d22b901ff86f323d596d8775cfe 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -191,6 +191,30 @@ import org.jetbrains.annotations.NotNull;
@@ -4744,7 +4777,7 @@ index 5f896948d158651cd9837364759dbfbcce6b7d21..920ca84bbb75bb1c24e2393a28563f1a
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2646,7 +2674,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2643,7 +2671,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -4762,7 +4795,7 @@ index 5f896948d158651cd9837364759dbfbcce6b7d21..920ca84bbb75bb1c24e2393a28563f1a
      }
  
      @Override
-@@ -2988,7 +3025,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2985,7 +3022,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -4771,7 +4804,7 @@ index 5f896948d158651cd9837364759dbfbcce6b7d21..920ca84bbb75bb1c24e2393a28563f1a
      }
      // Paper end
      @Override
-@@ -3123,7 +3160,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3120,7 +3157,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
          if (getHandle().connection == null) return;
          final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
@@ -4787,7 +4820,7 @@ index 5f896948d158651cd9837364759dbfbcce6b7d21..920ca84bbb75bb1c24e2393a28563f1a
      }
  
      @Override
-@@ -3385,7 +3429,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3382,7 +3426,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          public void sendMessage(net.md_5.bungee.api.ChatMessageType position, UUID sender, BaseComponent... components) {
              if ( CraftPlayer.this.getHandle().connection == null ) return;
  
@@ -4804,7 +4837,7 @@ index 5f896948d158651cd9837364759dbfbcce6b7d21..920ca84bbb75bb1c24e2393a28563f1a
          }
  
          // Paper start
-@@ -3522,4 +3574,353 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3519,4 +3571,353 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void setSendViewDistance(final int viewDistance) {
          this.getHandle().setSendViewDistance(viewDistance);
      }

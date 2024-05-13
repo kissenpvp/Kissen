@@ -7,10 +7,10 @@ Signed-off-by: Ivo Quiring <falk.quiring@gmail.com>
 
 diff --git a/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java b/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..252e4516e7dcf0bd128380cd08e4a12465b16307
+index 0000000000000000000000000000000000000000..e50046870910dbdd271290f7bae83b5388d73ad0
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,50 @@
 +package net.kissenpvp.paper.advancement;
 +
 +import com.google.gson.JsonElement;
@@ -39,9 +39,10 @@ index 0000000000000000000000000000000000000000..252e4516e7dcf0bd128380cd08e4a124
 +    @Override
 +    protected void load(@NotNull ServerAdvancementManager advancementLoader) {
 +        User privateUser = getPlayer().getBukkitEntity().getUser(Context.LOCAL);
++        //TODO
 +        //JsonElement jsonElement = privateUser.get("advancements", JsonElement.class).orElseGet(JsonObject::new);
-+        PlayerAdvancements.Data data = Util.getOrThrow(this.getCodec().parse(JsonOps.INSTANCE, new JsonObject()), JsonParseException::new);
-+        this.applyFrom(advancementLoader, data);
++        /*PlayerAdvancements.Data data = Util.getOrThrow(this.getCodec().parse(JsonOps.INSTANCE, new JsonObject()), JsonParseException::new);
++        this.applyFrom(advancementLoader, data);*/
 +
 +        this.checkForAutomaticTriggers(advancementLoader);
 +        this.registerListeners(advancementLoader);
@@ -51,7 +52,8 @@ index 0000000000000000000000000000000000000000..252e4516e7dcf0bd128380cd08e4a124
 +    public void save() {
 +        if (org.spigotmc.SpigotConfig.disableAdvancementSaving) return; // Spigot
 +
-+        JsonElement jsonelement = Util.getOrThrow(super.getCodec().encodeStart(JsonOps.INSTANCE, this.asData()), IllegalStateException::new);
++        //TODO
++        /*JsonElement jsonelement = Util.getOrThrow(super.getCodec().encodeStart(JsonOps.INSTANCE, this.asData()), IllegalStateException::new);*/
 +        //getPlayer().getBukkitEntity().getUser(Context.LOCAL).set("advancements", jsonelement);
 +    }
 +
