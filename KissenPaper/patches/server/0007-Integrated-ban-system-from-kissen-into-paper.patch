@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated ban system from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
-index 1d78e8beacbc93ef2cd6beb418edca843f8a5429..7d0b85e02b9dc6bc2dee2cc7bd40a3b4fb8e627d 100644
+index e83f9517b31c5171b8dc75ab63a5bfe654221c84..ae7ab5d59b17331b95c9c15eb24d90cccc1a99cb 100644
 --- a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
 +++ b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
 @@ -145,9 +145,14 @@ public final class ChatProcessor {
@@ -1174,10 +1174,10 @@ index f73d22316817f7ce487d6d48c726ff8460a3f620..8604fb5b7950590f0366a538e0f2f629
      }
  }
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 21519967a792b76c61af753a430ad5fa638ec919..96af226e2c613498203304166534ccd8b61b342a 100644
+index 833d0df8f2e6dcddd6ba218910a2165804c434bb..e701ca407e9d96f55fa4bd5e38800ec2a2b58039 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -164,7 +164,7 @@ public abstract class PlayerList {
+@@ -166,7 +166,7 @@ public abstract class PlayerList {
          server.console = new com.destroystokyo.paper.console.TerminalConsoleCommandSender(); // Paper
          // CraftBukkit end
  
@@ -1186,7 +1186,7 @@ index 21519967a792b76c61af753a430ad5fa638ec919..96af226e2c613498203304166534ccd8
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
          this.ops = /*new ServerOpList(PlayerList.OPLIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserOperatorList(); // KissenPaper
          this.whitelist = /*new UserWhiteList(PlayerList.WHITELIST_FILE);*/ new net.kissenpvp.paper.user.KissenUserWhiteList(); // KissenPaper
-@@ -738,6 +738,8 @@ public abstract class PlayerList {
+@@ -737,6 +737,8 @@ public abstract class PlayerList {
          Player player = entity.getBukkitEntity();
          PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
  
@@ -1195,7 +1195,7 @@ index 21519967a792b76c61af753a430ad5fa638ec919..96af226e2c613498203304166534ccd8
          // Paper start - Fix MC-158900
          UserBanListEntry gameprofilebanentry;
          if (this.bans.isBanned(gameprofile) && (gameprofilebanentry = this.bans.get(gameprofile)) != null) {
-@@ -769,6 +771,8 @@ public abstract class PlayerList {
+@@ -768,6 +770,8 @@ public abstract class PlayerList {
                  event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.serverFullMessage)); // Spigot // Paper - Adventure
              }
          }
@@ -1205,10 +1205,10 @@ index 21519967a792b76c61af753a430ad5fa638ec919..96af226e2c613498203304166534ccd8
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 07af353c39e93a01575096176af8b17af7406961..6648b9447c9d226a699407f8037e3c4acf2a6342 100644
+index c3d5a094e6fa17679b0702bc85bc3f0c46fd8c46..7ef485dc58847d8a7906756117b2e679e120f349 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -2237,6 +2237,11 @@ public final class CraftServer implements Server {
+@@ -2248,6 +2248,11 @@ public final class CraftServer implements Server {
  
      @Override
      public <T extends BanList<?>> T getBanList(BanList.Type type) {
@@ -1220,7 +1220,7 @@ index 07af353c39e93a01575096176af8b17af7406961..6648b9447c9d226a699407f8037e3c4a
          Preconditions.checkArgument(type != null, "BanList.Type cannot be null");
  
          return switch (type) {
-@@ -2249,6 +2254,11 @@ public final class CraftServer implements Server {
+@@ -2260,6 +2265,11 @@ public final class CraftServer implements Server {
      @SuppressWarnings("unchecked")
      @Override
      public <B extends BanList<E>, E> B getBanList(final io.papermc.paper.ban.BanListType<B> type) {

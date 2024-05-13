@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index d0944b9f52f5d94d87d648e922820590afaab0f3..2ba0621133202a92103e14ebf23b210129f34bc8 100644
+index de4811e4ecd81af9055cdad9d3d5677a7406873a..a1fb02924cc8ed43fe6a45ff18427138fe44c309 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 @@ -4,13 +4,13 @@ import com.google.common.graph.MutableGraph;
@@ -23,7 +23,7 @@ index d0944b9f52f5d94d87d648e922820590afaab0f3..2ba0621133202a92103e14ebf23b2101
  import org.bukkit.permissions.Permissible;
  import org.bukkit.permissions.Permission;
  import org.bukkit.plugin.EventExecutor;
-@@ -254,5 +254,20 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+@@ -259,5 +259,20 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
      public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
      }
@@ -1788,36 +1788,8 @@ index 0000000000000000000000000000000000000000..d52a036a0b8f5ac5d0f1ec29fa4a5aa0
 +        return true;
 +    }
 +}
-diff --git a/src/main/java/net/minecraft/commands/Commands.java b/src/main/java/net/minecraft/commands/Commands.java
-index b7f338e982d0dcab99137ab6dc200b82ac6b7cba..c41f51fc6b65c3e027296bfcd1c7550067ae7f4c 100644
---- a/src/main/java/net/minecraft/commands/Commands.java
-+++ b/src/main/java/net/minecraft/commands/Commands.java
-@@ -373,9 +373,12 @@ public class Commands {
-             // Paper start - Add UnknownCommandEvent
-             final net.kyori.adventure.text.TextComponent.Builder builder = net.kyori.adventure.text.Component.text();
-             if ((parseresults.getContext().getNodes().isEmpty() || !this.vanillaCommandNodes.contains(parseresults.getContext().getNodes().get(0).getNode()))) {
--                if (!org.spigotmc.SpigotConfig.unknownCommandMessage.isEmpty()) {
-+                // KissenPaper - add command failed message
-+                net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation kissenPaperLocalizationImplementation = org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation.class);
-+                builder.append(kissenPaperLocalizationImplementation.translate("server.command.failed", commandlistenerwrapper.getBukkitSender().getCurrentLocale()));
-+                /*if (!org.spigotmc.SpigotConfig.unknownCommandMessage.isEmpty() && false) { // KissenPaper - remove spigot
-                     builder.append(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.unknownCommandMessage));
--                }
-+                }*/
-             } else {
-                 // commandlistenerwrapper.sendFailure(ComponentUtils.fromMessage(commandsyntaxexception.getRawMessage()));
-                 builder.color(net.kyori.adventure.text.format.NamedTextColor.RED).append(io.papermc.paper.brigadier.PaperBrigadier.componentFromMessage(commandsyntaxexception.getRawMessage()));
-@@ -405,7 +408,7 @@ public class Commands {
-                     .append(io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent));
-             }
-             }
--            org.bukkit.event.command.UnknownCommandEvent event = new org.bukkit.event.command.UnknownCommandEvent(commandlistenerwrapper.getBukkitSender(), s, org.spigotmc.SpigotConfig.unknownCommandMessage.isEmpty() ? null : builder.build());
-+            org.bukkit.event.command.UnknownCommandEvent event = new org.bukkit.event.command.UnknownCommandEvent(commandlistenerwrapper.getBukkitSender(), s, /*org.spigotmc.SpigotConfig.unknownCommandMessage.isEmpty()  ? null :*/ builder.build()); // KissenPaper
-             org.bukkit.Bukkit.getServer().getPluginManager().callEvent(event);
-             if (event.message() != null) {
-                 commandlistenerwrapper.sendFailure(io.papermc.paper.adventure.PaperAdventure.asVanilla(event.message()), false);
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index ed0f2cae4239ff4f2553f2d5f68d939db60978d1..07af353c39e93a01575096176af8b17af7406961 100644
+index 6a74edbefeb786717fe1cce3daaef4ba6f310c0f..c3d5a094e6fa17679b0702bc85bc3f0c46fd8c46 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -1006,18 +1006,26 @@ public final class CraftServer implements Server {

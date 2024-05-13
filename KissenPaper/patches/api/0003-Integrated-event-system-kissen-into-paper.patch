@@ -208,10 +208,10 @@ index cb530369e667c426c842da356c31304bb5c3ecfa..dde6518d0adc80feec198ef688a879db
      /**
       * Enables the specified plugin
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 88228a142f53199b048c5bd22ac23dd1b9e50426..6ffafbabfdd65bee0b40ac34739973b93e1eba96 100644
+index a2f8c9e282257bf8f4a93eab3cc50480f7df72f4..a9ba540f5f5d343269746ee701234dcf97dbd34b 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -110,7 +110,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -119,7 +119,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
       *     <i>Note: This is best-effort basis, and should not be used to test
       *     synchronized state. This is an indicator for flawed flow logic.</i>
       */
@@ -220,7 +220,7 @@ index 88228a142f53199b048c5bd22ac23dd1b9e50426..6ffafbabfdd65bee0b40ac34739973b9
  
      /**
       * Registers all the events in the given listener class
-@@ -118,7 +118,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -127,7 +127,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
       * @param listener Listener to register
       * @param plugin Plugin to register
       */
@@ -229,7 +229,7 @@ index 88228a142f53199b048c5bd22ac23dd1b9e50426..6ffafbabfdd65bee0b40ac34739973b9
  
      /**
       * Registers the specified executor to the given event class
-@@ -129,7 +129,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -138,7 +138,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
       * @param executor EventExecutor to register
       * @param plugin Plugin to register
       */
@@ -238,7 +238,7 @@ index 88228a142f53199b048c5bd22ac23dd1b9e50426..6ffafbabfdd65bee0b40ac34739973b9
  
      /**
       * Registers the specified executor to the given event class
-@@ -141,7 +141,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -150,7 +150,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
       * @param plugin Plugin to register
       * @param ignoreCancelled Whether to pass cancelled events or not
       */
@@ -289,10 +289,10 @@ index 3b3d9642a8d63798dc28f2f8df77f0466451cbff..70669177980680c71e0c3c6672932668
              if (((Cancellable) event).isCancelled() && isIgnoringCancelled()) {
                  return;
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index c8aa887326fde648b05158c19cbeb830d10a3420..493b97b0e6e20ec39d8dd1102fc7f77d168b8c45 100644
+index 81bbf466d46526664297fe95f9a307192efc6a90..02c486c69a9ce5271a6d70c0d11dd3403eb51611 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -611,7 +611,7 @@ public final class SimplePluginManager implements PluginManager {
+@@ -623,7 +623,7 @@ public final class SimplePluginManager implements PluginManager {
       * @param event Event details
       */
      @Override
@@ -301,7 +301,7 @@ index c8aa887326fde648b05158c19cbeb830d10a3420..493b97b0e6e20ec39d8dd1102fc7f77d
          if (true) {this.paperPluginManager.callEvent(event); return;} // Paper
          if (event.isAsynchronous()) {
              if (Thread.holdsLock(this)) {
-@@ -626,7 +626,7 @@ public final class SimplePluginManager implements PluginManager {
+@@ -638,7 +638,7 @@ public final class SimplePluginManager implements PluginManager {
              }
          }
  
@@ -310,7 +310,7 @@ index c8aa887326fde648b05158c19cbeb830d10a3420..493b97b0e6e20ec39d8dd1102fc7f77d
      }
  
      private void fireEvent(@NotNull Event event) {
-@@ -666,20 +666,19 @@ public final class SimplePluginManager implements PluginManager {
+@@ -678,20 +678,19 @@ public final class SimplePluginManager implements PluginManager {
      }
  
      @Override
@@ -334,7 +334,7 @@ index c8aa887326fde648b05158c19cbeb830d10a3420..493b97b0e6e20ec39d8dd1102fc7f77d
          registerEvent(event, listener, priority, executor, plugin, false);
      }
  
-@@ -696,7 +695,7 @@ public final class SimplePluginManager implements PluginManager {
+@@ -708,7 +707,7 @@ public final class SimplePluginManager implements PluginManager {
       *     cancelled
       */
      @Override
@@ -343,7 +343,7 @@ index c8aa887326fde648b05158c19cbeb830d10a3420..493b97b0e6e20ec39d8dd1102fc7f77d
          Preconditions.checkArgument(listener != null, "Listener cannot be null");
          Preconditions.checkArgument(priority != null, "Priority cannot be null");
          Preconditions.checkArgument(executor != null, "Executor cannot be null");
-@@ -716,7 +715,7 @@ public final class SimplePluginManager implements PluginManager {
+@@ -728,7 +727,7 @@ public final class SimplePluginManager implements PluginManager {
      }
  
      @NotNull
@@ -352,7 +352,7 @@ index c8aa887326fde648b05158c19cbeb830d10a3420..493b97b0e6e20ec39d8dd1102fc7f77d
          try {
              Method method = getRegistrationClass(type).getDeclaredMethod("getHandlerList");
              method.setAccessible(true);
-@@ -732,7 +731,7 @@ public final class SimplePluginManager implements PluginManager {
+@@ -744,7 +743,7 @@ public final class SimplePluginManager implements PluginManager {
      }
  
      @NotNull

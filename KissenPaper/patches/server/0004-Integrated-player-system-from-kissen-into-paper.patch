@@ -5,10 +5,10 @@ Subject: [PATCH] Integrated player system from kissen into paper
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
-index 68c99e29450e318d2b6eb83099e3e4012b6f0c01..f7a8ca0fd5fac3793925298af8dacf5450b3a711 100644
+index 72e232791efa2154c6c95d2158734a86480cb40d..8b079e9ab9ff4dcdb2897aac87eb39696e1ae7d2 100644
 --- a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 +++ b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
-@@ -31,6 +31,10 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
+@@ -32,6 +32,10 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
      private GameProfile profile;
      private final PropertySet properties = new PropertySet();
  
@@ -19,7 +19,7 @@ index 68c99e29450e318d2b6eb83099e3e4012b6f0c01..f7a8ca0fd5fac3793925298af8dacf54
      public CraftPlayerProfile(CraftPlayer player) {
          this.profile = player.getHandle().getGameProfile();
      }
-@@ -409,4 +413,12 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
+@@ -417,4 +421,12 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
              }
          }
      }
@@ -33,10 +33,10 @@ index 68c99e29450e318d2b6eb83099e3e4012b6f0c01..f7a8ca0fd5fac3793925298af8dacf54
 +    // KissenPaper end
  }
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index 4299c924572408d95fba8cf8675406c14245ceee..2f51a495944ac61cd44c6dfa52cbd1291d574a52 100644
+index f4cce65cd6bb99768edd15ae7bf8f43b9cf2c817..da8a57253428efd0636b6f8265d79f0fe0dc6499 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-@@ -245,5 +245,9 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+@@ -250,5 +250,9 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
      {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
      }
@@ -3869,10 +3869,10 @@ index 0000000000000000000000000000000000000000..73128f8b8697090414c919793d907c3e
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
-index bc391d27399d8c22e78735ca39aa8ab45efb6413..0c67a9ecfdd120edc05e15df0cc1554fb57b0c20 100644
+index 5443013060b62e3bfcc51cddca96d1c0bc59fe72..3ee2b9c8bac70f053d7e59fe507bcf44c5fceb88 100644
 --- a/src/main/java/net/minecraft/server/Main.java
 +++ b/src/main/java/net/minecraft/server/Main.java
-@@ -179,15 +179,17 @@ public class Main {
+@@ -182,15 +182,17 @@ public class Main {
              org.spigotmc.SpigotConfig.disabledAdvancements = spigotConfiguration.getStringList("advancements.disabled"); // Paper - fix SPIGOT-5885, must be set early in init
              // Paper start - fix SPIGOT-5824
              File file;
@@ -3924,10 +3924,10 @@ index 22c4f8dea99f92a1eb3da2baf0a15bf9d2ca0462..8eaeb2f6096e1b1310022aa494257aac
          }
      }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index b3781efbd3edcf102fe1bda5d6149915dc1127c6..359210fde680444ca4c92a30eb530c887075783a 100644
+index 8437316888c6056060a2780652147590b6fe7443..dbda39fe73329a13d0a8d384261cc7ca17e7b7b6 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2084,17 +2084,22 @@ public class ServerPlayer extends Player {
+@@ -2178,17 +2178,22 @@ public class ServerPlayer extends Player {
  
      public void sendSystemMessage(Component message, boolean overlay) {
          if (this.acceptsSystemMessages(overlay)) {
@@ -3962,12 +3962,12 @@ index b3781efbd3edcf102fe1bda5d6149915dc1127c6..359210fde680444ca4c92a30eb530c88
      }
  
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index c5fa9f4d28f9a7f64a50a902ee5e631bfc00119c..7fe88b378876a5dd32793ca9ea5376b3af5529d7 100644
+index b656741eb68adeb04bf995f1045902cb6bd5f2e7..ad5a3263b44b42deb6a57368fde7dcf488f0388a 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-@@ -45,6 +45,13 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+@@ -50,6 +50,13 @@ import org.bukkit.craftbukkit.util.Waitable;
+ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
  import org.bukkit.event.player.PlayerPreLoginEvent;
- // CraftBukkit end
  
 +// KissenPaper start
 +import org.bukkit.Bukkit;
@@ -3976,10 +3976,10 @@ index c5fa9f4d28f9a7f64a50a902ee5e631bfc00119c..7fe88b378876a5dd32793ca9ea5376b3
 +import net.kissenpvp.paper.user.KissenPaperPublicUser;
 +// KissenPaper end
 +
- public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener, TickablePacketListener {
+ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener, TickablePacketListener, CraftPlayer.TransferCookieConnection {
  
-     private static final AtomicInteger UNIQUE_THREAD_ID = new AtomicInteger(0);
-@@ -308,6 +315,17 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+     @Override
+@@ -353,6 +360,17 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
              return gameprofile;
          }
          // Paper end - Add Velocity IP Forwarding Support
@@ -3997,7 +3997,7 @@ index c5fa9f4d28f9a7f64a50a902ee5e631bfc00119c..7fe88b378876a5dd32793ca9ea5376b3
          String playerName = gameprofile.getName();
          java.net.InetAddress address = ((java.net.InetSocketAddress) this.connection.getRemoteAddress()).getAddress();
          java.util.UUID uniqueId = gameprofile.getId();
-@@ -351,6 +369,56 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -396,6 +414,56 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
      }
      // CraftBukkit end
  
@@ -4055,7 +4055,7 @@ index c5fa9f4d28f9a7f64a50a902ee5e631bfc00119c..7fe88b378876a5dd32793ca9ea5376b3
      public void handleCustomQueryPacket(ServerboundCustomQueryAnswerPacket packet) {
          // Paper start - Add Velocity IP Forwarding Support
 diff --git a/src/main/java/net/minecraft/server/players/GameProfileCache.java b/src/main/java/net/minecraft/server/players/GameProfileCache.java
-index d45fe762941dd6da45c890706bc9e4c0438522c3..38fbe24db74b7f297945dea442ec8d659a220885 100644
+index 34b4166adfae8ff7d1eb73d56a72931b005330a7..ee9030ee27aa66520277fbf99607345c266de514 100644
 --- a/src/main/java/net/minecraft/server/players/GameProfileCache.java
 +++ b/src/main/java/net/minecraft/server/players/GameProfileCache.java
 @@ -230,7 +230,7 @@ public class GameProfileCache {
@@ -4064,7 +4064,7 @@ index d45fe762941dd6da45c890706bc9e4c0438522c3..38fbe24db74b7f297945dea442ec8d65
  
 -    public List<GameProfileCache.GameProfileInfo> load() {
 +    protected List<GameProfileCache.GameProfileInfo> load() { // KissenPaper - private -> protected
-         ArrayList arraylist = Lists.newArrayList();
+         List<GameProfileCache.GameProfileInfo> list = Lists.newArrayList();
  
          try {
 @@ -401,7 +401,7 @@ public class GameProfileCache {
@@ -4077,10 +4077,10 @@ index d45fe762941dd6da45c890706bc9e4c0438522c3..38fbe24db74b7f297945dea442ec8d65
          private final GameProfile profile;
          final Date expirationDate;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 1e5f709115007ff19901c0a6c3cf884d9e4d3a6c..21519967a792b76c61af753a430ad5fa638ec919 100644
+index a2142930b4d4b05987c90496fb9d733d99040aa0..833d0df8f2e6dcddd6ba218910a2165804c434bb 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -166,8 +166,8 @@ public abstract class PlayerList {
+@@ -168,8 +168,8 @@ public abstract class PlayerList {
  
          this.bans = new UserBanList(PlayerList.USERBANLIST_FILE);
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
@@ -4091,7 +4091,7 @@ index 1e5f709115007ff19901c0a6c3cf884d9e4d3a6c..21519967a792b76c61af753a430ad5fa
          // CraftBukkit start
          // this.stats = Maps.newHashMap();
          // this.advancements = Maps.newHashMap();
-@@ -312,7 +312,6 @@ public abstract class PlayerList {
+@@ -314,7 +314,6 @@ public abstract class PlayerList {
          } else {
              ichatmutablecomponent = Component.translatable("multiplayer.player.joined.renamed", player.getDisplayName(), s);
          }
@@ -4099,7 +4099,7 @@ index 1e5f709115007ff19901c0a6c3cf884d9e4d3a6c..21519967a792b76c61af753a430ad5fa
          ichatmutablecomponent.withStyle(ChatFormatting.YELLOW);
          Component joinMessage = ichatmutablecomponent; // Paper - Adventure
  
-@@ -341,6 +340,13 @@ public abstract class PlayerList {
+@@ -343,6 +342,13 @@ public abstract class PlayerList {
          // Ensure that player inventory is populated with its viewer
          player.containerMenu.transferTo(player.containerMenu, bukkitPlayer);
  
@@ -4113,7 +4113,7 @@ index 1e5f709115007ff19901c0a6c3cf884d9e4d3a6c..21519967a792b76c61af753a430ad5fa
          PlayerJoinEvent playerJoinEvent = new PlayerJoinEvent(bukkitPlayer, io.papermc.paper.adventure.PaperAdventure.asAdventure(ichatmutablecomponent)); // Paper - Adventure
          this.cserver.getPluginManager().callEvent(playerJoinEvent);
  
-@@ -689,6 +695,12 @@ public abstract class PlayerList {
+@@ -687,6 +693,12 @@ public abstract class PlayerList {
          this.cserver.getScoreboardManager().removePlayer(entityplayer.getBukkitEntity());
          // CraftBukkit end
  
@@ -4127,7 +4127,7 @@ index 1e5f709115007ff19901c0a6c3cf884d9e4d3a6c..21519967a792b76c61af753a430ad5fa
      }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index 4a875bce9563f3b9351ebecde9b0eb1287beb50e..f8f7faa421c513e2f317edbfb71bd0a6aa9c8a1b 100644
+index 9d93130f23addb18b97d7f5ec013faef17a74529..54c969597595f02604fa9f75536be760c04a8c71 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -4,11 +4,7 @@ import com.mojang.authlib.GameProfile;
@@ -4660,10 +4660,10 @@ index 1e3091687735b461d3b6a313ab8761127981d3e8..fb8c7e4e78b9ceb11e61f769cba085d7
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-index e8e4489bcd64fde1b3226bdc7a7cc612508bda3f..41addda7c1e5a05db60daf89a663e5410bf519db 100644
+index a2d336ceb52b63db5c03432ee7bc94dc6a742b82..01f544a7c7e009d087b5128ca564ca71a549de7e 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-@@ -1270,4 +1270,21 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1280,4 +1280,21 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          return this.getHandle().getScoreboardName();
      }
      // Paper end - entity scoreboard name
@@ -4686,10 +4686,10 @@ index e8e4489bcd64fde1b3226bdc7a7cc612508bda3f..41addda7c1e5a05db60daf89a663e541
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-index 7984365c8290ac9e526a413b56e1c8c0841e330c..2c8377c3e7588099d84ee804565ecb8718bbd090 100644
+index 41f3cdec7deabf34358b8087df77169f85a5b919..fb988ad444a8c57136ffa09f9a37e6a999e4b51a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-@@ -72,7 +72,7 @@ import org.bukkit.plugin.Plugin;
+@@ -70,7 +70,7 @@ import org.bukkit.plugin.Plugin;
  public class CraftHumanEntity extends CraftLivingEntity implements HumanEntity {
      private CraftInventoryPlayer inventory;
      private final CraftInventory enderChest;
@@ -4699,10 +4699,10 @@ index 7984365c8290ac9e526a413b56e1c8c0841e330c..2c8377c3e7588099d84ee804565ecb87
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 44f4665db613c558078df5bb49106e4ca5679dfe..a9a80cddf2a183a054df2b6c071ba5061b67622e 100644
+index 5f896948d158651cd9837364759dbfbcce6b7d21..920ca84bbb75bb1c24e2393a28563f1adf03a3a5 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -180,6 +180,30 @@ import org.jetbrains.annotations.NotNull;
+@@ -191,6 +191,30 @@ import org.jetbrains.annotations.NotNull;
  
  import net.md_5.bungee.api.chat.BaseComponent; // Spigot
  
@@ -4733,7 +4733,7 @@ index 44f4665db613c558078df5bb49106e4ca5679dfe..a9a80cddf2a183a054df2b6c071ba506
  @DelegateDeserialization(CraftOfflinePlayer.class)
  public class CraftPlayer extends CraftHumanEntity implements Player {
      private long firstPlayed = 0;
-@@ -200,6 +224,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -211,6 +235,10 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      private static final boolean DISABLE_CHANNEL_LIMIT = System.getProperty("paper.disableChannelLimit") != null; // Paper - add a flag to disable the channel limit
      private long lastSaveTime; // Paper - getLastPlayed replacement API
  
@@ -4744,7 +4744,7 @@ index 44f4665db613c558078df5bb49106e4ca5679dfe..a9a80cddf2a183a054df2b6c071ba506
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2571,7 +2599,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2646,7 +2674,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -4762,7 +4762,7 @@ index 44f4665db613c558078df5bb49106e4ca5679dfe..a9a80cddf2a183a054df2b6c071ba506
      }
  
      @Override
-@@ -2918,7 +2955,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2988,7 +3025,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -4771,7 +4771,7 @@ index 44f4665db613c558078df5bb49106e4ca5679dfe..a9a80cddf2a183a054df2b6c071ba506
      }
      // Paper end
      @Override
-@@ -3053,7 +3090,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3123,7 +3160,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
          if (getHandle().connection == null) return;
          final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
@@ -4787,7 +4787,7 @@ index 44f4665db613c558078df5bb49106e4ca5679dfe..a9a80cddf2a183a054df2b6c071ba506
      }
  
      @Override
-@@ -3319,7 +3363,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3385,7 +3429,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          public void sendMessage(net.md_5.bungee.api.ChatMessageType position, UUID sender, BaseComponent... components) {
              if ( CraftPlayer.this.getHandle().connection == null ) return;
  
@@ -4804,7 +4804,7 @@ index 44f4665db613c558078df5bb49106e4ca5679dfe..a9a80cddf2a183a054df2b6c071ba506
          }
  
          // Paper start
-@@ -3456,4 +3508,353 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3522,4 +3574,353 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void setSendViewDistance(final int viewDistance) {
          this.getHandle().setSendViewDistance(viewDistance);
      }
@@ -5159,10 +5159,10 @@ index 44f4665db613c558078df5bb49106e4ca5679dfe..a9a80cddf2a183a054df2b6c071ba506
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java b/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
-index 41336821d4e0430e19f2fc021f09430d7a1302f6..a1cd752e0952d58e30cae6249ad92e20f2d4652e 100644
+index 3e725dd3aca80a062917e3fd214c554b52dddde5..ed378ad44e88726a826fc8e9107c299e285e5170 100644
 --- a/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
 +++ b/src/main/java/org/bukkit/craftbukkit/profile/CraftPlayerProfile.java
-@@ -51,6 +51,10 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+@@ -61,6 +61,10 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
      private final PropertyMap properties = new PropertyMap();
      private final CraftPlayerTextures textures = new CraftPlayerTextures(this);
  
@@ -5172,8 +5172,8 @@ index 41336821d4e0430e19f2fc021f09430d7a1302f6..a1cd752e0952d58e30cae6249ad92e20
 +
      public CraftPlayerProfile(UUID uniqueId, String name) {
          Preconditions.checkArgument((uniqueId != null) || !StringUtils.isBlank(name), "uniqueId is null or name is blank");
-         this.uniqueId = (uniqueId == null) ? Util.NIL_UUID : uniqueId;
-@@ -344,4 +348,13 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
+         Preconditions.checkArgument(name == null || name.length() <= 16, "The name of the profile is longer than 16 characters"); // Paper - Validate
+@@ -356,4 +360,13 @@ public final class CraftPlayerProfile implements PlayerProfile, com.destroystoky
      public boolean complete(final boolean textures, final boolean onlineMode) {
          throw new UnsupportedOperationException("Do not cast to com.destroystokyo.paper.profile.PlayerProfile");
      }

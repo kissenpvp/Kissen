@@ -377,10 +377,10 @@ index 8ec56cd6b8e0f5c5dd8c7c88b4671e18dcf109d0..e2db4b4e3c04b408a5ff5d5a464b2b7f
      private final boolean async;
  
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 1ce2c17ac0c81481f8d96d146a778044b06faa5f..8021c7f7a0e32f7d4239f56944be80f8395f267f 100644
+index 8c944274ea143dad2de769ebdfbb1c9476a71c6a..212ce9d39ed795e631ae2e8eda39d3a9a829d544 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -112,6 +112,13 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -121,6 +121,13 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
       */
      public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) throws IllegalStateException; // KissenPaper - integrate unified event system
  

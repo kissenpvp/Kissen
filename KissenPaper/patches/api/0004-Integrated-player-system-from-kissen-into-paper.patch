@@ -309,10 +309,10 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..ae48198d53702f3234dbb2c2468d3500
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index c6cb4f17469a8f2e60dd3e28d41402851ce5fb21..1b23eee19af240424697d0ab13573f47dd16e9b6 100644
+index 6c327a07bf8a6aa11a2d7dad12b2830acc539484..9d7e13117d995eb5a051392f7e6b10f23fb9dff3 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
-@@ -54,7 +54,7 @@ import org.jetbrains.annotations.Nullable;
+@@ -56,7 +56,7 @@ import org.jetbrains.annotations.Nullable;
  /**
   * Represents a player, connected or not
   */
@@ -322,10 +322,10 @@ index c6cb4f17469a8f2e60dd3e28d41402851ce5fb21..1b23eee19af240424697d0ab13573f47
      // Paper start
      @Override
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 93a42806aa3d66c42d213115e6971d1f221ce41e..ef2ca3c6c39bca8c690892b23026c33a90e9dcec 100644
+index a9ba540f5f5d343269746ee701234dcf97dbd34b..a5f76815c2503fcec5dc893f8f68caf92bb46b15 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -322,6 +322,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -331,6 +331,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
  
      void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
  
@@ -335,10 +335,10 @@ index 93a42806aa3d66c42d213115e6971d1f221ce41e..ef2ca3c6c39bca8c690892b23026c33a
 +    // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index dd5cf2e9c8535a101b5a8618624d4ce2e64e38e2..df050559acff2e691f2bf064241920858b2b7d24 100644
+index 02c486c69a9ce5271a6d70c0d11dd3403eb51611..75ab899cfd39b70e3c639237ce8da7a3cf5425af 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -979,12 +979,15 @@ public final class SimplePluginManager implements PluginManager {
+@@ -991,12 +991,15 @@ public final class SimplePluginManager implements PluginManager {
      // Paper end
  
      // KissenPaper start

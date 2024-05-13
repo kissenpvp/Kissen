@@ -5,10 +5,10 @@ Subject: [PATCH] Integrated base and plugin system into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-index eedbf46e04b5ae420f9bedcbc2bbb10643ba7e22..43088e7d9614e8fb151ac3a255f3d030692626a4 100644
+index 3e82ea07ca4194844c5528446e2c4a46ff4acee5..59f8f60d5d962eccf2637d16985c86a38803c8e2 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-@@ -144,7 +144,13 @@ class PaperPluginInstanceManager {
+@@ -158,7 +158,13 @@ class PaperPluginInstanceManager {
      public void disablePlugins() {
          Plugin[] plugins = this.getPlugins();
          for (int i = plugins.length - 1; i >= 0; i--) {
@@ -23,10 +23,10 @@ index eedbf46e04b5ae420f9bedcbc2bbb10643ba7e22..43088e7d9614e8fb151ac3a255f3d030
      }
  
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index dab211c458311869c61779305580a1c7da830f71..8f8a43fa4cefaa8a01c571f2ffc8fe35aa687d84 100644
+index 097500a59336db1bbfffcd1aa4cff7a8586e46ec..b3fd45a4e11461a1237288863cebb5c5baa9d647 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-@@ -238,4 +238,12 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+@@ -243,4 +243,12 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
      public MutableGraph<String> getInstanceManagerGraph() {
          return instanceManager.getDependencyGraph();
      }
@@ -375,54 +375,23 @@ index 0000000000000000000000000000000000000000..96674e6f20f94c065586c6d7823a8751
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 93b661e9cb7743aeff7da3972942cb73049a5e4c..67bab2e8c48cc7cf88c9aca8d0ec6ad1b464341d 100644
+index 8dc2f9df367c849ca333bf1a1fd92ff91617b548..9cab59114fc14e1331e7d0569b467b7e37111ba1 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -191,7 +191,7 @@ import org.bukkit.event.server.ServerLoadEvent;
+@@ -195,7 +195,7 @@ import org.bukkit.event.server.ServerLoadEvent;
  
  import co.aikar.timings.MinecraftTimings; // Paper
  
 -public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements ServerInfo, CommandSource, AutoCloseable {
-+public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements ServerInfo, CommandSource, AutoCloseable, net.kissenpvp.core.api.base.KissenServer { // KissenPaper
++public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTask> implements ServerInfo, CommandSource, AutoCloseable, net.kissenpvp.core.api.base.KissenServer { // KissenPaper - impement kissen server
  
      private static MinecraftServer SERVER; // Paper
      public static final Logger LOGGER = LogUtils.getLogger();
-@@ -1016,6 +1016,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
-         }
-         // Spigot end
- 
-+        // KissenPaper start
-+        net.kissenpvp.core.base.KissenCore.getInstance().shutdown();
-+        // KissenPaper end
-+
-         // Paper start - move final shutdown items here
-         LOGGER.info("Flushing Chunk IO");
-         // Paper end - move final shutdown items here
-@@ -1132,6 +1136,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
-                 throw new IllegalStateException("Failed to initialize server");
-             }
- 
-+            // KissenPaper start
-+            net.kissenpvp.core.base.KissenCore.getInstance().start();
-+            // KissenPaper end
-+
-             this.nextTickTimeNanos = Util.getNanos();
-             this.statusIcon = (ServerStatus.Favicon) this.loadStatusIcon().orElse(null); // CraftBukkit - decompile error
-             this.status = this.buildServerStatus();
-@@ -1865,7 +1873,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
- 
-     @DontObfuscate
-     public String getServerModName() {
--        return "Paper"; // Paper
-+        return "KissenPaper"; // KissenPaper
-     }
- 
-     public SystemReport fillSystemReport(SystemReport details) {
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 68d268b6fff126e8645b6deec3fb549ea2286b77..9a1f669307897b5d98fdaa4b0ce46621e4a2bb36 100644
+index eb4fc900164d1fb3a78653ae8bc42ea30323f5b7..e0aa53984cf51c22ff050712f5d7c1cb4f41d2ce 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -179,6 +179,13 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -192,6 +192,13 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
              DedicatedServer.LOGGER.warn("To start the server with more ram, launch it as \"java -Xmx1024M -Xms1024M -jar minecraft_server.jar\"");
          }
  
@@ -436,7 +405,7 @@ index 68d268b6fff126e8645b6deec3fb549ea2286b77..9a1f669307897b5d98fdaa4b0ce46621
          // Paper start - detect running as root
          if (io.papermc.paper.util.ServerEnvironment.userIsRootOrAdmin()) {
              DedicatedServer.LOGGER.warn("****************************");
-@@ -213,6 +220,11 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -226,6 +233,11 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
          if (this.convertOldUsers()) {
              this.getProfileCache().save(false); // Paper
          }
@@ -449,19 +418,19 @@ index 68d268b6fff126e8645b6deec3fb549ea2286b77..9a1f669307897b5d98fdaa4b0ce46621
          // Paper end - fix converting txt to json file
          org.spigotmc.WatchdogThread.doStart(org.spigotmc.SpigotConfig.timeoutTime, org.spigotmc.SpigotConfig.restartOnCrash); // Paper - start watchdog thread
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index c490a29bcf7410bc54959ee71375605964379ed5..ed0f2cae4239ff4f2553f2d5f68d939db60978d1 100644
+index 57db399bc1d3b6b015740b059987bc8d9bcc3101..6a74edbefeb786717fe1cce3daaef4ba6f310c0f 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -266,7 +266,7 @@ import javax.annotation.Nullable; // Paper
+@@ -268,7 +268,7 @@ import javax.annotation.Nullable; // Paper
  import javax.annotation.Nonnull; // Paper
  
  public final class CraftServer implements Server {
 -    private final String serverName = "Paper"; // Paper
-+    private final String serverName = "KissenPaper"; // Paper
++    private final String serverName = "KissenPaper"; // KissenPaper - rename
      private final String serverVersion;
      private final String bukkitVersion = Versioning.getBukkitVersion();
      private final Logger logger = Logger.getLogger("Minecraft");
-@@ -547,7 +547,13 @@ public final class CraftServer implements Server {
+@@ -548,7 +548,13 @@ public final class CraftServer implements Server {
  
          for (Plugin plugin : plugins) {
              if ((!plugin.isEnabled()) && (plugin.getDescription().getLoad() == type)) {
@@ -500,10 +469,10 @@ index c490a29bcf7410bc54959ee71375605964379ed5..ed0f2cae4239ff4f2553f2d5f68d939d
          this.reloadData();
          org.spigotmc.SpigotConfig.registerCommands(); // Spigot
          io.papermc.paper.command.PaperCommands.registerCommands(this.console); // Paper
-@@ -1113,6 +1130,11 @@ public final class CraftServer implements Server {
-         this.enablePlugins(PluginLoadOrder.STARTUP);
+@@ -1114,6 +1131,11 @@ public final class CraftServer implements Server {
          this.enablePlugins(PluginLoadOrder.POSTWORLD);
          this.getPluginManager().callEvent(new ServerLoadEvent(ServerLoadEvent.LoadType.RELOAD));
+         if (io.papermc.paper.plugin.PluginInitializerManager.instance().pluginRemapper != null) io.papermc.paper.plugin.PluginInitializerManager.instance().pluginRemapper.pluginsEnabled(); // Paper - Remap plugins
 +
 +        // KissenPaper start - reinitialize core
 +        currentCore.start();

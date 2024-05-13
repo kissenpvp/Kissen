@@ -109,10 +109,10 @@ index 0000000000000000000000000000000000000000..0b37b7c0653395d7aa554846cde0e925
 +    }
 +}
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 9936f742519bd071956a925a650d3180a2296ff1..1ce2c17ac0c81481f8d96d146a778044b06faa5f 100644
+index 024400ecc4b36c97ed6df02eed7aa669a050e7e5..8c944274ea143dad2de769ebdfbb1c9476a71c6a 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -325,5 +325,10 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -334,5 +334,10 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
  
      void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin);
  
@@ -124,7 +124,7 @@ index 9936f742519bd071956a925a650d3180a2296ff1..1ce2c17ac0c81481f8d96d146a778044
      // KissenPaper end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index ae8739efb84eb681a933e7e4c43678e3b51beb59..0779fd43ded37110438e4d39ab9dca46a7bf1c00 100644
+index 9d87e7b905c4bca556cec7777886b4dd6c857f72..8351724b2ad97a3eb103c464f625815c8883f4a7 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 @@ -24,6 +24,8 @@ import java.util.WeakHashMap;
@@ -144,7 +144,7 @@ index ae8739efb84eb681a933e7e4c43678e3b51beb59..0779fd43ded37110438e4d39ab9dca46
  import org.bukkit.permissions.Permissible;
  import org.bukkit.permissions.Permission;
  import org.bukkit.permissions.PermissionDefault;
-@@ -994,5 +995,20 @@ public final class SimplePluginManager implements PluginManager {
+@@ -1006,5 +1007,20 @@ public final class SimplePluginManager implements PluginManager {
      public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
      }

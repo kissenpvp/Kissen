@@ -156,7 +156,7 @@ index 0000000000000000000000000000000000000000..8b1622e88272d74cc62f78bcab5cf819
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/world/inventory/AbstractContainerMenu.java b/src/main/java/net/minecraft/world/inventory/AbstractContainerMenu.java
-index 48f634a7521d31c1e9dfd3cfc83139d428dbd37a..db48536f8bc75398abb7736552509dbbad6ab017 100644
+index 32910f677b0522ac8ec513fa0d00b714b52cfae4..649af00dc8d0358ae23e94d2554b89d64f8be799 100644
 --- a/src/main/java/net/minecraft/world/inventory/AbstractContainerMenu.java
 +++ b/src/main/java/net/minecraft/world/inventory/AbstractContainerMenu.java
 @@ -477,8 +477,41 @@ public abstract class AbstractContainerMenu {
@@ -202,10 +202,10 @@ index 48f634a7521d31c1e9dfd3cfc83139d428dbd37a..db48536f8bc75398abb7736552509dbb
                      boolean needsUpdate = event.getResult() != Result.DEFAULT;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-index c0823c612de9dc2a64cc797f061eef25c5f31359..245eb68684b056bbc038f74e849c16f873b7d725 100644
+index 547ab158cd0cbf51da06ea97740cfce34bca651b..91a0fcd7d65d68b8779f0848a275c98167ff3743 100644
 --- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 +++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-@@ -1428,6 +1428,13 @@ public class CraftEventFactory {
+@@ -1425,6 +1425,13 @@ public class CraftEventFactory {
          event.setCancelled(cancelled);
          server.getPluginManager().callEvent(event);
  
@@ -219,7 +219,7 @@ index c0823c612de9dc2a64cc797f061eef25c5f31359..245eb68684b056bbc038f74e849c16f8
          if (event.isCancelled()) {
              container.transferTo(player.containerMenu, craftPlayer);
              return com.mojang.datafixers.util.Pair.of(null, null); // Paper - Add titleOverride to InventoryOpenEvent
-@@ -1625,6 +1632,14 @@ public class CraftEventFactory {
+@@ -1622,6 +1629,14 @@ public class CraftEventFactory {
          // Paper end
          InventoryCloseEvent event = new InventoryCloseEvent(human.containerMenu.getBukkitView(), reason); // Paper
          human.level().getCraftServer().getPluginManager().callEvent(event);

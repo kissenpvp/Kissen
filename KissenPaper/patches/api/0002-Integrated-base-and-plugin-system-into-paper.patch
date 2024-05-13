@@ -881,10 +881,10 @@ index 0000000000000000000000000000000000000000..878a9d11bf308d9206022ea0e086bdcc
 +    }
 +}
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index 9a428153f34291bdc026a71f7e60e285b7794b0c..6f2c85f049cd0b59b0b81e2e605ed2572da20522 100644
+index 5d1b55fdbcbe63f6b42b694d05211a3cc691a09d..8a165ffbdf16ceae39fc22a2c930d50158e5ca3a 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
-@@ -2884,4 +2884,17 @@ public final class Bukkit {
+@@ -2910,4 +2910,17 @@ public final class Bukkit {
      public static Server.Spigot spigot() {
          return server.spigot();
      }
@@ -916,10 +916,10 @@ index ef431219fd2bce48bad63b6b92c99d54348d480e..b753260bb333c8909ac2b251c17c4e92
       * Returns the folder that the plugin data's files are located in. The
       * folder may not yet exist.
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 03213fde8315384ec56c16031cfc606ade2e8091..0b8d6d43bd74052bc064641d5f93295d8ebf84e6 100644
+index 47153dee66782a00b980ecf15e8774ab6f3d887d..a2f8c9e282257bf8f4a93eab3cc50480f7df72f4 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -317,4 +317,11 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -326,4 +326,11 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
      @org.jetbrains.annotations.ApiStatus.Experimental
      void overridePermissionManager(@NotNull Plugin plugin, @Nullable io.papermc.paper.plugin.PermissionManager permissionManager);
      // Paper end
@@ -932,10 +932,10 @@ index 03213fde8315384ec56c16031cfc606ade2e8091..0b8d6d43bd74052bc064641d5f93295d
 +
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index fc2dae69165776d08274e34a69962cc70445f411..b7d3b5d2566739188f083bc2e2c1dc69501a7243 100644
+index 07a9c9e254188c251165ca84c8e961fccda01175..81bbf466d46526664297fe95f9a307192efc6a90 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -978,4 +978,14 @@ public final class SimplePluginManager implements PluginManager {
+@@ -990,4 +990,14 @@ public final class SimplePluginManager implements PluginManager {
          this.paperPluginManager.addPermissions(perm);
      }
      // Paper end

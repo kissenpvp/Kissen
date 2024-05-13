@@ -175,10 +175,10 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..4abf5840c8846dd31b05926f0f55258f
 +    // KissenPaper end - integrate unified event system
  }
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index 8f8a43fa4cefaa8a01c571f2ffc8fe35aa687d84..4299c924572408d95fba8cf8675406c14245ceee 100644
+index b3fd45a4e11461a1237288863cebb5c5baa9d647..f4cce65cd6bb99768edd15ae7bf8f43b9cf2c817 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-@@ -122,22 +122,22 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+@@ -127,22 +127,22 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
      // Event manipulation
  
      @Override

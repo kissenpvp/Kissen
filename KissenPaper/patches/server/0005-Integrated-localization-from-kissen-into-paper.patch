@@ -5,10 +5,10 @@ Subject: [PATCH] Integrated localization from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index 2f51a495944ac61cd44c6dfa52cbd1291d574a52..d0944b9f52f5d94d87d648e922820590afaab0f3 100644
+index da8a57253428efd0636b6f8265d79f0fe0dc6499..de4811e4ecd81af9055cdad9d3d5677a7406873a 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-@@ -249,5 +249,10 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+@@ -254,5 +254,10 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
      public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
      }
@@ -104,10 +104,10 @@ index 0000000000000000000000000000000000000000..e085d4c120a323b555970b7643b7280a
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 367de077620db87bc035fc0927720ce2559b3348..6b86d723104125e210c6127b5c7bf7b7d9c1337c 100644
+index dbda39fe73329a13d0a8d384261cc7ca17e7b7b6..02c02ce197106bde56527d4d766ad3343e179042 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2153,6 +2153,7 @@ public class ServerPlayer extends Player {
+@@ -2245,6 +2245,7 @@ public class ServerPlayer extends Player {
              PlayerLocaleChangeEvent event = new PlayerLocaleChangeEvent(this.getBukkitEntity(), clientOptions.language());
              this.server.server.getPluginManager().callEvent(event);
              this.server.server.getPluginManager().callEvent(new com.destroystokyo.paper.event.player.PlayerLocaleChangeEvent(this.getBukkitEntity(), this.language, clientOptions.language())); // Paper
@@ -115,7 +115,7 @@ index 367de077620db87bc035fc0927720ce2559b3348..6b86d723104125e210c6127b5c7bf7b7
          }
          // CraftBukkit end
          // Paper start - don't call options events on login
-@@ -2762,4 +2763,12 @@ public class ServerPlayer extends Player {
+@@ -2870,4 +2871,12 @@ public class ServerPlayer extends Player {
          return (CraftPlayer) super.getBukkitEntity();
      }
      // CraftBukkit end
@@ -129,10 +129,10 @@ index 367de077620db87bc035fc0927720ce2559b3348..6b86d723104125e210c6127b5c7bf7b7
 +
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 81d62fec2a22d472f7dad2eb681a98fbe09f5385..81a5e495a5eeb120961ed0e3f78d240104bbc2ff 100644
+index 920ca84bbb75bb1c24e2393a28563f1adf03a3a5..7ae14d70aab501cf43292989ba11fa0b99cbe9ec 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -3248,7 +3248,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3314,7 +3314,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      @Override
      public void openBook(final net.kyori.adventure.inventory.Book book) {

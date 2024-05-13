@@ -60,7 +60,7 @@ index 0000000000000000000000000000000000000000..252e4516e7dcf0bd128380cd08e4a124
 +    }*/
 +}
 diff --git a/src/main/java/net/minecraft/server/PlayerAdvancements.java b/src/main/java/net/minecraft/server/PlayerAdvancements.java
-index 24e5993b281448734eb67c7a8439a349bbf9fd72..85db6972a7e56ac72537f3f109129bc0521a56e8 100644
+index c7e1f2bac3eca9bb72bf1f8c26cccb2905e1ddfc..a6b35182fd7ed7cb09dc302fe718711ca57fc038 100644
 --- a/src/main/java/net/minecraft/server/PlayerAdvancements.java
 +++ b/src/main/java/net/minecraft/server/PlayerAdvancements.java
 @@ -103,7 +103,7 @@ public class PlayerAdvancements {
@@ -141,12 +141,12 @@ index 24e5993b281448734eb67c7a8439a349bbf9fd72..85db6972a7e56ac72537f3f109129bc0
 +    // KissenPaper end - make player accessible from class children
  }
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 96af226e2c613498203304166534ccd8b61b342a..7562e40d8a3a1f9636ea0ce70100d01eed0fb36f 100644
+index e701ca407e9d96f55fa4bd5e38800ec2a2b58039..9c86ad7e6fcbc810096a81bc2b19721f3328b3c8 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -1517,7 +1517,11 @@ public abstract class PlayerList {
+@@ -1516,7 +1516,11 @@ public abstract class PlayerList {
          if (advancementdataplayer == null) {
-             Path path = this.server.getWorldPath(LevelResource.PLAYER_ADVANCEMENTS_DIR).resolve(uuid + ".json");
+             Path path = this.server.getWorldPath(LevelResource.PLAYER_ADVANCEMENTS_DIR).resolve(String.valueOf(uuid) + ".json");
  
 -            advancementdataplayer = new PlayerAdvancements(this.server.getFixerUpper(), this, this.server.getAdvancements(), path, player);
 +            // KissenPaper start - make advancements being saved in the database
