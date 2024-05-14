@@ -134,7 +134,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
 
     @Override
     public @NotNull <T> Optional<T> get(@NotNull String key, @NotNull Class<T> clazz) {
-        return Optional.ofNullable(super.get(key)).map(data -> (T) data);
+        return Optional.ofNullable((T) super.get(key));
     }
 
     @Override
