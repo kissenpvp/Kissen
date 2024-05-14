@@ -19,6 +19,7 @@
 package net.kissenpvp.core.command;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.command.exception.deserialization.TemporaryDeserializationException;
@@ -45,7 +46,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-@Getter
+@Getter @Slf4j(topic = "Kissen")
 public abstract class InternalCommandImplementation<S extends ServerEntity> implements KissenImplementation {
     private final Set<PluginCommandHandler<S, ?>> handler;
     private final InternalCommandHandler<S, ?> internalHandler;
@@ -113,13 +114,13 @@ public abstract class InternalCommandImplementation<S extends ServerEntity> impl
             String errorMessage = "Plugin %s already has a command handler registered.";
             throw new IllegalStateException(errorMessage.formatted(kissenPlugin));
         }
-        KissenCore.getInstance().getLogger().info("Register command handler for {}.", kissenPlugin.getName());
+        log.info("Register command handler for {}.", kissenPlugin.getName());
         registerHandler(kissenPlugin);
     }
 
     @Override
     public void postEnable(@NotNull KissenPlugin kissenPlugin) {
-        KissenCore.getInstance().getLogger().debug("Initialize command handler from plugin {}.", kissenPlugin);
+        log.debug("Initialize command handler from plugin {}.", kissenPlugin);
         getHandler().stream().filter(handler -> handler.getPlugin().equals(kissenPlugin)).findFirst().ifPresent(AbstractCommandHandler::registerCachedCommands);
     }
 

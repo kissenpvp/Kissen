@@ -22,6 +22,7 @@ import com.google.gson.Gson;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.Table;
@@ -50,6 +51,7 @@ import java.util.stream.IntStream;
 
 @AllArgsConstructor
 @Getter
+@Slf4j(topic = "Kissen")
 public abstract class KissenBaseMeta implements Meta {
 
     private static final Gson GSON;
@@ -79,7 +81,7 @@ public abstract class KissenBaseMeta implements Meta {
             }
 
             String message = "There was an exception caught when fetching data from the database.";
-            KissenCore.getInstance().getLogger().debug(message, throwable);
+            log.debug(message, throwable);
             return object;
         };
     }
@@ -464,10 +466,6 @@ public abstract class KissenBaseMeta implements Meta {
     @Override
     public @NotNull CompletableFuture<@Unmodifiable Map<@NotNull String, @NotNull SavableMap>> getData(@NotNull Savable<?> savable) {
         return select(Column.TOTAL_ID, Column.KEY, Column.VALUE).where(Column.TOTAL_ID, String.format("^%s", savable.getSaveID())).execute().thenApply(this::mergeData);
-    }
-
-    protected @NotNull Class<?> loadClass(@NotNull String name) {
-        return KissenCore.getInstance().getImplementation(KissenDatabaseImplementation.class).loadClass(name);
     }
 
     private @NotNull Map<String, SavableMap> mergeData(@NotNull Object @NotNull [] @NotNull [] data) {

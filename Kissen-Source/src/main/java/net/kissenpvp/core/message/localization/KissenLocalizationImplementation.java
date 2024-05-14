@@ -19,6 +19,7 @@
 package net.kissenpvp.core.message.localization;
 
 import com.google.gson.*;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
@@ -61,6 +62,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * The class facilitates loading language files, registering translations, and providing translation data to plugins when needed.
  * It is a central component in the kissen framework that helps make plugins more user-friendly by offering multilingual support.
  */
+@Slf4j(topic = "Kissen")
 public class KissenLocalizationImplementation implements LocalizationImplementation, KissenImplementation {
 
     private static final String SYSTEM = "$system";
@@ -106,7 +108,8 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
         try {
             loadFiles(getData(SYSTEM));
         } catch (IOException ioException) {
-            KissenCore.getInstance().getLogger().error("The system was unable to load its translation files.", ioException);
+            String message = "The system encountered an issue while trying to generate or retrieve translation files. Creation or loading of the translation files failed.";
+            log.error(message, ioException);
         }
     }
 
@@ -126,8 +129,8 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
         try {
             loadFiles(getData(kissenPlugin.getName()));
         } catch (IOException ioException) {
-            String message = "The system was unable to create or load the translation files for plugin {}.";
-            KissenCore.getInstance().getLogger().error(message, kissenPlugin.getName(), ioException);
+            String message = "The plugin {} encountered an issue while attempting to generate or retrieve translation files. Creation or loading of the translation files failed.";
+            log.error(message, kissenPlugin, ioException);
         }
     }
 
@@ -136,7 +139,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
         LocaleData localeData = getData(kissenPlugin.getName());
         clearData(localeData);
         String message = "All {} messages have been unregistered from plugin {}.";
-        KissenCore.getInstance().getLogger().debug(message, localeData.data().size(), kissenPlugin.getName());
+        log.debug(message, localeData.data().size(), kissenPlugin.getName());
     }
 
     @Override
@@ -373,7 +376,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
                 return Optional.ofNullable(JsonParser.parseReader(bufferedReader).getAsJsonObject());
             }
         } catch (IOException | JsonIOException | JsonSyntaxException exception) {
-            KissenCore.getInstance().getLogger().error("An error occurred when reading language file '{}'", file.getAbsolutePath(), exception);
+            log.error("An error occurred when reading language file '{}'", file.getAbsolutePath(), exception);
         }
         return Optional.empty();
     }
@@ -400,7 +403,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
         localeData.data().keySet().stream().filter(translation -> !stringStringMap.containsKey(translation)).forEach(translation -> {
             rewrite.set(true);
             MessageFormat defaultMessage = localeData.data().get(translation);
-            KissenCore.getInstance().getLogger().warn("The translation '{}' was not found in the file for locale '{}' from plugin '{}'. It will be set to the default message: '{}'.", translation, locale, localeData.translationRegistry.name().namespace(), defaultMessage.toPattern());
+            log.warn("The translation '{}' was not found in the file for locale '{}' from plugin '{}'. It will be set to the default message: '{}'.", translation, locale, localeData.translationRegistry.name().namespace(), defaultMessage.toPattern());
             jsonObject.addProperty(translation, defaultMessage.toPattern());
             stringStringMap.put(translation, defaultMessage);
         });
@@ -408,14 +411,14 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
             try {
                 writeJson(jsonObject, new File(localeData.directory(), locale + ".json"));
             } catch (IOException e) {
-                KissenCore.getInstance().getLogger().info("");
+                log.info("");
             }
         }
 
         Locale parsedLocale = getInternalLocale(locale).orElseGet(() -> buildLocale(locale));
         if (!localeData.installed().contains(parsedLocale)) {
             localeData.installed().add(parsedLocale);
-            KissenCore.getInstance().getLogger().info("Found and registered locale '{}' from '{}'.", parsedLocale.getDisplayName(), localeData.translationRegistry.name());
+            log.info("Found and registered locale '{}' from '{}'.", parsedLocale.getDisplayName(), localeData.translationRegistry.name());
         }
 
         localeData.translationRegistry().registerAll(Objects.requireNonNull(parsedLocale), stringStringMap);

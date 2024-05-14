@@ -56,7 +56,6 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
     @Override
     public void addMap(@NotNull String id, final @NotNull Map<@NotNull String, @NotNull Object> data) throws BackendException {
         getCollection().bulkWrite(data.entrySet().stream().map(buildUpdateQuery(id)).toList());
-        KissenCore.getInstance().getLogger().debug("Insert map {} with id {}.", data, id);
     }
 
     @Override
@@ -76,7 +75,6 @@ public abstract class KissenMongoMeta extends KissenBaseMeta {
         document.append(getTable().getColumn(Column.VALUE), data[1]); // value
 
         getCollection().updateOne(Filters.and(Filters.eq(getTable().getColumn(Column.TOTAL_ID), totalID), Filters.eq(getTable().getColumn(Column.KEY), key)), new Document("$set", document), new UpdateOptions().upsert(true));
-        KissenCore.getInstance().getLogger().debug("Set {} to {} from id {}.", key, data[0], totalID);
     }
 
     @Override

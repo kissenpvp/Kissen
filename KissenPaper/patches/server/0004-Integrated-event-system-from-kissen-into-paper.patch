@@ -205,6 +205,18 @@ index b3fd45a4e11461a1237288863cebb5c5baa9d647..f4cce65cd6bb99768edd15ae7bf8f43b
          this.paperEventManager.registerEvent(event, listener, priority, executor, plugin, ignoreCancelled);
      }
  
+diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+index ceb813c68098fccdd36e43cae7d8a2c7afdb0f80..0741270ec506fa45bf3f9eec9c400dc4545256b1 100644
+--- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
++++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
+@@ -48,6 +48,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+     @Override
+     protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader) {
+         loader.put(net.kissenpvp.core.api.config.ConfigurationImplementation.class, new net.kissenpvp.paper.config.KissenPaperConfigurationImplementation());
++        loader.put(net.kissenpvp.core.event.EventImplementation.class, new net.kissenpvp.paper.event.KissenEventImplementation());
+         super.loadImplementations(loader);
+     }
+ 
 diff --git a/src/main/java/net/kissenpvp/paper/event/KissenEventImplementation.java b/src/main/java/net/kissenpvp/paper/event/KissenEventImplementation.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..715d1f9d2a8bcbf2c01ef90c64279d2b12adac17

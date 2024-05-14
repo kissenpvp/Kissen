@@ -81,36 +81,18 @@ index f4cce65cd6bb99768edd15ae7bf8f43b9cf2c817..da8a57253428efd0636b6f8265d79f0f
 +    // KissenPaper start
  }
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index 964f3eeee94e61a0dd631ca32e7588cacc6a5787..b3cbcea7cdb3e7e56d82183592e69d2e5d47d6de 100644
+index 0741270ec506fa45bf3f9eec9c400dc4545256b1..38fa6ae5a2a2ab5300384c01c251bc12be659690 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -31,17 +31,12 @@ import net.kissenpvp.core.base.KissenCore;
- import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
- import net.kissenpvp.core.event.EventImplementation;
- import net.kissenpvp.core.permission.InternalPermissionImplementation;
--import net.kissenpvp.paper.advancement.KissenPaperAdvancementImplementation;
- import net.kissenpvp.paper.api.base.PaperKissen;
- import net.kissenpvp.paper.api.command.PaperCommandImplementation;
- import net.kissenpvp.paper.api.permission.PermissionImplementation;
--import net.kissenpvp.paper.ban.KissenPaperBanImplementation;
--import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
--import net.kissenpvp.paper.command.confirmation.KissenPaperConfirmationImplementation;
- import net.kissenpvp.paper.database.KissenPaperConfigurationImplementation;
- import net.kissenpvp.paper.database.KissenPaperDatabaseImplementation;
- import net.kissenpvp.paper.event.KissenEventImplementation;
--import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
- import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
- import net.kissenpvp.paper.user.KissenPaperUserImplementation;
- import net.kissenpvp.paper.user.rank.KissenPaperRankImplementation;
-@@ -87,11 +82,6 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
-         KissenPaperPermissionImplementation permissionImplementation = new KissenPaperPermissionImplementation();
-         loader.put(InternalPermissionImplementation.class, permissionImplementation);
-         loader.put(PermissionImplementation.class, permissionImplementation);
--        loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());
--        loader.put(PaperCommandImplementation.class, new KissenPaperCommandImplementation());
--        loader.put(AbstractBanImplementation.class, new KissenPaperBanImplementation());
--        loader.put(KissenConfirmationImplementation.class, new KissenPaperConfirmationImplementation());
--        loader.put(KissenPaperAdvancementImplementation.class, new KissenPaperAdvancementImplementation());
+@@ -49,6 +49,11 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+     protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader) {
+         loader.put(net.kissenpvp.core.api.config.ConfigurationImplementation.class, new net.kissenpvp.paper.config.KissenPaperConfigurationImplementation());
+         loader.put(net.kissenpvp.core.event.EventImplementation.class, new net.kissenpvp.paper.event.KissenEventImplementation());
++        loader.put(net.kissenpvp.core.api.user.UserImplementation.class, new net.kissenpvp.paper.user.KissenPaperUserImplementation());
++        loader.put(net.kissenpvp.paper.api.user.rank.RankImplementation.class, new net.kissenpvp.paper.user.rank.KissenPaperRankImplementation());
++        net.kissenpvp.paper.permission.KissenPaperPermissionImplementation permissionImplementation = new net.kissenpvp.paper.permission.KissenPaperPermissionImplementation();
++        loader.put(net.kissenpvp.paper.api.permission.PermissionImplementation.class, permissionImplementation);
++        loader.put(net.kissenpvp.core.permission.InternalPermissionImplementation.class, permissionImplementation);
          super.loadImplementations(loader);
      }
  
@@ -791,10 +773,10 @@ index 0000000000000000000000000000000000000000..87e6013e84b547e09037dc7e2e6f172f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..2562459db6ca32b0123088bc99bae6e7fe6a9a88
+index 0000000000000000000000000000000000000000..0e8009923c35311211c349eb01d39b5ccf0a625f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/permission/KissenPaperPermissionImplementation.java
-@@ -0,0 +1,319 @@
+@@ -0,0 +1,322 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -837,13 +819,16 @@ index 0000000000000000000000000000000000000000..2562459db6ca32b0123088bc99bae6e7
 +import org.bukkit.permissions.PermissionDefault;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
 +
 +import java.text.MessageFormat;
 +import java.util.*;
 +import java.util.stream.Collectors;
 +
-+@SuppressWarnings("unchecked")
 +public class KissenPaperPermissionImplementation extends InternalKissenPermissionImplementation<Permission> implements PermissionImplementation, InternalPermissionImplementation<Permission>, KissenImplementation {
++
++    private static final Logger log = LoggerFactory.getLogger("Kissen");
 +
 +    private final Set<GroupHolder> cachedHolder;
 +    private KissenTable privateTable;
@@ -892,7 +877,7 @@ index 0000000000000000000000000000000000000000..2562459db6ca32b0123088bc99bae6e7
 +
 +    @Override
 +    public boolean postStart() {
-+        KissenCore.getInstance().getLogger().info("Successfully loaded {} permission group(s) from the database.", cachedHolder.size());
++        log.info("Successfully loaded {} permission group(s) from the database.", cachedHolder.size());
 +        return PermissionImplementation.super.postStart();
 +    }
 +
@@ -4110,7 +4095,7 @@ index 34b4166adfae8ff7d1eb73d56a72931b005330a7..ee9030ee27aa66520277fbf99607345c
          private final GameProfile profile;
          final Date expirationDate;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index a2142930b4d4b05987c90496fb9d733d99040aa0..833d0df8f2e6dcddd6ba218910a2165804c434bb 100644
+index a2142930b4d4b05987c90496fb9d733d99040aa0..6ab435657c92d9fbf863d2a47254de9f138537f4 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -168,8 +168,8 @@ public abstract class PlayerList {
@@ -4153,7 +4138,7 @@ index a2142930b4d4b05987c90496fb9d733d99040aa0..833d0df8f2e6dcddd6ba218910a21658
 +        // KissenPaper start - logout user
 +        if(!org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.user.KissenUserImplementation.class).logoutUser(entityplayer.getBukkitEntity().getUser()))
 +        {
-+            org.bukkit.Bukkit.getKissen().getLogger().warn("Player {} was on the server but was not recognized by the system.", entityplayer.getName());
++            PlayerList.LOGGER.warn("Player {} was on the server but was not recognized by the system.", entityplayer.getName());
 +        }
 +
          return playerQuitEvent.quitMessage(); // Paper - Adventure

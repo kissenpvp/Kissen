@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  *
  * @see JDBCQueryExecutor
  */
-@Slf4j
+@Slf4j(topic = "Kissen")
 @Getter
 public class JDBCSelectQueryExecutor extends JDBCQueryExecutor {
 

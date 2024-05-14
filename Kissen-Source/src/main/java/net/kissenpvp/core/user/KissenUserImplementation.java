@@ -48,6 +48,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -59,7 +61,7 @@ import java.util.stream.Collectors;
  * <p>
  * In the implementation of the UserImplementation interface, this class provides some basic concrete functionality and leaves the rest to its subclasses. It is a way of enforcing a certain structure on the user-related classes in the system.
  */
-@Slf4j
+@Slf4j(topic = "Kissen")
 public abstract class KissenUserImplementation implements UserImplementation {
 
     @Getter private final static Set<User> onlineUserSet;
@@ -101,7 +103,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
         cachedProfiles.clear();
         cachedProfiles.addAll(fetchUserProfiles());
-        KissenCore.getInstance().getLogger().info("Successfully loaded {} user profile(s) from the database.", cachedProfiles.size());
+        log.info("Successfully loaded {} user profile(s) from the database.", cachedProfiles.size());
 
         Class<KissenConfirmationImplementation> clazz = KissenConfirmationImplementation.class;
         KissenConfirmationImplementation confirmation = KissenCore.getInstance().getImplementation(clazz);
@@ -323,6 +325,6 @@ public abstract class KissenUserImplementation implements UserImplementation {
         }
         getCachedProfiles().remove(userInfoNode);
         getCachedProfiles().add(userInfoNode);
-        KissenCore.getInstance().getLogger().info("The profile {} has been cached.", userInfoNode);
+        log.info("The profile {} has been cached.", userInfoNode);
     }
 }

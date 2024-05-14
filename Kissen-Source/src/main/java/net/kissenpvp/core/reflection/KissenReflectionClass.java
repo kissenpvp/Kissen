@@ -20,6 +20,7 @@ package net.kissenpvp.core.reflection;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.reflection.Parameter;
 import net.kissenpvp.core.api.reflection.ReflectionClass;
 import net.kissenpvp.core.base.KissenCore;
@@ -31,7 +32,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-
+@Slf4j(topic = "Kissen")
 public class KissenReflectionClass implements ReflectionClass {
     private Class<?> clazz;
     @Getter
@@ -190,7 +191,7 @@ public class KissenReflectionClass implements ReflectionClass {
         try {
             return executeUnsafe(method, parameters);
         } catch (Exception exception) {
-            KissenCore.getInstance().getLogger().error("An error occurred when executing method '{}' from object '{}'.", method, instance, exception);
+            log.error("An error occurred when executing method '{}' from object '{}'.", method, instance, exception);
         }
         return null;
     }
@@ -213,7 +214,7 @@ public class KissenReflectionClass implements ReflectionClass {
             FIELD.set(this.instance, newValue);
             FIELD.setAccessible(false);
         } catch (Exception exception) {
-            KissenCore.getInstance().getLogger().error("An error occurred while setting field '{}' from object '{}'.", field, instance, exception);
+            log.error("An error occurred while setting field '{}' from object '{}'.", field, instance, exception);
         }
     }
 
@@ -232,7 +233,7 @@ public class KissenReflectionClass implements ReflectionClass {
             return RETURN;
 
         } catch (Exception exception) {
-            KissenCore.getInstance().getLogger().error("An error occurred while getting field '{}' from object '{}'.", field, instance, exception);
+            log.error("An error occurred while getting field '{}' from object '{}'.", field, instance, exception);
         }
         return null;
     }
@@ -276,7 +277,7 @@ public class KissenReflectionClass implements ReflectionClass {
             FIELD.setAccessible(false);
 
         } catch (Exception exception) {
-            KissenCore.getInstance().getLogger().error("An error occurred while setting static field '{}' from class '{}'.", field, clazz, exception);
+            log.error("An error occurred while setting static field '{}' from class '{}'.", field, clazz, exception);
         }
     }
 
@@ -292,7 +293,7 @@ public class KissenReflectionClass implements ReflectionClass {
             return RETURN;
 
         } catch (Exception exception) {
-            KissenCore.getInstance().getLogger().error("An error occurred while getting static field '{}' from class '{}'.", field, clazz, exception);
+            log.error("An error occurred while getting static field '{}' from class '{}'.", field, clazz, exception);
         }
         return null;
     }
@@ -301,7 +302,7 @@ public class KissenReflectionClass implements ReflectionClass {
     public Object newInstance(Parameter<?>... parameters) {
         try {
             if (isInterface()) {
-                KissenCore.getInstance().getLogger().info("You cannot create an instance of an interface.");
+                log.info("You cannot create an instance of an interface.");
                 return null;
             }
 
@@ -313,7 +314,7 @@ public class KissenReflectionClass implements ReflectionClass {
 
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
                  InvocationTargetException exception) {
-            KissenCore.getInstance().getLogger().error("An error occurred while creating a new instance of the class '{}'.", clazz.getSimpleName(), exception);
+            log.error("An error occurred while creating a new instance of the class '{}'.", clazz.getSimpleName(), exception);
         }
         return this.getInstance();
     }
@@ -322,12 +323,12 @@ public class KissenReflectionClass implements ReflectionClass {
     public Object newInstance() {
         try {
             if (isInterface()) {
-                KissenCore.getInstance().getLogger().info("You cannot create an instance of an interface.");
+                log.info("You cannot create an instance of an interface.");
                 return null;
             }
 
             if (this.getJavaClass().getSimpleName().trim().isEmpty()) {
-                KissenCore.getInstance().getLogger().info("Cannot invoke to an empty class.");
+                log.info("Cannot invoke to an empty class.");
                 return null;
             }
 
@@ -360,7 +361,7 @@ public class KissenReflectionClass implements ReflectionClass {
 
             setInstance(callBack);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException exception) {
-            KissenCore.getInstance().getLogger().error("An error occurred while invoking empty constructor from class '{}'.", getJavaClass().getSimpleName(), exception);
+            log.error("An error occurred while invoking empty constructor from class '{}'.", getJavaClass().getSimpleName(), exception);
         }
         return this.getInstance();
     }

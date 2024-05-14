@@ -2,6 +2,7 @@ package net.kissenpvp.core.command.handler;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.ExceptionHandler;
 import net.kissenpvp.core.api.command.AbstractArgumentParser;
 import net.kissenpvp.core.api.command.CommandHandler;
@@ -23,7 +24,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.lang.reflect.Method;
 import java.util.*;
 
-@Getter
+@Getter @Slf4j(topic = "Kissen")
 public abstract class AbstractCommandHandler<S extends ServerEntity, C extends CommandHolder<S, ? extends C>> implements CommandHandler<S, C> {
     @Getter(AccessLevel.PROTECTED)
     private final Set<C> commands;
@@ -68,7 +69,7 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
         if (exceptionHandler.contains(handler)) {
             throw new IllegalArgumentException("There is already an exception handler registered for that exception.");
         }
-        KissenCore.getInstance().getLogger().debug("Registered exception handler {} in handler {}.", handler.getClass().getSimpleName(), getHandlerName());
+        log.debug("Registered exception handler {} in handler {}.", handler.getClass().getSimpleName(), getHandlerName());
         exceptionHandler.add(handler);
     }
 
@@ -77,7 +78,7 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
         if (this.parser.containsKey(type)) {
             throw new IllegalArgumentException(String.format("Parser type %s is already registered.", type.getSimpleName()));
         }
-        KissenCore.getInstance().getLogger().debug("Register parser for type {} with handler {}.", type, getHandlerName());
+        log.debug("Register parser for type {} with handler {}.", type, getHandlerName());
         this.parser.put(type, parser);
     }
 
@@ -87,7 +88,7 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
                 injectMethod(object, method);
             }
         }
-        KissenCore.getInstance().getLogger().debug("Class(es) {} has been registered as command holder from handler {}..", cached, getHandlerName());
+        log.debug("Class(es) {} has been registered as command holder from handler {}..", cached, getHandlerName());
         cached.clear();
         initialized = true;
     }

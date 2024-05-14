@@ -63,7 +63,7 @@ import java.util.function.BiConsumer;
  */
 @Setter
 @Getter
-@Slf4j
+@Slf4j(topic = "Kissen")
 public class KissenSavableMap extends HashMap<String, Object> implements SavableMap {
 
     private final String id;

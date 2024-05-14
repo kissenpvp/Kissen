@@ -65,10 +65,10 @@ index cb9b13522a976b82bcb71cef486f11f4172e3e99..e132a7c5cd9bea3ba77500dfeeb5eb96
              provided.getSLF4JLogger().error("Error initializing plugin '%s' in folder '%s' (Is it up to date?)".formatted(provider.getFileName(), provider.getParentSource()), ex);
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..964f3eeee94e61a0dd631ca32e7588cacc6a5787
+index 0000000000000000000000000000000000000000..ceb813c68098fccdd36e43cae7d8a2c7afdb0f80
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -0,0 +1,132 @@
+@@ -0,0 +1,88 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -89,38 +89,15 @@ index 0000000000000000000000000000000000000000..964f3eeee94e61a0dd631ca32e7588ca
 +
 +package net.kissenpvp.paper.base;
 +
-+import net.kissenpvp.core.api.ban.AbstractBanImplementation;
 +import net.kissenpvp.core.api.base.Implementation;
 +import net.kissenpvp.core.api.base.plugin.KissenPlugin;
-+import net.kissenpvp.core.api.config.ConfigurationImplementation;
-+import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
-+import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 +import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
-+import net.kissenpvp.core.api.user.UserImplementation;
-+import net.kissenpvp.core.api.user.rank.AbstractRankImplementation;
 +import net.kissenpvp.core.base.KissenCore;
-+import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
-+import net.kissenpvp.core.event.EventImplementation;
-+import net.kissenpvp.core.permission.InternalPermissionImplementation;
-+import net.kissenpvp.paper.advancement.KissenPaperAdvancementImplementation;
 +import net.kissenpvp.paper.api.base.PaperKissen;
-+import net.kissenpvp.paper.api.command.PaperCommandImplementation;
-+import net.kissenpvp.paper.api.permission.PermissionImplementation;
-+import net.kissenpvp.paper.ban.KissenPaperBanImplementation;
-+import net.kissenpvp.paper.command.KissenPaperCommandImplementation;
-+import net.kissenpvp.paper.command.confirmation.KissenPaperConfirmationImplementation;
-+import net.kissenpvp.paper.database.KissenPaperConfigurationImplementation;
-+import net.kissenpvp.paper.database.KissenPaperDatabaseImplementation;
-+import net.kissenpvp.paper.event.KissenEventImplementation;
-+import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
-+import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
-+import net.kissenpvp.paper.user.KissenPaperUserImplementation;
-+import net.kissenpvp.paper.user.rank.KissenPaperRankImplementation;
 +import org.bukkit.Bukkit;
 +import org.bukkit.craftbukkit.scheduler.CraftScheduler;
 +import org.bukkit.plugin.Plugin;
 +import org.jetbrains.annotations.NotNull;
-+import org.slf4j.Logger;
 +
 +import java.util.Map;
 +import java.util.Optional;
@@ -128,15 +105,6 @@ index 0000000000000000000000000000000000000000..964f3eeee94e61a0dd631ca32e7588ca
 +
 +// KissenPaper
 +public class KissenPaperCore extends KissenCore implements PaperKissen {
-+
-+    /**
-+     * Constructs a new instance of the KissenPaperCore class.
-+     *
-+     * @param logger The logger to be used for logging.
-+     */
-+    public KissenPaperCore(@NotNull Logger logger) {
-+        super(logger);
-+    }
 +
 +    @Override
 +    public @NotNull Optional<KissenPlugin> getPlugin(@NotNull String plugin) {
@@ -150,24 +118,12 @@ index 0000000000000000000000000000000000000000..964f3eeee94e61a0dd631ca32e7588ca
 +
 +    @Override
 +    protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader) {
-+        loader.put(ConfigurationImplementation.class, new KissenPaperConfigurationImplementation());
-+        loader.put(DatabaseImplementation.class, new KissenPaperDatabaseImplementation());
-+        loader.put(EventImplementation.class, new KissenEventImplementation());
-+        loader.put(UserImplementation.class, new KissenPaperUserImplementation());
-+        loader.put(AbstractRankImplementation.class, new KissenPaperRankImplementation());
-+        KissenPaperPermissionImplementation permissionImplementation = new KissenPaperPermissionImplementation();
-+        loader.put(InternalPermissionImplementation.class, permissionImplementation);
-+        loader.put(PermissionImplementation.class, permissionImplementation);
-+        loader.put(LocalizationImplementation.class, new KissenPaperLocalizationImplementation());
-+        loader.put(PaperCommandImplementation.class, new KissenPaperCommandImplementation());
-+        loader.put(AbstractBanImplementation.class, new KissenPaperBanImplementation());
-+        loader.put(KissenConfirmationImplementation.class, new KissenPaperConfirmationImplementation());
-+        loader.put(KissenPaperAdvancementImplementation.class, new KissenPaperAdvancementImplementation());
++        loader.put(net.kissenpvp.core.api.config.ConfigurationImplementation.class, new net.kissenpvp.paper.config.KissenPaperConfigurationImplementation());
 +        super.loadImplementations(loader);
 +    }
 +
 +    @Override
-+    protected void setupDatabase(@NotNull ConfigurationImplementation config, @NotNull DatabaseImplementation database) {
++    protected void setupDatabase(@NotNull net.kissenpvp.core.api.config.ConfigurationImplementation config, @NotNull net.kissenpvp.core.api.database.connection.DatabaseImplementation database) {
 +        super.setupDatabase(config, database);
 +    }
 +
@@ -201,17 +157,19 @@ index 0000000000000000000000000000000000000000..964f3eeee94e61a0dd631ca32e7588ca
 +        ((CraftScheduler) Bukkit.getScheduler()).scheduleInternalTask(runnable, delay, name);
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/database/KissenPaperConfigurationImplementation.java b/src/main/java/net/kissenpvp/paper/database/KissenPaperConfigurationImplementation.java
+diff --git a/src/main/java/net/kissenpvp/paper/config/KissenPaperConfigurationImplementation.java b/src/main/java/net/kissenpvp/paper/config/KissenPaperConfigurationImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..eaadb426e0155f453e8763fa53158c5a4e291e32
+index 0000000000000000000000000000000000000000..8e5537b78d2ac9b94fab357ff3b0a19c8adc9adb
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/database/KissenPaperConfigurationImplementation.java
-@@ -0,0 +1,70 @@
-+package net.kissenpvp.paper.database;
++++ b/src/main/java/net/kissenpvp/paper/config/KissenPaperConfigurationImplementation.java
+@@ -0,0 +1,72 @@
++package net.kissenpvp.paper.config;
 +
 +import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 +import net.kissenpvp.core.api.config.Option;
 +import net.kissenpvp.core.config.KissenConfigurationImplementation;
++import net.kissenpvp.paper.database.PrivateDatabaseDns;
++import net.kissenpvp.paper.database.UsePrivate;
 +import org.bukkit.configuration.file.FileConfiguration;
 +import org.bukkit.configuration.file.YamlConfiguration;
 +import org.jetbrains.annotations.Contract;
@@ -275,39 +233,6 @@ index 0000000000000000000000000000000000000000..eaadb426e0155f453e8763fa53158c5a
 +    private @NotNull Collector<Option<?, ?>, ?, TreeMap<String, List<Option<?, ?>>>> getCollector() {
 +        Function<Option<?, ?>, String> key = option -> option.getGroup().toLowerCase();
 +        return Collectors.groupingBy(key, TreeMap::new, Collectors.toCollection(ArrayList::new));
-+    }
-+}
-diff --git a/src/main/java/net/kissenpvp/paper/database/KissenPaperDatabaseImplementation.java b/src/main/java/net/kissenpvp/paper/database/KissenPaperDatabaseImplementation.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..3b07c7c85b8f4c25733b1d31c0750ebb62de7b90
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/database/KissenPaperDatabaseImplementation.java
-@@ -0,0 +1,27 @@
-+package net.kissenpvp.paper.database;
-+
-+import net.kissenpvp.core.base.KissenCore;
-+import net.kissenpvp.core.database.KissenDatabaseImplementation;
-+import org.bukkit.Bukkit;
-+import org.bukkit.plugin.Plugin;
-+import org.jetbrains.annotations.NotNull;
-+
-+
-+public class KissenPaperDatabaseImplementation extends KissenDatabaseImplementation {
-+    @Override
-+    public @NotNull Class<?> loadClass(@NotNull String name) {
-+        try {
-+            return getClass().getClassLoader().loadClass(name);
-+        } catch (ClassNotFoundException ignored) {
-+        }
-+
-+        for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
-+            try {
-+                return plugin.getClass().getClassLoader().loadClass(name);
-+            } catch (ClassNotFoundException ignored) {
-+            }
-+        }
-+        KissenCore.getInstance().getLogger().info("Cannot find class {}.", name);
-+        throw new NullPointerException();
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/database/PrivateDatabaseDns.java b/src/main/java/net/kissenpvp/paper/database/PrivateDatabaseDns.java
@@ -388,7 +313,7 @@ index a07057d9c3480599b2e34d5657ef66500481a82d..b7fa9c2f911614393d3e3c36dd56c7bd
      private static MinecraftServer SERVER; // Paper
      public static final Logger LOGGER = LogUtils.getLogger();
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 2eb9c584cc77237f1c82d880a51a3f8b51008d73..a924a2cf72c9c7573354c007bdca7b20ff6fe5af 100644
+index 2eb9c584cc77237f1c82d880a51a3f8b51008d73..0aa76c29c0617754592701196435bcc2ca81c59a 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -192,6 +192,13 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
@@ -396,7 +321,7 @@ index 2eb9c584cc77237f1c82d880a51a3f8b51008d73..a924a2cf72c9c7573354c007bdca7b20
          }
  
 +        // KissenPaper start - start system
-+        net.kissenpvp.paper.base.KissenPaperCore kissenPaperCore = new net.kissenpvp.paper.base.KissenPaperCore(LogUtils.getLogger());
++        net.kissenpvp.paper.base.KissenPaperCore kissenPaperCore = new net.kissenpvp.paper.base.KissenPaperCore();
 +        org.bukkit.Bukkit.setKissen(kissenPaperCore);
 +        //system start is asynchronous
 +        java.util.concurrent.CompletableFuture<Void> systemStart = java.util.concurrent.CompletableFuture.runAsync(kissenPaperCore::initialize);

@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.user;
 
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.database.savable.Savable;
@@ -35,7 +36,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-
+@Slf4j(topic = "Kissen")
 public abstract class KissenPublicUser<T extends AbstractPermission> extends KissenUser<T> implements User {
 
     /**
@@ -80,7 +81,7 @@ public abstract class KissenPublicUser<T extends AbstractPermission> extends Kis
      */
     private void updateName(@NotNull String name, String currentName) {
         String message = "The user '{}' has changed their name from '{}' to '{}'.";
-        KissenCore.getInstance().getLogger().debug(message, getRawID(), getRepository().getNotNull("name", String.class), name);
+        log.debug(message, getRawID(), getRepository().getNotNull("name", String.class), name);
         getImplementation().getCachedProfiles().removeIf(cached -> Objects.equals(currentName, cached.name()));
         getRepository().set("name", name);
     }
@@ -173,7 +174,7 @@ public abstract class KissenPublicUser<T extends AbstractPermission> extends Kis
                 try {
                     getImplementation().rewriteTotalID(targetID, totalID);
                 } catch (Exception exception) {
-                    KissenCore.getInstance().getLogger().error("Could not update the totalId from '{}' to '{}'", targetID, totalID, exception);
+                    log.error("Could not update the totalId from '{}' to '{}'", targetID, totalID, exception);
                 }
             }
         }

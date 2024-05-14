@@ -19,6 +19,7 @@
 package net.kissenpvp.core.base;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.Implementation;
 import net.kissenpvp.core.api.base.ImplementationAbsentException;
 import net.kissenpvp.core.api.base.Kissen;
@@ -34,6 +35,7 @@ import net.kissenpvp.core.api.time.TimeImplementation;
 import net.kissenpvp.core.api.util.PageImplementation;
 import net.kissenpvp.core.command.InternalCommandImplementation;
 import net.kissenpvp.core.config.KissenConfigurationImplementation;
+import net.kissenpvp.core.database.KissenDatabaseImplementation;
 import net.kissenpvp.core.database.savable.KissenStorageImplementation;
 import net.kissenpvp.core.database.settings.DatabaseDns;
 import net.kissenpvp.core.message.KissenChatImplementation;
@@ -43,24 +45,18 @@ import net.kissenpvp.core.time.KissenTimeImplementation;
 import net.kissenpvp.core.util.KissenPageImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
-import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-@Getter
+@Getter @Slf4j(topic = "Kissen")
 public abstract class KissenCore implements Kissen {
 
     @Getter
     private static KissenCore instance;
-    private final Logger logger;
     private Map<Class<? extends Implementation>, Implementation> implementation;
-
-    protected KissenCore(@NotNull Logger logger) {
-        this.logger = logger;
-    }
 
     /**
      * Starts the Kissen system by loading plugin implementations, initializing serializers, and invoking necessary operations.
@@ -77,12 +73,12 @@ public abstract class KissenCore implements Kissen {
             implementation = new HashMap<>();
             loadImplementations(implementation);
 
-            getLogger().debug("The following implementations have been loaded: ");
-            implementation.forEach((key, value) -> getLogger().debug("- {}", key.getName()));
+            log.debug("The following implementations have been loaded: ");
+            implementation.forEach((key, value) -> log.debug("- {}", key.getName()));
 
             startImplementations();
             time = System.currentTimeMillis() - time;
-            getLogger().info("The kissen system took {}ms to start.", time);
+            log.info("The kissen system took {}ms to start.", time);
         }
         catch (IOException exception)
         {
@@ -99,10 +95,11 @@ public abstract class KissenCore implements Kissen {
     {
         loader.put(APIRequestImplementation.class, new KissenAPIRequestImplementation());
         loader.put(ChatImplementation.class, new KissenChatImplementation());
+        loader.put(DatabaseImplementation.class, new KissenDatabaseImplementation());
         loader.put(PageImplementation.class, new KissenPageImplementation());
-        loader.put(TimeImplementation.class, new KissenTimeImplementation());
         loader.put(ReflectionImplementation.class, new KissenReflectionImplementation());
         loader.put(StorageImplementation.class, new KissenStorageImplementation());
+        loader.put(TimeImplementation.class, new KissenTimeImplementation());
     }
 
     /**
@@ -119,7 +116,7 @@ public abstract class KissenCore implements Kissen {
         }
         catch (Throwable throwable)
         {
-            getLogger().error("Could not finish kissen startup.", throwable);
+            log.error("Could not finish kissen startup.", throwable);
             throw throwable;
         }
     }
@@ -133,32 +130,32 @@ public abstract class KissenCore implements Kissen {
      * Any exceptions that occur during the shutdown process are logged using the plugin's logger.
      */
     public void shutdown() {
-        getLogger().debug("## STOP ##");
+        log.debug("## STOP ##");
 
-        getLogger().debug("Shutting down implementations...");
+        log.debug("Shutting down implementations...");
         implementation.forEach((key, value) -> {
             try {
                 value.stop();
             } catch (Exception exception) {
-                getLogger().error("An error occurred when shutting down implementation '{}'", key.getSimpleName(), exception);
+                log.error("An error occurred when shutting down implementation '{}'", key.getSimpleName(), exception);
             }
         });
     }
 
     private void startImplementations() throws IOException {
-        getLogger().debug("Scan for class scanner entries.");
+        log.debug("Scan for class scanner entries.");
 
         KissenConfigurationImplementation config = getImplementation(KissenConfigurationImplementation.class);
         config.loadInternalConfiguration();
 
-        getLogger().debug("Enable locale system and load Languages.");
+        log.debug("Enable locale system and load Languages.");
 
         setupDatabase(config, getImplementation(DatabaseImplementation.class));
-        getLogger().debug("## Start ##");
+        log.debug("## Start ##");
 
         runOperation(OperationState.PRE);
 
-        getLogger().debug("Enable class scanner entries");
+        log.debug("Enable class scanner entries");
 
         runOperation(OperationState.START);
         runOperation(OperationState.POST);
@@ -185,7 +182,7 @@ public abstract class KissenCore implements Kissen {
 
     private void runOperation(@NotNull OperationState operationState) {
 
-        getLogger().debug("Run {} operation state...", operationState.name().toLowerCase(Locale.ENGLISH));
+        log.debug("Run {} operation state...", operationState.name().toLowerCase(Locale.ENGLISH));
 
         Set<Implementation> alreadyExecuted = new HashSet<>(); //prevent double execution
         for (Implementation implementation : implementation.values()) {

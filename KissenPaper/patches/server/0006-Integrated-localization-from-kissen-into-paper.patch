@@ -20,21 +20,13 @@ index da8a57253428efd0636b6f8265d79f0fe0dc6499..de4811e4ecd81af9055cdad9d3d5677a
      // KissenPaper start
  }
 diff --git a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-index b3cbcea7cdb3e7e56d82183592e69d2e5d47d6de..f320dd0709c6c2f10987d28533e8add87e2ff74f 100644
+index 38fa6ae5a2a2ab5300384c01c251bc12be659690..bfd4ee27d79a90419d5d15c0409ebe6df3af58fe 100644
 --- a/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
 +++ b/src/main/java/net/kissenpvp/paper/base/KissenPaperCore.java
-@@ -37,6 +37,7 @@ import net.kissenpvp.paper.api.permission.PermissionImplementation;
- import net.kissenpvp.paper.database.KissenPaperConfigurationImplementation;
- import net.kissenpvp.paper.database.KissenPaperDatabaseImplementation;
- import net.kissenpvp.paper.event.KissenEventImplementation;
-+import net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation;
- import net.kissenpvp.paper.permission.KissenPaperPermissionImplementation;
- import net.kissenpvp.paper.user.KissenPaperUserImplementation;
- import net.kissenpvp.paper.user.rank.KissenPaperRankImplementation;
-@@ -82,6 +83,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
-         KissenPaperPermissionImplementation permissionImplementation = new KissenPaperPermissionImplementation();
-         loader.put(InternalPermissionImplementation.class, permissionImplementation);
-         loader.put(PermissionImplementation.class, permissionImplementation);
+@@ -54,6 +54,7 @@ public class KissenPaperCore extends KissenCore implements PaperKissen {
+         net.kissenpvp.paper.permission.KissenPaperPermissionImplementation permissionImplementation = new net.kissenpvp.paper.permission.KissenPaperPermissionImplementation();
+         loader.put(net.kissenpvp.paper.api.permission.PermissionImplementation.class, permissionImplementation);
+         loader.put(net.kissenpvp.core.permission.InternalPermissionImplementation.class, permissionImplementation);
 +        loader.put(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class, new net.kissenpvp.paper.message.localization.KissenPaperLocalizationImplementation());
          super.loadImplementations(loader);
      }

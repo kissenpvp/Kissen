@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.permission;
 
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.base.KissenCore;
@@ -28,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j(topic = "Kissen")
 public class SerializablePermissionGroupHandler implements SerializableSavableHandler {
 
     private final @NotNull String permissionGroup;
@@ -56,7 +58,7 @@ public class SerializablePermissionGroupHandler implements SerializableSavableHa
         try {
             KissenCore.getInstance().getImplementation(InternalPermissionImplementation.class).create(name);
         } catch (BackendException backendException) {
-            KissenCore.getInstance().getLogger().error("The system was unable to create the permission group {} due to some backend issue. It is advised to shutdown the server to prevent data loss to the database.", name, backendException);
+            log.error("The system was unable to create the permission group {} due to some backend issue. It is advised to shutdown the server to prevent data loss to the database.", name, backendException);
         }
     }
 

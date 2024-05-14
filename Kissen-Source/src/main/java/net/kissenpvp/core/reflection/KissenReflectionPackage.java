@@ -20,6 +20,7 @@ package net.kissenpvp.core.reflection;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.reflection.ReflectionPackage;
 import net.kissenpvp.core.base.KissenCore;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
+@Slf4j(topic = "Kissen")
 public class KissenReflectionPackage implements ReflectionPackage {
     private final String packageName;
     private final File sourceFile;
@@ -159,7 +161,7 @@ public class KissenReflectionPackage implements ReflectionPackage {
         try {
             return Optional.of(classLoader.loadClass((name.startsWith(packageName) ? "" : this.packageName) + name));
         } catch (ClassNotFoundException exception) {
-            KissenCore.getInstance().getLogger().error("An error occurred while trying to get class '{}' out of package.", name, exception);
+            log.error("An error occurred while trying to get class '{}' out of package.", name, exception);
         }
         return Optional.empty();
     }
@@ -171,7 +173,7 @@ public class KissenReflectionPackage implements ReflectionPackage {
             getUnsafeClasses().stream().map(this::getClass).filter(Optional::isPresent).forEach(clazz -> classes.add(clazz.get()));
             return List.copyOf(classes);
         } catch (Exception exception) {
-            KissenCore.getInstance().getLogger().error("An error occurred while trying to read contents of the package '{}'.", packageName, exception);
+            log.error("An error occurred while trying to read contents of the package '{}'.", packageName, exception);
         }
         return new ArrayList<>();
     }
@@ -200,7 +202,7 @@ public class KissenReflectionPackage implements ReflectionPackage {
             }
 
         } catch (Exception exception) {
-            KissenCore.getInstance().getLogger().error("An error occurred while trying to get jar file.", exception);
+            log.error("An error occurred while trying to get jar file.", exception);
         }
         return Collections.unmodifiableList(classes);
     }

@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.database;
 
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.database.connection.DatabaseConnection;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
@@ -35,8 +36,8 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.*;
 
-
-public abstract class KissenDatabaseImplementation implements DatabaseImplementation {
+@Slf4j(topic = "Kissen")
+public class KissenDatabaseImplementation implements DatabaseImplementation {
 
     private final Set<DatabaseConnection> databaseConnections;
     private final Set<Class<? extends DatabaseConnection>> connectionClasses;
@@ -55,11 +56,9 @@ public abstract class KissenDatabaseImplementation implements DatabaseImplementa
         {
             deleteObsoleteDatabaseFiles();
         }
-        KissenCore.getInstance().getLogger().info("The application is currently utilizing the backend driver '{}' for the database.", databaseConnection.getDriver());
+        log.info("The application is currently utilizing the backend driver '{}' for the database.", databaseConnection.getDriver());
         return databaseConnection;
     }
-
-    public abstract @NotNull Class<?> loadClass(@NotNull String name);
 
     @Override
     public @NotNull DatabaseConnection[] getConnections() {
@@ -87,7 +86,9 @@ public abstract class KissenDatabaseImplementation implements DatabaseImplementa
                 if (databaseConnection.isConnected()) {
                     break;
                 }
-                KissenCore.getInstance().getLogger().error("Could not establish a connection to database backend '{}' using connection string '{}'.", databaseConnection.getDriver(), connectionString);
+
+                String exceptionMessage = "Could not establish a connection to database backend {} using connection string {}.";
+                log.error(exceptionMessage, databaseConnection.getDriver(), connectionString);
 
             } catch (BackendException ignored) {
             }
@@ -95,7 +96,8 @@ public abstract class KissenDatabaseImplementation implements DatabaseImplementa
         }
 
         if (databaseConnection == null) {
-            throw new NullPointerException("No suitable driver found for connection string '" + connectionString + "'.");
+            String exceptionMessage = String.format("No suitable driver found for connection string %s.", connectionString);
+            throw new NullPointerException(exceptionMessage);
         }
 
         databaseConnections.add(databaseConnection);
@@ -120,7 +122,11 @@ public abstract class KissenDatabaseImplementation implements DatabaseImplementa
         File[] files = Paths.get("").toAbsolutePath().toFile().listFiles((curr, s) -> s.endsWith(".db"));
         if(files != null)
         {
-            Arrays.stream(files).filter(file -> !file.delete()).forEach(file -> KissenCore.getInstance().getLogger().error("The system was unable to delete the file {}.", file));
+            Arrays.stream(files).filter(file -> !file.delete()).forEach(file ->
+            {
+                String exceptionMessage = "An error occurred when trying to delete file {}.";
+                log.error(exceptionMessage, file);
+            });
         }
     }
 

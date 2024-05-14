@@ -27,7 +27,6 @@ import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.queryapi.Column;
-import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.KissenTable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

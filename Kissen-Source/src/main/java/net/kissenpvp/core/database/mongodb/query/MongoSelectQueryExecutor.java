@@ -24,7 +24,7 @@ import java.util.function.Consumer;
  *
  * @see MongoQueryExecutor
  */
-@Slf4j
+@Slf4j(topic = "Kissen")
 @Getter
 public class MongoSelectQueryExecutor extends MongoQueryExecutor {
 

@@ -39,7 +39,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 
-@Getter
+@Getter @Slf4j(topic = "Kissen")
 public abstract class KissenConfigurationImplementation implements ConfigurationImplementation, KissenImplementation {
 
     private final Set<Option<?, ?>> internalSettings;
@@ -130,7 +130,7 @@ public abstract class KissenConfigurationImplementation implements Configuration
         if (!getPluginSettings().containsKey(plugin)) {
             return;
         }
-        KissenCore.getInstance().getLogger().info("Load configuration for plugin {}.", plugin.getName());
+        log.info("Load configuration for plugin {}.", plugin.getName());
         loadPlugin(plugin, getSorted(plugin));
     }
 
@@ -152,7 +152,7 @@ public abstract class KissenConfigurationImplementation implements Configuration
             write(file, settings);
         } catch (IOException ioException) {
             //TODO good exception handling
-            KissenCore.getInstance().getLogger().error("", ioException);
+            log.error("An exception occurred when loading config file from plugin {}.", plugin, ioException);
         }
     }
 
