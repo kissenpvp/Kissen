@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 /**
  * The {@code SavableMap} interface extends the standard {@link Map} interface and provides additional functionality for
@@ -58,6 +59,8 @@ import java.util.Optional;
  * @see Serializable
  */
 public interface SavableMap extends Map<String, Object>, Serializable {
+
+    void applyHook(@NotNull String key, @NotNull BiConsumer<String, Object> hook);
 
     /**
      * Associates the specified value with the specified key in this map and saves the value within the database.

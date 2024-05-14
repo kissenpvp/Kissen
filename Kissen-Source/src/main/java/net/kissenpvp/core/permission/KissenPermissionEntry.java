@@ -96,6 +96,12 @@ public abstract class KissenPermissionEntry<T, X extends AbstractPermission> ext
     }
 
     @Override
+    protected void applyHooks() {
+        getRepository().applyHook("permission_list", (s, object) -> permissionUpdate());
+        super.applyHooks();
+    }
+
+    @Override
     public boolean hasPermission(@NotNull String permission) {
         return getInternalPermission(permission).orElse(false);
     }

@@ -21,6 +21,7 @@ package net.kissenpvp.core.database.savable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.database.savable.SavableMap;
@@ -30,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 
 
 /**
@@ -61,11 +63,12 @@ import java.util.*;
  */
 @Setter
 @Getter
+@Slf4j
 public class KissenSavableMap extends HashMap<String, Object> implements SavableMap {
 
     private final String id;
     private final Meta meta;
-
+    private final Map<String, BiConsumer<String, Object>> hooks;
 
     /**
      * Constructs a new KissenSavableMap with the specified ID and ObjectMeta.
@@ -80,6 +83,23 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
 
         this.id = id;
         this.meta = meta;
+        this.hooks = new HashMap<>();
+    }
+
+    public void applyHook(@NotNull String key, @NotNull BiConsumer<String, Object> hook) {
+        log.debug("Apply hook {} to repository {} by plugin {}.", key, getId(), getMeta().getPlugin());
+        if (Objects.nonNull(this.hooks.put(key, hook))) {
+            log.debug("Hook for key {} was already present and has been overridden.", key);
+        }
+    }
+
+    @Override
+    public Object put(@NotNull String key, @Nullable Object value) {
+        if (getHooks().containsKey(key)) {
+            getHooks().get(key).accept(key, value);
+            log.debug("Hook for key {} from repository {} by plugin {} has been triggered.", key, getId(), getMeta().getPlugin());
+        }
+        return super.put(key, value);
     }
 
     @Override

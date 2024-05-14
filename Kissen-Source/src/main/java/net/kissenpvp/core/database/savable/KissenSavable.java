@@ -80,17 +80,19 @@ public abstract class KissenSavable<T> extends HashMap<KissenPlugin, SavableMap>
         this.id = id;
 
         repository = createRepository(initialData);
-        SavableMap repo = getRepository();
+        applyHooks();
+
+        SavableMap repository = getRepository();
         if (this.getKeys().length > 0) {
-            if (!Stream.of(this.getKeys()).allMatch(repo::containsKey)) {
+            if (!Stream.of(this.getKeys()).allMatch(repository::containsKey)) {
                 throw new SavableInitializeException();
             }
         }
 
-        if (!repo.containsKey("id")) {
-            repo.put("id", getRawID());
-            if (repo instanceof KissenSavableMap internal) {
-                internal.getMeta().addMap(getDatabaseID(), repo);
+        if (!repository.containsKey("id")) {
+            repository.put("id", getRawID());
+            if (repository instanceof KissenSavableMap internal) {
+                internal.getMeta().addMap(getDatabaseID(), repository);
             }
         }
 
@@ -103,6 +105,8 @@ public abstract class KissenSavable<T> extends HashMap<KissenPlugin, SavableMap>
     }
 
     protected abstract @NotNull SavableMap createRepository(@Nullable Map<String, Object> data);
+
+    protected void applyHooks() {}
 
     @Override
     public @NotNull T getRawID() {
