@@ -5,7 +5,7 @@ Subject: [PATCH] Adjusted gradle script to integrate into kissen
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 87bb3fd9b97506f61734ae7f2e6860610ba794e7..9c772637aa72d6fce974432854d02c72166ac337 100644
+index 87bb3fd9b97506f61734ae7f2e6860610ba794e7..b8adf206862d00205b061e160c5efa6e0a3feec5 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -12,7 +12,10 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
@@ -32,6 +32,15 @@ index 87bb3fd9b97506f61734ae7f2e6860610ba794e7..9c772637aa72d6fce974432854d02c72
      testImplementation("io.github.classgraph:classgraph:4.8.47") // Paper - mob goal test
      testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
      testImplementation("org.hamcrest:hamcrest:2.2")
+@@ -78,7 +86,7 @@ tasks.jar {
+         attributes(
+             "Main-Class" to "org.bukkit.craftbukkit.Main",
+             "Implementation-Title" to "CraftBukkit",
+-            "Implementation-Version" to "git-Paper-$implementationVersion",
++            "Implementation-Version" to "git-KissenPaper-$implementationVersion",
+             "Implementation-Vendor" to date, // Paper
+             "Specification-Title" to "Bukkit",
+             "Specification-Version" to project.version,
 @@ -149,8 +157,8 @@ fun TaskContainer.registerRunTask(
      })
      jvmArgs("-XX:+AllowEnhancedClassRedefinition", "-XX:+AllowRedefinitionToAddDeleteMethods")
