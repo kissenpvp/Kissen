@@ -1205,7 +1205,7 @@ index 833d0df8f2e6dcddd6ba218910a2165804c434bb..e701ca407e9d96f55fa4bd5e38800ec2
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 1f8b1aaa133ff2c8af332b0feae937dd64a20701..eec66ee6c8e58553db53b8a20511645791934562 100644
+index 1484266579134b6c7ebc8a2b3a8cd5b9bf61c2f5..74c7e755f977fc74b9881b89cb24ad7156c05204 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -2231,6 +2231,11 @@ public final class CraftServer implements Server {
