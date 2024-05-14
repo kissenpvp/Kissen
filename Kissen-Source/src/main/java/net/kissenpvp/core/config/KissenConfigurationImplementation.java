@@ -19,6 +19,7 @@
 package net.kissenpvp.core.config;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.ServerName;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
@@ -83,11 +84,6 @@ public abstract class KissenConfigurationImplementation implements Configuration
     }
 
     public void loadInternalConfiguration() throws IOException {
-
-        Class<KissenConfigurationImplementation> clazz = KissenConfigurationImplementation.class;
-        KissenCore instance = KissenCore.getInstance();
-
-        KissenConfigurationImplementation kissenConfigurationImplementation = instance.getImplementation(clazz);
         File file = getFile();
 
         List<Option<?, ?>> sorted = getSorted(internalSettings);
