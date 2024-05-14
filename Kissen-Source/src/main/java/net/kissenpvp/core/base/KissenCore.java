@@ -33,7 +33,6 @@ import net.kissenpvp.core.api.reflection.ReflectionImplementation;
 import net.kissenpvp.core.api.time.TimeImplementation;
 import net.kissenpvp.core.api.util.PageImplementation;
 import net.kissenpvp.core.command.InternalCommandImplementation;
-import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
 import net.kissenpvp.core.config.KissenConfigurationImplementation;
 import net.kissenpvp.core.database.savable.KissenStorageImplementation;
 import net.kissenpvp.core.database.settings.DatabaseDns;
@@ -113,8 +112,16 @@ public abstract class KissenCore implements Kissen {
      * It invokes the {@link KissenImplementation#setupComplete()} method for each registered {@link KissenImplementation}, allowing them to perform any final setup steps.
      */
     public void start() {
-        getKissenImplementations().forEach(KissenImplementation::setupComplete);
-        getImplementation(InternalCommandImplementation.class).getInternalHandler().registerCachedCommands();
+        try
+        {
+            getKissenImplementations().forEach(KissenImplementation::setupComplete);
+            getImplementation(InternalCommandImplementation.class).getInternalHandler().registerCachedCommands();
+        }
+        catch (Throwable throwable)
+        {
+            getLogger().error("Could not finish kissen startup.", throwable);
+            throw throwable;
+        }
     }
 
     /**
@@ -193,17 +200,13 @@ public abstract class KissenCore implements Kissen {
                 }
                 alreadyExecuted.add(implementation);
             } catch (Exception exception) {
-                throw new IllegalStateException(String.format("An error occurred when running %s on implementation %s",
-                        operationState.name().toLowerCase(Locale.ENGLISH), implementation.getClass().getName()),
-                        exception);
+                throw new IllegalStateException(String.format("An error occurred when running %s on implementation %s", operationState.name().toLowerCase(Locale.ENGLISH), implementation.getClass().getName()), exception);
             }
         }
     }
 
     public @NotNull @Unmodifiable Set<KissenImplementation> getKissenImplementations() {
-        return KissenCore.getInstance().getImplementation().values().stream().filter(
-                implementation -> implementation instanceof KissenImplementation).map(
-                implementation1 -> (KissenImplementation) implementation1).collect(Collectors.toSet());
+        return KissenCore.getInstance().getImplementation().values().stream().filter(implementation -> implementation instanceof KissenImplementation).map(implementation1 -> (KissenImplementation) implementation1).collect(Collectors.toSet());
     }
 
     public void load(@NotNull PluginState pluginState, @NotNull KissenPlugin kissenPlugin) {

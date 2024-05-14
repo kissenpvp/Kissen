@@ -46,8 +46,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Getter
-public abstract class InternalCommandImplementation<S extends ServerEntity> implements KissenImplementation
-{
+public abstract class InternalCommandImplementation<S extends ServerEntity> implements KissenImplementation {
     private final Set<PluginCommandHandler<S, ?>> handler;
     private final InternalCommandHandler<S, ?> internalHandler;
     private final TargetValidator targetValidator;
@@ -109,10 +108,8 @@ public abstract class InternalCommandImplementation<S extends ServerEntity> impl
     }
 
     @Override
-    public void enable(@NotNull KissenPlugin kissenPlugin)
-    {
-        if(getHandler().stream().anyMatch(handler -> Objects.equals(handler.getPlugin(), kissenPlugin)))
-        {
+    public void enable(@NotNull KissenPlugin kissenPlugin) {
+        if (getHandler().stream().anyMatch(handler -> Objects.equals(handler.getPlugin(), kissenPlugin))) {
             String errorMessage = "Plugin %s already has a command handler registered.";
             throw new IllegalStateException(errorMessage.formatted(kissenPlugin));
         }
@@ -133,10 +130,8 @@ public abstract class InternalCommandImplementation<S extends ServerEntity> impl
 
     @Override
     public void postDisable(@NotNull KissenPlugin kissenPlugin) {
-        this.handler.removeIf(handler ->
-        {
-            if(handler.getPlugin().equals(kissenPlugin))
-            {
+        this.handler.removeIf(handler -> {
+            if (handler.getPlugin().equals(kissenPlugin)) {
                 handler.unregister();
                 return true;
             }
@@ -144,11 +139,9 @@ public abstract class InternalCommandImplementation<S extends ServerEntity> impl
         });
     }
 
-    protected void registerHandler(@NotNull KissenPlugin kissenPlugin)
-    {
+    protected void registerHandler(@NotNull KissenPlugin kissenPlugin) {
         PluginCommandHandler<S, ?> pluginHandler = constructHandler(kissenPlugin);
-        if (getHandler().contains(pluginHandler))
-        {
+        if (getHandler().contains(pluginHandler)) {
             throw new IllegalArgumentException(String.format("Command handler for %s is already registered.", kissenPlugin.getName()));
         }
         this.handler.add(pluginHandler);
@@ -158,15 +151,14 @@ public abstract class InternalCommandImplementation<S extends ServerEntity> impl
 
     protected abstract @NotNull PluginCommandHandler<S, ?> constructHandler(@NotNull KissenPlugin kissenPlugin);
 
-    public @NotNull @Unmodifiable Set<PluginCommandHandler<S, ?>> getHandler()
-    {
+    public @NotNull @Unmodifiable Set<PluginCommandHandler<S, ?>> getHandler() {
         return Collections.unmodifiableSet(handler);
     }
 
     /**
      * This method is used to deserialize a string using an ArgumentParser.
      *
-     * @param input          the input string to be deserialized
+     * @param input                  the input string to be deserialized
      * @param abstractArgumentParser the parser to use for deserialization
      * @return the object deserialized from the input
      * @throws TemporaryDeserializationException if any exception occurs during deserialization
@@ -221,12 +213,12 @@ public abstract class InternalCommandImplementation<S extends ServerEntity> impl
     /**
      * Creates a deep copy of the given array.
      *
-     * @param array                   The array to be copied
-     * @param newArrayComponentType   The class type of the new array
+     * @param array                 The array to be copied
+     * @param newArrayComponentType The class type of the new array
      * @return A deep copy of the given array
      */
     public @NotNull Object[] copy(@NotNull Object[] array, @NotNull Class<?> newArrayComponentType) {
-        return (array != null) ? expandArray(array) : createSingleElementArray(newArrayComponentType);
+        return (array!=null) ? expandArray(array):createSingleElementArray(newArrayComponentType);
     }
 
     /**
