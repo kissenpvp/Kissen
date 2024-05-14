@@ -1,4 +1,4 @@
-package org.purpurmc.testplugin;
+package net.kissenpvp.testplugin;
 
 public class TestPluginLoader {
 }

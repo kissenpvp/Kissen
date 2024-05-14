@@ -1,12 +1,12 @@
-name: Purpur-Test-Plugin
+name: KissenPaper-Test-Plugin
 version: ${version}
-main: org.purpurmc.testplugin.TestPlugin
-description: Purpur Test Plugin
-author: PurpurMC
+main: net.kissenpvp.testplugin.TestPlugin
+description: KissenPaper Test Plugin
+author: KissenPvP
 api-version: ${apiversion}
 load: STARTUP
-bootstrapper: org.purpurmc.testplugin.TestPluginBootstrap
-loader: org.purpurmc.testplugin.TestPluginLoader
+bootstrapper: net.kissenpvp.testplugin.TestPluginBootstrap
+loader: net.kissenpvp.testplugin.TestPluginLoader
 defaultPerm: FALSE
 permissions:
 dependencies:
