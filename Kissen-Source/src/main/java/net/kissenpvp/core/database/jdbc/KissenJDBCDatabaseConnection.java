@@ -123,7 +123,6 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
 
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            KissenCore.getInstance().getLogger().debug("Run sql query {}.", query);
             preparedStatementExecutor.execute(preparedStatement);
             preparedStatement.close();
         } catch (SQLException sqlException) {
