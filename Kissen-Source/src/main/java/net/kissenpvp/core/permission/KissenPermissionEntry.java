@@ -122,7 +122,7 @@ public abstract class KissenPermissionEntry<T, X extends AbstractPermission> ext
         if (permissions.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(permissions.get(permissions.size() - 1).getValue());
+        return Optional.of(permissions.getLast().getValue());
     }
 
     /**
