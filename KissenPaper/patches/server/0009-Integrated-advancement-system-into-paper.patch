@@ -7,10 +7,10 @@ Signed-off-by: Ivo Quiring <falk.quiring@gmail.com>
 
 diff --git a/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java b/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..e50046870910dbdd271290f7bae83b5388d73ad0
+index 0000000000000000000000000000000000000000..3aeaf207f83331421ca3839897f34f1a90fcf826
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/advancement/KissenPlayerAdvancement.java
-@@ -0,0 +1,50 @@
+@@ -0,0 +1,46 @@
 +package net.kissenpvp.paper.advancement;
 +
 +import com.google.gson.JsonElement;
@@ -18,31 +18,27 @@ index 0000000000000000000000000000000000000000..e50046870910dbdd271290f7bae83b53
 +import com.google.gson.JsonParseException;
 +import com.mojang.datafixers.DataFixer;
 +import com.mojang.serialization.JsonOps;
-+import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.paper.api.base.Context;
-+import net.minecraft.Util;
++import net.kissenpvp.paper.user.KissenPaperPublicUser;
 +import net.minecraft.server.PlayerAdvancements;
 +import net.minecraft.server.ServerAdvancementManager;
 +import net.minecraft.server.level.ServerPlayer;
 +import net.minecraft.server.players.PlayerList;
-+import org.bukkit.Bukkit;
 +import org.jetbrains.annotations.NotNull;
 +
 +import java.nio.file.Path;
 +
 +public class KissenPlayerAdvancement extends PlayerAdvancements {
-+    
++
 +    public KissenPlayerAdvancement(DataFixer dataFixer, PlayerList playerManager, ServerAdvancementManager advancementLoader, Path filePath, ServerPlayer owner) {
 +        super(dataFixer, playerManager, advancementLoader, filePath, owner);
 +    }
 +
 +    @Override
 +    protected void load(@NotNull ServerAdvancementManager advancementLoader) {
-+        User privateUser = getPlayer().getBukkitEntity().getUser(Context.LOCAL);
-+        //TODO
-+        //JsonElement jsonElement = privateUser.get("advancements", JsonElement.class).orElseGet(JsonObject::new);
-+        /*PlayerAdvancements.Data data = Util.getOrThrow(this.getCodec().parse(JsonOps.INSTANCE, new JsonObject()), JsonParseException::new);
-+        this.applyFrom(advancementLoader, data);*/
++        JsonElement progress = getPrivateUser().getAdvancementsProgress();
++        PlayerAdvancements.Data data = this.getCodec().parse(JsonOps.INSTANCE, progress).getOrThrow(JsonParseException::new);
++        this.applyFrom(advancementLoader, data);
 +
 +        this.checkForAutomaticTriggers(advancementLoader);
 +        this.registerListeners(advancementLoader);
@@ -50,17 +46,46 @@ index 0000000000000000000000000000000000000000..e50046870910dbdd271290f7bae83b53
 +
 +    @Override
 +    public void save() {
-+        if (org.spigotmc.SpigotConfig.disableAdvancementSaving) return; // Spigot
++        if (org.spigotmc.SpigotConfig.disableAdvancementSaving) { return; } // Spigot
 +
-+        //TODO
-+        /*JsonElement jsonelement = Util.getOrThrow(super.getCodec().encodeStart(JsonOps.INSTANCE, this.asData()), IllegalStateException::new);*/
-+        //getPlayer().getBukkitEntity().getUser(Context.LOCAL).set("advancements", jsonelement);
++        JsonElement progress = this.getCodec().encodeStart(JsonOps.INSTANCE, this.asData()).getOrThrow();
++        getPrivateUser().setAdvancementsProgress(progress);
 +    }
 +
-+/*    private @NotNull KissenPaperAdvancementImplementation getImplementation() {
-+        return Bukkit.getKissen().getImplementation(KissenPaperAdvancementImplementation.class);
-+    }*/
++    private @NotNull KissenPaperPublicUser.KissenPaperPrivateUser getPrivateUser()
++    {
++        return (KissenPaperPublicUser.KissenPaperPrivateUser) getPlayer().getBukkitEntity().getUser(Context.LOCAL);
++    }
 +}
+diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
+index 03218b3d105fd1416b031c8f503b9fd082a60cc1..80b87eaebae0a3632642e13541020d49982609e7 100644
+--- a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
++++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
+@@ -18,6 +18,8 @@
+ 
+ package net.kissenpvp.paper.user;
+ 
++import com.google.gson.JsonElement;
++import com.google.gson.JsonObject;
+ import net.kissenpvp.core.api.database.DataWriter;
+ import net.kissenpvp.core.api.database.StorageImplementation;
+ import net.kissenpvp.core.api.database.meta.BackendException;
+@@ -235,5 +237,15 @@ public class KissenPaperPublicUser extends KissenPublicUser<Permission> {
+ 
+         @Override
+         public void sendData(@NotNull DataPackage dataPackage) { /* Ignored because it's private */ }
++
++        public @NotNull JsonElement getAdvancementsProgress()
++        {
++            return getRepository().get("advancements", JsonElement.class).orElseGet(JsonObject::new);
++        }
++
++        public void setAdvancementsProgress(@NotNull JsonElement progress)
++        {
++            getRepository().set("advancements", progress);
++        }
+     }
+ }
 diff --git a/src/main/java/net/minecraft/server/PlayerAdvancements.java b/src/main/java/net/minecraft/server/PlayerAdvancements.java
 index c7e1f2bac3eca9bb72bf1f8c26cccb2905e1ddfc..a6b35182fd7ed7cb09dc302fe718711ca57fc038 100644
 --- a/src/main/java/net/minecraft/server/PlayerAdvancements.java
