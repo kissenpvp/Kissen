@@ -37,3 +37,22 @@ paperProjects.forEach { name ->
     include("kissenpaper:$projName")
     findProject(":kissenpaper:$projName")?.projectDir = file("KissenPaper/$name")
 }
+
+optionalInclude("test-plugin")
+
+fun optionalInclude(name: String, op: (ProjectDescriptor.() -> Unit)? = null) {
+    val settingsFile = file("KissenPaper/$name.settings.gradle.kts")
+    if (settingsFile.exists()) {
+        apply(from = settingsFile)
+        findProject(":kissenpaper:$name")?.let { op?.invoke(it) }
+        project(":kissenpaper:$name").projectDir = file("KissenPaper/$name")
+    } else {
+        settingsFile.writeText(
+            """
+            // Uncomment to enable the '$name' project
+            // include(":$name")
+
+            """.trimIndent()
+        )
+    }
+}

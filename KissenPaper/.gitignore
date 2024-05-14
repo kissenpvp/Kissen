@@ -56,4 +56,5 @@ KissenPaper-API
 KissenPaper-MojangAPI
 KissenPaper-Server
 paper-api-generator
+test-plugin.settings.gradle.kts
 *.jar
