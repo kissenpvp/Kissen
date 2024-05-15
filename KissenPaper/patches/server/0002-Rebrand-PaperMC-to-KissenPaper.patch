@@ -128,18 +128,22 @@ index e85b9bb3f9c225d289a4959921970b9963881199..1ec021088310497046bce49b6033cfc1
                  // (async tasks must live with race-conditions if they attempt to cancel between these few lines of code)
              }
 diff --git a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
-index 774556a62eb240da42e84db4502e2ed43495be17..c761635c6ae0d6fc1cad5d8a566252ef5f823650 100644
+index 774556a62eb240da42e84db4502e2ed43495be17..08727535d3769f11af74aa3e6bbb539ae051c575 100644
 --- a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
 +++ b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
-@@ -11,7 +11,7 @@ public final class Versioning {
+@@ -11,10 +11,10 @@ public final class Versioning {
      public static String getBukkitVersion() {
          String result = "Unknown-Version";
  
 -        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/io.papermc.paper/paper-api/pom.properties");
-+        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/de.kissenpvp.kissenpaper/kissenpaper-api/pom.properties");
++        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/net.kissenpvp.paper/kissenpaper-api/pom.properties");
          Properties properties = new Properties();
  
-         if (stream != null) {
+-        if (stream != null) {
++        if (stream!=null) {
+             try {
+                 properties.load(stream);
+ 
 diff --git a/src/main/java/org/spigotmc/WatchdogThread.java b/src/main/java/org/spigotmc/WatchdogThread.java
 index 6db566e3111ec08a99aa429624979cb83a85e272..9b29bd4cd25e912288f38595a8a85e013e3a6fa2 100644
 --- a/src/main/java/org/spigotmc/WatchdogThread.java
