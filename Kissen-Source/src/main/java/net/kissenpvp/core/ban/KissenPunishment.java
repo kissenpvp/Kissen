@@ -21,6 +21,8 @@ package net.kissenpvp.core.ban;
 import net.kissenpvp.core.api.ban.AbstractPunishment;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.database.DataWriter;
+import net.kissenpvp.core.api.database.queryapi.Column;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.message.Comment;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
@@ -35,6 +37,7 @@ import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.event.EventImplementation;
 import net.kissenpvp.core.message.CommentNode;
 import net.kissenpvp.core.message.KissenComment;
+import net.kissenpvp.core.user.KissenUserImplementation;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
 import org.jetbrains.annotations.NotNull;
@@ -45,6 +48,7 @@ import java.text.DateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public abstract class KissenPunishment<T> extends KissenTemporalObject implements AbstractPunishment<T> {
 
@@ -145,7 +149,13 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     @Override
     public @Unmodifiable Set<UUID> getAffectedPlayers() {
-        return Collections.emptySet(); //TODO
+        KissenBanImplementation<?, ?> banSystem = KissenCore.getInstance().getImplementation(KissenBanImplementation.class);
+        QuerySelect select = banSystem.getMeta().select(Column.TOTAL_ID).whereExact(Column.KEY, "total_id").andExact(Column.VALUE, getTotalID().toString());
+        KissenUserImplementation userImplementation = KissenCore.getInstance().getImplementation(KissenUserImplementation.class);
+        return Arrays.stream(select.execute().join()).map(obj -> {
+            String id = String.valueOf(obj[0]).substring(userImplementation.getUserSaveID().length());
+            return UUID.fromString(id);
+        }).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
