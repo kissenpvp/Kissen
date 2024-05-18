@@ -20,11 +20,9 @@ package net.kissenpvp.core.ban;
 
 import net.kissenpvp.core.api.ban.AbstractBan;
 import net.kissenpvp.core.api.ban.BanType;
-import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.util.Container;
-import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.message.CommentNode;
 import net.kissenpvp.core.api.time.TemporalData;
 import net.kyori.adventure.text.Component;
@@ -35,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * The {@link KissenPunishmentNode} record encapsulates all the information necessary to deal with the punishments in the form of ban.
@@ -48,7 +47,7 @@ import java.util.Objects;
  * @param banType The type of the ban, this parameter must not be null
  * @param cause The reason for this punishment, this parameter can be null inside the container
  * @param comments Additional comments for this punishment, this parameter must not be null
- * @param temporalMeasureNode The expire bound element of the punishment, this parameter must not be null
+ * @param temporalMeasure The expiry bound element of the punishment, this parameter must not be null
  *
  * @see Record
  * @see NotNull
@@ -59,7 +58,7 @@ public record KissenPunishmentNode(@NotNull String id, @NotNull String banName, 
 {
 
     public KissenPunishmentNode(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator, @Nullable Component reason) {
-        this(KissenCore.getInstance().getImplementation(DataImplementation.class).generateID(), ban.getName(), banOperator instanceof PlayerClient<?,?,?> playerClient ? playerClient.getUniqueId().toString() : banOperator.getName(), ban.getBanType(), new Container<>(reason), new ArrayList<>(), new TemporalData(System.currentTimeMillis(), ban.getDuration().orElse(null)));
+        this(UUID.randomUUID().toString().split("-")[1], ban.getName(), banOperator instanceof PlayerClient<?,?,?> playerClient ? playerClient.getUniqueId().toString() : banOperator.getName(), ban.getBanType(), new Container<>(reason), new ArrayList<>(), new TemporalData(System.currentTimeMillis(), ban.getDuration().orElse(null)));
     }
 
     @Contract(pure = true)

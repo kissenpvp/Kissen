@@ -21,7 +21,6 @@ package net.kissenpvp.core.networking.client.entity;
 import net.kissenpvp.core.api.ban.AbstractBan;
 import net.kissenpvp.core.api.ban.AbstractBanImplementation;
 import net.kissenpvp.core.api.ban.AbstractPunishment;
-import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
@@ -224,7 +223,7 @@ public abstract class KissenPlayerClient<P extends AbstractPermission, R extends
 
     @Override
     public @NotNull R grantRank(@NotNull AbstractRank rank, @Nullable AccurateDuration accurateDuration) {
-        String id = KissenCore.getInstance().getImplementation(DataImplementation.class).generateID();
+        String id = UUID.randomUUID().toString().split("-")[1];
         PlayerRankNode playerRankNode = new PlayerRankNode(id, rank.getName(), new TemporalData(accurateDuration));
         return setRank(translateRank(playerRankNode, record -> {
         }));

@@ -80,19 +80,6 @@ public interface AbstractBanImplementation<B extends AbstractBan, P extends Abst
     @NotNull Optional<B> getBan(int id);
 
     /**
-     * Creates a new ban with the given ID and data. The data is a map of ban properties such as reason, type, and duration.
-     * The ban is returned as a {@link AbstractBan} object. If a ban with the same ID already exists, it will be overridden.
-     * The newly created ban is saved within the database.
-     *
-     * @param id   The ID of the new ban.
-     * @param data A map of ban properties.
-     * @return The new {@link AbstractBan}.
-     * @throws NullPointerException if the data map is null.
-     * @see AbstractBan
-     */
-    @NotNull B createBan(int id);
-
-    /**
      * Creates a new ban with the given ID, name, and type.
      * The ban is returned as a {@link AbstractBan} object. If a ban with the same ID already exists, it will be overridden.
      * The newly created ban is saved within the database.

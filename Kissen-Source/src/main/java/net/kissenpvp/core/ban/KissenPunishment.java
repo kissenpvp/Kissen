@@ -20,7 +20,6 @@ package net.kissenpvp.core.ban;
 
 import net.kissenpvp.core.api.ban.AbstractPunishment;
 import net.kissenpvp.core.api.ban.BanType;
-import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.message.Comment;
@@ -188,7 +187,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
      * @see NotNull
      */
     private @NotNull CommentNode constructComment(@NotNull ServerEntity sender, @NotNull Component comment) {
-        String id = KissenCore.getInstance().getImplementation(DataImplementation.class).generateID();
+        String id = UUID.randomUUID().toString().split("-")[1];
         UUID senderUUID = sender instanceof PlayerClient<?, ?, ?> playerClient ? playerClient.getUniqueId():null;
 
         return new CommentNode(id, comment, senderUUID, System.currentTimeMillis());

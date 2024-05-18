@@ -61,7 +61,7 @@ public abstract class KissenBan extends KissenSavable<Integer> implements Abstra
 
     @Override
     protected @NotNull SavableMap createRepository(@Nullable Map<String, Object> data) {
-        Meta meta = KissenCore.getInstance().getImplementation(KissenBanImplementation.class).getInternalMeta();
+        Meta meta = KissenCore.getInstance().getImplementation(KissenBanImplementation.class).getMeta();
         return new KissenSavableMap(getDatabaseID(), meta, Objects.requireNonNullElseGet(data, meta.getData(getDatabaseID())::join));
     }
 

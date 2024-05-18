@@ -122,10 +122,10 @@ index 0000000000000000000000000000000000000000..aa933e5bfb91819c1b0e5d9eba415134
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..dbbeb0ad45afa253b04977eef75e529759381fbf
+index 0000000000000000000000000000000000000000..c73c68890639d54bc39a37d6195043d3e7762e16
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,498 @@
+@@ -0,0 +1,461 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -154,7 +154,7 @@ index 0000000000000000000000000000000000000000..dbbeb0ad45afa253b04977eef75e5297
 +import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.meta.Meta;
-+import net.kissenpvp.core.api.database.savable.SavableMap;
++import net.kissenpvp.core.api.database.savable.Savable;
 +import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.time.AccurateDuration;
@@ -189,7 +189,6 @@ index 0000000000000000000000000000000000000000..dbbeb0ad45afa253b04977eef75e5297
 +import java.time.Instant;
 +import java.time.temporal.ChronoUnit;
 +import java.util.*;
-+import java.util.function.Function;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
@@ -249,26 +248,15 @@ index 0000000000000000000000000000000000000000..dbbeb0ad45afa253b04977eef75e5297
 +        ban.getOnlineAffectedPlayers().forEach(player -> applyBan(ban, player));
 +    }
 +
-+    private void applyBan(@NotNull Punishment ban, @NotNull Player player) {
-+        switch (ban.getBanType()) {
-+            case BAN ->
-+                    player.kick(Component.translatable("multiplayer.disconnect.banned"), PlayerKickEvent.Cause.BANNED);
-+            case KICK ->
-+                    player.kick(Component.translatable("multiplayer.disconnect.kicked"), PlayerKickEvent.Cause.KICK_COMMAND);
-+            case MUTE -> player.sendMessage(Component.translatable("chat.filtered_full"));
-+        }
++    @Override
++    protected @NotNull @Unmodifiable Set<Ban> fetchBanSet() {
++        Set<Ban> privateBans = translate(getMeta(Context.LOCAL).getData((Savable<?>) createObject()).join());
++        return Stream.concat(super.fetchBanSet().stream(), privateBans.stream()).collect(Collectors.toUnmodifiableSet());
 +    }
 +
 +    @Override
-+    protected @NotNull @Unmodifiable Set<Ban> fetchBanSet() throws BackendException {
-+        return Stream.concat(queryBanStream(getMeta(Context.GLOBAL)), queryBanStream(getMeta(Context.LOCAL))).filter(Objects::nonNull).collect(Collectors.toSet());
-+    }
-+
-+    @Override
-+    protected @NotNull Ban buildBan(int id) throws BackendException {
-+        KissenPaperBan kissenPaperBan = new KissenPaperBan();
-+        kissenPaperBan.setup(id);
-+        return kissenPaperBan;
++    protected @NotNull Ban createObject() {
++        return new KissenPaperBan();
 +    }
 +
 +    @Override
@@ -323,6 +311,23 @@ index 0000000000000000000000000000000000000000..dbbeb0ad45afa253b04977eef75e5297
 +        };
 +    }
 +
++    private void applyBan(@NotNull Punishment ban, @NotNull Player player) {
++        switch (ban.getBanType()) {
++            case BAN -> {
++                Component banned = Component.translatable("multiplayer.disconnect.banned");
++                player.kick(banned, PlayerKickEvent.Cause.BANNED);
++            }
++            case KICK -> {
++                Component kicked = Component.translatable("multiplayer.disconnect.kicked");
++                player.kick(kicked, PlayerKickEvent.Cause.KICK_COMMAND);
++            }
++            case MUTE -> {
++                Component mute = Component.translatable("chat.filtered_full");
++                player.sendMessage(mute);
++            }
++        }
++    }
++
 +    /**
 +     * Retrieves the metadata associated with the specified context.
 +     *
@@ -336,48 +341,6 @@ index 0000000000000000000000000000000000000000..dbbeb0ad45afa253b04977eef75e5297
 +    protected @NotNull @Unmodifiable Meta getMeta(@NotNull Context context) {
 +        return getTable(context).setupMeta(null);
 +    }
-+
-+    /**
-+     * Queries the ban stream based on the given meta information.
-+     * <p>
-+     * This method performs a database operation under the hood to fetch a stream of PaperBan
-+     * instances. The query operates on the foundations of the supplied meta information. This
-+     * metaobject encapsulates essential data that directs the query towards the appropriate
-+     * dataset within the database.
-+     * <p>
-+     * A stream interface is being utilized here due to its advantages in handling large datasets.
-+     * It works by loading data on-demand, instead of loading it all at once into memory, making the
-+     * process more efficient.
-+     * <p>
-+     * The function will map over the values returned from the database query by utilizing the
-+     * banProcessor() function on each element, further processing the raw data into PaperBan
-+     * objects that the application can interact with.
-+     * <p>
-+     * An important factor to note is that this method throws a BackendException. This exception
-+     * is thrown if there are issues encountered when querying the ban stream from the database,
-+     * such as connection problems, invalid query syntax.
-+     *
-+     * @param meta The meta information containing the data to query. This is an instance of
-+     *             ObjectMeta which encapsulates the query parameters.
-+     * @return The ban stream based on the given meta information. Takes form as a stream of
-+     * PaperBan objects each representing a unique ban instance.
-+     * @throws BackendException If there is an error querying the ban stream, this exception
-+     *                          will be thrown. It signifies an issue with the backend operation.
-+     */
-+    private @NotNull Stream<Ban> queryBanStream(@NotNull Meta meta) {
-+        return meta.getData(new KissenPaperBan()).thenApply(Map::values).thenApply(Collection::stream).thenApply(s -> s.map(banProcessor())).join();
-+    }
-+
-+    /**
-+     * Retrieves the ban processor function, which processes a SavableMap and returns a PaperBan.
-+     *
-+     * @return The ban processor function.
-+     */
-+    @Contract(pure = true)
-+    private @NotNull Function<SavableMap, Ban> banProcessor() {
-+        return savableMap -> createBan(Integer.parseInt(savableMap.getNotNull("id", String.class)));
-+    }
-+
 +    // Bukkit
 +
 +    @Override

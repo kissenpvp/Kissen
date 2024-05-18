@@ -174,10 +174,10 @@ public interface Savable<T> {
 
 
     @Contract(value = "_ -> this")
-    @NotNull Savable setup(@NotNull T id) throws SavableInitializeException;
+    @NotNull Savable<T> setup(@NotNull T id) throws SavableInitializeException;
 
     @Contract(value = "_, _ -> this")
-    @NotNull Savable setup(@NotNull T id, @Nullable Map<String, Object> initialData) throws SavableInitializeException;
+    @NotNull Savable<T> setup(@NotNull T id, @Nullable Map<String, Object> initialData) throws SavableInitializeException;
 
     /**
      * Retrieves the storage map associated with the savable object. This map serves as a cache for storing

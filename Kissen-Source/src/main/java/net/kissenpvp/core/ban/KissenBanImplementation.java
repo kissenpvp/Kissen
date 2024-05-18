@@ -18,13 +18,18 @@
 
 package net.kissenpvp.core.ban;
 
-import net.kissenpvp.core.api.ban.*;
+import net.kissenpvp.core.api.ban.AbstractBan;
+import net.kissenpvp.core.api.ban.AbstractBanImplementation;
+import net.kissenpvp.core.api.ban.AbstractPunishment;
+import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.database.StorageImplementation;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.Meta;
+import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.database.queryapi.Column;
 import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
-import net.kissenpvp.core.api.database.meta.list.MetaList;
+import net.kissenpvp.core.api.database.savable.Savable;
+import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TemporalObject;
@@ -32,7 +37,6 @@ import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.KissenTable;
 import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -55,7 +59,7 @@ import java.util.stream.Stream;
 public abstract class KissenBanImplementation<B extends AbstractBan, P extends AbstractPunishment<?>> implements AbstractBanImplementation<B, P> {
 
     private static final String STORAGE_KEY = "ban_storage";
-    private static final MessageFormat TOTAL_ID_KEY = new MessageFormat("ban_{0}");
+    private static final MessageFormat TOTAL_ID_KEY = new MessageFormat("ban_{0}"); // TODO use String#format(String, Object...)
     private final Set<B> cachedBans;
     private KissenTable banTable;
 
@@ -108,15 +112,7 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
 
     @Override
     public @NotNull Optional<B> getBan(int id) {
-        return cachedBans.stream().filter(ban -> ban.getID() == id).findFirst();
-    }
-
-    @Override
-    public @NotNull B createBan(int id) {
-        B ban = buildBan(id);
-        cachedBans.removeIf(currentBan -> currentBan.getID() == ban.getID());
-        cachedBans.add(ban);
-        return ban;
+        return cachedBans.stream().filter(ban -> ban.getID()==id).findFirst();
     }
 
     @Override
@@ -125,54 +121,55 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
     }
 
     @Override
-    public @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration)  {
-/*        Map<String, Object> data = new HashMap<>();
+    public @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration) {
+        Map<String, Object> data = new HashMap<>();
         data.put("name", name);
         data.put("ban_type", banType);
-        if (accurateDuration != null) {
+        if (accurateDuration!=null) {
             data.put("duration", accurateDuration);
-        }*/
-        return createBan(id);
+        }
+
+        return setupBan(id, data);
     }
 
     @Override
-    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator)  {
+    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator) {
         return punish(totalID, ban, banOperator, true);
     }
 
     @Override
-    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, @Nullable Component reason)  {
+    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, @Nullable Component reason) {
         return punish(totalID, ban, banOperator, true, reason);
     }
 
     @Override
-    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply)  {
+    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply) {
         return punish(totalID, ban, banOperator, apply, null);
     }
 
     @Override
-    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason)  {
-        return punish(totalID, ban, banOperator, apply, reason, getInternalMeta());
+    public @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason) {
+        return punish(totalID, ban, banOperator, apply, reason, getMeta());
     }
 
     @Override
-    public @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID)  {
-        return getLatestPunishment(totalID, getInternalMeta());
+    public @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID) {
+        return getLatestPunishment(totalID, getMeta());
     }
 
     @Override
-    public @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType)  {
-        return getLatestPunishment(totalID, banType, getInternalMeta());
+    public @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType) {
+        return getLatestPunishment(totalID, banType, getMeta());
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID)  {
-        return getPunishmentSet(totalID, getInternalMeta());
+    public @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID) {
+        return getPunishmentSet(totalID, getMeta());
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<P> getPunishmentSet()  {
-        return getPunishmentSet(getInternalMeta());
+    public @NotNull @Unmodifiable Set<P> getPunishmentSet() {
+        return getPunishmentSet(getMeta());
     }
 
     /**
@@ -186,7 +183,7 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      * @return the punishment object representing the applied ban
      * @ if there is an error in the backend operation
      */
-    protected @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason, @NotNull Meta meta)  {
+    protected @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason, @NotNull Meta meta) {
         KissenPunishmentNode kissenPunishmentNode = constructPunishmentNode(ban, banOperator, reason);
         set(totalID, kissenPunishmentNode, meta);
 
@@ -206,7 +203,7 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      * @return an Optional containing the current ban if found, otherwise an empty Optional
      * @ if there is an error retrieving the ban from the backend
      */
-    protected @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull Meta meta)  {
+    protected @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull Meta meta) {
         return getPunishmentSet(totalID, meta).stream().filter(TemporalObject::isValid).min(Comparator.comparing(TemporalObject::getStart));
     }
 
@@ -219,7 +216,7 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      * @return an Optional containing the current ban if found, otherwise an empty Optional
      * @ if there is an error retrieving the ban from the backend
      */
-    protected @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType, @NotNull Meta meta)  {
+    protected @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType, @NotNull Meta meta) {
         return getPunishmentSet(totalID, meta).stream().filter(TemporalObject::isValid).filter(punishment -> punishment.getBanType().equals(banType)).min(Comparator.comparing(TemporalObject::getStart));
     }
 
@@ -231,11 +228,10 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      * @return The set of player bans, wrapped in an {@link Optional}.
      * @ If an error occurs while accessing the backend.
      */
-    protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID, @NotNull Meta meta)  {
+    protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID, @NotNull Meta meta) {
         StorageImplementation storage = KissenCore.getInstance().getImplementation(StorageImplementation.class);
         Map<String, Object> cache = storage.getStorage(STORAGE_KEY, Duration.ofHours(1));
-        Object[] keyArguments = {totalID};
-        return (Set<P>) cache.computeIfAbsent(TOTAL_ID_KEY.format(keyArguments), (k) -> cacheId(totalID, meta));
+        return (Set<P>) cache.computeIfAbsent(TOTAL_ID_KEY.format(new Object[]{totalID}), (k) -> loadPunishments(totalID, meta));
     }
 
     /**
@@ -261,10 +257,10 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      * @return an unmodifiable set of {@code P} objects associated with the specified {@link UUID} and {@link Meta}
      * @throws NullPointerException if the specified {@link UUID} or {@link Meta} is `null`
      */
-    private @NotNull @Unmodifiable Set<P> cacheId(@NotNull UUID totalID, @NotNull Meta meta) {
+    private @NotNull @Unmodifiable Set<P> loadPunishments(@NotNull UUID totalID, @NotNull Meta meta) {
         return meta.getCollection("punishment", totalID.toString(), KissenPunishmentNode.class).thenApply(data -> {
             Stream<KissenPunishmentNode> nodeStream = data.stream();
-            return nodeStream.map(transform(totalID, meta)).collect(Collectors.toUnmodifiableSet());
+            return nodeStream.map(node -> translatePunishment(totalID, node, meta)).collect(Collectors.toUnmodifiableSet());
         }).join();
     }
 
@@ -275,9 +271,8 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      * @return an unmodifiable set of player bans
      * @ if there is an issue retrieving the player bans from the backend
      */
-    protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull Meta meta)  {
-
-        QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).where(Column.TOTAL_ID, "punishment");
+    protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull Meta meta) {
+        QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).whereExact(Column.TOTAL_ID, "punishment");
         Object[][] objects = querySelect.execute().exceptionally((t) -> new Object[0][]).join();
 
         return Arrays.stream(objects).flatMap(data -> {
@@ -294,10 +289,10 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      *
      * @param totalID        the UUID representing the totalID for which the KissenPunishmentNode should be set
      * @param punishmentNode the KissenPunishmentNode to be set
-     * @param meta           the Meta data object
+     * @param meta           the Metadata object
      * @ if there is an error accessing the backend
      */
-    protected void set(@NotNull UUID totalID, @NotNull KissenPunishmentNode punishmentNode, @NotNull Meta meta)  {
+    protected void set(@NotNull UUID totalID, @NotNull KissenPunishmentNode punishmentNode, @NotNull Meta meta) {
         Function<MetaList<KissenPunishmentNode>, Boolean> insert = list -> list.replaceOrInsert(punishmentNode);
         if (meta.getCollection("punishment", totalID.toString(), KissenPunishmentNode.class).thenApply(insert).join()) {
             invalidateCache(totalID);
@@ -341,7 +336,7 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      * side effects are concerned, it treats `ban` as an essentially immutable object.
      */
     public boolean remove(@NotNull B ban) {
-        return cachedBans.removeIf(current -> current.getID() == ban.getID());
+        return cachedBans.removeIf(current -> current.getID()==ban.getID());
     }
 
     /**
@@ -377,29 +372,29 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      * @return The ban set fetched from the database, represented as an unmodifiable
      * Set of 'Ban' objects of type 'B'.
      * @ if any issues occur while retrieving
-     *                          the data from the database, such as connection issues,
-     *                          query execution errors, timeout, or any other low-level
-     *                          database related errors.
+     * the data from the database, such as connection issues,
+     * query execution errors, timeout, or any other low-level
+     * database related errors.
      */
-    protected abstract @NotNull @Unmodifiable Set<B> fetchBanSet() ;
+    protected @NotNull @Unmodifiable Set<B> fetchBanSet() {
+        return translate(getMeta().getData((Savable<?>) createObject()).join());
+    }
+
+    protected Set<B> translate(@NotNull Map<String, SavableMap> data) {
+        return data.values().stream().map((entrySet) -> {
+            int id = entrySet.getNotNull("id", Integer.class);
+            return setupBan(id, entrySet);
+        }).collect(Collectors.toUnmodifiableSet());
+    }
 
     /**
      * Retrieves the meta information for the current object.
      *
      * @return The meta information as an instance of the Meta class.
      */
-    protected @NotNull KissenTable getTable()
-    {
+    protected @NotNull KissenTable getTable() {
         return banTable;
     }
-
-    /**
-     * Constructs a ban object with the specified id and data.
-     *
-     * @param id   the id of the ban object
-     * @return the constructed ban object
-     */
-    protected abstract @NotNull B buildBan(int id) ;
 
     /**
      * Translates a punishment from the given parameters.
@@ -411,24 +406,16 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
      */
     protected abstract @NotNull P translatePunishment(@NotNull UUID totalID, @NotNull KissenPunishmentNode kissenPunishmentNode, @NotNull Meta meta);
 
-    /**
-     * Creates and returns a {@link Function} that transforms a {@link KissenPunishmentNode} into a {@code P} object
-     * using the specified {@link UUID} and {@link Meta}.
-     *
-     * <p>The {@code transform} method generates a {@link Function} that takes a {@link KissenPunishmentNode} as input
-     * and applies the transformation using the provided {@link UUID} and {@link Meta} to create a {@code P} object.</p>
-     *
-     * @param totalID the {@link UUID} associated with the punishment data
-     * @param meta    the {@link Meta} containing information about the data transformation
-     * @return a {@link Function} transforming {@link KissenPunishmentNode} into {@code P} objects
-     * @throws NullPointerException if the specified {@link UUID} or {@link Meta} is `null`
-     */
-    @Contract(pure = true, value = "_, _ -> new")
-    private @NotNull Function<KissenPunishmentNode, P> transform(@NotNull UUID totalID, @NotNull Meta meta) {
-        return node -> translatePunishment(totalID, node, meta);
-    }
-
-    protected @NotNull Meta getInternalMeta() {
+    protected @NotNull Meta getMeta() {
         return getTable().setupMeta(null);
     }
+
+    protected @NotNull B setupBan(int id, @NotNull Map<String, Object> data) {
+        B ban = createObject();
+        ((Savable<Integer>) ban).setup(id, data);
+        cachedBans.add(ban);
+        return ban;
+    }
+
+    protected abstract @NotNull B createObject();
 }
