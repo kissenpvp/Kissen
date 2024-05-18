@@ -92,8 +92,12 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
 
     @Override
     public @NotNull T getDefaultRank() {
-        //return getRankSet().stream().filter(currentRank -> ((KissenRank) currentRank).getR.containsKey("default")).findFirst().orElseGet(this::getFallbackRank);
-        return null; //TODO
+        return getMeta().getString("default_rank").handle(((string, throwable) -> {
+            if (Objects.nonNull(throwable)) {
+                return getFallbackRank();
+            }
+            return getRank(string).orElseGet(this::getFallbackRank);
+        })).join();
     }
 
     /**
