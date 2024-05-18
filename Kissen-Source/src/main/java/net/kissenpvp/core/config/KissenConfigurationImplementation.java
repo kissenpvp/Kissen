@@ -25,7 +25,6 @@ import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.config.Option;
 import net.kissenpvp.core.api.config.UnregisteredException;
-import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.base.KissenImplementation;
 import net.kissenpvp.core.database.settings.DatabaseDns;
 import net.kissenpvp.core.database.settings.KeepSqliteFile;
@@ -151,7 +150,6 @@ public abstract class KissenConfigurationImplementation implements Configuration
             load(file, settings);
             write(file, settings);
         } catch (IOException ioException) {
-            //TODO good exception handling
             log.error("An exception occurred when loading config file from plugin {}.", plugin, ioException);
         }
     }
