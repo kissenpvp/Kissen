@@ -45,7 +45,6 @@ fun optionalInclude(name: String, op: (ProjectDescriptor.() -> Unit)? = null) {
     if (settingsFile.exists()) {
         apply(from = settingsFile)
         findProject(":kissenpaper:$name")?.let { op?.invoke(it) }
-        project(":kissenpaper:$name").projectDir = file("KissenPaper/$name")
     } else {
         settingsFile.writeText(
             """
