@@ -179,23 +179,6 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
         return banMessage.asComponent();
     }
 
-    /**
-     * Constructs a {@link CommentNode} object with a generated comment ID, current expire, sender UUID if the sender is a {@link PlayerClient}, and the provided comment.
-     * The comment ID is generated using {@link DataImplementation} obtained from {@link KissenCore}.
-     * Current expire is obtained with `System.currentTimeMillis()`.
-     * Sender UUID is obtained only if the sender is a {@link PlayerClient}.
-     * <p>
-     * This method should be used when creating a new comment in the system.
-     *
-     * @param sender  the server entity who sends the comment, must not be null. If it's a {@link PlayerClient}, its UUID will be retrieved.
-     * @param comment the content of the comment, must not be null.
-     * @return a newly constructed {@link CommentNode} object.
-     * @see KissenCore
-     * @see DataImplementation
-     * @see PlayerClient
-     * @see CommentNode
-     * @see NotNull
-     */
     private @NotNull CommentNode constructComment(@NotNull ServerEntity sender, @NotNull Component comment) {
         String id = UUID.randomUUID().toString().split("-")[1];
         UUID senderUUID = sender instanceof PlayerClient<?, ?, ?> playerClient ? playerClient.getUniqueId():null;
