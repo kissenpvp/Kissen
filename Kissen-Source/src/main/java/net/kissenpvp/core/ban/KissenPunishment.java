@@ -46,6 +46,9 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.text.DateFormat;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -167,8 +170,9 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
                 banMessage.append(getCause().map(reason -> Component.translatable("multiplayer.disconnect.banned.cause", reason)).orElse(Component.translatable("multiplayer.disconnect.banned")).toBuilder());
                 Optional<TranslatableComponent> optionalEnd = getEnd().map(end ->
                 {
-                    String date = DateFormat.getDateInstance(DateFormat.LONG, locale).format(Date.from(end));
-                    return Component.translatable("multiplayer.disconnect.banned.expiration", Component.text(date));
+                    DateTimeFormatter instance = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT);
+                    String expiry = instance.withLocale(locale).format(end.atZone(ZoneId.systemDefault()));
+                    return Component.translatable("multiplayer.disconnect.banned.expiration", Component.text(expiry));
                 });
                 optionalEnd.ifPresent(banMessage::append);
             }
