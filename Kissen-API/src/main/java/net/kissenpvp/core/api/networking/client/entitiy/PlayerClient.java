@@ -36,7 +36,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-public interface PlayerClient<P extends AbstractPermission, R extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> extends ServerEntity {
+public interface PlayerClient<R extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> extends ServerEntity {
 
     /**
      * Returns the UUID of the player this object is pointing to.

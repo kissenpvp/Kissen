@@ -1587,7 +1587,7 @@ index 7b1b95202c1fd999a6a5c339526a8f3fe654d536..6538050ff515d985566249c4a67d47d6
          Component title = Component.translatable("server.ban.player.warned.target", Component.text(ban.getName())).color(NamedTextColor.RED);
  
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
-index f73d22316817f7ce487d6d48c726ff8460a3f620..f38ea9e953a89c4b5a42f8e77d6396d27eff0c8d 100644
+index daa41f5aa31b24df751ff8465d26cbdd351ff83e..8e9aa8ef46450a73f07cca42e00c64e5e796fb8a 100644
 --- a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 @@ -18,7 +18,7 @@
@@ -1599,7 +1599,7 @@ index f73d22316817f7ce487d6d48c726ff8460a3f620..f38ea9e953a89c4b5a42f8e77d6396d2
  import net.kissenpvp.core.api.database.DataWriter;
  import net.kissenpvp.core.api.database.meta.list.MetaList;
  import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
-@@ -39,6 +39,7 @@ import net.kissenpvp.paper.api.permission.Permission;
+@@ -38,6 +38,7 @@ import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
  import net.kissenpvp.paper.api.user.playersetting.BoundPlayerSetting;
  import net.kissenpvp.paper.api.user.playersetting.PlayerSetting;
  import net.kissenpvp.paper.api.user.rank.PlayerRank;
@@ -1607,7 +1607,7 @@ index f73d22316817f7ce487d6d48c726ff8460a3f620..f38ea9e953a89c4b5a42f8e77d6396d2
  import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
  import net.kissenpvp.paper.user.KissenPaperPublicUser;
  import net.kissenpvp.paper.user.rank.KissenPaperKissenPlayerRank;
-@@ -123,12 +124,12 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<Permiss
+@@ -122,12 +123,12 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<PlayerR
      }
  
      @Override
@@ -1622,7 +1622,7 @@ index f73d22316817f7ce487d6d48c726ff8460a3f620..f38ea9e953a89c4b5a42f8e77d6396d2
          MetaList<WarnNode> nodes = ((KissenPaperPublicUser) getUser()).getWarns();
  
          AccurateDuration duration = new AccurateDuration(Period.ofWeeks(1));
-@@ -145,6 +146,6 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<Permiss
+@@ -144,6 +145,6 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<PlayerR
  
      @Contract(pure = true, value = "-> new")
      protected @NotNull Function<WarnNode, Warn> transformWarn() {

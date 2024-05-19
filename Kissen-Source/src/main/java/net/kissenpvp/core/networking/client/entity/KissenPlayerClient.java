@@ -47,7 +47,7 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 
-public abstract class KissenPlayerClient<P extends AbstractPermission, R extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> implements PlayerClient<P, R, B> {
+public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> implements PlayerClient<R, B> {
 
     /**
      * Retrieves a player setting of the specified type from the user system.
@@ -64,7 +64,7 @@ public abstract class KissenPlayerClient<P extends AbstractPermission, R extends
      * @see UserImplementation
      * @see AbstractPlayerSetting
      */
-    private static <X, S extends PlayerClient<?, ?, ?>> @NotNull RegisteredPlayerSetting<X, S> getPlayerSetting(@NotNull Class<? extends AbstractPlayerSetting<X, S>> settingClass) {
+    private static <X, S extends PlayerClient<?, ?>> @NotNull RegisteredPlayerSetting<X, S> getPlayerSetting(@NotNull Class<? extends AbstractPlayerSetting<X, S>> settingClass) {
         UserImplementation userSystem = KissenCore.getInstance().getImplementation(UserImplementation.class);
         return (RegisteredPlayerSetting<X, S>) userSystem.getPlayerSetting(settingClass);
     }

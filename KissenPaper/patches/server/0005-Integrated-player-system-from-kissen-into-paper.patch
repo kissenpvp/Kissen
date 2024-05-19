@@ -219,10 +219,10 @@ index 0000000000000000000000000000000000000000..7b1b95202c1fd999a6a5c339526a8f3f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f73d22316817f7ce487d6d48c726ff8460a3f620
+index 0000000000000000000000000000000000000000..daa41f5aa31b24df751ff8465d26cbdd351ff83e
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
-@@ -0,0 +1,150 @@
+@@ -0,0 +1,149 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -260,7 +260,6 @@ index 0000000000000000000000000000000000000000..f73d22316817f7ce487d6d48c726ff84
 +import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
 +import net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient;
 +import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
-+import net.kissenpvp.paper.api.permission.Permission;
 +import net.kissenpvp.paper.api.user.playersetting.BoundPlayerSetting;
 +import net.kissenpvp.paper.api.user.playersetting.PlayerSetting;
 +import net.kissenpvp.paper.api.user.rank.PlayerRank;
@@ -281,7 +280,7 @@ index 0000000000000000000000000000000000000000..f73d22316817f7ce487d6d48c726ff84
 +import java.util.function.Function;
 +import java.util.stream.Collectors;
 +
-+public abstract class KissenPaperPlayerClient extends KissenPlayerClient<Permission, PlayerRank, Punishment> implements PaperPlayerClient {
++public abstract class KissenPaperPlayerClient extends KissenPlayerClient<PlayerRank, Punishment> implements PaperPlayerClient {
 +
 +    @Override
 +    public @NotNull User getUser() {
@@ -3942,7 +3941,7 @@ index 22c4f8dea99f92a1eb3da2baf0a15bf9d2ca0462..8eaeb2f6096e1b1310022aa494257aac
          }
      }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index c10401e587a710d49c4af481c1e531b4bf51f755..8d1d0754b50c1eea69db91126587b009009e1131 100644
+index a645ad66af061966c5e47cae677026b35a55c486..ab9bac053c443acdefc3045df4b50d902b998d88 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -2178,17 +2178,22 @@ public class ServerPlayer extends Player {
@@ -4717,7 +4716,7 @@ index 41f3cdec7deabf34358b8087df77169f85a5b919..fb988ad444a8c57136ffa09f9a37e6a9
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 561a7a8e96e2d91bbb87fe6230e94b5f38073d27..a2669f47aa298d22b901ff86f323d596d8775cfe 100644
+index 7e6116963d835d4606ef3d93b69d3e44b61288e1..7720ee4da48c5e4eb4c6e1cf6bdc1f93ab84e1ea 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -191,6 +191,30 @@ import org.jetbrains.annotations.NotNull;

@@ -79,10 +79,10 @@ index 0000000000000000000000000000000000000000..31072db8ac04fdb0b88a56d536e09252
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b4dcbd72371ee6a9e55ed58c0d08700f0faec8ea
+index 0000000000000000000000000000000000000000..ffdae4ff457817ab23a14f27572a47361f7bf116
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
-@@ -0,0 +1,66 @@
+@@ -0,0 +1,62 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -103,17 +103,13 @@ index 0000000000000000000000000000000000000000..b4dcbd72371ee6a9e55ed58c0d08700f
 +
 +package net.kissenpvp.paper.api.networking.client.entity;
 +
-+import net.kissenpvp.core.api.ban.AbstractBan;
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.user.User;
-+import net.kissenpvp.paper.api.ban.Punishment;
-+import net.kissenpvp.paper.api.ban.warn.PaperWarn;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.permission.PaperPermissible;
 +import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
-+import net.kissenpvp.paper.api.permission.Permission;
 +import net.kissenpvp.paper.api.user.playersetting.BoundPlayerSetting;
 +import net.kissenpvp.paper.api.user.playersetting.PlayerSetting;
 +import net.kissenpvp.paper.api.user.rank.PlayerRank;
@@ -126,7 +122,7 @@ index 0000000000000000000000000000000000000000..b4dcbd72371ee6a9e55ed58c0d08700f
 +import java.util.Set;
 +
 +
-+public interface PaperPlayerClient extends PlayerClient<Permission, PlayerRank, Punishment> {
++public interface PaperPlayerClient extends PlayerClient<PlayerRank, Punishment> {
 +
 +    @NotNull @Unmodifiable Set<@NotNull PaperOnlinePlayerClient> getOnlineAltAccounts();
 +
@@ -141,11 +137,11 @@ index 0000000000000000000000000000000000000000..b4dcbd72371ee6a9e55ed58c0d08700f
 +
 +    <X> @NotNull BoundPlayerSetting<X> getSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context);
 +
-+    @NotNull PaperWarn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator);
++    @NotNull Warn warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator);
 +
-+    @NotNull PaperWarn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator, @Nullable Component reason);
++    @NotNull Warn warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator, @Nullable Component reason);
 +
-+    @NotNull @Unmodifiable List<PaperWarn> getWarnHistory();
++    @NotNull @Unmodifiable List<Warn> getWarnHistory();
 +
 +    void clearActiveWarns();
 +}
