@@ -58,7 +58,7 @@ public record KissenPunishmentNode(@NotNull String id, @NotNull String banName, 
 {
 
     public KissenPunishmentNode(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator, @Nullable Component reason) {
-        this(UUID.randomUUID().toString().split("-")[1], ban.getName(), banOperator instanceof PlayerClient<?,?,?> playerClient ? playerClient.getUniqueId().toString() : banOperator.getName(), ban.getBanType(), new Container<>(reason), new ArrayList<>(), new TemporalData(System.currentTimeMillis(), ban.getDuration().orElse(null)));
+        this(UUID.randomUUID().toString().split("-")[1], ban.getName(), banOperator instanceof PlayerClient<?,?> playerClient ? playerClient.getUniqueId().toString() : banOperator.getName(), ban.getBanType(), new Container<>(reason), new ArrayList<>(), new TemporalData(System.currentTimeMillis(), ban.getDuration().orElse(null)));
     }
 
     @Contract(pure = true)

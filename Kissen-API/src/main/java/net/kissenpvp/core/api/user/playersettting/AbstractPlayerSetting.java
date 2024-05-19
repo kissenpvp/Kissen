@@ -23,7 +23,7 @@ import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface AbstractPlayerSetting<T, S extends PlayerClient<?, ?, ?>> extends TextSerializer<T> {
+public interface AbstractPlayerSetting<T, S extends PlayerClient<?, ?>> extends TextSerializer<T> {
 
     @NotNull
     String getKey();

@@ -28,7 +28,7 @@ public class TargetValidator
 {
     public boolean validate(@NotNull CommandTarget commandTarget, @NotNull ServerEntity serverEntity) {
         return switch (commandTarget) {
-            case PLAYER -> serverEntity instanceof PlayerClient<?, ?, ?>;
+            case PLAYER -> serverEntity instanceof PlayerClient<?, ?>;
             case SYSTEM -> serverEntity instanceof ConsoleClient;
             case ALL -> true;
         };
@@ -39,7 +39,7 @@ public class TargetValidator
             return CommandTarget.SYSTEM;
         }
 
-        if (serverEntity instanceof PlayerClient<?, ?, ?>) {
+        if (serverEntity instanceof PlayerClient<?, ?>) {
             return CommandTarget.PLAYER;
         }
 

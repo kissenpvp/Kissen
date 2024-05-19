@@ -28,7 +28,7 @@ import net.kissenpvp.core.api.user.playersettting.RegisteredPlayerSetting;
 import org.jetbrains.annotations.NotNull;
 
 @Getter @RequiredArgsConstructor
-public abstract class KissenUserSetting<T, S extends PlayerClient<?, ?, ?>> implements AbstractBoundPlayerSetting<T>
+public abstract class KissenUserSetting<T, S extends PlayerClient<?, ?>> implements AbstractBoundPlayerSetting<T>
 {
     private final RegisteredPlayerSetting<T, S> setting;
 

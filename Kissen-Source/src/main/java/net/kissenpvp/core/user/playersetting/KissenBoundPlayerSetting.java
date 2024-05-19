@@ -37,7 +37,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Getter
-public abstract class KissenBoundPlayerSetting<T, S extends PlayerClient<?, ?, ?>> extends KissenUserSetting<T, S> implements AbstractBoundPlayerSetting<T> {
+public abstract class KissenBoundPlayerSetting<T, S extends PlayerClient<?, ?>> extends KissenUserSetting<T, S> implements AbstractBoundPlayerSetting<T> {
     private final S player;
 
     public KissenBoundPlayerSetting(@NotNull RegisteredPlayerSetting<T, S> setting, @NotNull S player) {

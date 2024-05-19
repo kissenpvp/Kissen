@@ -189,7 +189,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
 
     private @NotNull CommentNode constructComment(@NotNull ServerEntity sender, @NotNull Component comment) {
         String id = UUID.randomUUID().toString().split("-")[1];
-        UUID senderUUID = sender instanceof PlayerClient<?, ?, ?> playerClient ? playerClient.getUniqueId():null;
+        UUID senderUUID = sender instanceof PlayerClient<?, ?> playerClient ? playerClient.getUniqueId():null;
 
         return new CommentNode(id, comment, senderUUID, System.currentTimeMillis());
     }

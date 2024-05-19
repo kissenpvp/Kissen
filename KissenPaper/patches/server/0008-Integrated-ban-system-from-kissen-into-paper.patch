@@ -1565,40 +1565,50 @@ index 727539dc4ab17a82e9aaf000a5158ba2a9224711..a9ea6b7ac02b5b466b7b1eb123dabdd8
      }
  
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
-index 7b1b95202c1fd999a6a5c339526a8f3fe654d536..6538050ff515d985566249c4a67d47d6bc66ab7e 100644
+index 7b1b95202c1fd999a6a5c339526a8f3fe654d536..ae1fc0609fe63ab40515b1390c58878c6a0f0ae8 100644
 --- a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
-@@ -19,7 +19,7 @@
+@@ -19,10 +19,10 @@
  package net.kissenpvp.paper.networking.client.entity;
  
  import io.netty.channel.Channel;
 -import net.kissenpvp.core.api.ban.AbstractBan;
-+import net.kissenpvp.core.api.ban.AbstractBanTemplate;
  import net.kissenpvp.core.api.base.KissenServer;
  import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
  import net.kissenpvp.core.api.user.User;
++import net.kissenpvp.paper.api.ban.BanTemplate;
+ import net.kissenpvp.paper.api.ban.warn.Warn;
+ import net.kissenpvp.paper.api.base.Context;
+ import net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient;
 @@ -60,7 +60,7 @@ public abstract class KissenPaperOnlinePlayerClient extends KissenPaperPlayerCli
      }
  
      @Override
 -    public @NotNull Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator, @Nullable Component reason)
-+    public @NotNull Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason)
++    public @NotNull Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason)
      {
          Component title = Component.translatable("server.ban.player.warned.target", Component.text(ban.getName())).color(NamedTextColor.RED);
  
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
-index daa41f5aa31b24df751ff8465d26cbdd351ff83e..8e9aa8ef46450a73f07cca42e00c64e5e796fb8a 100644
+index daa41f5aa31b24df751ff8465d26cbdd351ff83e..1d05315b4d0a25c12163eb16ee45b078933f1f3a 100644
 --- a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
-@@ -18,7 +18,7 @@
+@@ -18,7 +18,6 @@
  
  package net.kissenpvp.paper.networking.client.entity;
  
 -import net.kissenpvp.core.api.ban.AbstractBan;
-+import net.kissenpvp.core.api.ban.AbstractBanTemplate;
  import net.kissenpvp.core.api.database.DataWriter;
  import net.kissenpvp.core.api.database.meta.list.MetaList;
  import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+@@ -29,6 +28,7 @@ import net.kissenpvp.core.api.user.UserImplementation;
+ import net.kissenpvp.core.ban.warn.WarnNode;
+ import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
+ import net.kissenpvp.core.user.rank.PlayerRankNode;
++import net.kissenpvp.paper.api.ban.BanTemplate;
+ import net.kissenpvp.paper.api.ban.Punishment;
+ import net.kissenpvp.paper.api.ban.warn.Warn;
+ import net.kissenpvp.paper.api.base.Context;
 @@ -38,6 +38,7 @@ import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
  import net.kissenpvp.paper.api.user.playersetting.BoundPlayerSetting;
  import net.kissenpvp.paper.api.user.playersetting.PlayerSetting;
@@ -1612,13 +1622,13 @@ index daa41f5aa31b24df751ff8465d26cbdd351ff83e..8e9aa8ef46450a73f07cca42e00c64e5
  
      @Override
 -    public @NotNull Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator) {
-+    public @NotNull Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator) {
++    public @NotNull Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator) {
          return warn(ban, warnOperator, null);
      }
  
      @Override
 -    public @NotNull Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator, @Nullable Component reason) {
-+    public @NotNull Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason) {
++    public @NotNull Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason) {
          MetaList<WarnNode> nodes = ((KissenPaperPublicUser) getUser()).getWarns();
  
          AccurateDuration duration = new AccurateDuration(Period.ofWeeks(1));
@@ -1662,46 +1672,54 @@ index 6ab435657c92d9fbf863d2a47254de9f138537f4..4a9cdf250ab96f0191d3fb786ca7a546
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index 54c969597595f02604fa9f75536be760c04a8c71..3dd686fca91515881627381247068f3ff68aadd8 100644
+index 54c969597595f02604fa9f75536be760c04a8c71..e7d09ae83aeb4a38781c4a13bd958d70a1de4e3c 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-@@ -34,7 +34,7 @@ import org.bukkit.permissions.Permissible;
+@@ -33,8 +33,6 @@ import org.bukkit.plugin.Plugin;
+ import org.bukkit.permissions.Permissible;
  import org.bukkit.permissions.PermissionAttachment;
  import org.bukkit.permissions.PermissionAttachmentInfo;
- 
+-
 -import net.kissenpvp.core.api.ban.AbstractBan;
-+import net.kissenpvp.core.api.ban.AbstractBanTemplate;
  import net.kissenpvp.core.api.database.meta.BackendException;
  import net.kissenpvp.core.api.event.EventCancelledException;
  import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
-@@ -680,12 +680,12 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -52,7 +50,6 @@ import net.kissenpvp.paper.api.user.rank.PlayerRank;
+ import net.kissenpvp.paper.networking.client.entity.KissenPaperPlayerClient;
+ import net.kissenpvp.paper.permission.permissible.KissenPaperPlayerPermissible;
+ import net.kyori.adventure.text.Component;
+-
+ import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
+ import org.jetbrains.annotations.Unmodifiable;
+@@ -680,12 +677,12 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
      }
  
      @Override
 -    public @NotNull Punishment punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator) throws BackendException {
-+    public @NotNull Punishment punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator) throws BackendException {
++    public @NotNull Punishment punish(@NotNull net.kissenpvp.core.api.ban.AbstractBanTemplate ban, @NotNull ServerEntity banOperator) throws BackendException {
          return getKissenPaperPlayerClient().punish(ban, banOperator);
      }
  
      @Override
 -    public @NotNull Punishment punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException {
-+    public @NotNull Punishment punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException {
++    public @NotNull Punishment punish(@NotNull net.kissenpvp.core.api.ban.AbstractBanTemplate ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException {
          return getKissenPaperPlayerClient().punish(ban, banOperator, reason);
      }
  
-@@ -771,13 +771,13 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -771,13 +768,13 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
      }
  
      @Override
 -    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator)
-+    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator)
++    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull net.kissenpvp.paper.api.ban.BanTemplate ban, @NotNull ServerEntity warnOperator)
      {
          return getKissenPaperPlayerClient().warn(ban, warnOperator);
      }
  
      @Override
 -    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator, @Nullable Component reason)
-+    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason)
++    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull net.kissenpvp.paper.api.ban.BanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason)
      {
          return getKissenPaperPlayerClient().warn(ban, warnOperator, reason);
      }
@@ -1734,7 +1752,7 @@ index 9de60fa2f31b5f45c7d3e915d3b379a600656b88..ed876a4a82a9bb12c17304162c1c4595
         if (type == io.papermc.paper.ban.BanListType.IP) {
             return (B) new CraftIpBanList(this.playerList.getIpBans());
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 0ff81b1d353bd122e838b96a68c713185258fade..1b2fd3283998ea3eaa6e9fa1643fa34400ba2c70 100644
+index 0ff81b1d353bd122e838b96a68c713185258fade..9e537f535720b90e6595767c7eb5d526f31ea32f 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -159,7 +159,6 @@ import org.bukkit.craftbukkit.map.CraftMapView;
@@ -1753,7 +1771,7 @@ index 0ff81b1d353bd122e838b96a68c713185258fade..1b2fd3283998ea3eaa6e9fa1643fa344
  import org.bukkit.event.player.PlayerTeleportEvent;
  import org.bukkit.event.player.PlayerUnregisterChannelEvent;
  import org.bukkit.inventory.EquipmentSlot;
-@@ -185,14 +183,13 @@ import org.bukkit.plugin.Plugin;
+@@ -185,14 +183,12 @@ import org.bukkit.plugin.Plugin;
  import org.bukkit.plugin.messaging.StandardMessenger;
  import org.bukkit.potion.PotionEffect;
  import org.bukkit.potion.PotionEffectType;
@@ -1765,37 +1783,36 @@ index 0ff81b1d353bd122e838b96a68c713185258fade..1b2fd3283998ea3eaa6e9fa1643fa344
  
  // KissenPaper start
 -import net.kissenpvp.core.api.ban.AbstractBan;
-+import net.kissenpvp.core.api.ban.AbstractBanTemplate;
  import net.kissenpvp.core.api.base.KissenServer;
  import net.kissenpvp.core.api.database.meta.BackendException;
  import net.kissenpvp.core.api.event.EventCancelledException;
-@@ -3650,12 +3647,12 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3650,12 +3646,12 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      }
  
      @Override
 -    public @NotNull Punishment punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator) throws BackendException {
-+    public @NotNull Punishment punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator) throws BackendException {
++    public @NotNull Punishment punish(@NotNull net.kissenpvp.core.api.ban.AbstractBanTemplate ban, @NotNull ServerEntity banOperator) throws BackendException {
          return getKissenPaperOnlinePlayerClient().punish(ban, banOperator);
      }
  
      @Override
 -    public @NotNull Punishment punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) throws BackendException {
-+    public @NotNull Punishment punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) throws BackendException {
++    public @NotNull Punishment punish(@NotNull net.kissenpvp.core.api.ban.AbstractBanTemplate ban, @NotNull ServerEntity banOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) throws BackendException {
          return getKissenPaperOnlinePlayerClient().punish(ban, banOperator, reason);
      }
  
-@@ -3710,12 +3707,12 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3710,12 +3706,12 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      }
  
      @Override
 -    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator) {
-+    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator) {
++    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull net.kissenpvp.paper.api.ban.BanTemplate ban, @NotNull ServerEntity warnOperator) {
          return getKissenPaperOnlinePlayerClient().warn(ban, warnOperator);
      }
  
      @Override
 -    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) {
-+    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) {
++    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull net.kissenpvp.paper.api.ban.BanTemplate ban, @NotNull ServerEntity warnOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) {
          return getKissenPaperOnlinePlayerClient().warn(ban, warnOperator, reason);
      }
  

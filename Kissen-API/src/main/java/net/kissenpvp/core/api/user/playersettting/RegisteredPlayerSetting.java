@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public interface RegisteredPlayerSetting<T, S extends PlayerClient<?, ?, ?>> {
+public interface RegisteredPlayerSetting<T, S extends PlayerClient<?, ?>> {
 
     @NotNull
     AbstractPlayerSetting<T, S> getParent();

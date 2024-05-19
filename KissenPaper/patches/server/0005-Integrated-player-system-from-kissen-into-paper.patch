@@ -2217,7 +2217,7 @@ index 0000000000000000000000000000000000000000..f8344bec3cd20dbd76e5c23edeeed196
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..03218b3d105fd1416b031c8f503b9fd082a60cc1
+index 0000000000000000000000000000000000000000..73f2abcef6c443b187093aa5f7660d3fd4769a79
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 @@ -0,0 +1,239 @@
@@ -2301,7 +2301,7 @@ index 0000000000000000000000000000000000000000..03218b3d105fd1416b031c8f503b9fd0
 +    }
 +
 +    @Override
-+    public @NotNull PlayerClient<?, ?, ?> getPlayerClient() {
++    public @NotNull PlayerClient<?, ?> getPlayerClient() {
 +        return getPrivateUserEntry().getPlayerClient();
 +    }
 +
@@ -2446,7 +2446,7 @@ index 0000000000000000000000000000000000000000..03218b3d105fd1416b031c8f503b9fd0
 +        }
 +
 +        @Override
-+        public @NotNull PlayerClient<?, ?, ?> getPlayerClient() {
++        public @NotNull PlayerClient<?, ?> getPlayerClient() {
 +            UUID uuid = (UUID) getRawID();
 +            return Objects.requireNonNullElse(Bukkit.getPlayer(uuid), Bukkit.getOfflinePlayer(uuid));
 +        }
@@ -3171,7 +3171,7 @@ index 0000000000000000000000000000000000000000..d8c589da70c14e03f7b6a4b59d4d8938
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/PlayerSettingCommand.java b/src/main/java/net/kissenpvp/paper/user/PlayerSettingCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..564903242f04f8542bb4287d1a65277b45fa6863
+index 0000000000000000000000000000000000000000..d619f77ddf38330582573e8cc9439128d0ec52c5
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/PlayerSettingCommand.java
 @@ -0,0 +1,108 @@
@@ -3243,7 +3243,7 @@ index 0000000000000000000000000000000000000000..564903242f04f8542bb4287d1a65277b
 +    }
 +
 +    @TabCompleter("setting")
-+    public @NotNull <S extends PlayerClient<?, ?, ?>> Collection<String> settingCommand(@NotNull CommandPayload<CommandSender> payload)
++    public @NotNull <S extends PlayerClient<?, ?>> Collection<String> settingCommand(@NotNull CommandPayload<CommandSender> payload)
 +    {
 +        try
 +        {
@@ -3261,7 +3261,7 @@ index 0000000000000000000000000000000000000000..564903242f04f8542bb4287d1a65277b
 +        return Collections.EMPTY_SET;
 +    }
 +
-+    public <S extends PlayerClient<?, ?, ?>> @NotNull RegisteredPlayerSetting<?, S> deserialize(@NotNull String input)
++    public <S extends PlayerClient<?, ?>> @NotNull RegisteredPlayerSetting<?, S> deserialize(@NotNull String input)
 +    {
 +        UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
 +        Stream<RegisteredPlayerSetting<?, ?>> settings = userImplementation.getPlayerSettings().stream();

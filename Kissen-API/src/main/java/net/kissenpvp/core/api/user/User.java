@@ -35,5 +35,5 @@ public interface User extends Savable<UUID> {
     @NotNull
     Locale getLocale();
 
-    @NotNull PlayerClient<?, ?, ?> getPlayerClient();
+    @NotNull PlayerClient<?, ?> getPlayerClient();
 }

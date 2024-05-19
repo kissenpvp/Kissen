@@ -27,7 +27,7 @@ import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface OnlinePlayerClient<P extends AbstractPermission, R extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> extends PlayerClient<P, R, B>, MessageReceiver {
+public interface OnlinePlayerClient<P extends AbstractPermission, R extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> extends PlayerClient<R, B>, MessageReceiver {
 
     void kick(@NotNull String message);
 

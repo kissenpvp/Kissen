@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.Optional;
 
-public record KissenRegisteredPlayerSetting<T, S extends PlayerClient<?, ?, ?>>(@NotNull KissenPlugin plugin,
+public record KissenRegisteredPlayerSetting<T, S extends PlayerClient<?, ?>>(@NotNull KissenPlugin plugin,
                                                                                 @NotNull AbstractPlayerSetting<T, S> setting) implements RegisteredPlayerSetting<T, S> {
     @Override
     public @NotNull AbstractPlayerSetting<T, S> getParent() {

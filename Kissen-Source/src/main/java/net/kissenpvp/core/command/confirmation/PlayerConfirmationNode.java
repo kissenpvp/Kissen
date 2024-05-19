@@ -8,7 +8,7 @@ import java.util.UUID;
 public record PlayerConfirmationNode(@NotNull UUID uuid,
                                      @NotNull ConfirmationNode confirmationNode) implements Confirmation
 {
-    public boolean equals(@NotNull PlayerClient<?, ?, ?> player)
+    public boolean equals(@NotNull PlayerClient<?, ?> player)
     {
         return uuid().equals(player.getUniqueId());
     }

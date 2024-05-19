@@ -52,7 +52,7 @@ public abstract class KissenConfirmationImplementation implements KissenImplemen
 
     public boolean execute(@NotNull ServerEntity sender, boolean cancel)
     {
-        if (sender instanceof PlayerClient<?, ?, ?> player)
+        if (sender instanceof PlayerClient<?, ?> player)
         {
             Predicate<PlayerConfirmationNode> isFromPlayer = confirmation -> confirmation.equals(player);
             return getPlayerConfirmation().stream().filter(isFromPlayer).anyMatch(executePlayer(cancel));
@@ -78,14 +78,14 @@ public abstract class KissenConfirmationImplementation implements KissenImplemen
 
     public boolean requestConfirmation(@NotNull ConfirmationNode node, @NotNull ServerEntity sender)
     {
-        if (sender instanceof PlayerClient<?, ?, ?> player)
+        if (sender instanceof PlayerClient<?, ?> player)
         {
             return requestPlayerConfirmation(node, player);
         }
         return false;
     }
 
-    private boolean requestPlayerConfirmation(@NotNull ConfirmationNode node, @NotNull PlayerClient<?, ?, ?> player)
+    private boolean requestPlayerConfirmation(@NotNull ConfirmationNode node, @NotNull PlayerClient<?, ?> player)
     {
         Predicate<Confirmation> is = task -> task instanceof PlayerConfirmationNode confirm && confirm.equals(player);
         if (confirmations.stream().anyMatch(is))
