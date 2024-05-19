@@ -208,6 +208,103 @@ index 0000000000000000000000000000000000000000..f4003d7ada0ed5573ad4d3d6e0b25aec
 +
 +public class PermissibleOverriddenException extends IllegalStateException {
 +} // LuckPerms, I know where you live
+diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PermissionParser.java b/src/main/java/net/kissenpvp/paper/api/permission/PermissionParser.java
+index 631cdaad6f8d567b5d63658548d0b775ebc87a6f..1cf13ed2c7e87a6f0c85d8a177f867cbb7d3f6a8 100644
+--- a/src/main/java/net/kissenpvp/paper/api/permission/PermissionParser.java
++++ b/src/main/java/net/kissenpvp/paper/api/permission/PermissionParser.java
+@@ -7,57 +7,60 @@ import org.bukkit.command.CommandSender;
+ import org.bukkit.permissions.Permission;
+ import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
++import org.jetbrains.annotations.Unmodifiable;
+ 
+ import java.util.Collection;
+ import java.util.HashSet;
+ import java.util.Set;
+ import java.util.stream.Collectors;
+ 
+-public class PermissionParser implements ArgumentParser<PermissionParser.PermissionArgument>
+-{
++public class PermissionParser implements ArgumentParser<PermissionParser.PermissionArgument> {
++
++    private static void handleArgument(@NotNull String current, @NotNull Set<String> data) { //TODO enhance implementation
++        StringBuilder stringBuilder = new StringBuilder();
++        String[] parts = current.split("\\.");
++        for (int i = 0; i < parts.length - 1; i++) {
++
++            if (!stringBuilder.isEmpty() && stringBuilder.charAt(stringBuilder.length() - 1)=='*') {
++                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
++            }
++
++            stringBuilder.append(parts[i]).append(".*");
++            data.add(stringBuilder.toString());
++        }
++        data.add(current);
++    }
++
+     @Override
+-    public @NotNull String serialize(@NotNull PermissionArgument object)
+-    {
++    public @NotNull String serialize(@NotNull PermissionArgument object) {
+         return object.permission();
+     }
+ 
+     @Override
+-    public @NotNull PermissionArgument deserialize(@NotNull String input)
+-    {
++    public @NotNull PermissionArgument deserialize(@NotNull String input) {
+         return new PermissionArgument(input);
+     }
+ 
+     @Override
+-    public @Nullable String argumentName()
+-    {
++    public @Nullable String argumentName() {
+         return "permission";
+     }
+ 
+     @Override
+-    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
+-    {
+-        return Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).flatMap(currentPermission ->
+-                {
+-                    Set<String> data = new HashSet<>(currentPermission.length());
+-                    for (String current : currentPermission.split(";"))
+-                    {
+-                        StringBuilder stringBuilder = new StringBuilder();
+-                        String[] parts = current.split("\\.");
+-                        for (int i = 0; i < parts.length - 1; i++) {
+-
+-                            if (!stringBuilder.isEmpty() && stringBuilder.charAt(stringBuilder.length() - 1) == '*') {
+-                                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+-                            }
+-
+-                            stringBuilder.append(parts[i]).append(".*");
+-                            data.add(stringBuilder.toString());
+-                        }
+-                        data.add(current);
+-                    }
+-                    return data.stream();
+-                }
+-                ).collect(Collectors.toSet());
++    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
++        return getPermissionNames().stream().flatMap(permission -> {
++            Set<String> data = new HashSet<>(permission.length());
++            for (String current : permission.split(";")) {
++                handleArgument(current, data);
++            }
++            return data.stream();
++        }).collect(Collectors.toUnmodifiableSet());
++    }
++
++    private @NotNull @Unmodifiable Set<String> getPermissionNames() {
++        return Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).collect(Collectors.toUnmodifiableSet());
+     }
+ 
+-    public record PermissionArgument(@Override String permission) {}
++    public record PermissionArgument(@NotNull String permission) {
++    }
+ }
 diff --git a/src/main/java/net/kissenpvp/paper/api/user/event/VisualChangeEvent.java b/src/main/java/net/kissenpvp/paper/api/user/event/VisualChangeEvent.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..bd15a61250250418eb9dceb7aa2acaa6a1d4820e
