@@ -29,11 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * This interface represents a player ban and provides methods to access and modify its properties.
@@ -52,55 +48,81 @@ import java.util.UUID;
 public interface AbstractPunishment<T> extends TemporalObject {
 
     /**
-     * Returns the total ID that is assigned to a player ban. This ID can change if the system recognizes similarities
-     * between players' IP addresses. If they are recognized as related, they will have the same total ID and will be
-     * punished as if they were the same player.
+     * Returns the total ID that clusters punishments together.
+     * <p>
+     * This ID can change if the system recognizes similarities between players IP addresses.
+     * If they are recognized as related, they will have the same {@link PlayerClient#getTotalID()} and will be punished as if they were the same {@link PlayerClient}.
      *
-     * @return the total ID assigned to a player ban
+     * @return the total ID assigned to this punishment.
+     * @see PlayerClient#getTotalID()
      */
-    @NotNull UUID getTotalID();
-
-    @NotNull String getID();
+    @NotNull
+    UUID getTotalID();
 
     /**
-     * Returns the name of the ban that was used to apply this punishment.
+     * Returns a unique id.
+     * <p>
+     * This method returns a unique id, which is used to identify this punishment.
+     * This id is generated when the punishment is created.
+     *
+     * @return the id of this specific punishment.
+     */
+    @NotNull
+    String getID();
+
+    /**
+     * Returns the name of the ban template, portrayed by {@link AbstractBan}.
+     * <p>
+     * This method returns the name of the {@link AbstractBan} that was used to apply this punishment.
      * The name of the ban is kept even if it is overridden or deleted.
      *
-     * @return the name of the ban associated with this player ban
+     * @return the name of the ban associated with this player ban.
      */
-    @NotNull String getName();
+    @NotNull
+    String getName();
+
 
     /**
-     * Returns the name of the team member who applied this punishment.
-     * This can be used for accountability purposes and to identify who applied the ban.
+     * Returns the name of the player who created the punishment.
+     * <p>
+     * This method returns the name of the operator who applied this punishment.
+     * As this saves the uuid of an operator if it is a player, it will keep track of their name.
      *
-     * @return the name of the team member who applied this player ban
+     * @return the current name of the operator.
      */
-    @NotNull String getBanOperator();
+    @NotNull
+    String getBanOperator();
 
     /**
-     * Returns the type of the ban associated with this player ban.
-     * The ban type of the {@link AbstractBan} is kept even if it is overridden or deleted.
+     * Returns the ban type of the ban template, portrayed by {@link AbstractBan}.
+     * <p>
+     * This method returns the ban type of the {@link AbstractBan} that was used to apply this punishment.
+     * The ban type of the ban is kept even if it is overridden or deleted.
      *
      * @return the type of the ban, as an enum constant of {@link BanType}
      */
-    @NotNull BanType getBanType();
+    @NotNull
+    BanType getBanType();
 
     /**
      * Returns an {@link Optional} containing the reason for the punishment, if it was specified when the ban was created.
-     *
-     * <p>If a reason was specified when the ban was created, it will be returned in the {@link Optional}.
-     * If no reason was specified, an empty {@link Optional} will be returned.</p>
-     *
-     * <p>Note that the reason for the punishment may be changed using the {@link #setCause(Component)} method.</p>
+     * <p>
+     * If a reason was specified when the ban was created, it will be returned in the {@link Optional}.
+     * If no reason was specified, an empty {@link Optional} will be returned.
+     * <p>
+     * Note that the reason for the punishment may be changed using the {@link #setCause(Component)} method.
      *
      * @return an {@link Optional} containing the reason for the punishment, or an empty {@link Optional} if no reason was specified
+     * @see #setCause(Component)
      */
-    @NotNull Optional<Component> getCause();
+    @NotNull
+    Optional<Component> getCause();
 
     /**
-     * Sets the reason for the player's ban. If the reason is null, the ban will be set without a reason.
-     * The reason should be a concise and clear explanation of the ban, and it can be retrieved by calling {@link #getCause()}.
+     * Sets the cause for the punishment.
+     * <p>
+     * This method sets the cause of this punishment. If the reason is {@code null}, the punishment won't have a cause anymore.
+     * The cause should be a concise and clear explanation of the ban, and it can be retrieved by calling {@link #getCause()}.
      *
      * @param cause the reason for the ban, or null to remove the reason.
      * @see #getCause()
@@ -120,7 +142,9 @@ public interface AbstractPunishment<T> extends TemporalObject {
      * @see #addComment(ServerEntity, Component)
      * @see Comment
      */
-    @NotNull @Unmodifiable List<Comment> getComments();
+    @NotNull
+    @Unmodifiable
+    List<Comment> getComments();
 
     /**
      * Adds a new comment to this player ban by creating a new {@link Comment} object.
@@ -134,7 +158,8 @@ public interface AbstractPunishment<T> extends TemporalObject {
      * @see #getComments()
      * @see Comment
      */
-    @NotNull Comment addComment(@NotNull ServerEntity sender, @NotNull Component comment) throws EventCancelledException;
+    @NotNull
+    Comment addComment(@NotNull ServerEntity sender, @NotNull Component comment) throws EventCancelledException;
 
     /**
      * Retrieves a {@link Set} of {@link UUID}s that represent the players who are affected by this ban from the database. Use this method with caution, as it may take significant performance to load all affected players.
@@ -145,7 +170,8 @@ public interface AbstractPunishment<T> extends TemporalObject {
      *
      * @return a {@link Set} of {@link UUID}s representing the players affected by the ban
      */
-    @Unmodifiable Set<UUID> getAffectedPlayers();
+    @Unmodifiable
+    Set<UUID> getAffectedPlayers();
 
     /**
      * Retrieves a {@link Set} of {@link OnlinePlayerClient}s that represent the online players who are affected by this ban.
@@ -157,7 +183,8 @@ public interface AbstractPunishment<T> extends TemporalObject {
      *
      * @return a {@link Set} of {@link PlayerClient}s representing the online players affected by the ban
      */
-    @Unmodifiable Set<T> getOnlineAffectedPlayers();
+    @Unmodifiable
+    Set<T> getOnlineAffectedPlayers();
 
     /**
      * Retrieves a Translatable message associated with the user's punishment.
@@ -168,5 +195,6 @@ public interface AbstractPunishment<T> extends TemporalObject {
      *
      * @return A Translatable instance that represents a punishment message intended for the user.
      */
-    @NotNull Component getPunishmentText(@NotNull Locale locale);
+    @NotNull
+    Component getPunishmentText(@NotNull Locale locale);
 }
