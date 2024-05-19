@@ -165,7 +165,11 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
         switch (getBanType()) {
             case BAN -> {
                 banMessage.append(getCause().map(reason -> Component.translatable("multiplayer.disconnect.banned.cause", reason)).orElse(Component.translatable("multiplayer.disconnect.banned")).toBuilder());
-                Optional<TranslatableComponent> optionalEnd = getEnd().map(end -> Component.translatable("multiplayer.disconnect.banned.expiration", DateFormat.getDateInstance(DateFormat.SHORT, locale).format(Date.from(end))));
+                Optional<TranslatableComponent> optionalEnd = getEnd().map(end ->
+                {
+                    String date = DateFormat.getDateInstance(DateFormat.LONG, locale).format(Date.from(end));
+                    return Component.translatable("multiplayer.disconnect.banned.expiration", Component.text(date));
+                });
                 optionalEnd.ifPresent(banMessage::append);
             }
             case MUTE -> {
