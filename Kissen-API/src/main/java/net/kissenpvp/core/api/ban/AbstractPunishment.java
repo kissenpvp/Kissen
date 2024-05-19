@@ -39,9 +39,9 @@ import java.util.*;
  * This interface provides methods to access and modify the properties of a player ban, such as the duration of the ban, the reason for the ban, the players affected by the ban, and the type of the ban.
  * It also provides methods to check whether a ban is currently valid and to retrieve a list of online players affected by the ban.
  * <p>
- * Implementations of this interface should be immutable, meaning that once a player ban has been created, its properties are not affected by changes made to its origin {@link AbstractBan} template.
+ * Implementations of this interface should be immutable, meaning that once a player ban has been created, its properties are not affected by changes made to its origin {@link AbstractBanTemplate} template.
  *
- * @see AbstractBan
+ * @see AbstractBanTemplate
  * @see AbstractBanImplementation
  * @see BanType
  */
@@ -71,9 +71,9 @@ public interface AbstractPunishment<T> extends TemporalObject {
     String getID();
 
     /**
-     * Returns the name of the ban template, portrayed by {@link AbstractBan}.
+     * Returns the name of the ban template, portrayed by {@link AbstractBanTemplate}.
      * <p>
-     * This method returns the name of the {@link AbstractBan} that was used to apply this punishment.
+     * This method returns the name of the {@link AbstractBanTemplate} that was used to apply this punishment.
      * The name of the ban is kept even if it is overridden or deleted.
      *
      * @return the name of the ban associated with this player ban.
@@ -94,9 +94,9 @@ public interface AbstractPunishment<T> extends TemporalObject {
     String getBanOperator();
 
     /**
-     * Returns the ban type of the ban template, portrayed by {@link AbstractBan}.
+     * Returns the ban type of the ban template, portrayed by {@link AbstractBanTemplate}.
      * <p>
-     * This method returns the ban type of the {@link AbstractBan} that was used to apply this punishment.
+     * This method returns the ban type of the {@link AbstractBanTemplate} that was used to apply this punishment.
      * The ban type of the ban is kept even if it is overridden or deleted.
      *
      * @return the type of the ban, as an enum constant of {@link BanType}

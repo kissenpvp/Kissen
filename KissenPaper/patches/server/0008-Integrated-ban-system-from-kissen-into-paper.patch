@@ -83,46 +83,9 @@ index e83f9517b31c5171b8dc75ab63a5bfe654221c84..ae7ab5d59b17331b95c9c15eb24d90cc
 +    }
 +    // KissenPaper end
  }
-diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBan.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBan.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..aa933e5bfb91819c1b0e5d9eba415134f8d898e6
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBan.java
-@@ -0,0 +1,31 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
-+package net.kissenpvp.paper.ban;
-+
-+import net.kissenpvp.core.api.networking.socket.DataPackage;
-+import net.kissenpvp.core.ban.KissenBan;
-+import net.kissenpvp.paper.api.ban.Ban;
-+import org.jetbrains.annotations.NotNull;
-+
-+public class KissenPaperBan extends KissenBan implements Ban {
-+    @Override
-+    public void sendData(@NotNull DataPackage dataPackage) {
-+        //TODO
-+    }
-+}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..c73c68890639d54bc39a37d6195043d3e7762e16
+index 0000000000000000000000000000000000000000..acd411f9cb4335d888ac9f1640895a41822904a5
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 @@ -0,0 +1,461 @@
@@ -192,7 +155,7 @@ index 0000000000000000000000000000000000000000..c73c68890639d54bc39a37d6195043d3
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
-+public class KissenPaperBanImplementation extends KissenBanImplementation<Ban, Punishment> implements BanImplementation, KissenImplementation {
++public class KissenPaperBanImplementation extends KissenBanImplementation<BanTemplate, Punishment> implements BanImplementation, KissenImplementation {
 +
 +    private KissenTable privateTable;
 +
@@ -229,7 +192,7 @@ index 0000000000000000000000000000000000000000..c73c68890639d54bc39a37d6195043d3
 +        kissenLocalizationImplementation.register("server.ban.warn.clear", new MessageFormat("The warn(s) of the player {0} have been reset."));
 +
 +        InternalCommandImplementation<CommandSender> command = Bukkit.getKissen().getImplementation(InternalCommandImplementation.class);
-+        command.getInternalHandler().registerParser(Ban.class, new BanParser());
++        command.getInternalHandler().registerParser(BanTemplate.class, new BanParser());
 +        command.getInternalHandler().registerParser(Punishment.class, new PunishmentParser());
 +        command.getInternalHandler().registerExceptionHandler(new BanParser());
 +        command.getInternalHandler().registerExceptionHandler(new PunishmentParser());
@@ -249,14 +212,14 @@ index 0000000000000000000000000000000000000000..c73c68890639d54bc39a37d6195043d3
 +    }
 +
 +    @Override
-+    protected @NotNull @Unmodifiable Set<Ban> fetchBanSet() {
-+        Set<Ban> privateBans = translate(getMeta(Context.LOCAL).getData((Savable<?>) createObject()).join());
++    protected @NotNull @Unmodifiable Set<BanTemplate> fetchBanSet() {
++        Set<BanTemplate> privateBans = translate(getMeta(Context.LOCAL).getData((Savable<?>) createObject()).join());
 +        return Stream.concat(super.fetchBanSet().stream(), privateBans.stream()).collect(Collectors.toUnmodifiableSet());
 +    }
 +
 +    @Override
-+    protected @NotNull Ban createObject() {
-+        return new KissenPaperBan();
++    protected @NotNull BanTemplate createObject() {
++        return new KissenPaperBanTemplate();
 +    }
 +
 +    @Override
@@ -285,22 +248,22 @@ index 0000000000000000000000000000000000000000..c73c68890639d54bc39a37d6195043d3
 +    }
 +
 +    @Override
-+    public @NotNull Punishment punish(@NotNull UUID totalID, @NotNull Ban ban, @NotNull ServerEntity banOperator, @Nullable Component cause, @NotNull Context context) throws BackendException {
++    public @NotNull Punishment punish(@NotNull UUID totalID, @NotNull BanTemplate ban, @NotNull ServerEntity banOperator, @Nullable Component cause, @NotNull Context context) throws BackendException {
 +        return punish(totalID, ban, banOperator, true, cause);
 +    }
 +
 +    @Override
-+    public @NotNull Punishment punish(@NotNull UUID totalID, @NotNull Ban ban, @NotNull ServerEntity banOperator, @NotNull Context context) throws BackendException {
++    public @NotNull Punishment punish(@NotNull UUID totalID, @NotNull BanTemplate ban, @NotNull ServerEntity banOperator, @NotNull Context context) throws BackendException {
 +        return punish(totalID, ban, banOperator, true, context);
 +    }
 +
 +    @Override
-+    public @NotNull Punishment punish(@NotNull UUID totalID, @NotNull Ban ban, @NotNull ServerEntity banOperator, boolean apply, @NotNull Context context) throws BackendException {
++    public @NotNull Punishment punish(@NotNull UUID totalID, @NotNull BanTemplate ban, @NotNull ServerEntity banOperator, boolean apply, @NotNull Context context) throws BackendException {
 +        return punish(totalID, ban, banOperator, apply, null, context);
 +    }
 +
 +    @Override
-+    public @NotNull Punishment punish(@NotNull UUID totalID, @NotNull Ban ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component cause, @NotNull Context context) throws BackendException {
++    public @NotNull Punishment punish(@NotNull UUID totalID, @NotNull BanTemplate ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component cause, @NotNull Context context) throws BackendException {
 +        return punish(totalID, ban, banOperator, apply, cause, getMeta(context));
 +    }
 +
@@ -484,7 +447,7 @@ index 0000000000000000000000000000000000000000..c73c68890639d54bc39a37d6195043d3
 +            throw new IllegalArgumentException("Source must not be null");
 +        }
 +        // Detect source
-+        return punish(target.getPlayerClient().getTotalID(), new MinecraftBan(BanType.BAN, durationTransformer.create()), new ServerEntity() {
++        return punish(target.getPlayerClient().getTotalID(), new MinecraftBanTemplate(BanType.BAN, durationTransformer.create()), new ServerEntity() {
 +            @Override
 +            public @NotNull String getName() {
 +                return source;
@@ -585,6 +548,43 @@ index 0000000000000000000000000000000000000000..c73c68890639d54bc39a37d6195043d3
 +        @Nullable
 +        AccurateDuration create();
 +
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanTemplate.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanTemplate.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d9252f72507f0cdeb597b9f1736e1147cfbcce9b
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanTemplate.java
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.paper.ban;
++
++import net.kissenpvp.core.api.networking.socket.DataPackage;
++import net.kissenpvp.core.ban.KissenBanTemplate;
++import net.kissenpvp.paper.api.ban.BanTemplate;
++import org.jetbrains.annotations.NotNull;
++
++public class KissenPaperBanTemplate extends KissenBanTemplate implements BanTemplate {
++    @Override
++    public void sendData(@NotNull DataPackage dataPackage) {
++        //TODO
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperPunishment.java
@@ -897,29 +897,29 @@ index 0000000000000000000000000000000000000000..b05abe4ce48e1facd73b5eb571da45cb
 +        }
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/ban/MinecraftBan.java b/src/main/java/net/kissenpvp/paper/ban/MinecraftBan.java
+diff --git a/src/main/java/net/kissenpvp/paper/ban/MinecraftBanTemplate.java b/src/main/java/net/kissenpvp/paper/ban/MinecraftBanTemplate.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..740b0b953e493eaf45acf6458ffdbe69c0bc646c
+index 0000000000000000000000000000000000000000..ec0fc528a9e2e0fc6b4f79438cb545c8ac6ea808
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/ban/MinecraftBan.java
++++ b/src/main/java/net/kissenpvp/paper/ban/MinecraftBanTemplate.java
 @@ -0,0 +1,61 @@
 +package net.kissenpvp.paper.ban;
 +
 +import net.kissenpvp.core.api.ban.BanType;
 +import net.kissenpvp.core.api.event.EventCancelledException;
 +import net.kissenpvp.core.api.time.AccurateDuration;
-+import net.kissenpvp.paper.api.ban.Ban;
++import net.kissenpvp.paper.api.ban.BanTemplate;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +
 +import java.util.Optional;
 +
-+public class MinecraftBan implements Ban {
++public class MinecraftBanTemplate implements BanTemplate {
 +
 +    private final BanType banType;
 +    private final AccurateDuration duration;
 +
-+    public MinecraftBan(BanType banType, AccurateDuration duration) {
++    public MinecraftBanTemplate(BanType banType, AccurateDuration duration) {
 +        this.banType = banType;
 +        this.duration = duration;
 +    }
@@ -966,7 +966,7 @@ index 0000000000000000000000000000000000000000..740b0b953e493eaf45acf6458ffdbe69
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/BanCommand.java b/src/main/java/net/kissenpvp/paper/ban/command/BanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..1be51ac8ee07d7d56e8d726acd6530f2a8d73b05
+index 0000000000000000000000000000000000000000..21fe639eef5aca2f38e65a00ed6d6e9e461aa1fc
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/BanCommand.java
 @@ -0,0 +1,142 @@
@@ -983,7 +983,7 @@ index 0000000000000000000000000000000000000000..1be51ac8ee07d7d56e8d726acd6530f2
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.time.TemporalObject;
-+import net.kissenpvp.paper.api.ban.Ban;
++import net.kissenpvp.paper.api.ban.BanTemplate;
 +import net.kissenpvp.paper.api.ban.BanImplementation;
 +import net.kissenpvp.paper.api.ban.Punishment;
 +import net.kyori.adventure.text.Component;
@@ -1010,7 +1010,7 @@ index 0000000000000000000000000000000000000000..1be51ac8ee07d7d56e8d726acd6530f2
 +     * @throws BackendException if there is an error in the backend
 +     */
 +    @CommandData(value = "ban", aliases = {"punish", "mute", "kick"}, description = "This command is used to ban or punish a specific user by removing their access rights from the server.")
-+    public void ban(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer player, @NotNull Ban paperBan, @NotNull @Optional @ArgumentName("reason") String[] reasonArray) throws BackendException {
++    public void ban(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer player, @NotNull BanTemplate paperBan, @NotNull @Optional @ArgumentName("reason") String[] reasonArray) throws BackendException {
 +        if (payload.getSender() instanceof OfflinePlayer && player.getRank().getSource().getPriority() < player.getRank().getSource().getPriority()) {
 +            payload.getSender().sendMessage(Component.translatable("server.ban.player.not.allowed", player.displayName()));
 +            return;
@@ -1040,7 +1040,7 @@ index 0000000000000000000000000000000000000000..1be51ac8ee07d7d56e8d726acd6530f2
 +        BanImplementation paperBanImplementation = Bukkit.getKissen().getImplementation(BanImplementation.class);
 +
 +        Runnable runnable = () -> {
-+            Ban paperBan = paperBanImplementation.createBan(id, name, banType, accurateDuration.orElse(null));
++            BanTemplate paperBan = paperBanImplementation.createBanTemplate(id, name, banType, accurateDuration.orElse(null));
 +
 +            Component idComponent = Component.text(paperBan.getID()), nameComponent = Component.text(paperBan.getName()), banTypeComponent = Component.text(paperBan.getBanType().toString());
 +            if (accurateDuration.isPresent()) {
@@ -1053,7 +1053,7 @@ index 0000000000000000000000000000000000000000..1be51ac8ee07d7d56e8d726acd6530f2
 +        };
 +
 +        //Ask for confirmation if ban exists.
-+        if (paperBanImplementation.getBan(id).isPresent()) {
++        if (paperBanImplementation.getBanTemplate(id).isPresent()) {
 +            payload.confirmRequest(runnable).send();
 +            return;
 +        }
@@ -1061,7 +1061,7 @@ index 0000000000000000000000000000000000000000..1be51ac8ee07d7d56e8d726acd6530f2
 +    }
 +
 +    @CommandData(value = "baniddelete", aliases = {"bidd", "deleteidban"})
-+    public void delete(@NotNull CommandPayload<CommandSender> payload, @NotNull Ban paperBan) throws BackendException {
++    public void delete(@NotNull CommandPayload<CommandSender> payload, @NotNull BanTemplate paperBan) throws BackendException {
 +        paperBan.delete();
 +        payload.getSender().sendMessage(Component.translatable("server.ban.deleted", Component.text(paperBan.getID())));
 +    }
@@ -1114,19 +1114,19 @@ index 0000000000000000000000000000000000000000..1be51ac8ee07d7d56e8d726acd6530f2
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java b/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..2bf02e734e4696fe0b6e7a87f1a3e951eb79b78d
+index 0000000000000000000000000000000000000000..5c03a804bcad26e0e9297d9b01864149a7d8466d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/command/BanCommandMessages.java
 @@ -0,0 +1,256 @@
 +package net.kissenpvp.paper.ban.command;
 +
-+import net.kissenpvp.core.api.ban.AbstractBan;
++import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 +import net.kissenpvp.core.api.ban.BanType;
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.core.api.util.PageBuilder;
 +import net.kissenpvp.core.api.util.PageImplementation;
 +import net.kissenpvp.core.util.KissenPageBuilder;
-+import net.kissenpvp.paper.api.ban.Ban;
++import net.kissenpvp.paper.api.ban.BanTemplate;
 +import net.kissenpvp.paper.api.ban.BanImplementation;
 +import net.kissenpvp.paper.api.ban.Punishment;
 +import net.kyori.adventure.text.Component;
@@ -1166,18 +1166,18 @@ index 0000000000000000000000000000000000000000..2bf02e734e4696fe0b6e7a87f1a3e951
 +        PageImplementation pageImplementation = Bukkit.getKissen().getImplementation(PageImplementation.class);
 +        BanImplementation banSystem = Bukkit.getKissen().getImplementation(BanImplementation.class);
 +
-+        List<Ban> sorted = banSystem.getBanSet().stream().sorted(Comparator.comparingInt(AbstractBan::getID)).toList();
++        List<BanTemplate> sorted = banSystem.getBanTemplates().stream().sorted(Comparator.comparingInt(AbstractBanTemplate::getID)).toList();
 +        if (sorted.isEmpty())
 +        {
 +            return Component.text("Gibt keine ban ids");
 +        }
-+        PageBuilder<Ban> banIDPageBuilder = pageImplementation.createPageBuilder(sorted);
++        PageBuilder<BanTemplate> banIDPageBuilder = pageImplementation.createPageBuilder(sorted);
 +
 +        Component header = banIDPageBuilder.getHeader(Component.text("BanIDs"), page);
 +        Component footer = banIDPageBuilder.getFooter(Component.text("BanIDs"), page);
 +
 +        TextComponent.Builder builder = Component.text().append(header);
-+        for (Ban currentBan : banIDPageBuilder.getEntries(page))
++        for (BanTemplate currentBan : banIDPageBuilder.getEntries(page))
 +        {
 +            Component[] args = {
 +                    Component.text(currentBan.getID()), Component.text(currentBan.getName()), Component.text(currentBan.getBanType().toString())
@@ -1376,7 +1376,7 @@ index 0000000000000000000000000000000000000000..2bf02e734e4696fe0b6e7a87f1a3e951
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/warn/KissenWarn.java b/src/main/java/net/kissenpvp/paper/ban/warn/KissenWarn.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ad03c6037b1fb062b9aacafba91a03726eea6bb0
+index 0000000000000000000000000000000000000000..eefab2a59a4ce4b5fb3a8793b8ee1d1e25b76b1b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/warn/KissenWarn.java
 @@ -0,0 +1,15 @@
@@ -1384,11 +1384,11 @@ index 0000000000000000000000000000000000000000..ad03c6037b1fb062b9aacafba91a0372
 +
 +import net.kissenpvp.core.ban.warn.KissenAbstractWarn;
 +import net.kissenpvp.core.ban.warn.WarnNode;
-+import net.kissenpvp.paper.api.ban.Ban;
++import net.kissenpvp.paper.api.ban.BanTemplate;
 +import net.kissenpvp.paper.api.ban.warn.Warn;
 +import org.jetbrains.annotations.NotNull;
 +
-+public class KissenWarn extends KissenAbstractWarn<Ban> implements Warn
++public class KissenWarn extends KissenAbstractWarn<BanTemplate> implements Warn
 +{
 +    public KissenWarn(@NotNull WarnNode warnNode)
 +    {
@@ -1397,7 +1397,7 @@ index 0000000000000000000000000000000000000000..ad03c6037b1fb062b9aacafba91a0372
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/ban/warn/command/WarnCommand.java b/src/main/java/net/kissenpvp/paper/ban/warn/command/WarnCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..68af27b44a8919bf06de084b714f6ef05176be47
+index 0000000000000000000000000000000000000000..3a38ce3662c4c3c2b5d41d02b027fcde693962c8
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/warn/command/WarnCommand.java
 @@ -0,0 +1,151 @@
@@ -1410,7 +1410,7 @@ index 0000000000000000000000000000000000000000..68af27b44a8919bf06de084b714f6ef0
 +import net.kissenpvp.core.api.time.TemporalObject;
 +import net.kissenpvp.core.api.util.PageBuilder;
 +import net.kissenpvp.core.api.util.PageImplementation;
-+import net.kissenpvp.paper.api.ban.Ban;
++import net.kissenpvp.paper.api.ban.BanTemplate;
 +import net.kissenpvp.paper.api.ban.warn.Warn;
 +import net.kissenpvp.paper.ban.command.BanCommand;
 +import net.kyori.adventure.text.Component;
@@ -1441,7 +1441,7 @@ index 0000000000000000000000000000000000000000..68af27b44a8919bf06de084b714f6ef0
 +     * @param reasonArray (Optional) The reason for the warning.
 +     */
 +    @CommandData(value = "warn", description = "This command is used to warn a specific user to refrain from inappropriate behavior.")
-+    public void warn(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer player, @NotNull Ban paperBan, @NotNull @Optional @ArgumentName("reason") String[] reasonArray)
++    public void warn(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer player, @NotNull BanTemplate paperBan, @NotNull @Optional @ArgumentName("reason") String[] reasonArray)
 +    {
 +        java.util.Optional<Component> transformedReason = getReason(reasonArray);
 +        List<Warn> currentWarns = player.getWarnHistory().stream().filter(TemporalObject::isValid).toList();
@@ -1564,10 +1564,41 @@ index 727539dc4ab17a82e9aaf000a5158ba2a9224711..a9ea6b7ac02b5b466b7b1eb123dabdd8
          super.loadImplementations(loader);
      }
  
+diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
+index 7b1b95202c1fd999a6a5c339526a8f3fe654d536..6538050ff515d985566249c4a67d47d6bc66ab7e 100644
+--- a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
++++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperOnlinePlayerClient.java
+@@ -19,7 +19,7 @@
+ package net.kissenpvp.paper.networking.client.entity;
+ 
+ import io.netty.channel.Channel;
+-import net.kissenpvp.core.api.ban.AbstractBan;
++import net.kissenpvp.core.api.ban.AbstractBanTemplate;
+ import net.kissenpvp.core.api.base.KissenServer;
+ import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+ import net.kissenpvp.core.api.user.User;
+@@ -60,7 +60,7 @@ public abstract class KissenPaperOnlinePlayerClient extends KissenPaperPlayerCli
+     }
+ 
+     @Override
+-    public @NotNull Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator, @Nullable Component reason)
++    public @NotNull Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason)
+     {
+         Component title = Component.translatable("server.ban.player.warned.target", Component.text(ban.getName())).color(NamedTextColor.RED);
+ 
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
-index f73d22316817f7ce487d6d48c726ff8460a3f620..8604fb5b7950590f0366a538e0f2f629bca9d912 100644
+index f73d22316817f7ce487d6d48c726ff8460a3f620..f38ea9e953a89c4b5a42f8e77d6396d27eff0c8d 100644
 --- a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
+@@ -18,7 +18,7 @@
+ 
+ package net.kissenpvp.paper.networking.client.entity;
+ 
+-import net.kissenpvp.core.api.ban.AbstractBan;
++import net.kissenpvp.core.api.ban.AbstractBanTemplate;
+ import net.kissenpvp.core.api.database.DataWriter;
+ import net.kissenpvp.core.api.database.meta.list.MetaList;
+ import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 @@ -39,6 +39,7 @@ import net.kissenpvp.paper.api.permission.Permission;
  import net.kissenpvp.paper.api.user.playersetting.BoundPlayerSetting;
  import net.kissenpvp.paper.api.user.playersetting.PlayerSetting;
@@ -1576,6 +1607,21 @@ index f73d22316817f7ce487d6d48c726ff8460a3f620..8604fb5b7950590f0366a538e0f2f629
  import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
  import net.kissenpvp.paper.user.KissenPaperPublicUser;
  import net.kissenpvp.paper.user.rank.KissenPaperKissenPlayerRank;
+@@ -123,12 +124,12 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<Permiss
+     }
+ 
+     @Override
+-    public @NotNull Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator) {
++    public @NotNull Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator) {
+         return warn(ban, warnOperator, null);
+     }
+ 
+     @Override
+-    public @NotNull Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator, @Nullable Component reason) {
++    public @NotNull Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason) {
+         MetaList<WarnNode> nodes = ((KissenPaperPublicUser) getUser()).getWarns();
+ 
+         AccurateDuration duration = new AccurateDuration(Period.ofWeeks(1));
 @@ -145,6 +146,6 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<Permiss
  
      @Contract(pure = true, value = "-> new")
@@ -1615,6 +1661,50 @@ index 6ab435657c92d9fbf863d2a47254de9f138537f4..4a9cdf250ab96f0191d3fb786ca7a546
  
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+index 54c969597595f02604fa9f75536be760c04a8c71..3dd686fca91515881627381247068f3ff68aadd8 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
+@@ -34,7 +34,7 @@ import org.bukkit.permissions.Permissible;
+ import org.bukkit.permissions.PermissionAttachment;
+ import org.bukkit.permissions.PermissionAttachmentInfo;
+ 
+-import net.kissenpvp.core.api.ban.AbstractBan;
++import net.kissenpvp.core.api.ban.AbstractBanTemplate;
+ import net.kissenpvp.core.api.database.meta.BackendException;
+ import net.kissenpvp.core.api.event.EventCancelledException;
+ import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
+@@ -680,12 +680,12 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     }
+ 
+     @Override
+-    public @NotNull Punishment punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator) throws BackendException {
++    public @NotNull Punishment punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator) throws BackendException {
+         return getKissenPaperPlayerClient().punish(ban, banOperator);
+     }
+ 
+     @Override
+-    public @NotNull Punishment punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException {
++    public @NotNull Punishment punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException {
+         return getKissenPaperPlayerClient().punish(ban, banOperator, reason);
+     }
+ 
+@@ -771,13 +771,13 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+     }
+ 
+     @Override
+-    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator)
++    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator)
+     {
+         return getKissenPaperPlayerClient().warn(ban, warnOperator);
+     }
+ 
+     @Override
+-    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator, @Nullable Component reason)
++    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason)
+     {
+         return getKissenPaperPlayerClient().warn(ban, warnOperator, reason);
+     }
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 index 9de60fa2f31b5f45c7d3e915d3b379a600656b88..ed876a4a82a9bb12c17304162c1c45955f4bfa41 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
@@ -1643,3 +1733,69 @@ index 9de60fa2f31b5f45c7d3e915d3b379a600656b88..ed876a4a82a9bb12c17304162c1c4595
          Preconditions.checkArgument(type != null, "BanList.BanType cannot be null");
         if (type == io.papermc.paper.ban.BanListType.IP) {
             return (B) new CraftIpBanList(this.playerList.getIpBans());
+diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+index 0ff81b1d353bd122e838b96a68c713185258fade..1b2fd3283998ea3eaa6e9fa1643fa34400ba2c70 100644
+--- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
++++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
+@@ -159,7 +159,6 @@ import org.bukkit.craftbukkit.map.CraftMapView;
+ import org.bukkit.craftbukkit.map.RenderData;
+ import org.bukkit.craftbukkit.potion.CraftPotionEffectType;
+ import org.bukkit.craftbukkit.potion.CraftPotionUtil;
+-import org.bukkit.craftbukkit.profile.CraftPlayerProfile;
+ import org.bukkit.craftbukkit.scoreboard.CraftScoreboard;
+ import org.bukkit.craftbukkit.util.CraftChatMessage;
+ import org.bukkit.craftbukkit.util.CraftLocation;
+@@ -172,7 +171,6 @@ import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
+ import org.bukkit.event.player.PlayerHideEntityEvent;
+ import org.bukkit.event.player.PlayerRegisterChannelEvent;
+ import org.bukkit.event.player.PlayerShowEntityEvent;
+-import org.bukkit.event.player.PlayerSpawnChangeEvent;
+ import org.bukkit.event.player.PlayerTeleportEvent;
+ import org.bukkit.event.player.PlayerUnregisterChannelEvent;
+ import org.bukkit.inventory.EquipmentSlot;
+@@ -185,14 +183,13 @@ import org.bukkit.plugin.Plugin;
+ import org.bukkit.plugin.messaging.StandardMessenger;
+ import org.bukkit.potion.PotionEffect;
+ import org.bukkit.potion.PotionEffectType;
+-import org.bukkit.profile.PlayerProfile;
+ import org.bukkit.scoreboard.Scoreboard;
+ import org.jetbrains.annotations.NotNull;
+ 
+ import net.md_5.bungee.api.chat.BaseComponent; // Spigot
+ 
+ // KissenPaper start
+-import net.kissenpvp.core.api.ban.AbstractBan;
++import net.kissenpvp.core.api.ban.AbstractBanTemplate;
+ import net.kissenpvp.core.api.base.KissenServer;
+ import net.kissenpvp.core.api.database.meta.BackendException;
+ import net.kissenpvp.core.api.event.EventCancelledException;
+@@ -3650,12 +3647,12 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     }
+ 
+     @Override
+-    public @NotNull Punishment punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator) throws BackendException {
++    public @NotNull Punishment punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator) throws BackendException {
+         return getKissenPaperOnlinePlayerClient().punish(ban, banOperator);
+     }
+ 
+     @Override
+-    public @NotNull Punishment punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) throws BackendException {
++    public @NotNull Punishment punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) throws BackendException {
+         return getKissenPaperOnlinePlayerClient().punish(ban, banOperator, reason);
+     }
+ 
+@@ -3710,12 +3707,12 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+     }
+ 
+     @Override
+-    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator) {
++    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator) {
+         return getKissenPaperOnlinePlayerClient().warn(ban, warnOperator);
+     }
+ 
+     @Override
+-    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBan ban, @NotNull ServerEntity warnOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) {
++    public @NotNull net.kissenpvp.paper.api.ban.warn.Warn warn(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity warnOperator, net.kyori.adventure.text.@org.jetbrains.annotations.Nullable Component reason) {
+         return getKissenPaperOnlinePlayerClient().warn(ban, warnOperator, reason);
+     }
+ 

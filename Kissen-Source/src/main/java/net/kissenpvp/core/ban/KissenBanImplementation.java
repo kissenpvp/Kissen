@@ -19,7 +19,7 @@
 package net.kissenpvp.core.ban;
 
 import lombok.extern.slf4j.Slf4j;
-import net.kissenpvp.core.api.ban.AbstractBan;
+import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 import net.kissenpvp.core.api.ban.AbstractBanImplementation;
 import net.kissenpvp.core.api.ban.AbstractPunishment;
 import net.kissenpvp.core.api.ban.BanType;
@@ -58,7 +58,7 @@ import java.util.stream.Stream;
  * @param <P> the type of Punishment object to be used
  */
 @Slf4j(topic = "Kissen")
-public abstract class KissenBanImplementation<B extends AbstractBan, P extends AbstractPunishment<?>> implements AbstractBanImplementation<B, P> {
+public abstract class KissenBanImplementation<B extends AbstractBanTemplate, P extends AbstractPunishment<?>> implements AbstractBanImplementation<B, P> {
 
     private static final String STORAGE_KEY = "ban_storage";
     private static final MessageFormat TOTAL_ID_KEY = new MessageFormat("ban_{0}"); // TODO use String#format(String, Object...)
@@ -108,22 +108,22 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<B> getBanSet() {
+    public @NotNull @Unmodifiable Set<B> getBanTemplates() {
         return Collections.unmodifiableSet(cachedBans);
     }
 
     @Override
-    public @NotNull Optional<B> getBan(int id) {
-        return cachedBans.stream().filter(ban -> ban.getID()==id).findFirst();
+    public @NotNull Optional<B> getBanTemplate(int id) {
+        return getBanTemplates().stream().filter(ban -> ban.getID()==id).findFirst();
     }
 
     @Override
-    public @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType) {
-        return createBan(id, name, banType, null);
+    public @NotNull B createBanTemplate(int id, @NotNull String name, @NotNull BanType banType) {
+        return createBanTemplate(id, name, banType, null);
     }
 
     @Override
-    public @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration) {
+    public @NotNull B createBanTemplate(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration) {
         Map<String, Object> data = new HashMap<>();
         data.put("name", name);
         data.put("ban_type", banType);

@@ -18,7 +18,7 @@
 
 package net.kissenpvp.core.ban;
 
-import net.kissenpvp.core.api.ban.AbstractBan;
+import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
@@ -57,7 +57,7 @@ public record KissenPunishmentNode(@NotNull String id, @NotNull String banName, 
                                    @NotNull List<CommentNode> comments, @NotNull TemporalData temporalMeasure)
 {
 
-    public KissenPunishmentNode(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator, @Nullable Component reason) {
+    public KissenPunishmentNode(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator, @Nullable Component reason) {
         this(UUID.randomUUID().toString().split("-")[1], ban.getName(), banOperator instanceof PlayerClient<?,?,?> playerClient ? playerClient.getUniqueId().toString() : banOperator.getName(), ban.getBanType(), new Container<>(reason), new ArrayList<>(), new TemporalData(System.currentTimeMillis(), ban.getDuration().orElse(null)));
     }
 

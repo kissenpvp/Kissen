@@ -18,7 +18,7 @@
 
 package net.kissenpvp.core.networking.client.entity;
 
-import net.kissenpvp.core.api.ban.AbstractBan;
+import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 import net.kissenpvp.core.api.ban.AbstractBanImplementation;
 import net.kissenpvp.core.api.ban.AbstractPunishment;
 import net.kissenpvp.core.api.database.DataWriter;
@@ -101,12 +101,12 @@ public abstract class KissenPlayerClient<P extends AbstractPermission, R extends
     }
 
     @Override
-    public @NotNull B punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator) {
+    public @NotNull B punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator) {
         return punish(ban, banOperator, null);
     }
 
     @Override
-    public @NotNull B punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException {
+    public @NotNull B punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator, @Nullable Component reason) throws BackendException {
         return (B) KissenCore.getInstance().getImplementation(AbstractBanImplementation.class).punish(getTotalID(), ban, banOperator, reason);
     }
 

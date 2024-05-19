@@ -18,7 +18,7 @@
 
 package net.kissenpvp.core.api.networking.client.entitiy;
 
-import net.kissenpvp.core.api.ban.AbstractBan;
+import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 import net.kissenpvp.core.api.ban.AbstractPunishment;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.permission.AbstractPermission;
@@ -126,12 +126,12 @@ public interface PlayerClient<P extends AbstractPermission, R extends AbstractPl
      *
      * <p>This method is specifically designed for cases where a ban and ban operator are provided without a reason.</p>
      *
-     * @param ban the {@link AbstractBan} information for the punishment
+     * @param ban the {@link AbstractBanTemplate} information for the punishment
      * @param banOperator the {@link ServerEntity} performing the ban
      * @return the punishment object representing the applied punishment
      * @throws NullPointerException if either the ban or banOperator is {@code null}
      */
-    @NotNull B punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator);
+    @NotNull B punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator);
 
     /**
      * Applies a punishment based on the provided ban information and the server entity performing the ban.
@@ -142,13 +142,13 @@ public interface PlayerClient<P extends AbstractPermission, R extends AbstractPl
      *     <li>When a ban, ban operator, and an optional reason are provided.</li>
      * </ol>
      *
-     * @param ban the {@link AbstractBan} information for the punishment
+     * @param ban the {@link AbstractBanTemplate} information for the punishment
      * @param banOperator the {@link ServerEntity} performing the ban
      * @param reason (optional) the reason for the ban, can be {@code null} if not provided
      * @return the punishment object representing the applied punishment
      * @throws NullPointerException if either the ban or banOperator is {@code null}
      */
-    @NotNull B punish(@NotNull AbstractBan ban, @NotNull ServerEntity banOperator, @Nullable Component reason);
+    @NotNull B punish(@NotNull AbstractBanTemplate ban, @NotNull ServerEntity banOperator, @Nullable Component reason);
 
     @NotNull Optional<B> getPunishment(@NotNull String id) throws BackendException;
 

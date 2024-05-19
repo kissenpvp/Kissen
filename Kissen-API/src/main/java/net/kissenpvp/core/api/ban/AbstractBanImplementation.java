@@ -42,14 +42,14 @@ import java.util.UUID;
  * This interface is designed to be implemented by a class that manages player bans for a system.
  * It can be used by other components of the system to interact with the ban controller and enforce bans on players.
  * <p>
- * This interface should be used in conjunction with the {@link AbstractBan} class, which represents a single ban and provides methods for modifying or deleting the ban.
+ * This interface should be used in conjunction with the {@link AbstractBanTemplate} class, which represents a single ban and provides methods for modifying or deleting the ban.
  *
  * @see Implementation
- * @see AbstractBan
+ * @see AbstractBanTemplate
  * @see AbstractPunishment
  * @see BanType
  */
-public interface AbstractBanImplementation<B extends AbstractBan, P extends AbstractPunishment<?>> extends Implementation {
+public interface AbstractBanImplementation<B extends AbstractBanTemplate, P extends AbstractPunishment<?>> extends Implementation {
 
     /**
      * Returns an unmodifiable set containing all bans.
@@ -57,33 +57,33 @@ public interface AbstractBanImplementation<B extends AbstractBan, P extends Abst
      * This method returns an {@link Unmodifiable} {@link Set} containing {@link B}.
      * As the {@link B} are cached it is not a problem to call this method more often.
      * <p>
-     * Note that this list is updated when {@link #createBan(int, String, BanType)}, {@link #createBan(int, String, BanType, AccurateDuration)} or {@link B#delete()} is called.
+     * Note that this list is updated when {@link #createBanTemplate(int, String, BanType)}, {@link #createBanTemplate(int, String, BanType, AccurateDuration)} or {@link B#delete()} is called.
      *
      * @return An unmodifiable {@link Set} containing all bans.
-     * @see AbstractBan
-     * @see #createBan(int, String, BanType, AccurateDuration)
-     * @see AbstractBan#delete()
+     * @see AbstractBanTemplate
+     * @see #createBanTemplate(int, String, BanType, AccurateDuration)
+     * @see AbstractBanTemplate#delete()
      */
     @NotNull
     @Unmodifiable
-    Set<B> getBanSet();
+    Set<B> getBanTemplates();
 
     /**
      * Returns an {@link Optional} containing a previously created ban with the given ID.
      * <p>
-     * If the {@link Optional} is empty, a {@link B} with the given ID does not exist within the system and can be added using {@link #createBan(int, String, BanType)} or
-     * {@link #createBan(int, String, BanType, AccurateDuration)}.
+     * If the {@link Optional} is empty, a {@link B} with the given ID does not exist within the system and can be added using {@link #createBanTemplate(int, String, BanType)} or
+     * {@link #createBanTemplate(int, String, BanType, AccurateDuration)}.
      * <p>
-     * To get all available {@link B}, use the method {@link #getBanSet()} which returns an unmodifiable set containing all {@link B}.
+     * To get all available {@link B}, use the method {@link #getBanTemplates()} which returns an unmodifiable set containing all {@link B}.
      *
      * @param id The ID of the ban to return.
      * @return An {@link Optional} containing the {@link B} with the given ID, or an empty one if no such {@link B} exists.
-     * @see #createBan(int, String, BanType)
-     * @see #createBan(int, String, BanType, AccurateDuration)
-     * @see #getBanSet()
+     * @see #createBanTemplate(int, String, BanType)
+     * @see #createBanTemplate(int, String, BanType, AccurateDuration)
+     * @see #getBanTemplates()
      */
     @NotNull
-    Optional<B> getBan(int id);
+    Optional<B> getBanTemplate(int id);
 
     /**
      * Creates a new ban with the given ID, name, and type.
@@ -99,7 +99,7 @@ public interface AbstractBanImplementation<B extends AbstractBan, P extends Abst
      * @return The newly created {@link B}.
      */
     @NotNull
-    B createBan(int id, @NotNull String name, @NotNull BanType banType);
+    B createBanTemplate(int id, @NotNull String name, @NotNull BanType banType);
 
     /**
      * Creates a new ban with the given ID, name, type, and duration.
@@ -111,12 +111,12 @@ public interface AbstractBanImplementation<B extends AbstractBan, P extends Abst
      * @param name             The name of the player being banned.
      * @param banType          The type of the ban.
      * @param accurateDuration The duration of the ban, or {@code null} for permanent bans.
-     * @return The new {@link AbstractBan}.
-     * @see #createBan(int, String, BanType)
-     * @see #createBan(int, String, BanType, AccurateDuration)
+     * @return The new {@link AbstractBanTemplate}.
+     * @see #createBanTemplate(int, String, BanType)
+     * @see #createBanTemplate(int, String, BanType, AccurateDuration)
      */
     @NotNull
-    B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration);
+    B createBanTemplate(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration);
 
     /**
      * Appends the specified {@link B} to the players where {@link PlayerClient#getTotalID()} equals to {@link P#getTotalID()}.
@@ -125,7 +125,7 @@ public interface AbstractBanImplementation<B extends AbstractBan, P extends Abst
      * Note that this ban will instantly be applied.
      *
      * @param totalID     the UUID of the player to be banned.
-     * @param ban         the {@link AbstractBan} object containing details of the ban to be applied.
+     * @param ban         the {@link AbstractBanTemplate} object containing details of the ban to be applied.
      * @param banOperator the name of the team member who is applying the ban.
      * @return a {@link P} object representing the newly applied ban.
      * @see B

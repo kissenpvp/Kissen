@@ -18,7 +18,7 @@
 
 package net.kissenpvp.core.ban;
 
-import net.kissenpvp.core.api.ban.AbstractBan;
+import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 import net.kissenpvp.core.api.ban.BanType;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public abstract class KissenBan extends KissenSavable<Integer> implements AbstractBan {
+public abstract class KissenBanTemplate extends KissenSavable<Integer> implements AbstractBanTemplate {
 
     @Override
     public int getID() {

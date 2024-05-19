@@ -24,18 +24,17 @@ import net.kissenpvp.core.api.time.AccurateDuration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
 import java.util.Optional;
 
 /**
  * The {@code Ban} interface represents a ban that can be applied to a player in a game or server, specifying its unique ID, name, type, duration, and behavior.
  * <p>
- * To create a ban, you can use {@link AbstractBanImplementation#createBan(int, String, BanType, net.kissenpvp.core.api.time.AccurateDuration)}.
+ * To create a ban, you can use {@link AbstractBanImplementation#createBanTemplate(int, String, BanType, net.kissenpvp.core.api.time.AccurateDuration)}.
  * <p>
- * Once a ban has been created, it can be loaded using {@link AbstractBanImplementation#getBan(int)}.
+ * Once a ban has been created, it can be loaded using {@link AbstractBanImplementation#getBanTemplate(int)}.
  * <br>This allows you to manage bans for players, including specifying the ban's ID, name, type, duration, and behavior.
  * <p>
- * If you need to retrieve all bans at once, you can use {@link AbstractBanImplementation#getBanSet()}.
+ * If you need to retrieve all bans at once, you can use {@link AbstractBanImplementation#getBanTemplates()}.
  * <p>
  * These Bans do NOT apply to player directly, instead they function as template for creating a {@link AbstractPunishment}.
  *
@@ -43,12 +42,12 @@ import java.util.Optional;
  * @see BanType
  * @see AbstractBanImplementation
  */
-public interface AbstractBan {
+public interface AbstractBanTemplate {
 
     /**
      * Returns the unique ID that identifies this ban object. This ID cannot be edited once the object is created.
      * <p>
-     * However, it is possible to create a new object with the same ID and add it to the system. This will override the previously created instance of the {@link AbstractBan}.
+     * However, it is possible to create a new object with the same ID and add it to the system. This will override the previously created instance of the {@link AbstractBanTemplate}.
      * <p>
      * If this ID is no longer needed, call the {@link #delete()} method to remove it from the system.
      *

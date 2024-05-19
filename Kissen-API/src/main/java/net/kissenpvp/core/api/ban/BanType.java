@@ -38,7 +38,7 @@ import java.util.Locale;
  * This enum is serializable, meaning that it can be stored or transferred as a sequence of bytes.
  * </p>
  *
- * @see AbstractBan
+ * @see AbstractBanTemplate
  * @see AbstractPunishment
  */
 public enum BanType implements Serializable

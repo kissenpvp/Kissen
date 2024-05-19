@@ -1,7 +1,7 @@
 package net.kissenpvp.core.ban.events.ban;
 
 import lombok.Setter;
-import net.kissenpvp.core.api.ban.AbstractBan;
+import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 
 @Setter
-public class BanAlterDurationEvent<B extends AbstractBan> extends BanEvent<B> {
+public class BanAlterDurationEvent<B extends AbstractBanTemplate> extends BanEvent<B> {
 
     private AccurateDuration accurateDuration;
 
