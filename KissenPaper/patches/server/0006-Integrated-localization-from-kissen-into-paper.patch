@@ -96,7 +96,7 @@ index 0000000000000000000000000000000000000000..e085d4c120a323b555970b7643b7280a
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 8d1d0754b50c1eea69db91126587b009009e1131..60956fc6df086921ffd7ac81c3d0fba2bb58f879 100644
+index ab9bac053c443acdefc3045df4b50d902b998d88..03dff8c988f3b346d7156ca2a67464f367fbbd74 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -2245,6 +2245,7 @@ public class ServerPlayer extends Player {
@@ -107,7 +107,7 @@ index 8d1d0754b50c1eea69db91126587b009009e1131..60956fc6df086921ffd7ac81c3d0fba2
          }
          // CraftBukkit end
          // Paper start - don't call options events on login
-@@ -2870,4 +2871,12 @@ public class ServerPlayer extends Player {
+@@ -2876,4 +2877,12 @@ public class ServerPlayer extends Player {
          return (CraftPlayer) super.getBukkitEntity();
      }
      // CraftBukkit end
@@ -121,7 +121,7 @@ index 8d1d0754b50c1eea69db91126587b009009e1131..60956fc6df086921ffd7ac81c3d0fba2
 +
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index a2669f47aa298d22b901ff86f323d596d8775cfe..1b4493826b8456ecc094479e04b60cc7bd4382e7 100644
+index 7720ee4da48c5e4eb4c6e1cf6bdc1f93ab84e1ea..0ff81b1d353bd122e838b96a68c713185258fade 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -3311,7 +3311,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {

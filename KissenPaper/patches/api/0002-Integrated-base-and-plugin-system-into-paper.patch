@@ -881,10 +881,10 @@ index 0000000000000000000000000000000000000000..878a9d11bf308d9206022ea0e086bdcc
 +    }
 +}
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index 5d1b55fdbcbe63f6b42b694d05211a3cc691a09d..8a165ffbdf16ceae39fc22a2c930d50158e5ca3a 100644
+index 71f1c361ebccbe83193c37ec3a90faa4085001c3..f7730675e3b9fec31bdbc7cec95a20ea09d97012 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
-@@ -2910,4 +2910,17 @@ public final class Bukkit {
+@@ -2907,4 +2907,17 @@ public final class Bukkit {
      public static Server.Spigot spigot() {
          return server.spigot();
      }
