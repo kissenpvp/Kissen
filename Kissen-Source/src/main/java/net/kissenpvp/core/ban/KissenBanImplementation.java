@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.ban;
 
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.ban.AbstractBan;
 import net.kissenpvp.core.api.ban.AbstractBanImplementation;
 import net.kissenpvp.core.api.ban.AbstractPunishment;
@@ -56,6 +57,7 @@ import java.util.stream.Stream;
  * @param <B> the type of Ban object to be used
  * @param <P> the type of Punishment object to be used
  */
+@Slf4j(topic = "Kissen")
 public abstract class KissenBanImplementation<B extends AbstractBan, P extends AbstractPunishment<?>> implements AbstractBanImplementation<B, P> {
 
     private static final String STORAGE_KEY = "ban_storage";
@@ -413,7 +415,12 @@ public abstract class KissenBanImplementation<B extends AbstractBan, P extends A
     protected @NotNull B setupBan(int id, @NotNull Map<String, Object> data) {
         B ban = createObject();
         ((Savable<Integer>) ban).setup(id, data);
-        cachedBans.add(ban);
+        if(!cachedBans.add(ban))
+        {
+            log.debug("Replace ban {} with new ban having the same id.", ban.getID());
+            cachedBans.remove(ban);
+            cachedBans.add(ban);
+        }
         return ban;
     }
 
