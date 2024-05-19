@@ -19,18 +19,11 @@
 package net.kissenpvp.core.api.user.rank;
 
 
-import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.time.TemporalObject;
 import org.jetbrains.annotations.NotNull;
 
 public interface AbstractPlayerRank<RANK extends AbstractRank> extends TemporalObject {
-    /**
-     * Returns the id of this player rank.
-     * This is generated using {@link DataImplementation#generateID()}.
-     * This id is unique means only this specific rank got it.
-     *
-     * @return the id this player rank has.
-     */
+
     @NotNull String getID();
 
     @NotNull RANK getSource();

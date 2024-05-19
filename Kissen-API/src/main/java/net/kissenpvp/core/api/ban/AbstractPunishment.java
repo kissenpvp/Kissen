@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.api.ban;
 
-import net.kissenpvp.core.api.database.DataImplementation;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.message.Comment;
 import net.kissenpvp.core.api.networking.client.entitiy.OnlinePlayerClient;
@@ -61,18 +60,6 @@ public interface AbstractPunishment<T> extends TemporalObject {
      */
     @NotNull UUID getTotalID();
 
-    /**
-     * Returns a unique string identifier that distinguishes the bans associated with a particular total id.
-     * In order to generate this id, {@link DataImplementation#generateID()} is used.
-     * <p>
-     * The ID has the following format: a four-character sequence consisting of lowercase letters and numbers. For example: "a784, 1cdf, aa82".
-     * It matches the regular expression pattern: {@code ^[a-z0-9]{4}$}.
-     * <p>
-     * The ID is immutable and cannot be changed.
-     *
-     * @return the unique identifier for this player ban, following the format "^[a-z0-9]{4}$"
-     * @throws IllegalArgumentException if the ID does not match the expected format
-     */
     @NotNull String getID();
 
     /**
