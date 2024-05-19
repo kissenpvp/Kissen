@@ -5,7 +5,7 @@ Subject: [PATCH] Rebrand PaperMC to KissenPaper
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
-index 532306cacd52579cdf37e4aca25887b1ed3ba6a1..c8f1d526a1fcf9978138d267eff6787da13cd783 100644
+index 532306cacd52579cdf37e4aca25887b1ed3ba6a1..76193bf5973d02ec919552bb9d22bf94194767f7 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
 @@ -35,7 +35,7 @@ public class PaperVersionFetcher implements VersionFetcher {
@@ -26,7 +26,18 @@ index 532306cacd52579cdf37e4aca25887b1ed3ba6a1..c8f1d526a1fcf9978138d267eff6787d
          }
          final @Nullable Component history = this.getHistory();
  
-@@ -85,7 +85,7 @@ public class PaperVersionFetcher implements VersionFetcher {
+@@ -57,6 +57,10 @@ public class PaperVersionFetcher implements VersionFetcher {
+     }
+ 
+     private static Component getUpdateStatusMessage(final String repo, final ServerBuildInfo build) {
++        if(true) // KissenPaper TODO implement for real
++        {
++            return text("You are running the latest version", NamedTextColor.GREEN);
++        }
+         int distance = DISTANCE_ERROR;
+ 
+         final OptionalInt buildNumber = build.buildNumber();
+@@ -85,7 +89,7 @@ public class PaperVersionFetcher implements VersionFetcher {
  
      private static int fetchDistanceFromSiteApi(final ServerBuildInfo build, final int jenkinsBuild) {
          try {
