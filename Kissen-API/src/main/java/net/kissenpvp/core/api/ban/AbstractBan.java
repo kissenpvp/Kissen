@@ -30,7 +30,7 @@ import java.util.Optional;
 /**
  * The {@code Ban} interface represents a ban that can be applied to a player in a game or server, specifying its unique ID, name, type, duration, and behavior.
  * <p>
- * To create a ban, you can use either {@link AbstractBanImplementation#createBan(int, String, BanType, net.kissenpvp.core.api.time.AccurateDuration)} or {@link AbstractBanImplementation#createBan(int, Map)}.
+ * To create a ban, you can use {@link AbstractBanImplementation#createBan(int, String, BanType, net.kissenpvp.core.api.time.AccurateDuration)}.
  * <p>
  * Once a ban has been created, it can be loaded using {@link AbstractBanImplementation#getBan(int)}.
  * <br>This allows you to manage bans for players, including specifying the ban's ID, name, type, duration, and behavior.

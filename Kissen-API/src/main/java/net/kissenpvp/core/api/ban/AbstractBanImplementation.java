@@ -53,27 +53,25 @@ import java.util.UUID;
 public interface AbstractBanImplementation<B extends AbstractBan, P extends AbstractPunishment<?>> extends Implementation {
     
     /**
-     * Returns an unmodifiable set containing all bans created using {@link #createBan(int, Map)} or {@link #createBan(int, String, BanType, AccurateDuration)}.
+     * Returns an unmodifiable set containing all bans created using {@link #createBan(int, String, BanType, AccurateDuration)}.
      * This set cannot be modified. To remove a {@link AbstractBan} from this set, use {@link AbstractBan#delete()} instead.
      *
      * @return An unmodifiable {@link Set} containing all bans.
      * @see AbstractBan
-     * @see #createBan(int, Map)
      * @see #createBan(int, String, BanType, AccurateDuration)
      * @see AbstractBan#delete()
      */
     @NotNull @Unmodifiable Set<B> getBanSet();
 
     /**
-     * Returns an {@link Optional} containing a previously created ban with the given ID using {@link #createBan(int, Map)} or {@link #createBan(int, String, BanType, AccurateDuration)}.
+     * Returns an {@link Optional} containing a previously created ban with the given ID using {@link #createBan(int, String, BanType, AccurateDuration)}.
      * <p>
-     * If {@link Optional#isEmpty()} returns {@code true}, a {@link AbstractBan} with the given ID does not exist in the system and can be added using {@link #createBan(int, Map)} or {@link #createBan(int, String, BanType, AccurateDuration)}.
+     * If {@link Optional#isEmpty()} returns {@code true}, a {@link AbstractBan} with the given ID does not exist in the system and can be added using {@link #createBan(int, String, BanType, AccurateDuration)}.
      * <p>
      * To get all available {@link AbstractBan}, use the method {@link #getBanSet()} which returns an unmodifiable set containing all {@link AbstractBan}.
      *
      * @param id The ID of the ban to return.
      * @return An {@link Optional} containing the {@link AbstractBan} with the given ID, or an empty one if no such {@link AbstractBan} exists.
-     * @see #createBan(int, Map)
      * @see #createBan(int, String, BanType, AccurateDuration)
      * @see #getBanSet()
      */
