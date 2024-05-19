@@ -48,8 +48,11 @@ public interface TemporalObject {
     @NotNull Optional<Instant> getPredictedEnd();
 
     /**
-     * Checks the validity of the temporal event.
-     * @return True if the event is valid (i.e., it has a start time and either a duration or an end time), False otherwise.
+     * Check whether the temporal event is still valid.
+     * <p>
+     * This method checks the current time and returns whether the temporal object is still valid.
+     *
+     * @return true if the event is valid (i.e., it has a start time and either a duration or an end time), false otherwise.
      */
     boolean isValid();
 

@@ -27,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -51,218 +50,215 @@ import java.util.UUID;
  * @see BanType
  */
 public interface AbstractBanImplementation<B extends AbstractBan, P extends AbstractPunishment<?>> extends Implementation {
-    
+
     /**
-     * Returns an unmodifiable set containing all bans created using {@link #createBan(int, String, BanType, AccurateDuration)}.
-     * This set cannot be modified. To remove a {@link AbstractBan} from this set, use {@link AbstractBan#delete()} instead.
+     * Returns an unmodifiable set containing all bans.
+     * <p>
+     * This method returns an {@link Unmodifiable} {@link Set} containing {@link B}.
+     * As the {@link B} are cached it is not a problem to call this method more often.
+     * <p>
+     * Note that this list is updated when {@link #createBan(int, String, BanType)}, {@link #createBan(int, String, BanType, AccurateDuration)} or {@link B#delete()} is called.
      *
      * @return An unmodifiable {@link Set} containing all bans.
      * @see AbstractBan
      * @see #createBan(int, String, BanType, AccurateDuration)
      * @see AbstractBan#delete()
      */
-    @NotNull @Unmodifiable Set<B> getBanSet();
+    @NotNull
+    @Unmodifiable
+    Set<B> getBanSet();
 
     /**
-     * Returns an {@link Optional} containing a previously created ban with the given ID using {@link #createBan(int, String, BanType, AccurateDuration)}.
+     * Returns an {@link Optional} containing a previously created ban with the given ID.
      * <p>
-     * If {@link Optional#isEmpty()} returns {@code true}, a {@link AbstractBan} with the given ID does not exist in the system and can be added using {@link #createBan(int, String, BanType, AccurateDuration)}.
+     * If the {@link Optional} is empty, a {@link B} with the given ID does not exist within the system and can be added using {@link #createBan(int, String, BanType)} or
+     * {@link #createBan(int, String, BanType, AccurateDuration)}.
      * <p>
-     * To get all available {@link AbstractBan}, use the method {@link #getBanSet()} which returns an unmodifiable set containing all {@link AbstractBan}.
+     * To get all available {@link B}, use the method {@link #getBanSet()} which returns an unmodifiable set containing all {@link B}.
      *
      * @param id The ID of the ban to return.
-     * @return An {@link Optional} containing the {@link AbstractBan} with the given ID, or an empty one if no such {@link AbstractBan} exists.
+     * @return An {@link Optional} containing the {@link B} with the given ID, or an empty one if no such {@link B} exists.
+     * @see #createBan(int, String, BanType)
      * @see #createBan(int, String, BanType, AccurateDuration)
      * @see #getBanSet()
      */
-    @NotNull Optional<B> getBan(int id);
+    @NotNull
+    Optional<B> getBan(int id);
 
     /**
      * Creates a new ban with the given ID, name, and type.
-     * The ban is returned as a {@link AbstractBan} object. If a ban with the same ID already exists, it will be overridden.
+     * <p>
+     * The ban is returned as a {@link B} object. If a ban with the same ID already exists, it will be overridden.
+     * The newly created ban is saved within the database.
+     * <p>
+     * Note that as the duration is not set, the ban will be permanent.
+     *
+     * @param id      The ID of the new ban.
+     * @param name    The name of the ban.
+     * @param banType The type of the ban.
+     * @return The newly created {@link B}.
+     */
+    @NotNull
+    B createBan(int id, @NotNull String name, @NotNull BanType banType);
+
+    /**
+     * Creates a new ban with the given ID, name, type, and duration.
+     * <p>
+     * The ban is returned as a {@link B} object. If a ban with the same ID already exists, it will be overridden.
      * The newly created ban is saved within the database.
      *
-     * @param id       The ID of the new ban.
-     * @param name     The name of the ban.
-     * @param banType  The type of the ban.
+     * @param id               The ID of the new ban.
+     * @param name             The name of the player being banned.
+     * @param banType          The type of the ban.
+     * @param accurateDuration The duration of the ban, or {@code null} for permanent bans.
      * @return The new {@link AbstractBan}.
-     * @throws NullPointerException if either name or banType is null.
-     * @see AbstractBan
+     * @see #createBan(int, String, BanType)
+     * @see #createBan(int, String, BanType, AccurateDuration)
      */
-    @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType);
+    @NotNull
+    B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration);
 
     /**
-     * Creates a new ban with the given ID, name, type, and duration. The ban is returned as a {@link AbstractBan} object.
-     *
-     * @param id       The ID of the new ban.
-     * @param name     The name of the player being banned.
-     * @param banType  The type of the ban.
-     * @param accurateDuration The duration of the ban, or null for permanent bans.
-     * @return The new {@link AbstractBan}.
-     * @throws NullPointerException if the name or banType is null.
-     * @see AbstractBan
-     */
-    @NotNull B createBan(int id, @NotNull String name, @NotNull BanType banType, @Nullable AccurateDuration accurateDuration);
-
-    /**
-     * Applies the specified {@link AbstractBan} to the player with the given UUID, without providing a reason for the ban.
-     * The team member who applies the ban is identified by the given banner.
+     * Appends the specified {@link B} to the players where {@link PlayerClient#getTotalID()} equals to {@link P#getTotalID()}.
+     * This can affect multiple entries.
      * <p>
-     * It is recommended to use {@link #punish(UUID, AbstractBan, ServerEntity, Component)} to provide a reason for the ban.
-     * </p>
-     * <p>
-     * Depending on the {@link AbstractBan}, this punishment will be executed immediately and will affect all players who have the same {@link PlayerClient#getTotalID()} as the provided UUID.
-     * </p>
+     * Note that this ban will instantly be applied.
      *
      * @param totalID     the UUID of the player to be banned.
      * @param ban         the {@link AbstractBan} object containing details of the ban to be applied.
      * @param banOperator the name of the team member who is applying the ban.
-     * @return a {@link AbstractPunishment} object representing the newly applied ban.
-     * @throws NullPointerException if either totalID, ban or banner are null.
-     * @see AbstractBan
-     * @see AbstractPunishment
-     * @see #punish(UUID, AbstractBan, ServerEntity, Component)
+     * @return a {@link P} object representing the newly applied ban.
+     * @see B
+     * @see P
+     * @see #punish(UUID, B, ServerEntity, Component)
+     * @see #punish(UUID, B, ServerEntity, boolean)
+     * @see #punish(UUID, B, ServerEntity, boolean, Component)
+     *
      */
-    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator) ;
+    @NotNull
+    P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator);
 
     /**
-     * Applies the specified {@link AbstractBan} to the player identified by the given {@code totalID} and returns a {@link AbstractPunishment} object that represents the newly applied ban.
-     * If a reason for the ban is provided, it will be included in the {@link AbstractPunishment} object for future reference.
+     * Appends the specified {@link B} to the players where {@link PlayerClient#getTotalID()} equals to {@link P#getTotalID()}.
+     * This can affect multiple entries.
+     * If a reason for the ban is provided, it will be included in the {@link P} object for future reference.
      * <p>
-     * If no reason is given, use {@link #punish(UUID, AbstractBan, ServerEntity)} instead.
-     * </p>
-     * <p>
-     * The punishment specified by the {@link AbstractBan} object will be executed immediately and will affect all players who have the same {@link PlayerClient#getTotalID()} as the one provided.
-     * </p>
+     * Note that this ban will instantly be applied.
      *
      * @param totalID     the UUID of the player to be banned
-     * @param ban         the {@link AbstractBan} object containing details of the ban to be applied
+     * @param ban         the {@link B} object containing details of the ban to be applied
      * @param banOperator the name of the team member who is applying the ban
-     * @param reason      an optional reason for the ban, which will be included in the {@link AbstractPunishment} object
-     * @return a {@link AbstractPunishment} object representing the newly applied ban
-     * @throws NullPointerException if either totalID, ban, or banner is null
-     * @see AbstractBan
-     * @see AbstractPunishment
-     * @see #punish(UUID, AbstractBan, ServerEntity)
+     * @param reason      an optional reason for the ban, which will be included in the {@link P} object  If it is {@code null} the {@link P} won't have a reason.
+     * @return a {@link P} object representing the newly applied ban
+     * @see B
+     * @see P
+     * @see #punish(UUID, B, ServerEntity)
+     * @see #punish(UUID, B, ServerEntity, boolean)
+     * @see #punish(UUID, B, ServerEntity, boolean, Component)
      */
-    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, @Nullable Component reason);
+    @NotNull
+    P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, @Nullable Component reason);
 
     /**
-     * Applies the specified {@link AbstractBan} to the player identified by the given {@code totalID} and returns a {@link AbstractPunishment} object that represents the newly applied ban.
-     * This method allows controlling whether to apply the punishment immediately or not.
+     * Appends the specified {@link B} to the players where {@link PlayerClient#getTotalID()} equals to {@link P#getTotalID()}.
+     * This can affect multiple entries.
      *
      * @param totalID     the UUID of the player to be banned
-     * @param ban         the {@link AbstractBan} object containing details of the ban to be applied
+     * @param ban         the {@link B} object containing details of the ban to be applied
      * @param banOperator the name of the team member who is applying the ban
      * @param apply       a boolean indicating whether to apply the punishment immediately
-     * @return a {@link AbstractPunishment} object representing the newly applied ban
-     * @throws NullPointerException if either totalID, ban, or banOperator is null
-     * @see AbstractBan
-     * @see AbstractPunishment
-     * @see #punish(UUID, AbstractBan, ServerEntity)
+     * @return a {@link P} object representing the newly applied ban
+     * @see B
+     * @see P
+     * @see #punish(UUID, B, ServerEntity)
+     * @see #punish(UUID, B, ServerEntity, Component)
+     * @see #punish(UUID, B, ServerEntity, boolean, Component)
      */
-    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply);
+    @NotNull
+    P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply);
 
     /**
-     * Applies the specified {@link AbstractBan} to the player identified by the given {@code totalID} and returns a {@link AbstractPunishment} object that represents the newly applied ban.
-     * This method allows controlling whether to apply the punishment immediately or not, and includes an optional reason for the ban.
+     * Appends the specified {@link B} to the players where {@link PlayerClient#getTotalID()} equals to {@link P#getTotalID()}.
+     * This can affect multiple entries.
      *
      * @param totalID     the UUID of the player to be banned
-     * @param ban         the {@link AbstractBan} object containing details of the ban to be applied
+     * @param ban         the {@link B} object containing details of the ban to be applied
      * @param banOperator the name of the team member who is applying the ban
      * @param apply       a boolean indicating whether to apply the punishment immediately
-     * @param reason      an optional reason for the ban, which will be included in the {@link AbstractPunishment} object
-     * @return a {@link AbstractPunishment} object representing the newly applied ban
-     * @throws NullPointerException if either totalID, ban, or banOperator is null
-     * @see AbstractBan
-     * @see AbstractPunishment
-     * @see #punish(UUID, AbstractBan, ServerEntity)
+     * @param reason      an optional reason for the ban, which will be included in the {@link P} object. If it is {@code null} the {@link P} won't have a reason.
+     * @return a {@link P} object representing the newly applied ban
+     * @see B
+     * @see P
+     * @see #punish(UUID, B, ServerEntity)
+     * @see #punish(UUID, B, ServerEntity, Component)
+     * @see #punish(UUID, B, ServerEntity, boolean)
      */
-    @NotNull P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason);
+    @NotNull
+    P punish(@NotNull UUID totalID, @NotNull B ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason);
 
     /**
-     * Returns the most recent valid ban associated with the player having the specified {@link PlayerClient#getTotalID()}.
+     * Returns the most recent valid ban associated with the given id.
      * If no valid bans are found, an empty {@link Optional} is returned.
-     *
-     * <p>
-     * Bans can be applied to players using {@link #punish(UUID, AbstractBan, ServerEntity, Component)} or {@link #punish(UUID, AbstractBan, ServerEntity)}.
-     * </p>
      *
      * <p>
      * To filter for a specific {@link BanType}, use the {@link #getLatestPunishment(UUID, BanType)} method instead.
      * </p>
      *
-     * @param totalID the UUID of the player for whom to search for bans.
-     * @return an {@link Optional} containing the most recent {@link AbstractPunishment} object representing a valid ban for the specified player,
+     * @param totalID the total id of the players for whom to search for bans.
+     * @return an {@link Optional} containing the most recent {@link P} object representing a valid ban associated with the given id.
      * or an empty {@link Optional} if no valid bans are found.
-     * @throws NullPointerException if {@code totalID} is null.
      * @see AbstractPunishment#isValid()
-     * @see #punish(UUID, AbstractBan, ServerEntity, Component)
-     * @see #punish(UUID, AbstractBan, ServerEntity)
+     * @see #punish(UUID, B, ServerEntity, Component)
+     * @see #punish(UUID, B, ServerEntity)
      * @see #getLatestPunishment(UUID, BanType)
      */
-    @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID) ;
+    @NotNull
+    Optional<P> getLatestPunishment(@NotNull UUID totalID);
 
     /**
-     * Returns the most recent valid ban of the specified type associated with the player having the specified {@link PlayerClient#getTotalID()}.
-     * If no valid bans of the specified type are found, an empty {@link Optional} is returned.
-     *
-     * <p>
-     * Bans can be applied to players using {@link #punish(UUID, AbstractBan, ServerEntity, Component)} or {@link #punish(UUID, AbstractBan, ServerEntity)}.
-     * </p>
+     * Returns the most recent valid punishments of the specified type associated with the given id.
+     * If no valid punishments of the specified type are found, an empty {@link Optional} is returned.
      *
      * <p>
      * If no specific {@link BanType} is needed, use the method {@link #getLatestPunishment(UUID)} instead.
      * </p>
      *
-     * @param totalID the UUID of the player for whom to search for bans.
+     * @param totalID the total id of the players for whom to search for punishments.
      * @param banType the type of ban to search for.
-     * @return an {@link Optional} containing the most recent {@link AbstractPunishment} object representing a valid ban of the specified type for the specified player.
+     * @return an {@link Optional} containing the most recent {@link P} object representing a valid punishments associated with the given id.
      * Returns an empty {@link Optional} if no valid bans of the specified type are found.
-     * @throws NullPointerException if {@code totalID} or {@code banType} are null.
      * @see AbstractPunishment#isValid()
      * @see #getLatestPunishment(UUID)
-     * @see #punish(UUID, AbstractBan, ServerEntity, Component)
-     * @see #punish(UUID, AbstractBan, ServerEntity)
+     * @see #punish(UUID, B, ServerEntity, Component)
+     * @see #punish(UUID, B, ServerEntity)
      */
-    @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType) ;
+    @NotNull
+    Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType);
 
     /**
-     * Returns an unmodifiable set of all the bans associated with the player having the specified {@link PlayerClient#getTotalID()}.
-     * These bans include both valid and invalid bans.
-     * <p>
-     * To get the most recent valid ban of a player, use the {@link #getLatestPunishment(UUID)} or the {@link #getLatestPunishment(UUID, BanType)} method.
+     * Returns an unmodifiable set of all the punishments associated with the given id.
+     * This list contains all punishments not regarding their {@link P#isValid()} state.
      *
-     * <p>
-     * Note that this method returns an unmodifiable set, meaning that it cannot be modified directly.
-     * Attempting to modify the set will result in an {@link UnsupportedOperationException} being thrown.
-     * </p>
-     *
-     * @param totalID the UUID of the player for whom to retrieve the set of bans.
-     * @return an unmodifiable {@link Set} of all the {@link AbstractPunishment} objects associated with the specified player.
-     * @throws NullPointerException if {@code totalID} is null.
+     * @param totalID the UUID of the player for whom to retrieve the set of punishments.
+     * @return an unmodifiable {@link Set} of all the {@link P} objects associated with the given id.
      * @see #getLatestPunishment(UUID)
      * @see #getLatestPunishment(UUID, BanType)
      */
-    @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID) ;
+    @NotNull
+    @Unmodifiable
+    Set<P> getPunishmentSet(@NotNull UUID totalID);
 
     /**
-     * Returns an unmodifiable set of all the bans associated with any player.
+     * Returns an unmodifiable set of all the bans associated with any id.
      * These bans include both valid and invalid bans.
-     * <p>
-     * To get the bans associated with a specific player, use the {@link #getPunishmentSet(UUID)} method.
-     * To get the most recent valid ban of a player, use the {@link #getLatestPunishment(UUID)} or the {@link #getLatestPunishment(UUID, BanType)} method.
      *
-     * <p>
-     * Note that this method returns an unmodifiable set, meaning that it cannot be modified directly.
-     * Attempting to modify the set will result in an {@link UnsupportedOperationException} being thrown.
-     * </p>
-     *
-     * @return an unmodifiable {@link Set} of all the {@link AbstractPunishment} objects associated with any player.
+     * @return an unmodifiable {@link Set} of all the {@link P} objects associated with any player.
      * @see #getPunishmentSet(UUID)
      * @see #getLatestPunishment(UUID)
      * @see #getLatestPunishment(UUID, BanType)
      */
-    @NotNull @Unmodifiable Set<P> getPunishmentSet() ;
+    @NotNull
+    @Unmodifiable
+    Set<P> getPunishmentSet();
 
 }
