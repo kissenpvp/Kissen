@@ -26,7 +26,6 @@ import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
-import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.time.TemporalData;
 import net.kissenpvp.core.api.user.User;
@@ -267,7 +266,7 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
     private @NotNull Optional<TextColor> getLastColor(@NotNull Component component) {
         TextColor color = component.color();
         if (!component.children().isEmpty()) {
-            color = component.children().get(component.children().size() - 1).color();
+            color = component.children().getLast().color();
         }
         return Optional.ofNullable(color);
     }
