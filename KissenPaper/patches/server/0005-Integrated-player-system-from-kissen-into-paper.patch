@@ -219,10 +219,10 @@ index 0000000000000000000000000000000000000000..7b1b95202c1fd999a6a5c339526a8f3f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..daa41f5aa31b24df751ff8465d26cbdd351ff83e
+index 0000000000000000000000000000000000000000..5508962f5f1aaa253c25a6871eb399ec1278bc32
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
-@@ -0,0 +1,149 @@
+@@ -0,0 +1,150 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -265,10 +265,12 @@ index 0000000000000000000000000000000000000000..daa41f5aa31b24df751ff8465d26cbdd
 +import net.kissenpvp.paper.api.user.rank.PlayerRank;
 +import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
 +import net.kissenpvp.paper.user.KissenPaperPublicUser;
++import net.kissenpvp.paper.user.playersetting.KissenPaperBoundPlayerSetting;
 +import net.kissenpvp.paper.user.rank.KissenPaperKissenPlayerRank;
 +import net.kissenpvp.paper.user.rank.KissenPaperPlayerFallBackRank;
 +import net.kyori.adventure.text.Component;
 +import org.bukkit.Bukkit;
++import org.bukkit.OfflinePlayer;
 +import org.jetbrains.annotations.Contract;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
@@ -341,9 +343,8 @@ index 0000000000000000000000000000000000000000..daa41f5aa31b24df751ff8465d26cbdd
 +
 +    @Override
 +    public @NotNull <X> BoundPlayerSetting<X> getSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context) {
-+        UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
-+        return null;
-+        //return (BoundPlayerSetting<X>) new KissenPaperBoundPlayerSetting<>(userImplementation.getPlayerSetting(settingClass), (OfflinePlayer) getUser().getPlayerClient());
++        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(getUniqueId());
++        return new KissenPaperBoundPlayerSetting<>(getPlayerSetting(settingClass), offlinePlayer);
 +    }
 +
 +    @Override
@@ -2217,10 +2218,10 @@ index 0000000000000000000000000000000000000000..f8344bec3cd20dbd76e5c23edeeed196
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..73f2abcef6c443b187093aa5f7660d3fd4769a79
+index 0000000000000000000000000000000000000000..dcb89301584f021de9e1ee45e60eb8ad86c99b8d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
-@@ -0,0 +1,239 @@
+@@ -0,0 +1,245 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2245,6 +2246,7 @@ index 0000000000000000000000000000000000000000..73f2abcef6c443b187093aa5f7660d3f
 +import net.kissenpvp.core.api.database.StorageImplementation;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.meta.Meta;
++import net.kissenpvp.core.api.database.meta.Table;
 +import net.kissenpvp.core.api.database.meta.list.MetaList;
 +import net.kissenpvp.core.api.database.savable.SavableMap;
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
@@ -2435,6 +2437,11 @@ index 0000000000000000000000000000000000000000..73f2abcef6c443b187093aa5f7660d3f
 +        }
 +
 +        @Override
++        public @NotNull Table getTable() {
++            return Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getTable(Context.LOCAL);
++        }
++
++        @Override
 +        protected @NotNull SavableMap createRepository(@Nullable Map<String, Object> data) {
 +            Meta meta = Bukkit.getKissen().getImplementation(KissenPaperUserImplementation.class).getMeta(Context.LOCAL);
 +            return new KissenSavableMap(getDatabaseID(), meta, Objects.requireNonNullElseGet(data, meta.getData(getDatabaseID())::join));
@@ -2447,7 +2454,7 @@ index 0000000000000000000000000000000000000000..73f2abcef6c443b187093aa5f7660d3f
 +
 +        @Override
 +        public @NotNull PlayerClient<?, ?> getPlayerClient() {
-+            UUID uuid = (UUID) getRawID();
++            UUID uuid = getRawID();
 +            return Objects.requireNonNullElse(Bukkit.getPlayer(uuid), Bukkit.getOfflinePlayer(uuid));
 +        }
 +
@@ -2462,10 +2469,10 @@ index 0000000000000000000000000000000000000000..73f2abcef6c443b187093aa5f7660d3f
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7b0b9fef0bfbd82bcab786bed913f512977e717d
+index 0000000000000000000000000000000000000000..cbbb6a3a19e63470bdbc2d9727cf55a9027c0045
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
-@@ -0,0 +1,164 @@
+@@ -0,0 +1,169 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2515,7 +2522,7 @@ index 0000000000000000000000000000000000000000..7b0b9fef0bfbd82bcab786bed913f512
 +public class KissenPaperUserImplementation extends KissenUserImplementation implements KissenImplementation {
 +
 +    private static KissenPaperProfileCache profileCache;
-+    private KissenTable privateMeta;
++    private KissenTable privateTable;
 +
 +    /**
 +     * This private static method retrieves the current instance of KissenPaperProfileCache.
@@ -2541,8 +2548,13 @@ index 0000000000000000000000000000000000000000..7b0b9fef0bfbd82bcab786bed913f512
 +        KissenPaperUserImplementation.profileCache = profileCache;
 +    }
 +
-+    public @NotNull Meta getPrivateMeta() {
-+        return privateMeta.setupMeta(null);
++    public @NotNull KissenTable getTable(@NotNull Context context)
++    {
++        return switch (context)
++        {
++            case GLOBAL -> super.getTable();
++            case LOCAL -> privateTable;
++        };
 +    }
 +
 +    @Override
@@ -2550,7 +2562,7 @@ index 0000000000000000000000000000000000000000..7b0b9fef0bfbd82bcab786bed913f512
 +        DatabaseImplementation database = Bukkit.getKissen().getImplementation(DatabaseImplementation.class);
 +
 +        DatabaseConnection connection = database.getConnection("private").orElseGet(database::getPrimaryConnection);
-+        privateMeta = (KissenTable) connection.createTable("kissen_private_user_data");
++        privateTable = (KissenTable) connection.createTable("kissen_private_user_data");
 +        return super.preStart();
 +    }
 +
@@ -2626,7 +2638,7 @@ index 0000000000000000000000000000000000000000..7b0b9fef0bfbd82bcab786bed913f512
 +    public @NotNull Meta getMeta(@NotNull Context context) {
 +        return switch (context) {
 +            case GLOBAL -> super.getMeta();
-+            case LOCAL -> getPrivateMeta();
++            case LOCAL -> privateTable.setupMeta(null);
 +        };
 +    }
 +}
@@ -3171,10 +3183,10 @@ index 0000000000000000000000000000000000000000..d8c589da70c14e03f7b6a4b59d4d8938
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/PlayerSettingCommand.java b/src/main/java/net/kissenpvp/paper/user/PlayerSettingCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d619f77ddf38330582573e8cc9439128d0ec52c5
+index 0000000000000000000000000000000000000000..e722ab642948bdacaa7f02a23b12361e8eb56047
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/PlayerSettingCommand.java
-@@ -0,0 +1,108 @@
+@@ -0,0 +1,109 @@
 +package net.kissenpvp.paper.user;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -3188,6 +3200,7 @@ index 0000000000000000000000000000000000000000..d619f77ddf38330582573e8cc9439128
 +import net.kissenpvp.core.api.user.playersettting.RegisteredPlayerSetting;
 +import net.kissenpvp.core.api.user.playersettting.UserValue;
 +import net.kissenpvp.core.user.playersetting.IllegalSettingException;
++import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.command.CommandExceptionHandler;
 +import net.kissenpvp.paper.user.playersetting.KissenPaperBoundPlayerSetting;
 +import net.kyori.adventure.text.Component;
@@ -3285,10 +3298,10 @@ index 0000000000000000000000000000000000000000..d619f77ddf38330582573e8cc9439128
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/playersetting/KissenPaperBoundPlayerSetting.java b/src/main/java/net/kissenpvp/paper/user/playersetting/KissenPaperBoundPlayerSetting.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..04c51d83c45a6071ce77c355edbeff1ccc6c3c32
+index 0000000000000000000000000000000000000000..d69b4d28b10a378be2f6f01783177798dc57fef5
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/playersetting/KissenPaperBoundPlayerSetting.java
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,74 @@
 +package net.kissenpvp.paper.user.playersetting;
 +
 +import net.kissenpvp.core.api.database.savable.SavableMap;
@@ -3326,28 +3339,27 @@ index 0000000000000000000000000000000000000000..04c51d83c45a6071ce77c355edbeff1c
 +
 +    @Override
 +    public void reset() {
-+        if (super.reset(getPlayer().getUser(Context.LOCAL))) {
-+            super.reset(getPlayer().getUser(Context.GLOBAL)); //TODO debate
-+        }
++        //TODO debate
++        super.reset(getPlayer().getUser(Context.LOCAL));
++        super.reset(getPlayer().getUser(Context.GLOBAL));
 +    }
 +
 +    @Override
 +    public @NotNull T setValue(@NotNull T value, @NotNull Context context) throws UnauthorizedException {
 +        T oldValue = getValue(context);
 +
-+        if (Objects.equals(getSetting().getParent().getDefaultValue(getPlayer()), value)) {
-+            reset();
-+            return oldValue;
-+        }
-+
-+        UserValue<T>[] possibilities = getSetting().getParent().getPossibleValues(getPlayer()); // Get all possibilities
++        UserValue<T>[] possibilities = getSetting().getParent().getPossibleValues(getPlayer());
 +        if (possibilities.length!=0) {
 +            isAllowed(value, possibilities);
 +        }
 +
-+        getSetting().getParent().setValue(value);
-+        SavableMap repo = getPlayer().getUser(context).getRepository(getSetting().getPlugin());
-+        repo.set(getKey(), getSetting().getParent().serialize(value));
++        T defaultValue = getSetting().getParent().getDefaultValue(getPlayer());
++        if (Objects.equals(defaultValue, value)) {
++            reset();
++            return oldValue;
++        }
++
++        setValue(getPlayer().getUser(context), value);
 +        return oldValue;
 +    }
 +

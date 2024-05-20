@@ -58,7 +58,7 @@ index 0000000000000000000000000000000000000000..3aeaf207f83331421ca3839897f34f1a
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
-index 03218b3d105fd1416b031c8f503b9fd082a60cc1..80b87eaebae0a3632642e13541020d49982609e7 100644
+index dcb89301584f021de9e1ee45e60eb8ad86c99b8d..1c16b962eb35f1210fd72649abeeed8e3dbf628c 100644
 --- a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 @@ -18,6 +18,8 @@
@@ -70,7 +70,7 @@ index 03218b3d105fd1416b031c8f503b9fd082a60cc1..80b87eaebae0a3632642e13541020d49
  import net.kissenpvp.core.api.database.DataWriter;
  import net.kissenpvp.core.api.database.StorageImplementation;
  import net.kissenpvp.core.api.database.meta.BackendException;
-@@ -235,5 +237,15 @@ public class KissenPaperPublicUser extends KissenPublicUser<Permission> {
+@@ -241,5 +243,15 @@ public class KissenPaperPublicUser extends KissenPublicUser<Permission> {
  
          @Override
          public void sendData(@NotNull DataPackage dataPackage) { /* Ignored because it's private */ }
@@ -168,7 +168,7 @@ index c7e1f2bac3eca9bb72bf1f8c26cccb2905e1ddfc..a6b35182fd7ed7cb09dc302fe718711c
 +    // KissenPaper end - make player accessible from class children
  }
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index e701ca407e9d96f55fa4bd5e38800ec2a2b58039..9c86ad7e6fcbc810096a81bc2b19721f3328b3c8 100644
+index 4a9cdf250ab96f0191d3fb786ca7a5467b687c74..88d1239b8316f6de7566139eb2abc891cb078aa8 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -1516,7 +1516,11 @@ public abstract class PlayerList {

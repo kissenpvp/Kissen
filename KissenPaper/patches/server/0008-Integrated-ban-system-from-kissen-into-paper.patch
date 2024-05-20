@@ -1590,7 +1590,7 @@ index 7b1b95202c1fd999a6a5c339526a8f3fe654d536..ae1fc0609fe63ab40515b1390c58878c
          Component title = Component.translatable("server.ban.player.warned.target", Component.text(ban.getName())).color(NamedTextColor.RED);
  
 diff --git a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
-index daa41f5aa31b24df751ff8465d26cbdd351ff83e..1d05315b4d0a25c12163eb16ee45b078933f1f3a 100644
+index 5508962f5f1aaa253c25a6871eb399ec1278bc32..60597a26a0ff79642c434c9a694397874e5c39c1 100644
 --- a/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 +++ b/src/main/java/net/kissenpvp/paper/networking/client/entity/KissenPaperPlayerClient.java
 @@ -18,7 +18,6 @@
@@ -1616,8 +1616,8 @@ index daa41f5aa31b24df751ff8465d26cbdd351ff83e..1d05315b4d0a25c12163eb16ee45b078
 +import net.kissenpvp.paper.ban.warn.KissenWarn;
  import net.kissenpvp.paper.permission.permissible.KissenPaperPermissible;
  import net.kissenpvp.paper.user.KissenPaperPublicUser;
- import net.kissenpvp.paper.user.rank.KissenPaperKissenPlayerRank;
-@@ -122,12 +123,12 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<PlayerR
+ import net.kissenpvp.paper.user.playersetting.KissenPaperBoundPlayerSetting;
+@@ -123,12 +124,12 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<PlayerR
      }
  
      @Override
@@ -1632,7 +1632,7 @@ index daa41f5aa31b24df751ff8465d26cbdd351ff83e..1d05315b4d0a25c12163eb16ee45b078
          MetaList<WarnNode> nodes = ((KissenPaperPublicUser) getUser()).getWarns();
  
          AccurateDuration duration = new AccurateDuration(Period.ofWeeks(1));
-@@ -144,6 +145,6 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<PlayerR
+@@ -145,6 +146,6 @@ public abstract class KissenPaperPlayerClient extends KissenPlayerClient<PlayerR
  
      @Contract(pure = true, value = "-> new")
      protected @NotNull Function<WarnNode, Warn> transformWarn() {

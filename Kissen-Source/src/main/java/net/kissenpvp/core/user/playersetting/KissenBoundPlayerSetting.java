@@ -19,7 +19,6 @@
 package net.kissenpvp.core.user.playersetting;
 
 import lombok.Getter;
-import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
 import net.kissenpvp.core.api.user.User;
@@ -34,7 +33,6 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 @Getter
 public abstract class KissenBoundPlayerSetting<T, S extends PlayerClient<?, ?>> extends KissenUserSetting<T, S> implements AbstractBoundPlayerSetting<T> {
@@ -45,36 +43,42 @@ public abstract class KissenBoundPlayerSetting<T, S extends PlayerClient<?, ?>> 
         this.player = player;
     }
 
-    protected void isAllowed(@NotNull T value, @NotNull UserValue<T>[] possibilities) throws UnauthorizedException {
-        Optional<UserValue<T>> currentPossibility = Arrays.stream(possibilities).filter(possibility -> Objects.equals(possibility.value(), value)).findFirst(); // find the one the user wants to set
+    private static <T> @NotNull Optional<UserValue<T>> findMatchingPossibility(@NotNull T value, @NotNull UserValue<T>[] possibilities) {
+        Predicate<UserValue<T>> equals = possibility -> Objects.equals(possibility.value(), value);
+        return Arrays.stream(possibilities).filter(equals).findFirst();
+    }
 
-        if (currentPossibility.isEmpty()) // throw exception if value is not listed as option
-        {
-            throw new IllegalArgumentException("Value is not listed as possible value.");
+    private static <T> UserValue<T> loadMatchingPossibility(@NotNull T value, @NotNull UserValue<T>[] possibilities) {
+        return findMatchingPossibility(value, possibilities).orElseThrow(() -> {
+            String message = String.format("The value %s is not registered as possible possibility.", value);
+            return new IllegalArgumentException(message);
+        });
+    }
+
+    protected void isAllowed(@NotNull T value, @NotNull UserValue<T>[] possibilities) throws UnauthorizedException {
+        UserValue<T> possibility = loadMatchingPossibility(value, possibilities);
+
+        // Users always can select the default value
+        if (Objects.equals(value, getSetting().getParent().getDefaultValue(getPlayer()))) {
+            return;
         }
 
-        UserValue<T> currentValue = currentPossibility.get();
-        if (currentValue.permission().length > 0 && !value.equals(getSetting().getParent().getDefaultValue(getPlayer()))) {
+        AbstractPermissionEntry<?> permissionEntry = (AbstractPermissionEntry<?>) getPlayer();
 
-            Predicate<String> isNotAllowed = currentPermission -> {
-                AbstractPermissionEntry<?> permissionEntry = (AbstractPermissionEntry<?>) getPlayer();
-                return !permissionEntry.hasPermission(currentPermission);
-            };
-
-            Stream<String> valueStream = Arrays.stream(currentValue.permission());
-            Optional<String> permission = valueStream.filter(isNotAllowed).toList().stream().findFirst();
-
-            if (permission.isPresent()) {
-                throw new UnauthorizedException(getPlayer().getUniqueId(), permission.get());
+        // If possibility#permission() is empty, this will be skipped.
+        for (String permission : possibility.permission()) {
+            if (!permissionEntry.hasPermission(permission)) {
+                throw new UnauthorizedException(getPlayer().getUniqueId(), permission);
             }
         }
-
-        getRepository(getPlayer().getUser()).set(getKey(), getSetting().getParent().serialize(value));
     }
 
     protected @NotNull Optional<T> getValue(@NotNull User user) {
-        SavableMap repo = user.getRepository(getSetting().getPlugin());
-        return repo.get(getKey(), String.class).map(currentValue -> getSetting().getParent().deserialize(currentValue));
+        return getRepository(user).get(getKey(), String.class).map(value -> getSetting().getParent().deserialize(value));
+    }
+
+    protected void setValue(User user, @NotNull T value) {
+        getRepository(user).set(getKey(), getSetting().getParent().serialize(value));
     }
 
     protected boolean reset(@NotNull User user) {

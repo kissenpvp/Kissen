@@ -64,7 +64,7 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
      * @see UserImplementation
      * @see AbstractPlayerSetting
      */
-    private static <X, S extends PlayerClient<?, ?>> @NotNull RegisteredPlayerSetting<X, S> getPlayerSetting(@NotNull Class<? extends AbstractPlayerSetting<X, S>> settingClass) {
+    protected static <X, S extends PlayerClient<?, ?>> @NotNull RegisteredPlayerSetting<X, S> getPlayerSetting(@NotNull Class<? extends AbstractPlayerSetting<X, S>> settingClass) {
         UserImplementation userSystem = KissenCore.getInstance().getImplementation(UserImplementation.class);
         return (RegisteredPlayerSetting<X, S>) userSystem.getPlayerSetting(settingClass);
     }

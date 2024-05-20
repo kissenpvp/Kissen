@@ -107,8 +107,9 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
 
         Object returnValue;
         if (Objects.isNull(value)) {
-            if (Objects.nonNull(returnValue = remove(key))) {
-                getMeta().delete(key);
+            returnValue = remove(key);
+            if (Objects.nonNull(returnValue)) {
+                getMeta().delete(getId(), key);
             }
             return returnValue;
         }
