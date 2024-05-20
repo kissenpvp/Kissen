@@ -20,6 +20,7 @@ package net.kissenpvp.core.api.user;
 
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
+import net.kissenpvp.core.api.time.AccurateDuration;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
@@ -34,6 +35,9 @@ public interface User extends Savable<UUID> {
 
     @NotNull
     Locale getLocale();
+
+    @NotNull
+    AccurateDuration getOnlineTime();
 
     @NotNull PlayerClient<?, ?> getPlayerClient();
 }

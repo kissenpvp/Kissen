@@ -44,6 +44,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> implements PlayerClient<R, B> {
@@ -241,15 +243,13 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
      * @see AccurateDuration
      */
     protected @NotNull AccurateDuration getOnlineTime(@NotNull User user) {
-        return new AccurateDuration(0);
-/*        AccurateDuration defaultDuration = new AccurateDuration(0);
-        AccurateDuration onlineTime = user.get("online_time", AccurateDuration.class).orElse(defaultDuration);
+        AccurateDuration onlineTime = user.getOnlineTime();
 
         if (isConnected()) {
-            //Duration onlineSince = Duration.between(Instant.now(), Instant.now()); //TODO
-            //return new KissenAccurateDuration(onlineTime.milliseconds() + onlineSince.toMillis());
+            Duration onlineSince = Duration.between(Instant.now(), Instant.now()); //TODO
+            return new AccurateDuration(onlineTime.milliseconds() + onlineSince.toMillis());
         }
-        return onlineTime;*/
+        return onlineTime;
     }
 
     /**

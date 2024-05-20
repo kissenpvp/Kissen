@@ -42,7 +42,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 
-public abstract class KissenUser<T extends AbstractPermission> extends KissenGroupablePermissionEntry<UUID, T> implements User{
+public abstract class KissenUser<T extends AbstractPermission> extends KissenGroupablePermissionEntry<UUID, T> implements User {
 
     public KissenUser(@Nullable UUID uuid, @Nullable String name) {
         if (Objects.nonNull(uuid)) {
@@ -57,6 +57,11 @@ public abstract class KissenUser<T extends AbstractPermission> extends KissenGro
     @Override
     public @NotNull Table getTable() {
         return getImplementation().getTable();
+    }
+
+    @Override
+    public @NotNull AccurateDuration getOnlineTime() {
+        return getRepository().get("online_time", AccurateDuration.class).orElse(new AccurateDuration(0));
     }
 
     @Override
