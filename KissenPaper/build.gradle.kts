@@ -89,20 +89,20 @@ tasks.generateDevelopmentBundle {
     libraryRepositories = listOf(
             "https://repo.maven.apache.org/maven2/",
             paperMavenPublicUrl,
-            "https://repo.purpurmc.org/snapshots",
+            "https://repo.kissenpvp.net/repository/maven-snapshots/",
     )
 }
 
-/*allprojects {
+allprojects {
     publishing {
         repositories {
-            maven("https://repo.purpurmc.org/snapshots") {
-                name = "purpur"
+            maven("https://repo.kissenpvp.net/repository/maven-snapshots/") {
+                name = "kissenpvp"
                 credentials(PasswordCredentials::class)
             }
         }
     }
-}*/
+}
 
 publishing {
     publications.create<MavenPublication>("devBundle") {
