@@ -377,19 +377,19 @@ index 8ec56cd6b8e0f5c5dd8c7c88b4671e18dcf109d0..e2db4b4e3c04b408a5ff5d5a464b2b7f
      private final boolean async;
  
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 8c944274ea143dad2de769ebdfbb1c9476a71c6a..212ce9d39ed795e631ae2e8eda39d3a9a829d544 100644
+index ba8daf59d250f26fa64553efd079283c4241a148..cdaecaba6f39bf712fa22a79ddacd2ca30232a7b 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
 @@ -121,6 +121,13 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
       */
-     public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) throws IllegalStateException; // KissenPaper - integrate unified event system
+     public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) throws IllegalStateException; // Pulvinar - integrate unified event system
  
-+    // KissenPaper start - keep compatibility with plugins
++    // Pulvinar start - keep compatibility with plugins
 +    default void registerEvents(@NotNull Listener listener, @NotNull Plugin plugin)
 +    {
 +        registerEvents((net.kissenpvp.core.api.event.EventListener<?>) listener, plugin);
 +    }
-+    // KissenPaper end - keep compatibility with plugins
++    // Pulvinar end - keep compatibility with plugins
 +
      /**
       * Registers all the events in the given listener class

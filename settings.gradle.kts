@@ -23,8 +23,8 @@ if (!file(".git").exists()) {
 
 rootProject.name = "kissen"
 
-val projects = listOf("Kissen-API", "Kissen-Source", "KissenPaper")
-val paperProjects = listOf("KissenPaper-API", "KissenPaper-Server", "paper-api-generator")
+val projects = listOf("Kissen-API", "Kissen-Source", "Pulvinar")
+val paperProjects = listOf("Pulvinar-API", "Pulvinar-Server", "paper-api-generator")
 
 projects.forEach { name ->
     val projName = name.lowercase(Locale.ENGLISH)
@@ -34,17 +34,17 @@ projects.forEach { name ->
 
 paperProjects.forEach { name ->
     val projName = name.lowercase(Locale.ENGLISH)
-    include("kissenpaper:$projName")
-    findProject(":kissenpaper:$projName")?.projectDir = file("KissenPaper/$name")
+    include("pulvinar:$projName")
+    findProject(":pulvinar:$projName")?.projectDir = file("Pulvinar/$name")
 }
 
 optionalInclude("test-plugin")
 
 fun optionalInclude(name: String, op: (ProjectDescriptor.() -> Unit)? = null) {
-    val settingsFile = file("KissenPaper/$name.settings.gradle.kts")
+    val settingsFile = file("Pulvinar/$name.settings.gradle.kts")
     if (settingsFile.exists()) {
         apply(from = settingsFile)
-        findProject(":kissenpaper:$name")?.let { op?.invoke(it) }
+        findProject(":pulvinar:$name")?.let { op?.invoke(it) }
     } else {
         settingsFile.writeText(
             """

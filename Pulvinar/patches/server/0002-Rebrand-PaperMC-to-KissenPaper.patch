@@ -5,36 +5,39 @@ Subject: [PATCH] Rebrand PaperMC to KissenPaper
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index ad130b18f40b8f7758642a915902074871c8d428..db048f32183411c686a13bc2043251993974d8c8 100644
+index d83dffae942227143cea7bc1bd5a6f4c93546fa3..471bdcc18fb38b66988d4d0f295d3e26b96dc164 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
-@@ -91,11 +91,11 @@ tasks.jar {
-             "Implementation-Title" to "KissenPaper",
-             "Implementation-Version" to implementationVersion,
-             "Implementation-Vendor" to date, // Paper
--            "Specification-Title" to "KissenPaper",
-+            "Specification-Title" to "KissenPaper", // KissenPaper
-             "Specification-Version" to project.version,
--            "Specification-Vendor" to "KissenPvP Team",
--            "Brand-Id" to "kissenpvp:kissenpaper",
--            "Brand-Name" to "KissenPvP",
-+            "Specification-Vendor" to "KissenPvP Team", // KissenPaper
-+            "Brand-Id" to "kissenpvp:kissenpaper", // KissenPaper
-+            "Brand-Name" to "KissenPaper", // KissenPaper
-             "Build-Number" to (build ?: ""),
-             "Build-Time" to Instant.now().toString(),
-             "Git-Branch" to gitBranch, // Paper
 @@ -152,7 +152,7 @@ fun TaskContainer.registerRunTask(
      name: String,
      block: JavaExec.() -> Unit
  ): TaskProvider<JavaExec> = register<JavaExec>(name) {
--    group = "paper"
-+    group = "paperweight" // KissenPaper
+-    group = "paperweight"
++    group = "paperweight" // Pulvinar
      mainClass.set("org.bukkit.craftbukkit.Main")
      standardInput = System.`in`
      workingDir = rootProject.layout.projectDirectory
+@@ -164,8 +164,8 @@ fun TaskContainer.registerRunTask(
+     })
+     jvmArgs("-XX:+AllowEnhancedClassRedefinition", "-XX:+AllowRedefinitionToAddDeleteMethods")
+ 
+-    if (rootProject.childProjects["pulvinar:test-plugin"] != null) {
+-        val testPluginJar = rootProject.project(":pulvinar:test-plugin").tasks.jar.flatMap { it.archiveFile }
++    if (rootProject.childProjects["pulvinar:test-plugin"] != null) { // Pulvinar
++        val testPluginJar = rootProject.project(":pulvinar:test-plugin").tasks.jar.flatMap { it.archiveFile } // Pulvinar
+         inputs.file(testPluginJar)
+         args("-add-plugin=${testPluginJar.get().asFile.absolutePath}")
+     }
+@@ -193,7 +193,6 @@ val runtimeClasspathWithoutVanillaServer = configurations.runtimeClasspath.flatM
+         runtime.filterNot { it.asFile.absolutePath == vanilla }
+     }
+ 
+-
+ tasks.registerRunTask("runServer") {
+     description = "Spin up a test server from the Mojang mapped server jar"
+     classpath(tasks.includeMappings.flatMap { it.outputJar })
 diff --git a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
-index 532306cacd52579cdf37e4aca25887b1ed3ba6a1..76193bf5973d02ec919552bb9d22bf94194767f7 100644
+index 532306cacd52579cdf37e4aca25887b1ed3ba6a1..df84c86306ea85d077a64e8a48c5298c47b72760 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
 @@ -35,7 +35,7 @@ public class PaperVersionFetcher implements VersionFetcher {
@@ -42,7 +45,7 @@ index 532306cacd52579cdf37e4aca25887b1ed3ba6a1..76193bf5973d02ec919552bb9d22bf94
      private static final int DISTANCE_ERROR = -1;
      private static final int DISTANCE_UNKNOWN = -2;
 -    private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/paper";
-+    private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/paper"; //TODO KissenPaper: rebrand
++    private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/paper"; //TODO Pulvinar: rebrand
  
      @Override
      public long getCacheTime() {
@@ -51,7 +54,7 @@ index 532306cacd52579cdf37e4aca25887b1ed3ba6a1..76193bf5973d02ec919552bb9d22bf94
              updateMessage = text("You are running a development version without access to version information", color(0xFF5300));
          } else {
 -            updateMessage = getUpdateStatusMessage("PaperMC/Paper", build);
-+            updateMessage = getUpdateStatusMessage("KissenPvP/Kissen", build); //TODO KissenPaper adjust repo
++            updateMessage = getUpdateStatusMessage("KissenPvP/Kissen", build); //TODO Pulvinar adjust repo
          }
          final @Nullable Component history = this.getHistory();
  
@@ -59,7 +62,7 @@ index 532306cacd52579cdf37e4aca25887b1ed3ba6a1..76193bf5973d02ec919552bb9d22bf94
      }
  
      private static Component getUpdateStatusMessage(final String repo, final ServerBuildInfo build) {
-+        if(true) // KissenPaper TODO implement for real
++        if(true) // Pulvinar TODO implement for real
 +        {
 +            return text("You are running the latest version", NamedTextColor.GREEN);
 +        }
@@ -71,12 +74,12 @@ index 532306cacd52579cdf37e4aca25887b1ed3ba6a1..76193bf5973d02ec919552bb9d22bf94
      private static int fetchDistanceFromSiteApi(final ServerBuildInfo build, final int jenkinsBuild) {
          try {
 -            try (final BufferedReader reader = Resources.asCharSource(
-+            try (final BufferedReader reader = Resources.asCharSource( //TODO KissenPaper: rebrand
++            try (final BufferedReader reader = Resources.asCharSource( //TODO Pulvinar: rebrand
                  URI.create("https://api.papermc.io/v2/projects/paper/versions/" + build.minecraftVersionId()).toURL(),
                  Charsets.UTF_8
              ).openBufferedStream()) {
 diff --git a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
-index c5d5648f4ca603ef2b1df723b58f9caf4dd3c722..265eb95dcf693c0b05bd40be4c801ec2cfa397d5 100644
+index c5d5648f4ca603ef2b1df723b58f9caf4dd3c722..b31d6fd95d46443c7724dab159242f82e24274ae 100644
 --- a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
 +++ b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
 @@ -17,7 +17,7 @@ public final class PaperConsole extends SimpleTerminalConsole {
@@ -84,27 +87,27 @@ index c5d5648f4ca603ef2b1df723b58f9caf4dd3c722..265eb95dcf693c0b05bd40be4c801ec2
      protected LineReader buildReader(LineReaderBuilder builder) {
          builder
 -                .appName("Paper")
-+                .appName("KissenPaper") // KissenPaper
++                .appName("Pulvinar") // Pulvinar
                  .variable(LineReader.HISTORY_FILE, java.nio.file.Paths.get(".console_history"))
                  .completer(new ConsoleCommandCompleter(this.server))
                  .option(LineReader.Option.COMPLETE_IN_WORD, true);
 diff --git a/src/main/java/net/minecraft/CrashReport.java b/src/main/java/net/minecraft/CrashReport.java
-index 4f3cc14d48690bb183d09bb7a5ba1e23e8a0c08a..03408b48236f03ce47c62730a9b4f31fa9f32cb8 100644
+index 4f3cc14d48690bb183d09bb7a5ba1e23e8a0c08a..528c51fb68b694d48da90bff0bd134dc40cbcd76 100644
 --- a/src/main/java/net/minecraft/CrashReport.java
 +++ b/src/main/java/net/minecraft/CrashReport.java
 @@ -125,6 +125,10 @@ public class CrashReport {
          StringBuilder stringbuilder = new StringBuilder();
  
          stringbuilder.append("---- Minecraft Crash Report ----\n");
-+        // KissenPaper start
++        // Pulvinar start
 +        stringbuilder.append("// ");
-+        stringbuilder.append("// DO NOT REPORT THIS TO PAPER! REPORT TO KISSENPAPER INSTEAD!");
-+        // KissenPaper end
++        stringbuilder.append("// DO NOT REPORT THIS TO PAPER! REPORT TO Pulvinar INSTEAD!");
++        // Pulvinar end
          stringbuilder.append("// ");
          stringbuilder.append(CrashReport.getErrorComment());
          stringbuilder.append("\n\n");
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index dbc86b8d4d2af6e5f7e678f2bb77fd39b85c04c5..4ac63723b8fea361743591c2ba773357bcdfdbbe 100644
+index dbc86b8d4d2af6e5f7e678f2bb77fd39b85c04c5..87f9d6a23871d8e80de6a73c9f3cf5e024ecd777 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -959,7 +959,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
@@ -112,12 +115,12 @@ index dbc86b8d4d2af6e5f7e678f2bb77fd39b85c04c5..4ac63723b8fea361743591c2ba773357
          org.spigotmc.WatchdogThread.doStop(); // Paper
          if (!isSameThread()) {
 -            MinecraftServer.LOGGER.info("Stopping main thread (Ignore any thread death message you see! - DO NOT REPORT THREAD DEATH TO PAPER)");
-+            MinecraftServer.LOGGER.info("Stopping main thread (Ignore any thread death message you see! - DO NOT REPORT THREAD DEATH TO KISSENPAPER)"); // KissenPaper
++            MinecraftServer.LOGGER.info("Stopping main thread (Ignore any thread death message you see! - DO NOT REPORT THREAD DEATH TO Pulvinar)"); // Pulvinar
              while (this.getRunningThread().isAlive()) {
                  this.getRunningThread().stop();
                  try {
 diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
-index e85b9bb3f9c225d289a4959921970b9963881199..1ec021088310497046bce49b6033cfc133e0cfea 100644
+index e85b9bb3f9c225d289a4959921970b9963881199..95ff57da8285bd8ae00291a0d0b554cc4ed6c396 100644
 --- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
 +++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
 @@ -503,7 +503,7 @@ public class CraftScheduler implements BukkitScheduler {
@@ -125,12 +128,12 @@ index e85b9bb3f9c225d289a4959921970b9963881199..1ec021088310497046bce49b6033cfc1
              } else {
                  // this.debugTail = this.debugTail.setNext(new CraftAsyncDebugger(currentTick + CraftScheduler.RECENT_TICKS, task.getOwner(), task.getTaskClass())); // Paper
 -                task.getOwner().getLogger().log(Level.SEVERE, "Unexpected Async Task in the Sync Scheduler. Report this to Paper"); // Paper
-+                task.getOwner().getLogger().log(Level.SEVERE, "Unexpected Async Task in the Sync Scheduler. Report this to KissenPaper"); // KissenPaper
++                task.getOwner().getLogger().log(Level.SEVERE, "Unexpected Async Task in the Sync Scheduler. Report this to Pulvinar"); // Pulvinar
                  // We don't need to parse pending
                  // (async tasks must live with race-conditions if they attempt to cancel between these few lines of code)
              }
 diff --git a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
-index 774556a62eb240da42e84db4502e2ed43495be17..08727535d3769f11af74aa3e6bbb539ae051c575 100644
+index 774556a62eb240da42e84db4502e2ed43495be17..e3295feff8bd992449b0e61e1eb534d149db1c7d 100644
 --- a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
 +++ b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
 @@ -11,10 +11,10 @@ public final class Versioning {
@@ -138,7 +141,7 @@ index 774556a62eb240da42e84db4502e2ed43495be17..08727535d3769f11af74aa3e6bbb539a
          String result = "Unknown-Version";
  
 -        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/io.papermc.paper/paper-api/pom.properties");
-+        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/net.kissenpvp.paper/kissenpaper-api/pom.properties");
++        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/net.kissenpvp.paper/Pulvinar-api/pom.properties");
          Properties properties = new Properties();
  
 -        if (stream != null) {
@@ -147,7 +150,7 @@ index 774556a62eb240da42e84db4502e2ed43495be17..08727535d3769f11af74aa3e6bbb539a
                  properties.load(stream);
  
 diff --git a/src/main/java/org/spigotmc/WatchdogThread.java b/src/main/java/org/spigotmc/WatchdogThread.java
-index 6db566e3111ec08a99aa429624979cb83a85e272..9b29bd4cd25e912288f38595a8a85e013e3a6fa2 100644
+index 6db566e3111ec08a99aa429624979cb83a85e272..b2975151d3f4933804b0b17566456c7862f50a04 100644
 --- a/src/main/java/org/spigotmc/WatchdogThread.java
 +++ b/src/main/java/org/spigotmc/WatchdogThread.java
 @@ -155,14 +155,14 @@ public final class WatchdogThread extends io.papermc.paper.util.TickThread // Pa
@@ -155,16 +158,16 @@ index 6db566e3111ec08a99aa429624979cb83a85e272..9b29bd4cd25e912288f38595a8a85e01
                  // Paper end
                  log.log( Level.SEVERE, "------------------------------" );
 -                log.log( Level.SEVERE, "The server has stopped responding! This is (probably) not a Paper bug." ); // Paper
-+                log.log( Level.SEVERE, "The server has stopped responding! This is (probably) not a KissenPaper bug." ); // KissenPaper
++                log.log( Level.SEVERE, "The server has stopped responding! This is (probably) not a Pulvinar bug." ); // Pulvinar
                  log.log( Level.SEVERE, "If you see a plugin in the Server thread dump below, then please report it to that author" );
                  log.log( Level.SEVERE, "\t *Especially* if it looks like HTTP or MySQL operations are occurring" );
                  log.log( Level.SEVERE, "If you see a world save or edit, then it means you did far more than your server can handle at once" );
                  log.log( Level.SEVERE, "\t If this is the case, consider increasing timeout-time in spigot.yml but note that this will replace the crash with LARGE lag spikes" );
 -                log.log( Level.SEVERE, "If you are unsure or still think this is a Paper bug, please report this to https://github.com/PaperMC/Paper/issues" );
-+                log.log( Level.SEVERE, "If you are unsure or still think this is a KissenPaper bug, please report this to https://github.com/KissenPvP/KissenPaper/issues" ); // KissenPaper
++                log.log( Level.SEVERE, "If you are unsure or still think this is a Pulvinar bug, please report this to https://github.com/KissenPvP/Pulvinar/issues" ); // Pulvinar
                  log.log( Level.SEVERE, "Be sure to include ALL relevant console errors and Minecraft crash reports" );
 -                log.log( Level.SEVERE, "Paper version: " + Bukkit.getServer().getVersion() );
-+                log.log( Level.SEVERE, "KissenPaper version: " + Bukkit.getServer().getVersion() ); // KissenPaper
++                log.log( Level.SEVERE, "Pulvinar version: " + Bukkit.getServer().getVersion() ); // Pulvinar
                  //
                  if ( net.minecraft.world.level.Level.lastPhysicsProblem != null )
                  {
@@ -173,13 +176,13 @@ index 6db566e3111ec08a99aa429624979cb83a85e272..9b29bd4cd25e912288f38595a8a85e01
                  } else
                  {
 -                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PAPER - THIS IS NOT A BUG OR A CRASH  - " + Bukkit.getServer().getVersion() + " ---");
-+                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO KISSENPAPER - THIS IS NOT A BUG OR A CRASH  - " + Bukkit.getServer().getVersion() + " ---"); // KissenPaper
++                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO Pulvinar - THIS IS NOT A BUG OR A CRASH  - " + Bukkit.getServer().getVersion() + " ---"); // Pulvinar
                      log.log(Level.SEVERE, "The server has not responded for " + (currentTime - lastTick) / 1000 + " seconds! Creating thread dump");
                  }
                  // Paper end - Different message for short timeout
                  log.log( Level.SEVERE, "------------------------------" );
 -                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Paper!):" ); // Paper
-+                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to KissenPaper!):" ); // Paper - // KissenPaper
++                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Pulvinar!):" ); // Paper - // Pulvinar
                  io.papermc.paper.chunk.system.scheduling.ChunkTaskScheduler.dumpAllChunkLoadInfo(isLongTimeout); // Paper - rewrite chunk system
                  this.dumpTickingInfo(); // Paper - log detailed tick information
                  WatchdogThread.dumpThread( ManagementFactory.getThreadMXBean().getThreadInfo( MinecraftServer.getServer().serverThread.getId(), Integer.MAX_VALUE ), log );
@@ -188,7 +191,7 @@ index 6db566e3111ec08a99aa429624979cb83a85e272..9b29bd4cd25e912288f38595a8a85e01
                  }
                  } else {
 -                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PAPER - THIS IS NOT A BUG OR A CRASH ---");
-+                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO KISSENPAPER - THIS IS NOT A BUG OR A CRASH ---"); // KissenPaper
++                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO Pulvinar - THIS IS NOT A BUG OR A CRASH ---"); // Pulvinar
                  }
  
                  log.log( Level.SEVERE, "------------------------------" );

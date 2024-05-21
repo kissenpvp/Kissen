@@ -61,7 +61,7 @@ dependencies {
 }
 
 paperweight {
-    serverProject.set(project(":kissenpaper:kissenpaper-server"))
+    serverProject.set(project(":pulvinar:pulvinar-server"))
 
     remapRepo.set(paperMavenPublicUrl)
     decompileRepo.set(paperMavenPublicUrl)
@@ -69,10 +69,10 @@ paperweight {
     usePaperUpstream(providers.gradleProperty("paperCommit")) {
         withPaperPatcher {
             apiPatchDir.set(layout.projectDirectory.dir("patches/api"))
-            apiOutputDir.set(layout.projectDirectory.dir("KissenPaper-API"))
+            apiOutputDir.set(layout.projectDirectory.dir("Pulvinar-API"))
 
             serverPatchDir.set(layout.projectDirectory.dir("patches/server"))
-            serverOutputDir.set(layout.projectDirectory.dir("KissenPaper-Server"))
+            serverOutputDir.set(layout.projectDirectory.dir("Pulvinar-Server"))
 
             patchTasks.register("generatedApi") {
                 isBareDirectory = true
@@ -85,7 +85,7 @@ paperweight {
 }
 
 tasks.generateDevelopmentBundle {
-    apiCoordinates.set("net.kissenpvp:kissenpaper-api")
+    apiCoordinates.set("net.kissenpvp:pulvinar-api")
     libraryRepositories = listOf(
             "https://repo.maven.apache.org/maven2/",
             paperMavenPublicUrl,
@@ -107,7 +107,7 @@ tasks.register("printMinecraftVersion") {
     }
 }
 
-tasks.register("printKissenVersion") {
+tasks.register("printPulvinarVersion") {
     doLast {
         println(project.version)
     }

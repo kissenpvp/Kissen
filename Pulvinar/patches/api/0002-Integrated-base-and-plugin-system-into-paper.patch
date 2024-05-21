@@ -881,7 +881,7 @@ index 0000000000000000000000000000000000000000..878a9d11bf308d9206022ea0e086bdcc
 +    }
 +}
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index 71f1c361ebccbe83193c37ec3a90faa4085001c3..f7730675e3b9fec31bdbc7cec95a20ea09d97012 100644
+index 71f1c361ebccbe83193c37ec3a90faa4085001c3..e5197ed78c57be5237121b2c3d0fc5bceef4a598 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
 @@ -2907,4 +2907,17 @@ public final class Bukkit {
@@ -889,7 +889,7 @@ index 71f1c361ebccbe83193c37ec3a90faa4085001c3..f7730675e3b9fec31bdbc7cec95a20ea
          return server.spigot();
      }
 +
-+    // KissenPaper start
++    // Pulvinar start
 +    private static net.kissenpvp.paper.api.base.PaperKissen kissen;
 +    public static @org.jetbrains.annotations.NotNull net.kissenpvp.paper.api.base.PaperKissen getKissen() {
 +        return kissen;
@@ -900,10 +900,10 @@ index 71f1c361ebccbe83193c37ec3a90faa4085001c3..f7730675e3b9fec31bdbc7cec95a20ea
 +        }
 +        Bukkit.kissen = kissen;
 +    }
-+    // KissenPaper end
++    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/Plugin.java b/src/main/java/org/bukkit/plugin/Plugin.java
-index ef431219fd2bce48bad63b6b92c99d54348d480e..b753260bb333c8909ac2b251c17c4e92c45d7e00 100644
+index ef431219fd2bce48bad63b6b92c99d54348d480e..e2efae7fdcc7030b5fba0a2d6733c4095b208394 100644
 --- a/src/main/java/org/bukkit/plugin/Plugin.java
 +++ b/src/main/java/org/bukkit/plugin/Plugin.java
 @@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
@@ -911,12 +911,12 @@ index ef431219fd2bce48bad63b6b92c99d54348d480e..b753260bb333c8909ac2b251c17c4e92
   * The use of {@link PluginBase} is recommended for actual Implementation
   */
 -public interface Plugin extends TabExecutor, io.papermc.paper.plugin.lifecycle.event.LifecycleEventOwner { // Paper
-+public interface Plugin extends TabExecutor, io.papermc.paper.plugin.lifecycle.event.LifecycleEventOwner, net.kissenpvp.core.api.base.plugin.KissenPlugin { // Paper  // KissenPaper
++public interface Plugin extends TabExecutor, io.papermc.paper.plugin.lifecycle.event.LifecycleEventOwner, net.kissenpvp.core.api.base.plugin.KissenPlugin { // Paper  // Pulvinar
      /**
       * Returns the folder that the plugin data's files are located in. The
       * folder may not yet exist.
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 47153dee66782a00b980ecf15e8774ab6f3d887d..a2f8c9e282257bf8f4a93eab3cc50480f7df72f4 100644
+index 47153dee66782a00b980ecf15e8774ab6f3d887d..7eda2d7931eb6f2ed542a1ff6b04d4b5e2e48414 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
 @@ -326,4 +326,11 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
@@ -924,15 +924,15 @@ index 47153dee66782a00b980ecf15e8774ab6f3d887d..a2f8c9e282257bf8f4a93eab3cc50480
      void overridePermissionManager(@NotNull Plugin plugin, @Nullable io.papermc.paper.plugin.PermissionManager permissionManager);
      // Paper end
 +
-+    // KissenPaper start
++    // Pulvinar start
 +
 +    void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
 +
-+    // KissenPaper end
++    // Pulvinar end
 +
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 07a9c9e254188c251165ca84c8e961fccda01175..81bbf466d46526664297fe95f9a307192efc6a90 100644
+index 07a9c9e254188c251165ca84c8e961fccda01175..ef2c29122649bc8cb7a420f0aca29664f9eec51c 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 @@ -990,4 +990,14 @@ public final class SimplePluginManager implements PluginManager {
@@ -940,7 +940,7 @@ index 07a9c9e254188c251165ca84c8e961fccda01175..81bbf466d46526664297fe95f9a30719
      }
      // Paper end
 +
-+    // KissenPaper start
++    // Pulvinar start
 +
 +    @Override
 +    public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin)
@@ -948,10 +948,10 @@ index 07a9c9e254188c251165ca84c8e961fccda01175..81bbf466d46526664297fe95f9a30719
 +        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
 +    }
 +
-+    // KissenPaper end
++    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-index 34037d3da2c536bac088e0ff629ee8f1daccc65b..350097c726eaf3e900ed4a073d43656cfaf0e95e 100644
+index 34037d3da2c536bac088e0ff629ee8f1daccc65b..4b95d0e680a80fb8ecfa083523f4df20170a2a97 100644
 --- a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
 +++ b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
 @@ -470,4 +470,11 @@ public abstract class JavaPlugin extends PluginBase {
@@ -959,12 +959,12 @@ index 34037d3da2c536bac088e0ff629ee8f1daccc65b..350097c726eaf3e900ed4a073d43656c
      }
      // Paper end - lifecycle events
 +
-+    // KissenPaper start
++    // Pulvinar start
 +    @Override
 +    public @NotNull net.kissenpvp.core.api.base.Kissen getKissen() {
 +        return org.bukkit.Bukkit.getKissen();
 +    }
-+    // KissenPaper end
++    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java b/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java
 index 7e4f7cb2afbc145e532285c793573ad107bc3033..5cdea21400ef131f6a290b37d5867bc7108636d1 100644
@@ -980,7 +980,7 @@ index 7e4f7cb2afbc145e532285c793573ad107bc3033..5cdea21400ef131f6a290b37d5867bc7
      private final Map<String, Class<?>> classes = new ConcurrentHashMap<String, Class<?>>();
      private final PluginDescriptionFile description;
 diff --git a/src/test/java/org/bukkit/plugin/TestPlugin.java b/src/test/java/org/bukkit/plugin/TestPlugin.java
-index affe88cf8e98a787e197936f5fc443464a2343c6..22c84be67677cafd38d4fc1d1ea7a4d97b162871 100644
+index affe88cf8e98a787e197936f5fc443464a2343c6..a5d8251700c32d402d256306c05e91bb8475628e 100644
 --- a/src/test/java/org/bukkit/plugin/TestPlugin.java
 +++ b/src/test/java/org/bukkit/plugin/TestPlugin.java
 @@ -140,4 +140,11 @@ public class TestPlugin extends PluginBase {
@@ -988,10 +988,10 @@ index affe88cf8e98a787e197936f5fc443464a2343c6..22c84be67677cafd38d4fc1d1ea7a4d9
      }
      // Paper end - lifecycle events
 +
-+    // KissenPaper start
++    // Pulvinar start
 +    @Override
 +    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
 +        return org.bukkit.Bukkit.getKissen();
 +    }
-+    // KissenPaper end
++    // Pulvinar end
  }

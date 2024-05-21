@@ -1,7 +1,7 @@
-name: KissenPaper-Test-Plugin
+name: Pulvinar-Test-Plugin
 version: ${version}
 main: net.kissenpvp.testplugin.TestPlugin
-description: KissenPaper Test Plugin
+description: Pulvinar Test Plugin
 author: KissenPvP
 api-version: ${apiversion}
 load: STARTUP

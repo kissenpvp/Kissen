@@ -1,7 +1,7 @@
 version = "1.0.0-SNAPSHOT"
 
 dependencies {
-    compileOnly(project(":kissenpaper:kissenpaper-api"))
+    compileOnly(project(":pulvinar:pulvinar-api"))
 }
 
 tasks.processResources {

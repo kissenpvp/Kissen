@@ -302,7 +302,7 @@ index 631cdaad6f8d567b5d63658548d0b775ebc87a6f..1cf13ed2c7e87a6f0c85d8a177f867cb
 +    }
  }
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index 30298a629b39bd43ce14b414fc697b2dfcbea89c..47c7bbd5c31d7c24f1b788b243715c8b8eafa69d 100644
+index 30298a629b39bd43ce14b414fc697b2dfcbea89c..45758755d26f05787a65436b1f90f686bd0e8144 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
 +++ b/src/main/java/org/bukkit/OfflinePlayer.java
 @@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
@@ -310,12 +310,12 @@ index 30298a629b39bd43ce14b414fc697b2dfcbea89c..47c7bbd5c31d7c24f1b788b243715c8b
   * player needing to be online.
   */
 -public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
-+public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient, net.kissenpvp.paper.api.permission.GroupablePermissionEntry { // KissenPaper
++public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient, net.kissenpvp.paper.api.permission.GroupablePermissionEntry { // Pulvinar
  
      /**
       * Checks if this player is currently online
 diff --git a/src/main/java/org/bukkit/command/CommandSender.java b/src/main/java/org/bukkit/command/CommandSender.java
-index 04e7cd0e4e2d0eb38fb2862ce6688a4470f30d6b..0fd1f0fa7ef8881efc62bffec5fca92d632b1681 100644
+index 04e7cd0e4e2d0eb38fb2862ce6688a4470f30d6b..8f5549fddef170ec45152084e4c73dcae7542ea6 100644
 --- a/src/main/java/org/bukkit/command/CommandSender.java
 +++ b/src/main/java/org/bukkit/command/CommandSender.java
 @@ -1,6 +1,7 @@
@@ -331,7 +331,7 @@ index 04e7cd0e4e2d0eb38fb2862ce6688a4470f30d6b..0fd1f0fa7ef8881efc62bffec5fca92d
  import org.jetbrains.annotations.Nullable;
  
 -public interface CommandSender extends net.kyori.adventure.audience.Audience, Permissible { // Paper
-+public interface CommandSender extends net.kyori.adventure.audience.Audience, Permissible, net.kissenpvp.core.api.networking.client.entitiy.ServerEntity { // Paper // KissenPaper
++public interface CommandSender extends net.kyori.adventure.audience.Audience, Permissible, net.kissenpvp.core.api.networking.client.entitiy.ServerEntity { // Paper // Pulvinar
  
      /**
       * Sends this sender a message
@@ -340,15 +340,15 @@ index 04e7cd0e4e2d0eb38fb2862ce6688a4470f30d6b..0fd1f0fa7ef8881efc62bffec5fca92d
      }
      // Paper end
 +
-+    // KissenPaper start
++    // Pulvinar start
 +    @Override
 +    default @NotNull Component displayName() {
 +        return name();
 +    }
-+    // KissenPaper end
++    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/command/ConsoleCommandSender.java b/src/main/java/org/bukkit/command/ConsoleCommandSender.java
-index f309c2ed39bcc700e5b491ff549bf0608a07aab8..5f9b1cd1fc2b9f81780e48c2966f839e5e1f3783 100644
+index f309c2ed39bcc700e5b491ff549bf0608a07aab8..d105bce3788d1bef72fc8426b9bb40e5ca79c0e6 100644
 --- a/src/main/java/org/bukkit/command/ConsoleCommandSender.java
 +++ b/src/main/java/org/bukkit/command/ConsoleCommandSender.java
 @@ -2,5 +2,5 @@ package org.bukkit.command;
@@ -356,17 +356,17 @@ index f309c2ed39bcc700e5b491ff549bf0608a07aab8..5f9b1cd1fc2b9f81780e48c2966f839e
  import org.bukkit.conversations.Conversable;
  
 -public interface ConsoleCommandSender extends CommandSender, Conversable {
-+public interface ConsoleCommandSender extends CommandSender, Conversable, net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient { // KissenPaper
++public interface ConsoleCommandSender extends CommandSender, Conversable, net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient { // Pulvinar
  }
 diff --git a/src/main/java/org/bukkit/command/MessageCommandSender.java b/src/main/java/org/bukkit/command/MessageCommandSender.java
-index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..ae48198d53702f3234dbb2c2468d3500db08ebc6 100644
+index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..8bff00621e832309de09636571b85222585929be 100644
 --- a/src/main/java/org/bukkit/command/MessageCommandSender.java
 +++ b/src/main/java/org/bukkit/command/MessageCommandSender.java
 @@ -132,4 +132,25 @@ public interface MessageCommandSender extends CommandSender {
          throw new UnsupportedOperationException();
      }
  
-+    // KissenPaper start
++    // Pulvinar start
 +    @Override
 +    default @NotNull java.util.Locale getCurrentLocale() {
 +        throw new UnsupportedOperationException();
@@ -386,10 +386,10 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..ae48198d53702f3234dbb2c2468d3500
 +    default boolean isClient() {
 +        throw new UnsupportedOperationException();
 +    }
-+    // KissenPaper end
++    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index 6c327a07bf8a6aa11a2d7dad12b2830acc539484..9d7e13117d995eb5a051392f7e6b10f23fb9dff3 100644
+index 6c327a07bf8a6aa11a2d7dad12b2830acc539484..a0be26df8e4ce610984549e21e8906682ea5c87f 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
 @@ -56,7 +56,7 @@ import org.jetbrains.annotations.Nullable;
@@ -397,31 +397,33 @@ index 6c327a07bf8a6aa11a2d7dad12b2830acc539484..9d7e13117d995eb5a051392f7e6b10f2
   * Represents a player, connected or not
   */
 -public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, net.kyori.adventure.bossbar.BossBarViewer, com.destroystokyo.paper.network.NetworkClient { // Paper
-+public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, net.kyori.adventure.bossbar.BossBarViewer, com.destroystokyo.paper.network.NetworkClient, net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient { // Paper // KissenPaper
++public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, net.kyori.adventure.bossbar.BossBarViewer, com.destroystokyo.paper.network.NetworkClient, net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient { // Paper // Pulvinar
  
      // Paper start
      @Override
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index a9ba540f5f5d343269746ee701234dcf97dbd34b..a5f76815c2503fcec5dc893f8f68caf92bb46b15 100644
+index 1aba6c985668b0e9cca15415a75b4431dcce35d0..b1685106416ea369d67aa53554cd4cf5dfdb827f 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -331,6 +331,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -328,9 +328,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+     // Paper end
  
+     // Pulvinar start
+-
      void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
  
--    // KissenPaper end
 +    void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin);
- 
-+    // KissenPaper end
+     // Pulvinar end
+-
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 02c486c69a9ce5271a6d70c0d11dd3403eb51611..75ab899cfd39b70e3c639237ce8da7a3cf5425af 100644
+index c2bf2252c4d9eb223c69bc059d55a4190a2e7490..22ef2c2bd3f3e5f0f72003195d8327052385e03a 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 @@ -991,12 +991,15 @@ public final class SimplePluginManager implements PluginManager {
      // Paper end
  
-     // KissenPaper start
+     // Pulvinar start
 -
      @Override
      public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin)
@@ -429,15 +431,14 @@ index 02c486c69a9ce5271a6d70c0d11dd3403eb51611..75ab899cfd39b70e3c639237ce8da7a3
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
      }
  
--    // KissenPaper end
 +    @Override
 +    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin) {
 +        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
 +    }
-+    // KissenPaper start
+     // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/profile/PlayerProfile.java b/src/main/java/org/bukkit/profile/PlayerProfile.java
-index d36b3e3c7e53840132011add365ca2a26d799064..50572f51a906c1fdc0788934d3d80c276bacad1b 100644
+index d36b3e3c7e53840132011add365ca2a26d799064..c04b6c883cb46f6283aea44248c28b74527edb65 100644
 --- a/src/main/java/org/bukkit/profile/PlayerProfile.java
 +++ b/src/main/java/org/bukkit/profile/PlayerProfile.java
 @@ -100,4 +100,8 @@ public interface PlayerProfile extends Cloneable, ConfigurationSerializable {
@@ -445,7 +446,7 @@ index d36b3e3c7e53840132011add365ca2a26d799064..50572f51a906c1fdc0788934d3d80c27
      @NotNull
      PlayerProfile clone();
 +
-+    // KissenPaper start
++    // Pulvinar start
 +    @NotNull net.kissenpvp.core.api.user.User getUser();
-+    // KissenPaper end
++    // Pulvinar end
  }
