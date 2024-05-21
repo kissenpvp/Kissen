@@ -89,19 +89,8 @@ tasks.generateDevelopmentBundle {
     libraryRepositories = listOf(
             "https://repo.maven.apache.org/maven2/",
             paperMavenPublicUrl,
-            "https://repo.kissenpvp.net/repository/maven-snapshots/",
+            "https://repo.kissenpvp.net/repository/maven-public/",
     )
-}
-
-allprojects {
-    publishing {
-        repositories {
-            maven("https://repo.kissenpvp.net/repository/maven-snapshots/") {
-                name = "kissenpvp"
-                credentials(PasswordCredentials::class)
-            }
-        }
-    }
 }
 
 publishing {

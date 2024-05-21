@@ -3,8 +3,8 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     java
+    `maven-publish`
 }
-
 
 allprojects {
     apply(plugin = "java")
@@ -13,6 +13,15 @@ allprojects {
     java {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(21))
+        }
+    }
+
+    publishing {
+        repositories {
+            maven("https://repo.kissenpvp.net/repository/maven-snapshots/") {
+                name = "kissenpvp"
+                credentials(PasswordCredentials::class)
+            }
         }
     }
 }
