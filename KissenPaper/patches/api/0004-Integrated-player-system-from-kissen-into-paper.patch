@@ -301,19 +301,6 @@ index 631cdaad6f8d567b5d63658548d0b775ebc87a6f..1cf13ed2c7e87a6f0c85d8a177f867cb
 +    public record PermissionArgument(@NotNull String permission) {
 +    }
  }
-diff --git a/src/main/java/net/kissenpvp/paper/api/user/event/VisualChangeEvent.java b/src/main/java/net/kissenpvp/paper/api/user/event/VisualChangeEvent.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..bd15a61250250418eb9dceb7aa2acaa6a1d4820e
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/user/event/VisualChangeEvent.java
-@@ -0,0 +1,7 @@
-+package net.kissenpvp.paper.api.user.event;
-+
-+import net.kissenpvp.core.api.event.EventClass;
-+import org.bukkit.entity.Player;
-+import org.jetbrains.annotations.NotNull;
-+
-+public record VisualChangeEvent(@NotNull Player player) implements EventClass { }
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
 index 30298a629b39bd43ce14b414fc697b2dfcbea89c..47c7bbd5c31d7c24f1b788b243715c8b8eafa69d 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
