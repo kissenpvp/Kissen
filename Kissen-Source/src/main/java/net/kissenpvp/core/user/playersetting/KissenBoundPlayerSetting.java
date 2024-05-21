@@ -77,7 +77,8 @@ public abstract class KissenBoundPlayerSetting<T, S extends PlayerClient<?, ?>> 
         return getRepository(user).get(getKey(), String.class).map(value -> getSetting().getParent().deserialize(value));
     }
 
-    protected void setValue(User user, @NotNull T value) {
+    protected void setValue(@NotNull User user, @NotNull T value) {
+        getSetting().getParent().setValue(getPlayer(), value);
         getRepository(user).set(getKey(), getSetting().getParent().serialize(value));
     }
 
