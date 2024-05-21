@@ -2218,10 +2218,10 @@ index 0000000000000000000000000000000000000000..f8344bec3cd20dbd76e5c23edeeed196
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..dcb89301584f021de9e1ee45e60eb8ad86c99b8d
+index 0000000000000000000000000000000000000000..e17a4371481bc190fa79422870a949a680df911a
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/user/KissenPaperPublicUser.java
-@@ -0,0 +1,245 @@
+@@ -0,0 +1,242 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2242,6 +2242,8 @@ index 0000000000000000000000000000000000000000..dcb89301584f021de9e1ee45e60eb8ad
 +
 +package net.kissenpvp.paper.user;
 +
++import com.google.gson.JsonElement;
++import com.google.gson.JsonObject;
 +import net.kissenpvp.core.api.database.DataWriter;
 +import net.kissenpvp.core.api.database.StorageImplementation;
 +import net.kissenpvp.core.api.database.meta.BackendException;
@@ -2253,18 +2255,14 @@ index 0000000000000000000000000000000000000000..dcb89301584f021de9e1ee45e60eb8ad
 +import net.kissenpvp.core.api.networking.socket.DataPackage;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.ban.warn.WarnNode;
-+import net.kissenpvp.core.base.KissenCore;
 +import net.kissenpvp.core.database.savable.KissenSavableMap;
-+import net.kissenpvp.core.event.EventImplementation;
 +import net.kissenpvp.core.permission.PermissionNode;
 +import net.kissenpvp.core.user.KissenPublicUser;
 +import net.kissenpvp.core.user.KissenUser;
 +import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.permission.Permission;
-+import net.kissenpvp.paper.api.user.event.VisualChangeEvent;
 +import net.kissenpvp.paper.permission.KissenPaperPermission;
 +import org.bukkit.Bukkit;
-+import org.bukkit.entity.Player;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +
@@ -2320,6 +2318,7 @@ index 0000000000000000000000000000000000000000..dcb89301584f021de9e1ee45e60eb8ad
 +    @Override
 +    public void login() {
 +        super.login();
++        getStorage().put("name_hash", getNameHash());
 +
 +        ((KissenUser<?>) getPrivateUserEntry()).login();
 +        getStorage().put("tick", true);
@@ -2361,7 +2360,7 @@ index 0000000000000000000000000000000000000000..dcb89301584f021de9e1ee45e60eb8ad
 +     */
 +    public @NotNull User getPrivateUserEntry() {
 +        return (User) getStorage().computeIfAbsent("private_user_entry", (key) -> {
-+            return setupPrivateUser((UUID) getRawID(), getRepository().getNotNull("name", String.class)); // If offline still return actual private entity
++            return setupPrivateUser(getRawID(), getRepository().getNotNull("name", String.class)); // If offline still return actual private entity
 +        });
 +    }
 +
@@ -2379,34 +2378,22 @@ index 0000000000000000000000000000000000000000..dcb89301584f021de9e1ee45e60eb8ad
 +    }
 +
 +    private void checkVisuals() {
-+        int visualHash = getVisualHash();
-+        if (!Objects.equals(getStorage().get("visual_hash"), visualHash)) {
-+            extracted(visualHash);
++        int visualHash = getNameHash();
++        if (!Objects.equals(getStorage().get("name_hash"), visualHash)) {
++            updatePermissions(visualHash);
 +        }
 +    }
 +
-+    private void extracted(int visualHash) {
-+        getStorage().put("visual_hash", visualHash);
++    private void updatePermissions(int visualHash) {
++        getStorage().put("name_hash", visualHash);
 +
 +        if (getStorage().containsKey("tick")) {
 +            ((KissenUser<?>) getPrivateUserEntry()).clearCache();
 +            permissionUpdate();
 +        }
-+
-+        Runnable update = () -> {
-+            Player player = Objects.requireNonNull(Bukkit.getPlayer((UUID) getRawID()));
-+            VisualChangeEvent visualChangeEvent = new VisualChangeEvent(player);
-+            Bukkit.getKissen().getImplementation(EventImplementation.class).call(visualChangeEvent);
-+        };
-+
-+        if (!Bukkit.isPrimaryThread()) {
-+            KissenCore.getInstance().runTask(update, 0, "Visual Update");
-+            return;
-+        }
-+        update.run();
 +    }
 +
-+    private int getVisualHash() {
++    private int getNameHash() {
 +        return getPlayerClient().getRank().hashCode() + displayName().hashCode();
 +    }
 +
@@ -2465,6 +2452,16 @@ index 0000000000000000000000000000000000000000..dcb89301584f021de9e1ee45e60eb8ad
 +
 +        @Override
 +        public void sendData(@NotNull DataPackage dataPackage) { /* Ignored because it's private */ }
++
++        public @NotNull JsonElement getAdvancementsProgress()
++        {
++            return getRepository().get("advancements", JsonElement.class).orElseGet(JsonObject::new);
++        }
++
++        public void setAdvancementsProgress(@NotNull JsonElement progress)
++        {
++            getRepository().set("advancements", progress);
++        }
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java b/src/main/java/net/kissenpvp/paper/user/KissenPaperUserImplementation.java
