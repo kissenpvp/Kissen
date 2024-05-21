@@ -94,10 +94,6 @@ public abstract class KissenBanImplementation<B extends AbstractBanTemplate, P e
         kissenLocalizationImplementation.register("server.ban.player.kicked", new MessageFormat("Player {0} has been kicked on this network."));
         kissenLocalizationImplementation.register("server.ban.player.kicked.cause", new MessageFormat("Player {0} has been kicked from this network with the cause: \"{1}\"."));
 
-        kissenLocalizationImplementation.register("server.ban.player.warned", new MessageFormat("Player {0} has been warned {1} time(s)."));
-        kissenLocalizationImplementation.register("server.ban.player.warned.cause", new MessageFormat("Player {0} has been warned {1} expire(s) with the cause: \"{2}\"."));
-        kissenLocalizationImplementation.register("server.ban.player.warned.target", new MessageFormat("Warned for {0}!"));
-
         return AbstractBanImplementation.super.start();
     }
 

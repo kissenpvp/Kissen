@@ -85,10 +85,10 @@ index e83f9517b31c5171b8dc75ab63a5bfe654221c84..ae7ab5d59b17331b95c9c15eb24d90cc
  }
 diff --git a/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..acd411f9cb4335d888ac9f1640895a41822904a5
+index 0000000000000000000000000000000000000000..68e74f4e6d61dc6c1be491fc8544fc15b85aafb2
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/paper/ban/KissenPaperBanImplementation.java
-@@ -0,0 +1,461 @@
+@@ -0,0 +1,464 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -190,6 +190,9 @@ index 0000000000000000000000000000000000000000..acd411f9cb4335d888ac9f1640895a41
 +        kissenLocalizationImplementation.register("server.ban.history.empty", new MessageFormat("The punishment history of {0} is empty."));
 +        kissenLocalizationImplementation.register("server.ban.warn.ban", new MessageFormat("The player {0} already has {1} warn(s). Do you want to punish the player instead?\n{2} {3}"));
 +        kissenLocalizationImplementation.register("server.ban.warn.clear", new MessageFormat("The warn(s) of the player {0} have been reset."));
++        kissenLocalizationImplementation.register("server.ban.player.warned", new MessageFormat("Player {0} has been warned {1} time(s)."));
++        kissenLocalizationImplementation.register("server.ban.player.warned.cause", new MessageFormat("Player {0} has been warned {1} times(s) with the cause: {2}."));
++        kissenLocalizationImplementation.register("server.ban.player.warned.target", new MessageFormat("Warned for {0}!"));
 +
 +        InternalCommandImplementation<CommandSender> command = Bukkit.getKissen().getImplementation(InternalCommandImplementation.class);
 +        command.getInternalHandler().registerParser(BanTemplate.class, new BanParser());
