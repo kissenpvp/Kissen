@@ -3,22 +3,21 @@ From: Ivo Quiring <falk.quiring@gmail.com>
 Date: Sun, 3 Mar 2024 09:34:37 +0100
 Subject: [PATCH] Integrated advancement system into paper
 
-Signed-off-by: Ivo Quiring <falk.quiring@gmail.com>
 
-diff --git a/src/main/java/net/kissenpvp/paper/advancement/PulvinarPlayerAdvancement.java b/src/main/java/net/kissenpvp/paper/advancement/PulvinarPlayerAdvancement.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/advancement/PulvinarPlayerAdvancement.java b/src/main/java/net/kissenpvp/pulvinar/advancement/PulvinarPlayerAdvancement.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..307c975a59ddddb8bf7ba12208c764f4029c9111
+index 0000000000000000000000000000000000000000..bd04997001648931fc9fb6d4c8888a04cde692f0
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/advancement/PulvinarPlayerAdvancement.java
++++ b/src/main/java/net/kissenpvp/pulvinar/advancement/PulvinarPlayerAdvancement.java
 @@ -0,0 +1,45 @@
-+package net.kissenpvp.paper.advancement;
++package net.kissenpvp.pulvinar.advancement;
 +
 +import com.google.gson.JsonElement;
 +import com.google.gson.JsonParseException;
 +import com.mojang.datafixers.DataFixer;
 +import com.mojang.serialization.JsonOps;
-+import net.kissenpvp.paper.api.base.Context;
-+import net.kissenpvp.paper.user.PulvinarPublicUser;
++import net.kissenpvp.pulvinar.api.base.Context;
++import net.kissenpvp.pulvinar.user.PulvinarPublicUser;
 +import net.minecraft.server.PlayerAdvancements;
 +import net.minecraft.server.ServerAdvancementManager;
 +import net.minecraft.server.level.ServerPlayer;
@@ -138,25 +137,17 @@ index c7e1f2bac3eca9bb72bf1f8c26cccb2905e1ddfc..42abbf41bc59b82b753a7e32857fc6dd
 +    // Pulvinar end - make player accessible from class children
  }
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 098e126960bc4589f1f598213f7ed102c0dc8ace..48f74504e12a54f20f0a3bd347983bc78a937d69 100644
+index 366256da7faeb2e26a0d5f3cd121c7effd8541c2..c01c949b5b24610c1ef5c22893b947b2e59fa789 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -26,6 +26,7 @@ import java.util.function.Function;
- import java.util.function.Predicate;
- import javax.annotation.Nullable;
- 
-+import net.kissenpvp.paper.advancement.PulvinarPlayerAdvancement;
- import net.kissenpvp.paper.ban.PulvinarPunishmentList;
- import net.minecraft.ChatFormatting;
- import net.minecraft.FileUtil;
-@@ -1516,7 +1517,11 @@ public abstract class PlayerList {
+@@ -1514,7 +1514,11 @@ public abstract class PlayerList {
          if (advancementdataplayer == null) {
              Path path = this.server.getWorldPath(LevelResource.PLAYER_ADVANCEMENTS_DIR).resolve(String.valueOf(uuid) + ".json");
  
 -            advancementdataplayer = new PlayerAdvancements(this.server.getFixerUpper(), this, this.server.getAdvancements(), path, player);
 +            // Pulvinar start - make advancements being saved in the database
 +            //advancementdataplayer = new PlayerAdvancements(this.server.getFixerUpper(), this, this.server.getAdvancements(), path, player);
-+            advancementdataplayer = new PulvinarPlayerAdvancement(this.server.getFixerUpper(), this, this.server.getAdvancements(), path, player);
++            advancementdataplayer = new net.kissenpvp.pulvinar.advancement.PulvinarPlayerAdvancement(this.server.getFixerUpper(), this, this.server.getAdvancements(), path, player);
 +            // Pulvinar end - make advancements being saved in the database
 +
              // this.advancements.put(uuid, advancementdataplayer); // CraftBukkit

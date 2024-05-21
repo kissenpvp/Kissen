@@ -4,11 +4,86 @@ Date: Sun, 24 Sep 2023 16:06:01 +0200
 Subject: [PATCH] Integrated command system from kissen into paper
 
 
-diff --git a/src/main/java/net/kissenpvp/paper/api/command/CommandImplementation.java b/src/main/java/net/kissenpvp/paper/api/command/CommandImplementation.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/command/ArgumentParser.java b/src/main/java/net/kissenpvp/pulvinar/api/command/ArgumentParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f0fb644a87663eccfa610ffb06a6c40588c4a9e8
+index 0000000000000000000000000000000000000000..1e7f4a0b19e76a637cd8d91b1a4df3c38cb0b8e8
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/command/CommandImplementation.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/command/ArgumentParser.java
+@@ -0,0 +1,40 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.command;
++
++import net.kissenpvp.core.api.command.AbstractArgumentParser;
++import org.bukkit.command.CommandSender;
++
++/**
++ * Interface for a Paper-specific argument parser.
++ * <p>
++ * This interface extends the {@link AbstractArgumentParser} and refines the server entity type to
++ * {@link CommandSender}. It's used for parsing command arguments within the Paper API context.
++ * <p>
++ * This interface does not add any additional methods; it merely specializes the
++ * {@link AbstractArgumentParser} for use with {@link CommandSender} in the Paper API context.
++ * <p>
++ * All methods inherited from {@link AbstractArgumentParser} maintain their original functionality
++ * with the specialized type {@link CommandSender}.
++ *
++ * @param <T> the type of object that the parser can parse.
++ * @see AbstractArgumentParser
++ * @see CommandSender
++ */
++public interface ArgumentParser<T> extends AbstractArgumentParser<T, CommandSender> { }
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/command/CommandExceptionHandler.java b/src/main/java/net/kissenpvp/pulvinar/api/command/CommandExceptionHandler.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..27ce83a389dd892adf488798365d60d373321fa4
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/command/CommandExceptionHandler.java
+@@ -0,0 +1,23 @@
++package net.kissenpvp.pulvinar.api.command;
++
++import net.kissenpvp.core.api.command.exception.AbstractCommandExceptionHandler;
++import org.bukkit.command.CommandSender;
++
++/**
++ * Interface for Paper command exception handler.
++ * <p>
++ * This interface extends the {@link AbstractCommandExceptionHandler} and narrows down
++ * the {@code ServerEntity} type to {@link CommandSender}. It's used for handling exceptions
++ * specifically occurring during the execution of commands within the Paper API context.
++ * <p>
++ * This interface does not add any additional methods; it merely specializes the
++ * {@link AbstractCommandExceptionHandler} for use with {@link CommandSender} in the Paper API context.
++ * <p>
++ * All methods inherited from {@link AbstractCommandExceptionHandler} maintain their original functionality
++ * with the specialized type {@link CommandSender}.
++ *
++ * @param <T> the type of exception this handler can handle
++ * @see AbstractCommandExceptionHandler
++ * @see CommandSender
++ */
++public interface CommandExceptionHandler<T extends Throwable> extends AbstractCommandExceptionHandler<T, CommandSender> { }
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/command/CommandImplementation.java b/src/main/java/net/kissenpvp/pulvinar/api/command/CommandImplementation.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..71e9e2c6da1c65b666bd13f8628b49f49d8529ff
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/command/CommandImplementation.java
 @@ -0,0 +1,42 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -28,7 +103,7 @@ index 0000000000000000000000000000000000000000..f0fb644a87663eccfa610ffb06a6c405
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.api.command;
++package net.kissenpvp.pulvinar.api.command;
 +
 +import net.kissenpvp.core.api.base.Implementation;
 +import net.kissenpvp.core.api.base.plugin.KissenPlugin;
@@ -52,11 +127,11 @@ index 0000000000000000000000000000000000000000..f0fb644a87663eccfa610ffb06a6c405
 +    @NotNull Optional<CommandHandler<CommandSender, KissenCommand>> getPluginHandler(@NotNull KissenPlugin kissenPlugin);
 +
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/command/KissenCommand.java b/src/main/java/net/kissenpvp/pulvinar/api/command/KissenCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0b37b7c0653395d7aa554846cde0e9254a11c93d
+index 0000000000000000000000000000000000000000..6e9fa6127922210633a7f51376a1b76e446329e5
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/command/KissenCommand.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/command/KissenCommand.java
 @@ -0,0 +1,50 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -76,7 +151,7 @@ index 0000000000000000000000000000000000000000..0b37b7c0653395d7aa554846cde0e925
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.api.command;
++package net.kissenpvp.pulvinar.api.command;
 +
 +import org.bukkit.command.Command;
 +import org.jetbrains.annotations.NotNull;
@@ -108,8 +183,159 @@ index 0000000000000000000000000000000000000000..0b37b7c0653395d7aa554846cde0e925
 +        super(name);
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/command/parser/OfflinePlayerParser.java b/src/main/java/net/kissenpvp/pulvinar/api/command/parser/OfflinePlayerParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..161e40e6463a736e0ffed41b8602e6a03e959ed6
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/command/parser/OfflinePlayerParser.java
+@@ -0,0 +1,76 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.command.parser;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.networking.client.entitiy.PlayerOfflineException;
++import net.kissenpvp.core.api.user.UserImplementation;
++import net.kissenpvp.core.api.user.UserInfo;
++import net.kissenpvp.pulvinar.api.command.ArgumentParser;
++import org.bukkit.Bukkit;
++import org.bukkit.OfflinePlayer;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.Collection;
++import java.util.Objects;
++import java.util.UUID;
++import java.util.stream.Collectors;
++
++
++/**
++ * A parser used to serialize and deserialize an OfflinePlayer object.
++ */
++public class OfflinePlayerParser implements ArgumentParser<OfflinePlayer> {
++    @Override
++    public @NotNull String serialize(@NotNull OfflinePlayer object) {
++        return Objects.requireNonNull(object.getName());
++    }
++
++    @Override
++    public @NotNull OfflinePlayer deserialize(@NotNull String input) {
++
++        try
++        {
++            OfflinePlayer player;
++            if (input.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}")) {
++                player = Bukkit.getOfflinePlayer(UUID.fromString(input));
++            } else {
++                player = Bukkit.getOfflinePlayer(input);
++            }
++            return player;
++        }
++        catch (NullPointerException nullPointerException)
++        {
++            throw new PlayerOfflineException(input);
++        }
++    }
++
++    @Override
++    public @Nullable String argumentName()
++    {
++        return "player";
++    }
++
++    @Override public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
++    {
++        return Bukkit.getKissen().getImplementation(UserImplementation.class).getUserProfiles().stream().map(UserInfo::getName).collect(Collectors.toSet());
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/command/parser/PlayerParser.java b/src/main/java/net/kissenpvp/pulvinar/api/command/parser/PlayerParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..80840b8f912d0691e068a22e2b50b062a457061f
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/command/parser/PlayerParser.java
+@@ -0,0 +1,63 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.command.parser;
++
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.networking.client.entitiy.PlayerOfflineException;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
++import org.bukkit.entity.Player;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Collection;
++import java.util.Objects;
++import java.util.UUID;
++import java.util.stream.Collectors;
++
++public class PlayerParser implements net.kissenpvp.pulvinar.api.command.ArgumentParser<Player> {
++    @Override
++    public @NotNull String serialize(@NotNull Player object) {
++        return object.getName();
++    }
++
++    @Override
++    public @NotNull Player deserialize(@NotNull String input) {
++        Player player;
++        if (input.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"))
++        {
++            player = Bukkit.getPlayer(UUID.fromString(input));
++        }
++        else
++        {
++            player = Bukkit.getPlayer(input);
++        }
++
++        if(Objects.isNull(player))
++        {
++            throw new PlayerOfflineException(input);
++        }
++
++        return player;
++    }
++
++    @Override
++    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
++        return Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toSet());
++    }
++}
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 3e7f95b02d21c1881faa62bc0f9f6291adadd7f6..ba8daf59d250f26fa64553efd079283c4241a148 100644
+index 3e7f95b02d21c1881faa62bc0f9f6291adadd7f6..019f5e4d152f4ebd1a7e5fcc731fd2e9f807c93b 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
 @@ -333,5 +333,11 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
@@ -121,31 +347,48 @@ index 3e7f95b02d21c1881faa62bc0f9f6291adadd7f6..ba8daf59d250f26fa64553efd079283c
 +
 +    void registerExceptionHandler(@NotNull net.kissenpvp.core.api.base.ExceptionHandler<?> exceptionHandler, @NotNull Plugin plugin);
 +
-+    <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.paper.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin);
++    <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin);
      // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 77f40130e6a69cee41103d01a89a3be0e70e555c..c74a0a994e6ae565599dfec4488c2715c1966cc6 100644
+index 77f40130e6a69cee41103d01a89a3be0e70e555c..21d36cbb566b17d8dfe4a214b7ac447e3ea82f83 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -1006,5 +1006,20 @@ public final class SimplePluginManager implements PluginManager {
+@@ -24,6 +24,8 @@ import java.util.WeakHashMap;
+ import java.util.logging.Level;
+ import java.util.regex.Matcher;
+ import java.util.regex.Pattern;
++
++import net.kissenpvp.pulvinar.api.command.CommandImplementation;
+ import org.bukkit.Server;
+ import org.bukkit.World;
+ import org.bukkit.command.Command;
+@@ -32,7 +34,6 @@ import org.bukkit.command.SimpleCommandMap;
+ import org.bukkit.event.Event;
+ import org.bukkit.event.EventPriority;
+ import org.bukkit.event.HandlerList;
+-import org.bukkit.event.Listener;
+ import org.bukkit.permissions.Permissible;
+ import org.bukkit.permissions.Permission;
+ import org.bukkit.permissions.PermissionDefault;
+@@ -1006,5 +1007,20 @@ public final class SimplePluginManager implements PluginManager {
      public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
      }
 +
 +    @Override
 +    public void registerCommand(@NotNull Plugin plugin, @NotNull Object... objects) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerCommand(objects));
++        org.bukkit.Bukkit.getKissen().getImplementation(CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerCommand(objects));
 +    }
 +
 +    @Override
 +    public void registerExceptionHandler(@NotNull net.kissenpvp.core.api.base.ExceptionHandler<?> exceptionHandler, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerExceptionHandler(exceptionHandler));
++        org.bukkit.Bukkit.getKissen().getImplementation(CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerExceptionHandler(exceptionHandler));
 +    }
 +
 +    @Override
-+    public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.paper.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
++    public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin) {
++        org.bukkit.Bukkit.getKissen().getImplementation(CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
 +    }
      // Pulvinar start
  }

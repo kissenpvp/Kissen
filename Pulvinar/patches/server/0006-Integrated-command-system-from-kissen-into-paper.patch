@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index aecbec5ca49947a1649eb569cb1e715d762c1af2..b7546931a58804996940a07aacd3e925b67aff6a 100644
+index aecbec5ca49947a1649eb569cb1e715d762c1af2..a712df714ec0d2bcd348ea820227a77ce61ee243 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 @@ -259,5 +259,20 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
@@ -15,52 +15,40 @@ index aecbec5ca49947a1649eb569cb1e715d762c1af2..b7546931a58804996940a07aacd3e925
 +
 +    @Override
 +    public void registerCommand(@NotNull Plugin plugin, @NotNull Object... objects) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerCommand(objects));
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerCommand(objects));
 +    }
 +
 +    @Override
 +    public void registerExceptionHandler(@NotNull net.kissenpvp.core.api.base.ExceptionHandler<?> exceptionHandler, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerExceptionHandler(exceptionHandler));
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerExceptionHandler(exceptionHandler));
 +    }
 +
 +    @Override
-+    public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.paper.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.paper.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
++    public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin) {
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
 +    }
      // Pulvinar end
  }
-diff --git a/src/main/java/net/kissenpvp/paper/base/PulvinarCore.java b/src/main/java/net/kissenpvp/paper/base/PulvinarCore.java
-index 550d972fc350a48c9c608d44a52357bcfa600411..1953c1156e2d218469b1fbf9d41d6dd0c97c1b09 100644
---- a/src/main/java/net/kissenpvp/paper/base/PulvinarCore.java
-+++ b/src/main/java/net/kissenpvp/paper/base/PulvinarCore.java
-@@ -23,7 +23,8 @@ import net.kissenpvp.core.api.base.plugin.KissenPlugin;
- import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
- import net.kissenpvp.core.base.KissenCore;
- import net.kissenpvp.paper.api.base.PaperKissen;
--import net.kissenpvp.paper.message.localization.PulvinarLocalizationImplementation;
-+import net.kissenpvp.paper.command.PulvinarCommandImplementation;
-+import net.kissenpvp.paper.command.confirmation.PulvinarConfirmationImplementation;
- import net.kissenpvp.paper.permission.PulvinarPermissionImplementation;
- import net.kissenpvp.paper.user.PulvinarUserImplementation;
- import net.kissenpvp.paper.user.rank.PulvinarRankImplementation;
-@@ -58,7 +59,11 @@ public class PulvinarCore extends KissenCore implements PaperKissen {
-         PulvinarPermissionImplementation permissionImplementation = new PulvinarPermissionImplementation();
-         loader.put(net.kissenpvp.paper.api.permission.PermissionImplementation.class, permissionImplementation);
+diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
+index d24f21cc56dfce0868abdb7588d5048d96b3f7c6..2d1ebdfc361acf478690dd7f4c0d30e99497c8b8 100644
+--- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
++++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
+@@ -55,6 +55,10 @@ public class PulvinarCore extends KissenCore implements PaperKissen {
+         loader.put(net.kissenpvp.pulvinar.api.permission.PermissionImplementation.class, permissionImplementation);
          loader.put(net.kissenpvp.core.permission.InternalPermissionImplementation.class, permissionImplementation);
--        loader.put(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class, new PulvinarLocalizationImplementation());
-+        loader.put(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class, new net.kissenpvp.paper.message.localization.PulvinarLocalizationImplementation());
-+        PulvinarCommandImplementation commandImplementation = new PulvinarCommandImplementation();
-+        loader.put(net.kissenpvp.paper.api.command.CommandImplementation.class, commandImplementation);
+         loader.put(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class, new net.kissenpvp.pulvinar.message.localization.PulvinarLocalizationImplementation());
++        net.kissenpvp.pulvinar.command.PulvinarCommandImplementation commandImplementation = new net.kissenpvp.pulvinar.command.PulvinarCommandImplementation();
++        loader.put(net.kissenpvp.pulvinar.api.command.CommandImplementation.class, commandImplementation);
 +        loader.put(net.kissenpvp.core.command.InternalCommandImplementation.class, commandImplementation);
-+        loader.put(net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation.class, new PulvinarConfirmationImplementation());
++        loader.put(net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation.class, new net.kissenpvp.pulvinar.command.confirmation.PulvinarConfirmationImplementation());
          super.loadImplementations(loader);
      }
  
-diff --git a/src/main/java/net/kissenpvp/paper/command/PulvinarCommandImplementation.java b/src/main/java/net/kissenpvp/paper/command/PulvinarCommandImplementation.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/PulvinarCommandImplementation.java b/src/main/java/net/kissenpvp/pulvinar/command/PulvinarCommandImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..97c4e3ee7b8dc6254151eabdab928c6c0bd0a5be
+index 0000000000000000000000000000000000000000..018021bedf948eea3ff59726c32b5b639b5ced77
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/PulvinarCommandImplementation.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/PulvinarCommandImplementation.java
 @@ -0,0 +1,122 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -80,7 +68,7 @@ index 0000000000000000000000000000000000000000..97c4e3ee7b8dc6254151eabdab928c6c
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.command;
++package net.kissenpvp.pulvinar.command;
 +
 +import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 +import net.kissenpvp.core.api.command.CommandHandler;
@@ -90,13 +78,13 @@ index 0000000000000000000000000000000000000000..97c4e3ee7b8dc6254151eabdab928c6c
 +import net.kissenpvp.core.command.handler.InternalCommandHandler;
 +import net.kissenpvp.core.command.handler.PluginCommandHandler;
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
-+import net.kissenpvp.paper.api.command.CommandImplementation;
-+import net.kissenpvp.paper.api.command.KissenCommand;
-+import net.kissenpvp.paper.api.command.parser.OfflinePlayerParser;
-+import net.kissenpvp.paper.api.command.parser.PlayerParser;
-+import net.kissenpvp.paper.command.handler.CompletionExceptionHandler;
-+import net.kissenpvp.paper.command.handler.PlayerExceptionHandler;
-+import net.kissenpvp.paper.command.handler.ProfileNotFoundExceptionHandler;
++import net.kissenpvp.pulvinar.api.command.CommandImplementation;
++import net.kissenpvp.pulvinar.api.command.KissenCommand;
++import net.kissenpvp.pulvinar.api.command.parser.OfflinePlayerParser;
++import net.kissenpvp.pulvinar.api.command.parser.PlayerParser;
++import net.kissenpvp.pulvinar.command.handler.CompletionExceptionHandler;
++import net.kissenpvp.pulvinar.command.handler.PlayerExceptionHandler;
++import net.kissenpvp.pulvinar.command.handler.ProfileNotFoundExceptionHandler;
 +import net.kyori.adventure.text.Component;
 +import net.kyori.adventure.text.minimessage.MiniMessage;
 +import org.bukkit.Bukkit;
@@ -184,16 +172,16 @@ index 0000000000000000000000000000000000000000..97c4e3ee7b8dc6254151eabdab928c6c
 +        return getHandler().stream().filter(handler -> handler.getPlugin().equals(kissenPlugin)).map(handler -> (CommandHandler<CommandSender, KissenCommand>) handler).findFirst();
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/PulvinarInternalCommandHandler.java b/src/main/java/net/kissenpvp/paper/command/PulvinarInternalCommandHandler.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/PulvinarInternalCommandHandler.java b/src/main/java/net/kissenpvp/pulvinar/command/PulvinarInternalCommandHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..cd085ac66793aa95af21911115ccc319ba6539bd
+index 0000000000000000000000000000000000000000..3cafa41511370e5e74d5fbb60530332718b44059
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/PulvinarInternalCommandHandler.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/PulvinarInternalCommandHandler.java
 @@ -0,0 +1,49 @@
-+package net.kissenpvp.paper.command;
++package net.kissenpvp.pulvinar.command;
 +
 +import net.kissenpvp.core.command.handler.InternalCommandHandler;
-+import net.kissenpvp.paper.command.command.system.PulvinarCommand;
++import net.kissenpvp.pulvinar.command.command.system.PulvinarCommand;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.Command;
 +import org.bukkit.command.CommandSender;
@@ -239,17 +227,17 @@ index 0000000000000000000000000000000000000000..cd085ac66793aa95af21911115ccc319
 +        return command;
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/PulvinarPluginHandler.java b/src/main/java/net/kissenpvp/paper/command/PulvinarPluginHandler.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/PulvinarPluginHandler.java b/src/main/java/net/kissenpvp/pulvinar/command/PulvinarPluginHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..258746f08fad5933efc8f846e4acd199be5ef02d
+index 0000000000000000000000000000000000000000..c5bd35e458ca3a3b19ef74705fc70c2de5254341
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/PulvinarPluginHandler.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/PulvinarPluginHandler.java
 @@ -0,0 +1,58 @@
-+package net.kissenpvp.paper.command;
++package net.kissenpvp.pulvinar.command;
 +
 +import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 +import net.kissenpvp.core.command.handler.PluginCommandHandler;
-+import net.kissenpvp.paper.command.command.plugin.PulvinarPluginCommand;
++import net.kissenpvp.pulvinar.command.command.plugin.PulvinarPluginCommand;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.Command;
 +import org.bukkit.command.CommandSender;
@@ -303,11 +291,11 @@ index 0000000000000000000000000000000000000000..258746f08fad5933efc8f846e4acd199
 +        return command;
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/command/PulvinarAbstractCommand.java b/src/main/java/net/kissenpvp/paper/command/command/PulvinarAbstractCommand.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ba4a664fcef2eb3cf7ef2f5b4c7dafba9db322ec
+index 0000000000000000000000000000000000000000..cca083a24418a09a46d2f1d08ad4cdaed0e46fce
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/command/PulvinarAbstractCommand.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java
 @@ -0,0 +1,477 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -327,7 +315,7 @@ index 0000000000000000000000000000000000000000..ba4a664fcef2eb3cf7ef2f5b4c7dafba
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.command.command;
++package net.kissenpvp.pulvinar.command.command;
 +
 +import net.kissenpvp.core.api.command.CommandHandler;
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -341,9 +329,9 @@ index 0000000000000000000000000000000000000000..ba4a664fcef2eb3cf7ef2f5b4c7dafba
 +import net.kissenpvp.core.command.TargetValidator;
 +import net.kissenpvp.core.command.argument.Argument;
 +import net.kissenpvp.core.command.executor.KissenCommandExecutor;
-+import net.kissenpvp.paper.api.command.KissenCommand;
-+import net.kissenpvp.paper.command.PulvinarCommandImplementation;
-+import net.kissenpvp.paper.command.command.system.PulvinarChildCommand;
++import net.kissenpvp.pulvinar.api.command.KissenCommand;
++import net.kissenpvp.pulvinar.command.PulvinarCommandImplementation;
++import net.kissenpvp.pulvinar.command.command.system.PulvinarChildCommand;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandException;
 +import org.bukkit.command.CommandSender;
@@ -786,11 +774,11 @@ index 0000000000000000000000000000000000000000..ba4a664fcef2eb3cf7ef2f5b4c7dafba
 +        };
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/command/plugin/PulvinarPluginChildCommand.java b/src/main/java/net/kissenpvp/paper/command/command/plugin/PulvinarPluginChildCommand.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/command/plugin/PulvinarPluginChildCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/command/plugin/PulvinarPluginChildCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..4476dad795e43de42d1686c09fddb39dea041763
+index 0000000000000000000000000000000000000000..2f037214cce4747fd6f23c598be54655fe8a6818
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/command/plugin/PulvinarPluginChildCommand.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/command/plugin/PulvinarPluginChildCommand.java
 @@ -0,0 +1,61 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -810,10 +798,10 @@ index 0000000000000000000000000000000000000000..4476dad795e43de42d1686c09fddb39d
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.command.command.plugin;
++package net.kissenpvp.pulvinar.command.command.plugin;
 +
 +import net.kissenpvp.core.command.CommandHolder;
-+import net.kissenpvp.paper.command.command.PulvinarAbstractCommand;
++import net.kissenpvp.pulvinar.command.command.PulvinarAbstractCommand;
 +import org.bukkit.plugin.Plugin;
 +import org.jetbrains.annotations.NotNull;
 +
@@ -853,11 +841,11 @@ index 0000000000000000000000000000000000000000..4476dad795e43de42d1686c09fddb39d
 +        return Optional.of(parent);
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/command/plugin/PulvinarPluginCommand.java b/src/main/java/net/kissenpvp/paper/command/command/plugin/PulvinarPluginCommand.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/command/plugin/PulvinarPluginCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/command/plugin/PulvinarPluginCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a41d42728878abd78ac90d91287633cc5ce084ba
+index 0000000000000000000000000000000000000000..7689da7004aa5fa83b67fb1e6b237fbf35cdb12b
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/command/plugin/PulvinarPluginCommand.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/command/plugin/PulvinarPluginCommand.java
 @@ -0,0 +1,89 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -877,11 +865,11 @@ index 0000000000000000000000000000000000000000..a41d42728878abd78ac90d91287633cc
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.command.command.plugin;
++package net.kissenpvp.pulvinar.command.command.plugin;
 +
 +import net.kissenpvp.core.api.command.CommandHandler;
 +import net.kissenpvp.core.api.command.CommandPayload;
-+import net.kissenpvp.paper.command.command.PulvinarAbstractCommand;
++import net.kissenpvp.pulvinar.command.command.PulvinarAbstractCommand;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandException;
 +import org.bukkit.command.CommandSender;
@@ -948,11 +936,11 @@ index 0000000000000000000000000000000000000000..a41d42728878abd78ac90d91287633cc
 +        return plugin;
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/command/system/PulvinarChildCommand.java b/src/main/java/net/kissenpvp/paper/command/command/system/PulvinarChildCommand.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/command/system/PulvinarChildCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/command/system/PulvinarChildCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d579a2103598d6cef013e21c424219988842757f
+index 0000000000000000000000000000000000000000..22e8210d12f7784a2d8b2c64e9bc78698403120e
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/command/system/PulvinarChildCommand.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/command/system/PulvinarChildCommand.java
 @@ -0,0 +1,60 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -972,10 +960,10 @@ index 0000000000000000000000000000000000000000..d579a2103598d6cef013e21c42421998
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.command.command.system;
++package net.kissenpvp.pulvinar.command.command.system;
 +
 +import net.kissenpvp.core.command.CommandHolder;
-+import net.kissenpvp.paper.command.command.PulvinarAbstractCommand;
++import net.kissenpvp.pulvinar.command.command.PulvinarAbstractCommand;
 +import org.jetbrains.annotations.NotNull;
 +
 +import java.util.Optional;
@@ -1014,11 +1002,11 @@ index 0000000000000000000000000000000000000000..d579a2103598d6cef013e21c42421998
 +        return Optional.of(parent);
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/command/system/PulvinarCommand.java b/src/main/java/net/kissenpvp/paper/command/command/system/PulvinarCommand.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/command/system/PulvinarCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/command/system/PulvinarCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6f0d7f85fd9692d43f381a7631621dbe81986be1
+index 0000000000000000000000000000000000000000..b3fd327054c33f71849815cafbc0f9090d8193e2
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/command/system/PulvinarCommand.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/command/system/PulvinarCommand.java
 @@ -0,0 +1,65 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -1038,11 +1026,11 @@ index 0000000000000000000000000000000000000000..6f0d7f85fd9692d43f381a7631621dbe
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.command.command.system;
++package net.kissenpvp.pulvinar.command.command.system;
 +
 +import net.kissenpvp.core.api.command.CommandHandler;
 +import net.kissenpvp.core.api.command.CommandPayload;
-+import net.kissenpvp.paper.command.command.PulvinarAbstractCommand;
++import net.kissenpvp.pulvinar.command.command.PulvinarAbstractCommand;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
 +
@@ -1085,13 +1073,13 @@ index 0000000000000000000000000000000000000000..6f0d7f85fd9692d43f381a7631621dbe
 +        return new PulvinarChildCommand(nextSubCommand, parent);
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/confirmation/ConfirmCommand.java b/src/main/java/net/kissenpvp/paper/command/confirmation/ConfirmCommand.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/confirmation/ConfirmCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/confirmation/ConfirmCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..fab813a53a5ad6d3727df4ebf35609e653cc21b8
+index 0000000000000000000000000000000000000000..8b47a8647daf6d015d4393abd955d7060ac7ed4b
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/confirmation/ConfirmCommand.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/confirmation/ConfirmCommand.java
 @@ -0,0 +1,67 @@
-+package net.kissenpvp.paper.command.confirmation;
++package net.kissenpvp.pulvinar.command.confirmation;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.core.api.command.annotations.CommandData;
@@ -1158,18 +1146,18 @@ index 0000000000000000000000000000000000000000..fab813a53a5ad6d3727df4ebf35609e6
 +        return Bukkit.getKissen().getImplementation(PulvinarConfirmationImplementation.class);
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/confirmation/PulvinarConfirmationImplementation.java b/src/main/java/net/kissenpvp/paper/command/confirmation/PulvinarConfirmationImplementation.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/confirmation/PulvinarConfirmationImplementation.java b/src/main/java/net/kissenpvp/pulvinar/command/confirmation/PulvinarConfirmationImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..e0aaa9eb4aab2caa99c1698b9c51ea4a50eab3d4
+index 0000000000000000000000000000000000000000..7e6f70aeb8e2c89161021efc8283ed29d9dbac92
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/confirmation/PulvinarConfirmationImplementation.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/confirmation/PulvinarConfirmationImplementation.java
 @@ -0,0 +1,36 @@
-+package net.kissenpvp.paper.command.confirmation;
++package net.kissenpvp.pulvinar.command.confirmation;
 +
 +
 +import net.kissenpvp.core.api.command.CommandHandler;
 +import net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation;
-+import net.kissenpvp.paper.command.PulvinarCommandImplementation;
++import net.kissenpvp.pulvinar.command.PulvinarCommandImplementation;
 +import org.bukkit.Bukkit;
 +
 +/**
@@ -1200,16 +1188,16 @@ index 0000000000000000000000000000000000000000..e0aaa9eb4aab2caa99c1698b9c51ea4a
 +        return !Bukkit.getServer().isStopping();
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/handler/CompletionExceptionHandler.java b/src/main/java/net/kissenpvp/paper/command/handler/CompletionExceptionHandler.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/handler/CompletionExceptionHandler.java b/src/main/java/net/kissenpvp/pulvinar/command/handler/CompletionExceptionHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3b7db415a1f2b0f2760ec5b7c14563a18763b72b
+index 0000000000000000000000000000000000000000..23fbb791771528850391a5cf8fe366b5a9cb9efd
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/handler/CompletionExceptionHandler.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/handler/CompletionExceptionHandler.java
 @@ -0,0 +1,16 @@
-+package net.kissenpvp.paper.command.handler;
++package net.kissenpvp.pulvinar.command.handler;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
-+import net.kissenpvp.paper.api.command.CommandExceptionHandler;
++import net.kissenpvp.pulvinar.api.command.CommandExceptionHandler;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
 +
@@ -1222,17 +1210,17 @@ index 0000000000000000000000000000000000000000..3b7db415a1f2b0f2760ec5b7c14563a1
 +        // TODO return Optional.ofNullable(throwable.getCause()).map(cause -> KissenCore.getInstance().getImplementation(KissenCommandImplementation.class).handle(commandPayload, cause)).orElse(false);
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/handler/PlayerExceptionHandler.java b/src/main/java/net/kissenpvp/paper/command/handler/PlayerExceptionHandler.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/handler/PlayerExceptionHandler.java b/src/main/java/net/kissenpvp/pulvinar/command/handler/PlayerExceptionHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..61923aa34a3729604916ed327650e0b0a5b6b20e
+index 0000000000000000000000000000000000000000..80cd2fd1422dbf3d22746e5a7674ecfbbb325d6c
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/handler/PlayerExceptionHandler.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/handler/PlayerExceptionHandler.java
 @@ -0,0 +1,17 @@
-+package net.kissenpvp.paper.command.handler;
++package net.kissenpvp.pulvinar.command.handler;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerOfflineException;
-+import net.kissenpvp.paper.api.command.CommandExceptionHandler;
++import net.kissenpvp.pulvinar.api.command.CommandExceptionHandler;
 +import net.kyori.adventure.text.Component;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
@@ -1245,17 +1233,17 @@ index 0000000000000000000000000000000000000000..61923aa34a3729604916ed327650e0b0
 +        return true;
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/command/handler/ProfileNotFoundExceptionHandler.java b/src/main/java/net/kissenpvp/paper/command/handler/ProfileNotFoundExceptionHandler.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/handler/ProfileNotFoundExceptionHandler.java b/src/main/java/net/kissenpvp/pulvinar/command/handler/ProfileNotFoundExceptionHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d52a036a0b8f5ac5d0f1ec29fa4a5aa06e4e3587
+index 0000000000000000000000000000000000000000..225153f69fc8785f4ba4ebc99b272ba3a07f8926
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/command/handler/ProfileNotFoundExceptionHandler.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/handler/ProfileNotFoundExceptionHandler.java
 @@ -0,0 +1,17 @@
-+package net.kissenpvp.paper.command.handler;
++package net.kissenpvp.pulvinar.command.handler;
 +
 +import com.mojang.authlib.yggdrasil.ProfileNotFoundException;
 +import net.kissenpvp.core.api.command.CommandPayload;
-+import net.kissenpvp.paper.api.command.CommandExceptionHandler;
++import net.kissenpvp.pulvinar.api.command.CommandExceptionHandler;
 +import net.kyori.adventure.text.Component;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;

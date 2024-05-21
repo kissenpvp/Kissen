@@ -4,11 +4,11 @@ Date: Sun, 7 Jan 2024 15:22:01 +0100
 Subject: [PATCH] Integrated ban system from kissen into paper
 
 
-diff --git a/src/main/java/net/kissenpvp/paper/api/ban/BanImplementation.java b/src/main/java/net/kissenpvp/paper/api/ban/BanImplementation.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/ban/BanImplementation.java b/src/main/java/net/kissenpvp/pulvinar/api/ban/BanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..09c810cb708f0a4eee65cc6567ccc2010ed75fa4
+index 0000000000000000000000000000000000000000..253b87c7b446f403cc1c092da925fdea1149d31f
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/ban/BanImplementation.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/ban/BanImplementation.java
 @@ -0,0 +1,113 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -28,13 +28,13 @@ index 0000000000000000000000000000000000000000..09c810cb708f0a4eee65cc6567ccc201
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.api.ban;
++package net.kissenpvp.pulvinar.api.ban;
 +
 +import net.kissenpvp.core.api.ban.AbstractBanImplementation;
 +import net.kissenpvp.core.api.ban.BanType;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
-+import net.kissenpvp.paper.api.base.Context;
++import net.kissenpvp.pulvinar.api.base.Context;
 +import net.kyori.adventure.text.Component;
 +import org.bukkit.ban.ProfileBanList;
 +import org.jetbrains.annotations.NotNull;
@@ -123,20 +123,20 @@ index 0000000000000000000000000000000000000000..09c810cb708f0a4eee65cc6567ccc201
 +    @NotNull
 +    Punishment punish(@NotNull UUID totalID, @NotNull BanTemplate ban, @NotNull ServerEntity banOperator, boolean apply, @Nullable Component reason, @NotNull Context context) throws BackendException;
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/ban/BanParser.java b/src/main/java/net/kissenpvp/paper/api/ban/BanParser.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/ban/BanParser.java b/src/main/java/net/kissenpvp/pulvinar/api/ban/BanParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..28e84ecbf08f161fde7e81924803ce0e5bf2bb39
+index 0000000000000000000000000000000000000000..d362716fe937105e883888fe01dca3483075920e
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/ban/BanParser.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/ban/BanParser.java
 @@ -0,0 +1,60 @@
-+package net.kissenpvp.paper.api.ban;
++package net.kissenpvp.pulvinar.api.ban;
 +
 +import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 +import net.kissenpvp.core.api.ban.exception.NonexistentBanException;
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.core.api.command.exception.deserialization.DeserializationException;
-+import net.kissenpvp.paper.api.command.ArgumentParser;
-+import net.kissenpvp.paper.api.command.CommandExceptionHandler;
++import net.kissenpvp.pulvinar.api.command.ArgumentParser;
++import net.kissenpvp.pulvinar.api.command.CommandExceptionHandler;
 +import net.kyori.adventure.text.Component;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
@@ -189,11 +189,11 @@ index 0000000000000000000000000000000000000000..28e84ecbf08f161fde7e81924803ce0e
 +        return true;
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/ban/BanTemplate.java b/src/main/java/net/kissenpvp/paper/api/ban/BanTemplate.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/ban/BanTemplate.java b/src/main/java/net/kissenpvp/pulvinar/api/ban/BanTemplate.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..5d70326fc794ec84f174e2cacc7cc00318e3cbc3
+index 0000000000000000000000000000000000000000..66ede44eed5358fc35b370202cd48692d4179626
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/ban/BanTemplate.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/ban/BanTemplate.java
 @@ -0,0 +1,33 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -213,7 +213,7 @@ index 0000000000000000000000000000000000000000..5d70326fc794ec84f174e2cacc7cc003
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.api.ban;
++package net.kissenpvp.pulvinar.api.ban;
 +
 +import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 +
@@ -228,11 +228,11 @@ index 0000000000000000000000000000000000000000..5d70326fc794ec84f174e2cacc7cc003
 + * @see AbstractBanTemplate
 + */
 +public interface BanTemplate extends AbstractBanTemplate {}
-diff --git a/src/main/java/net/kissenpvp/paper/api/ban/Punishment.java b/src/main/java/net/kissenpvp/paper/api/ban/Punishment.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/ban/Punishment.java b/src/main/java/net/kissenpvp/pulvinar/api/ban/Punishment.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6975d5845e8947031d478333341b0ab485b47113
+index 0000000000000000000000000000000000000000..cbd4f5d6edc3cbf8c1b190268098d7163d3fb8a7
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/ban/Punishment.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/ban/Punishment.java
 @@ -0,0 +1,38 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -252,7 +252,7 @@ index 0000000000000000000000000000000000000000..6975d5845e8947031d478333341b0ab4
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.api.ban;
++package net.kissenpvp.pulvinar.api.ban;
 +
 +import com.destroystokyo.paper.profile.PlayerProfile;
 +import net.kissenpvp.core.api.ban.AbstractPunishment;
@@ -272,19 +272,19 @@ index 0000000000000000000000000000000000000000..6975d5845e8947031d478333341b0ab4
 + * @see AbstractPunishment
 + */
 +public interface Punishment extends AbstractPunishment<Player>, BanEntry<PlayerProfile> {}
-diff --git a/src/main/java/net/kissenpvp/paper/api/ban/PunishmentParser.java b/src/main/java/net/kissenpvp/paper/api/ban/PunishmentParser.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/ban/PunishmentParser.java b/src/main/java/net/kissenpvp/pulvinar/api/ban/PunishmentParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b4a82ddae8acc9ab4b3578fa5f5b9a626939ab54
+index 0000000000000000000000000000000000000000..5d3a48e74b3e17fddb993f9a2eaeaa58700fb243
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/ban/PunishmentParser.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/ban/PunishmentParser.java
 @@ -0,0 +1,44 @@
-+package net.kissenpvp.paper.api.ban;
++package net.kissenpvp.pulvinar.api.ban;
 +
 +import net.kissenpvp.core.api.ban.AbstractPunishment;
 +import net.kissenpvp.core.api.ban.exception.NonexistentPunishmentException;
 +import net.kissenpvp.core.api.command.CommandPayload;
-+import net.kissenpvp.paper.api.command.ArgumentParser;
-+import net.kissenpvp.paper.api.command.CommandExceptionHandler;
++import net.kissenpvp.pulvinar.api.command.ArgumentParser;
++import net.kissenpvp.pulvinar.api.command.CommandExceptionHandler;
 +import net.kyori.adventure.text.Component;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
@@ -322,46 +322,34 @@ index 0000000000000000000000000000000000000000..b4a82ddae8acc9ab4b3578fa5f5b9a62
 +        return true;
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/ban/warn/Warn.java b/src/main/java/net/kissenpvp/paper/api/ban/warn/Warn.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/ban/warn/Warn.java b/src/main/java/net/kissenpvp/pulvinar/api/ban/warn/Warn.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..32c165c141f927ffee2d3441928f508b97ecb000
+index 0000000000000000000000000000000000000000..6683bcfc6a28b31621999d80669b2849105606ef
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/ban/warn/Warn.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/ban/warn/Warn.java
 @@ -0,0 +1,6 @@
-+package net.kissenpvp.paper.api.ban.warn;
++package net.kissenpvp.pulvinar.api.ban.warn;
 +
 +import net.kissenpvp.core.api.user.AbstractWarn;
-+import net.kissenpvp.paper.api.ban.BanTemplate;
++import net.kissenpvp.pulvinar.api.ban.BanTemplate;
 +
 +public interface Warn extends AbstractWarn<BanTemplate> {}
-diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
-index ffdae4ff457817ab23a14f27572a47361f7bf116..2ab8b01599a1af194022eda0d1fa6387e2ef8c81 100644
---- a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
-+++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
-@@ -22,6 +22,9 @@ import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarPlayerClient.java
+index f05416322a54e9c7d6694283659bf3fb2d8738b0..24be91b3606b38dc2ddcfd3ff83142c013ebdc7b 100644
+--- a/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarPlayerClient.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarPlayerClient.java
+@@ -22,8 +22,9 @@ import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
  import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
  import net.kissenpvp.core.api.time.AccurateDuration;
  import net.kissenpvp.core.api.user.User;
-+import net.kissenpvp.paper.api.ban.BanTemplate;
-+import net.kissenpvp.paper.api.ban.Punishment;
-+import net.kissenpvp.paper.api.ban.warn.Warn;
- import net.kissenpvp.paper.api.base.Context;
- import net.kissenpvp.paper.api.permission.PaperPermissible;
- import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
-@@ -52,9 +55,11 @@ public interface PaperPlayerClient extends PlayerClient<PlayerRank, Punishment>
- 
-     <X> @NotNull BoundPlayerSetting<X> getSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context);
- 
--    @NotNull Warn warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator);
-+    @NotNull
-+    Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator);
- 
--    @NotNull Warn warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator, @Nullable Component reason);
-+    @NotNull
-+    Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason);
- 
-     @NotNull @Unmodifiable List<Warn> getWarnHistory();
- 
+-import net.kissenpvp.paper.api.permission.PaperPermissible;
+-import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
++import net.kissenpvp.pulvinar.api.ban.BanTemplate;
++import net.kissenpvp.pulvinar.api.ban.Punishment;
++import net.kissenpvp.pulvinar.api.ban.warn.Warn;
+ import net.kissenpvp.pulvinar.api.base.Context;
+ import net.kissenpvp.pulvinar.api.permission.PaperPermissible;
+ import net.kissenpvp.pulvinar.api.permission.PermissibleOverriddenException;
 diff --git a/src/main/java/org/bukkit/event/Event.java b/src/main/java/org/bukkit/event/Event.java
 index 8ec56cd6b8e0f5c5dd8c7c88b4671e18dcf109d0..e2db4b4e3c04b408a5ff5d5a464b2b7f26d44a46 100644
 --- a/src/main/java/org/bukkit/event/Event.java
@@ -377,7 +365,7 @@ index 8ec56cd6b8e0f5c5dd8c7c88b4671e18dcf109d0..e2db4b4e3c04b408a5ff5d5a464b2b7f
      private final boolean async;
  
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index ba8daf59d250f26fa64553efd079283c4241a148..cdaecaba6f39bf712fa22a79ddacd2ca30232a7b 100644
+index 019f5e4d152f4ebd1a7e5fcc731fd2e9f807c93b..1cd0f5d0ef340c3485d21566a7c46f9d102d600f 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
 @@ -121,6 +121,13 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager

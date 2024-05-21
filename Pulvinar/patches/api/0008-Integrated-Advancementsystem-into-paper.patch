@@ -4,13 +4,13 @@ Date: Sun, 3 Mar 2024 09:32:59 +0100
 Subject: [PATCH] Integrated Advancementsystem into paper
 
 
-diff --git a/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementImplementation.java b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementImplementation.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/advancement/AdvancementImplementation.java b/src/main/java/net/kissenpvp/pulvinar/api/advancement/AdvancementImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..fbd29a4956a61bbe02b780a79321efab467d9a1d
+index 0000000000000000000000000000000000000000..45c1202781d7e2d96782944bde51633a0b215081
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementImplementation.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/advancement/AdvancementImplementation.java
 @@ -0,0 +1,9 @@
-+package net.kissenpvp.paper.api.advancement;
++package net.kissenpvp.pulvinar.api.advancement;
 +
 +import net.kissenpvp.core.api.base.Implementation;
 +
@@ -19,13 +19,13 @@ index 0000000000000000000000000000000000000000..fbd29a4956a61bbe02b780a79321efab
 +
 +
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementProgression.java b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementProgression.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/advancement/AdvancementProgression.java b/src/main/java/net/kissenpvp/pulvinar/api/advancement/AdvancementProgression.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..27a3caff45788b7d572c23de3ae7c06ea8836acf
+index 0000000000000000000000000000000000000000..0696e964125977e1a5e323e32212efdc1e4ed776
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementProgression.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/advancement/AdvancementProgression.java
 @@ -0,0 +1,29 @@
-+package net.kissenpvp.paper.api.advancement;
++package net.kissenpvp.pulvinar.api.advancement;
 +
 +import org.bukkit.entity.Player;
 +import org.jetbrains.annotations.NotNull;
@@ -54,13 +54,13 @@ index 0000000000000000000000000000000000000000..27a3caff45788b7d572c23de3ae7c06e
 +
 +    boolean detachPlayer(@NotNull Player... player);
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementTab.java b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementTab.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/advancement/AdvancementTab.java b/src/main/java/net/kissenpvp/pulvinar/api/advancement/AdvancementTab.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d358cafbe3d9fc1706495ce514869798b562e537
+index 0000000000000000000000000000000000000000..405eef87ec66ab13f778f3b2f2a0ee6eb07fc5d4
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/advancement/AdvancementTab.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/advancement/AdvancementTab.java
 @@ -0,0 +1,23 @@
-+package net.kissenpvp.paper.api.advancement;
++package net.kissenpvp.pulvinar.api.advancement;
 +
 +import org.bukkit.NamespacedKey;
 +import org.bukkit.advancement.Advancement;

@@ -4,11 +4,11 @@ Date: Mon, 11 Sep 2023 01:08:59 +0200
 Subject: [PATCH] Integrated player system from kissen into paper
 
 
-diff --git a/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java b/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/networking/PaperNetworkImplementation.java b/src/main/java/net/kissenpvp/pulvinar/api/networking/PaperNetworkImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ce61bd83bfcfb2dc09764f89b9bd1d1f48728e02
+index 0000000000000000000000000000000000000000..eb86fc35ba2ac1e7c2fe4ad0e4a0fd1b8820c8be
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/networking/PaperNetworkImplementation.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/networking/PaperNetworkImplementation.java
 @@ -0,0 +1,33 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -28,7 +28,7 @@ index 0000000000000000000000000000000000000000..ce61bd83bfcfb2dc09764f89b9bd1d1f
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.api.networking;
++package net.kissenpvp.pulvinar.api.networking;
 +
 +import net.kissenpvp.core.api.networking.NetworkImplementation;
 +import net.kissenpvp.core.api.networking.socket.DataPackage;
@@ -43,11 +43,11 @@ index 0000000000000000000000000000000000000000..ce61bd83bfcfb2dc09764f89b9bd1d1f
 +
 +    @Nullable DataPackage sendAnsweredDataPackage(@NotNull DataPackage dataPackage);
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarOnlinePlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarOnlinePlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..31072db8ac04fdb0b88a56d536e09252e445d5c1
+index 0000000000000000000000000000000000000000..c6408fb8e66dc4211aace345150976162230d5f5
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperOnlinePlayerClient.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarOnlinePlayerClient.java
 @@ -0,0 +1,28 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -67,22 +67,22 @@ index 0000000000000000000000000000000000000000..31072db8ac04fdb0b88a56d536e09252
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.api.networking.client.entity;
++package net.kissenpvp.pulvinar.api.networking.client.entity;
 +
 +import net.kissenpvp.core.api.networking.client.entitiy.OnlinePlayerClient;
-+import net.kissenpvp.paper.api.ban.Punishment;
-+import net.kissenpvp.paper.api.permission.Permission;
-+import net.kissenpvp.paper.api.user.rank.PlayerRank;
++import net.kissenpvp.pulvinar.api.ban.Punishment;
++import net.kissenpvp.pulvinar.api.permission.Permission;
++import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
 +
-+public interface PaperOnlinePlayerClient extends OnlinePlayerClient<Permission, PlayerRank, Punishment> {
++public interface PulvinarOnlinePlayerClient extends OnlinePlayerClient<Permission, PlayerRank, Punishment> {
 +
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ffdae4ff457817ab23a14f27572a47361f7bf116
+index 0000000000000000000000000000000000000000..f05416322a54e9c7d6694283659bf3fb2d8738b0
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/networking/client/entity/PaperPlayerClient.java
-@@ -0,0 +1,62 @@
++++ b/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarPlayerClient.java
+@@ -0,0 +1,65 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -101,18 +101,20 @@ index 0000000000000000000000000000000000000000..ffdae4ff457817ab23a14f27572a4736
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.api.networking.client.entity;
++package net.kissenpvp.pulvinar.api.networking.client.entity;
 +
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 +import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.user.User;
-+import net.kissenpvp.paper.api.base.Context;
 +import net.kissenpvp.paper.api.permission.PaperPermissible;
 +import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
-+import net.kissenpvp.paper.api.user.playersetting.BoundPlayerSetting;
-+import net.kissenpvp.paper.api.user.playersetting.PlayerSetting;
-+import net.kissenpvp.paper.api.user.rank.PlayerRank;
++import net.kissenpvp.pulvinar.api.base.Context;
++import net.kissenpvp.pulvinar.api.permission.PaperPermissible;
++import net.kissenpvp.pulvinar.api.permission.PermissibleOverriddenException;
++import net.kissenpvp.pulvinar.api.user.playersetting.BoundPlayerSetting;
++import net.kissenpvp.pulvinar.api.user.playersetting.PlayerSetting;
++import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
 +import net.kyori.adventure.text.Component;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
@@ -122,34 +124,83 @@ index 0000000000000000000000000000000000000000..ffdae4ff457817ab23a14f27572a4736
 +import java.util.Set;
 +
 +
-+public interface PaperPlayerClient extends PlayerClient<PlayerRank, Punishment> {
++public interface PulvinarPlayerClient extends PlayerClient<PlayerRank, Punishment> {
 +
-+    @NotNull @Unmodifiable Set<@NotNull PaperOnlinePlayerClient> getOnlineAltAccounts();
++    @NotNull @Unmodifiable Set<@NotNull PulvinarOnlinePlayerClient> getOnlineAltAccounts();
 +
 +    @NotNull
 +    AccurateDuration getOnlineTime(@NotNull Context context);
 +
 +    @NotNull User getUser(@NotNull Context context);
 +
-+    @NotNull PaperPermissible getPermissible() throws PermissibleOverriddenException;
++    @NotNull
++    PaperPermissible getPermissible() throws PermissibleOverriddenException;
 +
 +    <X> @NotNull BoundPlayerSetting<X> getSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass);
 +
 +    <X> @NotNull BoundPlayerSetting<X> getSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context);
 +
-+    @NotNull Warn warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator);
++    @NotNull Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator);
 +
-+    @NotNull Warn warn(@NotNull Ban ban, @NotNull ServerEntity warnOperator, @Nullable Component reason);
++    @NotNull Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason);
 +
 +    @NotNull @Unmodifiable List<Warn> getWarnHistory();
 +
 +    void clearActiveWarns();
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissible.java b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissible.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/GroupablePermissionEntry.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/GroupablePermissionEntry.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3b7def2bcddf00f6a5ce533eea99577f546faa9e
+index 0000000000000000000000000000000000000000..954c68dc9526db29395cd236f0f89ae6f64fee00
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/permission/PaperPermissible.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/GroupablePermissionEntry.java
+@@ -0,0 +1,42 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.permission;
++
++import net.kissenpvp.core.api.permission.AbstractGroupablePermissionEntry;
++import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
++
++import java.util.List;
++import java.util.Optional;
++import java.util.Set;
++
++public interface GroupablePermissionEntry extends AbstractGroupablePermissionEntry<Permission>, PermissionEntry {
++    @NotNull @Unmodifiable Set<Permission> getOwnPermissions(@NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    @NotNull Optional<Permission> getOwnPermission(@NotNull String permission, @NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    @NotNull @Unmodifiable List<AbstractPermissionGroup<Permission>> getOwnPermissionsGroups(@NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    @NotNull @Unmodifiable List<AbstractPermissionGroup<Permission>> getPermissionGroups(@NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    boolean inGroup(@NotNull AbstractPermissionGroup<Permission> permissionGroup, @NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    int wipeGroups(@NotNull net.kissenpvp.pulvinar.api.base.Context context);
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PaperPermissible.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PaperPermissible.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4a2693db561658feddbb427221897cca06226a21
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/PaperPermissible.java
 @@ -0,0 +1,25 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -169,18 +220,18 @@ index 0000000000000000000000000000000000000000..3b7def2bcddf00f6a5ce533eea99577f
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.api.permission;
++package net.kissenpvp.pulvinar.api.permission;
 +
 +import org.bukkit.permissions.Permissible;
 +
 +public interface PaperPermissible extends Permissible, PermissionEntry {
 +
 +}
-diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PermissibleOverriddenException.java b/src/main/java/net/kissenpvp/paper/api/permission/PermissibleOverriddenException.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissibleOverriddenException.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissibleOverriddenException.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f4003d7ada0ed5573ad4d3d6e0b25aec243ae805
+index 0000000000000000000000000000000000000000..1fe4272d0d34f632808d4e9df8ed03d87e661b73
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/paper/api/permission/PermissibleOverriddenException.java
++++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissibleOverriddenException.java
 @@ -0,0 +1,22 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
@@ -200,109 +251,547 @@ index 0000000000000000000000000000000000000000..f4003d7ada0ed5573ad4d3d6e0b25aec
 + * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
 + */
 +
-+package net.kissenpvp.paper.api.permission;
++package net.kissenpvp.pulvinar.api.permission;
 +
 +public class PermissibleOverriddenException extends IllegalStateException {
 +} // LuckPerms, I know where you live
-diff --git a/src/main/java/net/kissenpvp/paper/api/permission/PermissionParser.java b/src/main/java/net/kissenpvp/paper/api/permission/PermissionParser.java
-index 631cdaad6f8d567b5d63658548d0b775ebc87a6f..1cf13ed2c7e87a6f0c85d8a177f867cbb7d3f6a8 100644
---- a/src/main/java/net/kissenpvp/paper/api/permission/PermissionParser.java
-+++ b/src/main/java/net/kissenpvp/paper/api/permission/PermissionParser.java
-@@ -7,57 +7,60 @@ import org.bukkit.command.CommandSender;
- import org.bukkit.permissions.Permission;
- import org.jetbrains.annotations.NotNull;
- import org.jetbrains.annotations.Nullable;
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/Permission.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/Permission.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..0da6c83573a43e1750cbb99e9cdd84dcedcec210
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/Permission.java
+@@ -0,0 +1,24 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.permission;
++
++import net.kissenpvp.core.api.permission.AbstractPermission;
++
++public interface Permission extends AbstractPermission {
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionEntry.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionEntry.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..03ec2ee022d4d06e71e6e610ba270a23d7dfc70d
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionEntry.java
+@@ -0,0 +1,49 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.permission;
++
++import net.kissenpvp.core.api.event.EventCancelledException;
++import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
++import org.bukkit.permissions.Permissible;
++import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
- 
- import java.util.Collection;
- import java.util.HashSet;
- import java.util.Set;
- import java.util.stream.Collectors;
- 
--public class PermissionParser implements ArgumentParser<PermissionParser.PermissionArgument>
--{
-+public class PermissionParser implements ArgumentParser<PermissionParser.PermissionArgument> {
 +
-+    private static void handleArgument(@NotNull String current, @NotNull Set<String> data) { //TODO enhance implementation
-+        StringBuilder stringBuilder = new StringBuilder();
-+        String[] parts = current.split("\\.");
-+        for (int i = 0; i < parts.length - 1; i++) {
++import java.util.Optional;
++import java.util.Set;
 +
-+            if (!stringBuilder.isEmpty() && stringBuilder.charAt(stringBuilder.length() - 1)=='*') {
-+                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-+            }
++public interface PermissionEntry extends AbstractPermissionEntry<Permission>, Permissible {
++    @NotNull
++    Permission setPermission(@NotNull String permission, @NotNull net.kissenpvp.pulvinar.api.base.Context context) throws EventCancelledException;
 +
-+            stringBuilder.append(parts[i]).append(".*");
-+            data.add(stringBuilder.toString());
-+        }
-+        data.add(current);
++    @NotNull
++    Permission setPermission(@NotNull String permission, boolean value, @NotNull net.kissenpvp.pulvinar.api.base.Context context) throws EventCancelledException;
++
++    @NotNull
++    Permission setPermission(@NotNull Permission permission, @NotNull net.kissenpvp.pulvinar.api.base.Context context) throws EventCancelledException;
++
++    boolean unsetPermission(@NotNull String permission, @NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    @NotNull @Unmodifiable Set<Permission> getPermissionList(@NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    @NotNull Optional<Permission> getPermission(@NotNull String permission, @NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    boolean hasPermission(@NotNull String permission, @NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    int wipePermissions(@NotNull net.kissenpvp.pulvinar.api.base.Context context);
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionGroup.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionGroup.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..08d8f8ef30340ecb3912099419bb7eb3ea877146
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionGroup.java
+@@ -0,0 +1,38 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.permission;
++
++import net.kissenpvp.core.api.permission.AbstractGroupablePermissionEntry;
++import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
++
++import java.util.Set;
++
++public interface PermissionGroup extends AbstractPermissionGroup<Permission>, GroupablePermissionEntry
++{
++
++    @NotNull @Unmodifiable Set<String> getMember(@NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    @NotNull @Unmodifiable Set<String> getOwnMember(@NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    boolean addMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry, @NotNull net.kissenpvp.pulvinar.api.base.Context context);
++
++    boolean removeMember(@NotNull AbstractGroupablePermissionEntry<?> groupablePermissionEntry, @NotNull net.kissenpvp.pulvinar.api.base.Context context);
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionGroupParser.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionGroupParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..2d93cd17c2fd3ccdd5f3048932a2d925b7d41937
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionGroupParser.java
+@@ -0,0 +1,38 @@
++package net.kissenpvp.pulvinar.api.permission;
++
++import net.kissenpvp.core.api.command.AbstractArgumentParser;
++import net.kissenpvp.core.api.command.CommandPayload;
++import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.Collection;
++import java.util.stream.Collectors;
++import java.util.stream.Stream;
++
++public class PermissionGroupParser implements AbstractArgumentParser<PermissionGroup, CommandSender> {
++    @Override
++    public @NotNull String serialize(@NotNull PermissionGroup object) {
++        return object.getPermissionID();
 +    }
 +
-     @Override
--    public @NotNull String serialize(@NotNull PermissionArgument object)
--    {
-+    public @NotNull String serialize(@NotNull PermissionArgument object) {
-         return object.permission();
-     }
- 
-     @Override
--    public @NotNull PermissionArgument deserialize(@NotNull String input)
--    {
-+    public @NotNull PermissionArgument deserialize(@NotNull String input) {
-         return new PermissionArgument(input);
-     }
- 
-     @Override
--    public @Nullable String argumentName()
--    {
++    @Override
++    public @NotNull PermissionGroup deserialize(@NotNull String input) {
++        PermissionImplementation permission = Bukkit.getKissen().getImplementation(PermissionImplementation.class);
++        return permission.getGroupNotNull(input);
++    }
++
++    @Override
 +    public @Nullable String argumentName() {
-         return "permission";
-     }
- 
-     @Override
--    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
--    {
--        return Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).flatMap(currentPermission ->
--                {
--                    Set<String> data = new HashSet<>(currentPermission.length());
--                    for (String current : currentPermission.split(";"))
--                    {
--                        StringBuilder stringBuilder = new StringBuilder();
--                        String[] parts = current.split("\\.");
--                        for (int i = 0; i < parts.length - 1; i++) {
--
--                            if (!stringBuilder.isEmpty() && stringBuilder.charAt(stringBuilder.length() - 1) == '*') {
--                                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
--                            }
--
--                            stringBuilder.append(parts[i]).append(".*");
--                            data.add(stringBuilder.toString());
--                        }
--                        data.add(current);
--                    }
--                    return data.stream();
--                }
--                ).collect(Collectors.toSet());
-+    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
-+        return getPermissionNames().stream().flatMap(permission -> {
-+            Set<String> data = new HashSet<>(permission.length());
-+            for (String current : permission.split(";")) {
-+                handleArgument(current, data);
-+            }
-+            return data.stream();
-+        }).collect(Collectors.toUnmodifiableSet());
++        return "group";
 +    }
 +
-+    private @NotNull @Unmodifiable Set<String> getPermissionNames() {
-+        return Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).collect(Collectors.toUnmodifiableSet());
-     }
- 
--    public record PermissionArgument(@Override String permission) {}
-+    public record PermissionArgument(@NotNull String permission) {
++    @Override
++    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
++        PermissionImplementation permission = Bukkit.getKissen().getImplementation(PermissionImplementation.class);
++        Stream<String> groupStream = permission.getGroups().stream().map(AbstractPermissionEntry::getPermissionID);
++        return groupStream.collect(Collectors.toUnmodifiableSet());
 +    }
- }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionImplementation.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionImplementation.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d77cdae32faae9536f4ccad114fde297599482c3
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionImplementation.java
+@@ -0,0 +1,37 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.permission;
++
++import net.kissenpvp.core.api.base.Implementation;
++import net.kissenpvp.core.api.event.EventCancelledException;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
++
++import java.util.Optional;
++import java.util.Set;
++
++public interface PermissionImplementation extends Implementation {
++
++    @NotNull @Unmodifiable Set<PermissionGroup> getGroups();
++
++    @NotNull Optional<PermissionGroup> getGroup(@NotNull String group);
++
++    @NotNull
++    PermissionGroup getGroupNotNull(@NotNull String group) throws EventCancelledException;
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionParser.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..91a8e3f3e745b8d97177ae8df1988ef628c4452f
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionParser.java
+@@ -0,0 +1,63 @@
++package net.kissenpvp.pulvinar.api.permission;
++
++import net.kissenpvp.core.api.command.AbstractArgumentParser;
++import net.kissenpvp.core.api.command.CommandPayload;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
++import org.bukkit.permissions.Permission;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.Collection;
++import java.util.HashSet;
++import java.util.Set;
++import java.util.stream.Collectors;
++
++public class PermissionParser implements AbstractArgumentParser<PermissionParser.PermissionArgument, CommandSender>
++{
++    @Override
++    public @NotNull String serialize(@NotNull PermissionArgument object)
++    {
++        return object.permission();
++    }
++
++    @Override
++    public @NotNull PermissionArgument deserialize(@NotNull String input)
++    {
++        return new PermissionArgument(input);
++    }
++
++    @Override
++    public @Nullable String argumentName()
++    {
++        return "permission";
++    }
++
++    @Override
++    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
++    {
++        return Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).flatMap(currentPermission ->
++                {
++                    Set<String> data = new HashSet<>(currentPermission.length());
++                    for (String current : currentPermission.split(";"))
++                    {
++                        StringBuilder stringBuilder = new StringBuilder();
++                        String[] parts = current.split("\\.");
++                        for (int i = 0; i < parts.length - 1; i++) {
++
++                            if (!stringBuilder.isEmpty() && stringBuilder.charAt(stringBuilder.length() - 1) == '*') {
++                                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
++                            }
++
++                            stringBuilder.append(parts[i]).append(".*");
++                            data.add(stringBuilder.toString());
++                        }
++                        data.add(current);
++                    }
++                    return data.stream();
++                }
++                ).collect(Collectors.toSet());
++    }
++
++    public record PermissionArgument(@Override String permission) {}
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PrivatePermissionGroup.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PrivatePermissionGroup.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d39037de9a03f50d19184a1c46cf32bced226271
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/PrivatePermissionGroup.java
+@@ -0,0 +1,30 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.permission;
++
++import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Optional;
++
++public interface PrivatePermissionGroup extends AbstractPermissionGroup<Permission>
++{
++    @NotNull Optional<AbstractPermissionGroup<Permission>> getPublicGroup();
++
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PublicPermissionGroup.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PublicPermissionGroup.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..79c6a126e07844c536ad0069e263c1a6f091e1a5
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/PublicPermissionGroup.java
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.permission;
++
++import net.kissenpvp.core.api.permission.AbstractPermissionGroup;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Optional;
++
++public interface PublicPermissionGroup extends AbstractPermissionGroup<Permission>
++{
++    @NotNull Optional<AbstractPermissionGroup<Permission>> getPrivateGroup();
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/playersetting/BoundPlayerSetting.java b/src/main/java/net/kissenpvp/pulvinar/api/user/playersetting/BoundPlayerSetting.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..7147b9247bbbdf83954ef3f90d2270536ef7d5c7
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/playersetting/BoundPlayerSetting.java
+@@ -0,0 +1,17 @@
++package net.kissenpvp.pulvinar.api.user.playersetting;
++
++import net.kissenpvp.core.api.user.exception.UnauthorizedException;
++import net.kissenpvp.core.api.user.playersettting.AbstractBoundPlayerSetting;
++import net.kissenpvp.pulvinar.api.base.Context;
++import org.jetbrains.annotations.NotNull;
++
++public interface BoundPlayerSetting<T> extends AbstractBoundPlayerSetting<T> {
++
++    @NotNull
++    T setValue(@NotNull T value, @NotNull Context context) throws UnauthorizedException;
++
++    @NotNull T getValue(@NotNull Context context);
++
++    void reset(@NotNull Context context);
++
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/playersetting/PlayerSetting.java b/src/main/java/net/kissenpvp/pulvinar/api/user/playersetting/PlayerSetting.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..82260903bc6dff7f285d3f04147bc6e0ce04f6a5
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/playersetting/PlayerSetting.java
+@@ -0,0 +1,7 @@
++package net.kissenpvp.pulvinar.api.user.playersetting;
++
++import net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting;
++import org.bukkit.OfflinePlayer;
++
++public interface PlayerSetting<T> extends AbstractPlayerSetting<T, OfflinePlayer> {
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/PlayerRank.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/PlayerRank.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d50ef6b9a4d72c3b9f9ba233ade20936e6fc5e62
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/PlayerRank.java
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.user.rank;
++
++import net.kissenpvp.core.api.user.rank.AbstractPlayerRank;
++
++public interface PlayerRank extends AbstractPlayerRank<Rank> { }
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/Rank.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/Rank.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..e67f99e939c1cccb2edc10e7d4746fadb8c50b12
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/Rank.java
+@@ -0,0 +1,33 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.user.rank;
++
++import net.kissenpvp.core.api.user.rank.AbstractRank;
++import org.bukkit.OfflinePlayer;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
++
++import java.util.Set;
++
++public interface Rank extends AbstractRank
++{
++
++    @NotNull @Unmodifiable Set<OfflinePlayer> getPlayers();
++
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankImplementation.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankImplementation.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..fa721efe2ccb1df6bbd4d1af6739aa95c49cbbaf
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankImplementation.java
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (C) 2023 KissenPvP
++ *
++ * This program is licensed under the Apache License, Version 2.0.
++ *
++ * This software may be redistributed and/or modified under the terms
++ * of the Apache License as published by the Apache Software Foundation,
++ * either version 2 of the License, or (at your option) any later version.
++ *
++ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
++ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
++ * License, Version 2.0 for the specific language governing permissions
++ * and limitations under the License.
++ *
++ * You should have received a copy of the Apache License, Version 2.0
++ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
++ */
++
++package net.kissenpvp.pulvinar.api.user.rank;
++
++import net.kissenpvp.core.api.user.rank.AbstractRankImplementation;
++
++public interface RankImplementation extends AbstractRankImplementation<Rank> { }
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankParser.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankParser.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..604024bb91c67281cf66241b14cd8ab7651c3d49
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankParser.java
+@@ -0,0 +1,40 @@
++package net.kissenpvp.pulvinar.api.user.rank;
++
++import net.kissenpvp.core.api.command.AbstractArgumentParser;
++import net.kissenpvp.core.api.command.CommandPayload;
++import org.bukkit.Bukkit;
++import org.bukkit.command.CommandSender;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.Collection;
++import java.util.stream.Collectors;
++
++public class RankParser implements AbstractArgumentParser<Rank, CommandSender>
++{
++    @Override
++    public @NotNull String serialize(@NotNull Rank object)
++    {
++        return object.getName();
++    }
++
++    @Override
++    public @NotNull Rank deserialize(@NotNull String input)
++    {
++        RankImplementation rankImplementation = Bukkit.getKissen().getImplementation(RankImplementation.class);
++        return rankImplementation.getRank(input).orElseThrow(NullPointerException::new);
++    }
++
++    @Override
++    public @Nullable String argumentName()
++    {
++        return "rank";
++    }
++
++    @Override
++    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
++    {
++        RankImplementation rankImplementation = Bukkit.getKissen().getImplementation(RankImplementation.class);
++        return rankImplementation.getRankSet().stream().map(Rank::getName).collect(Collectors.toSet());
++    }
++}
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index 30298a629b39bd43ce14b414fc697b2dfcbea89c..45758755d26f05787a65436b1f90f686bd0e8144 100644
+index 30298a629b39bd43ce14b414fc697b2dfcbea89c..f4571ea6af5477445ad481770fb1cd307299bc89 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
 +++ b/src/main/java/org/bukkit/OfflinePlayer.java
 @@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
@@ -310,7 +799,7 @@ index 30298a629b39bd43ce14b414fc697b2dfcbea89c..45758755d26f05787a65436b1f90f686
   * player needing to be online.
   */
 -public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
-+public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.paper.api.networking.client.entity.PaperPlayerClient, net.kissenpvp.paper.api.permission.GroupablePermissionEntry { // Pulvinar
++public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.pulvinar.api.networking.client.entity.PulvinarPlayerClient, net.kissenpvp.pulvinar.api.permission.GroupablePermissionEntry { // Pulvinar
  
      /**
       * Checks if this player is currently online
@@ -389,7 +878,7 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..8bff00621e832309de09636571b85222
 +    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index 6c327a07bf8a6aa11a2d7dad12b2830acc539484..a0be26df8e4ce610984549e21e8906682ea5c87f 100644
+index 6c327a07bf8a6aa11a2d7dad12b2830acc539484..9cb87f53bba2c440ceb5181a9268cbf06924ed2d 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
 @@ -56,7 +56,7 @@ import org.jetbrains.annotations.Nullable;
@@ -397,7 +886,7 @@ index 6c327a07bf8a6aa11a2d7dad12b2830acc539484..a0be26df8e4ce610984549e21e890668
   * Represents a player, connected or not
   */
 -public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, net.kyori.adventure.bossbar.BossBarViewer, com.destroystokyo.paper.network.NetworkClient { // Paper
-+public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, net.kyori.adventure.bossbar.BossBarViewer, com.destroystokyo.paper.network.NetworkClient, net.kissenpvp.paper.api.networking.client.entity.PaperOnlinePlayerClient { // Paper // Pulvinar
++public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginMessageRecipient, net.kyori.adventure.identity.Identified, net.kyori.adventure.bossbar.BossBarViewer, com.destroystokyo.paper.network.NetworkClient, net.kissenpvp.pulvinar.api.networking.client.entity.PulvinarOnlinePlayerClient { // Paper // Pulvinar
  
      // Paper start
      @Override
