@@ -123,6 +123,19 @@ index f6e3b745fc417354380d4a969f83aee430bad785..2eed515c968be811e5d3ab3d4f0b78ff
      }
  
      private static CompoundTag readOversizedChunk(RegionFile regionfile, ChunkPos chunkCoordinate) throws IOException {
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+index 774556a62eb240da42e84db4502e2ed43495be17..f871579370f128f4b9c3ff40d0b3d32e720f4153 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+@@ -11,7 +11,7 @@ public final class Versioning {
+     public static String getBukkitVersion() {
+         String result = "Unknown-Version";
+ 
+-        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/io.papermc.paper/paper-api/pom.properties");
++        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/net.kissenpvp.pulvinar/pulvinar-api/pom.properties"); // Pulvinar
+         Properties properties = new Properties();
+ 
+         if (stream != null) {
 diff --git a/src/main/java/org/spigotmc/WatchdogThread.java b/src/main/java/org/spigotmc/WatchdogThread.java
 index 6db566e3111ec08a99aa429624979cb83a85e272..b08dc5e0f8db0e4a7a9825df8076bd4961ed7de3 100644
 --- a/src/main/java/org/spigotmc/WatchdogThread.java
