@@ -4,6 +4,19 @@ Date: Sun, 24 Sep 2023 16:06:01 +0200
 Subject: [PATCH] Integrated command system from kissen into paper
 
 
+diff --git a/src/main/java/co/aikar/timings/TimingsManager.java b/src/main/java/co/aikar/timings/TimingsManager.java
+index 5e1558ca3ffeeaf2645fa003965474a442d650bf..4b352533ec89c848dcd058d575fcf4aa4bf7ebe6 100644
+--- a/src/main/java/co/aikar/timings/TimingsManager.java
++++ b/src/main/java/co/aikar/timings/TimingsManager.java
+@@ -155,7 +155,7 @@ public final class TimingsManager {
+         final Server server = Bukkit.getServer();
+         if (!(  server == null || pluginName == null ||
+                 "minecraft".equals(pluginName) || "bukkit".equals(pluginName) ||
+-                "spigot".equalsIgnoreCase(pluginName) || "paper".equals(pluginName)
++                "spigot".equalsIgnoreCase(pluginName) || "paper".equals(pluginName) || "pulvinar".equals(pluginName) // Pulvinar
+         )) {
+             plugin = server.getPluginManager().getPlugin(pluginName);
+         }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/command/ArgumentParser.java b/src/main/java/net/kissenpvp/pulvinar/api/command/ArgumentParser.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..1e7f4a0b19e76a637cd8d91b1a4df3c38cb0b8e8
@@ -335,13 +348,13 @@ index 0000000000000000000000000000000000000000..80840b8f912d0691e068a22e2b50b062
 +    }
 +}
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 3e7f95b02d21c1881faa62bc0f9f6291adadd7f6..019f5e4d152f4ebd1a7e5fcc731fd2e9f807c93b 100644
+index 3eb85b114247ead19827c4dafb4b3598dd0b5194..cf70f8373cbf5cd37bf32dd08d370f642a746bb8 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -333,5 +333,11 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
-     void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin);
+@@ -336,5 +336,11 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
  
-     void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin);
+     // Pulvinar start
+     void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
 +
 +    void registerCommand(@NotNull Plugin plugin, @NotNull Object... objects);
 +
@@ -351,46 +364,35 @@ index 3e7f95b02d21c1881faa62bc0f9f6291adadd7f6..019f5e4d152f4ebd1a7e5fcc731fd2e9
      // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 77f40130e6a69cee41103d01a89a3be0e70e555c..21d36cbb566b17d8dfe4a214b7ac447e3ea82f83 100644
+index c2bf2252c4d9eb223c69bc059d55a4190a2e7490..44fe2a51bd89f78077702e82c5b57fe38a263bb8 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -24,6 +24,8 @@ import java.util.WeakHashMap;
- import java.util.logging.Level;
- import java.util.regex.Matcher;
- import java.util.regex.Pattern;
-+
-+import net.kissenpvp.pulvinar.api.command.CommandImplementation;
- import org.bukkit.Server;
- import org.bukkit.World;
- import org.bukkit.command.Command;
-@@ -32,7 +34,6 @@ import org.bukkit.command.SimpleCommandMap;
- import org.bukkit.event.Event;
- import org.bukkit.event.EventPriority;
- import org.bukkit.event.HandlerList;
--import org.bukkit.event.Listener;
- import org.bukkit.permissions.Permissible;
- import org.bukkit.permissions.Permission;
- import org.bukkit.permissions.PermissionDefault;
-@@ -1006,5 +1007,20 @@ public final class SimplePluginManager implements PluginManager {
-     public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
-         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
+@@ -991,12 +991,25 @@ public final class SimplePluginManager implements PluginManager {
+     // Paper end
+ 
+     // Pulvinar start
+-
+     @Override
+     public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin)
+     {
+         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
      }
-+
+ 
 +    @Override
 +    public void registerCommand(@NotNull Plugin plugin, @NotNull Object... objects) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerCommand(objects));
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerCommand(objects));
 +    }
 +
 +    @Override
 +    public void registerExceptionHandler(@NotNull net.kissenpvp.core.api.base.ExceptionHandler<?> exceptionHandler, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerExceptionHandler(exceptionHandler));
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerExceptionHandler(exceptionHandler));
 +    }
 +
 +    @Override
 +    public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
++        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
 +    }
-     // Pulvinar start
+     // Pulvinar end
  }
 diff --git "a/\302\260" "b/\302\260"
 new file mode 100644

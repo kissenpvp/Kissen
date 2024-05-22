@@ -79,10 +79,10 @@ index 0000000000000000000000000000000000000000..c6408fb8e66dc4211aace34515097616
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f05416322a54e9c7d6694283659bf3fb2d8738b0
+index 0000000000000000000000000000000000000000..cccb508701012e50dd41764950db1e8e1fdcd42f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/networking/client/entity/PulvinarPlayerClient.java
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,53 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -104,25 +104,18 @@ index 0000000000000000000000000000000000000000..f05416322a54e9c7d6694283659bf3fb
 +package net.kissenpvp.pulvinar.api.networking.client.entity;
 +
 +import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
-+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.user.User;
-+import net.kissenpvp.paper.api.permission.PaperPermissible;
-+import net.kissenpvp.paper.api.permission.PermissibleOverriddenException;
-+import net.kissenpvp.pulvinar.api.base.Context;
 +import net.kissenpvp.pulvinar.api.permission.PaperPermissible;
 +import net.kissenpvp.pulvinar.api.permission.PermissibleOverriddenException;
++import net.kissenpvp.pulvinar.api.base.Context;
 +import net.kissenpvp.pulvinar.api.user.playersetting.BoundPlayerSetting;
 +import net.kissenpvp.pulvinar.api.user.playersetting.PlayerSetting;
 +import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
-+import net.kyori.adventure.text.Component;
 +import org.jetbrains.annotations.NotNull;
-+import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.util.List;
 +import java.util.Set;
-+
 +
 +public interface PulvinarPlayerClient extends PlayerClient<PlayerRank, Punishment> {
 +
@@ -140,11 +133,6 @@ index 0000000000000000000000000000000000000000..f05416322a54e9c7d6694283659bf3fb
 +
 +    <X> @NotNull BoundPlayerSetting<X> getSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context);
 +
-+    @NotNull Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator);
-+
-+    @NotNull Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason);
-+
-+    @NotNull @Unmodifiable List<Warn> getWarnHistory();
 +
 +    void clearActiveWarns();
 +}
@@ -473,10 +461,10 @@ index 0000000000000000000000000000000000000000..d77cdae32faae9536f4ccad114fde297
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionParser.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..91a8e3f3e745b8d97177ae8df1988ef628c4452f
+index 0000000000000000000000000000000000000000..dcdcdd5011dd8a617edcade0139b5effb0773ef1
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionParser.java
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,66 @@
 +package net.kissenpvp.pulvinar.api.permission;
 +
 +import net.kissenpvp.core.api.command.AbstractArgumentParser;
@@ -490,55 +478,58 @@ index 0000000000000000000000000000000000000000..91a8e3f3e745b8d97177ae8df1988ef6
 +import java.util.Collection;
 +import java.util.HashSet;
 +import java.util.Set;
++import java.util.function.Function;
 +import java.util.stream.Collectors;
++import java.util.stream.Stream;
 +
-+public class PermissionParser implements AbstractArgumentParser<PermissionParser.PermissionArgument, CommandSender>
-+{
++public class PermissionParser implements AbstractArgumentParser<PermissionParser.PermissionArgument, CommandSender> {
++    private static @NotNull Function<String, Stream<? extends String>> splitPermissions() {
++        return permission -> {
++            Set<String> data = new HashSet<>(permission.length());
++            for (String current : permission.split(";")) {
++                StringBuilder stringBuilder = new StringBuilder();
++                String[] parts = current.split("\\.");
++                for (int i = 0; i < parts.length - 1; i++) {
++
++                    if (!stringBuilder.isEmpty() && stringBuilder.charAt(stringBuilder.length() - 1)=='*') {
++                        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
++                    }
++
++                    stringBuilder.append(parts[i]).append(".*");
++                    data.add(stringBuilder.toString());
++                }
++                data.add(current);
++            }
++            return data.stream();
++        };
++    }
++
++    private static @NotNull Stream<String> getPermissionStream() {
++        return Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName);
++    }
++
 +    @Override
-+    public @NotNull String serialize(@NotNull PermissionArgument object)
-+    {
++    public @NotNull String serialize(@NotNull PermissionArgument object) {
 +        return object.permission();
 +    }
 +
 +    @Override
-+    public @NotNull PermissionArgument deserialize(@NotNull String input)
-+    {
++    public @NotNull PermissionArgument deserialize(@NotNull String input) {
 +        return new PermissionArgument(input);
 +    }
 +
 +    @Override
-+    public @Nullable String argumentName()
-+    {
++    public @Nullable String argumentName() {
 +        return "permission";
 +    }
 +
 +    @Override
-+    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
-+    {
-+        return Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).flatMap(currentPermission ->
-+                {
-+                    Set<String> data = new HashSet<>(currentPermission.length());
-+                    for (String current : currentPermission.split(";"))
-+                    {
-+                        StringBuilder stringBuilder = new StringBuilder();
-+                        String[] parts = current.split("\\.");
-+                        for (int i = 0; i < parts.length - 1; i++) {
-+
-+                            if (!stringBuilder.isEmpty() && stringBuilder.charAt(stringBuilder.length() - 1) == '*') {
-+                                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-+                            }
-+
-+                            stringBuilder.append(parts[i]).append(".*");
-+                            data.add(stringBuilder.toString());
-+                        }
-+                        data.add(current);
-+                    }
-+                    return data.stream();
-+                }
-+                ).collect(Collectors.toSet());
++    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
++        return getPermissionStream().flatMap(splitPermissions()).collect(Collectors.toSet());
 +    }
 +
-+    public record PermissionArgument(@Override String permission) {}
++    public record PermissionArgument(@NotNull String permission) {
++    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PrivatePermissionGroup.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PrivatePermissionGroup.java
 new file mode 100644
@@ -891,35 +882,41 @@ index 6c327a07bf8a6aa11a2d7dad12b2830acc539484..9cb87f53bba2c440ceb5181a9268cbf0
      // Paper start
      @Override
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 1aba6c985668b0e9cca15415a75b4431dcce35d0..b1685106416ea369d67aa53554cd4cf5dfdb827f 100644
+index cf70f8373cbf5cd37bf32dd08d370f642a746bb8..3c392b48c69e14a23cc0cd7f999d6143cacb9fcd 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -328,9 +328,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
-     // Paper end
+@@ -121,13 +121,6 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+      */
+     public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) throws IllegalStateException; // Pulvinar - integrate unified event system
  
-     // Pulvinar start
+-    // Pulvinar start - keep compatibility with plugins
+-    default void registerEvents(@NotNull Listener listener, @NotNull Plugin plugin)
+-    {
+-        registerEvents((net.kissenpvp.core.api.event.EventListener<?>) listener, plugin);
+-    }
+-    // Pulvinar end - keep compatibility with plugins
 -
-     void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
+     /**
+      * Registers all the events in the given listener class
+      *
+@@ -342,5 +335,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+     void registerExceptionHandler(@NotNull net.kissenpvp.core.api.base.ExceptionHandler<?> exceptionHandler, @NotNull Plugin plugin);
  
+     <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin);
++
 +    void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin);
      // Pulvinar end
--
++
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index c2bf2252c4d9eb223c69bc059d55a4190a2e7490..22ef2c2bd3f3e5f0f72003195d8327052385e03a 100644
+index 44fe2a51bd89f78077702e82c5b57fe38a263bb8..e84b298e6d6a82f411bcb605ef161122a80385cc 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -991,12 +991,15 @@ public final class SimplePluginManager implements PluginManager {
-     // Paper end
- 
-     // Pulvinar start
--
-     @Override
-     public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin)
-     {
-         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
+@@ -1011,5 +1011,10 @@ public final class SimplePluginManager implements PluginManager {
+     public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin) {
+         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
      }
- 
++
 +    @Override
 +    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin) {
 +        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);

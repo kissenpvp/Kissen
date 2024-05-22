@@ -300,7 +300,7 @@ index 0000000000000000000000000000000000000000..2992f55cb77bc26243d42991822c5ce7
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 374798159ea277852650a1330e3e85d8f1ccf585..20a9b3580bbb9f7f967b7818c29aa71568b0e03e 100644
+index 7be1222dc02738d5a12f0a6f61626df7e9339cf3..100e8829bc4167f86353c54a8510da06c552f7c4 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -192,7 +192,7 @@ import org.bukkit.event.server.ServerLoadEvent;

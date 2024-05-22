@@ -208,19 +208,26 @@ index cb530369e667c426c842da356c31304bb5c3ecfa..dde6518d0adc80feec198ef688a879db
      /**
       * Enables the specified plugin
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 7eda2d7931eb6f2ed542a1ff6b04d4b5e2e48414..1aba6c985668b0e9cca15415a75b4431dcce35d0 100644
+index 7eda2d7931eb6f2ed542a1ff6b04d4b5e2e48414..3eb85b114247ead19827c4dafb4b3598dd0b5194 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -119,7 +119,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -119,7 +119,14 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
       *     <i>Note: This is best-effort basis, and should not be used to test
       *     synchronized state. This is an indicator for flawed flow logic.</i>
       */
 -    public void callEvent(@NotNull Event event) throws IllegalStateException;
 +    public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) throws IllegalStateException; // Pulvinar - integrate unified event system
++
++    // Pulvinar start - keep compatibility with plugins
++    default void registerEvents(@NotNull Listener listener, @NotNull Plugin plugin)
++    {
++        registerEvents((net.kissenpvp.core.api.event.EventListener<?>) listener, plugin);
++    }
++    // Pulvinar end - keep compatibility with plugins
  
      /**
       * Registers all the events in the given listener class
-@@ -127,7 +127,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -127,7 +134,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
       * @param listener Listener to register
       * @param plugin Plugin to register
       */
@@ -229,7 +236,7 @@ index 7eda2d7931eb6f2ed542a1ff6b04d4b5e2e48414..1aba6c985668b0e9cca15415a75b4431
  
      /**
       * Registers the specified executor to the given event class
-@@ -138,7 +138,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -138,7 +145,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
       * @param executor EventExecutor to register
       * @param plugin Plugin to register
       */
@@ -238,7 +245,7 @@ index 7eda2d7931eb6f2ed542a1ff6b04d4b5e2e48414..1aba6c985668b0e9cca15415a75b4431
  
      /**
       * Registers the specified executor to the given event class
-@@ -150,7 +150,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -150,7 +157,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
       * @param plugin Plugin to register
       * @param ignoreCancelled Whether to pass cancelled events or not
       */
@@ -247,6 +254,16 @@ index 7eda2d7931eb6f2ed542a1ff6b04d4b5e2e48414..1aba6c985668b0e9cca15415a75b4431
  
      /**
       * Enables the specified plugin
+@@ -328,9 +335,6 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+     // Paper end
+ 
+     // Pulvinar start
+-
+     void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
+-
+     // Pulvinar end
+-
+ }
 diff --git a/src/main/java/org/bukkit/plugin/RegisteredListener.java b/src/main/java/org/bukkit/plugin/RegisteredListener.java
 index 3b3d9642a8d63798dc28f2f8df77f0466451cbff..c3f501b1712a9256a1c8483fc24502cc39ac6338 100644
 --- a/src/main/java/org/bukkit/plugin/RegisteredListener.java

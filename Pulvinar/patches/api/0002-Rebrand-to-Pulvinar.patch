@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Wed, 22 May 2024 08:43:10 +0200
+Subject: [PATCH] Rebrand to Pulvinar
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+index 9df9d09aa477d4cd3c496ba0933c816df1ef0964..0d18ee1445fba5f3f4511c55c87901274552ee43 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+@@ -16,7 +16,7 @@ public interface ServerBuildInfo {
+     /**
+      * The brand id for Paper.
+      */
+-    Key BRAND_PAPER_ID = Key.key("papermc", "paper");
++    Key BRAND_PAPER_ID = Key.key("kissenpvp", "pulvinar");
+ 
+     /**
+      * Gets the {@code ServerBuildInfo}.

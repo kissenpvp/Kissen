@@ -1,34 +1,34 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ivo Quiring <falk.quiring@gmail.com>
-Date: Mon, 12 Feb 2024 15:50:50 +0100
-Subject: [PATCH] Integrated localization from kissen into paper
+Date: Wed, 22 May 2024 08:34:16 +0200
+Subject: [PATCH] Implement localization methods to plugin manager
 
 
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index b1685106416ea369d67aa53554cd4cf5dfdb827f..3e7f95b02d21c1881faa62bc0f9f6291adadd7f6 100644
+index 3c392b48c69e14a23cc0cd7f999d6143cacb9fcd..8e1f7dfc7ec59bd08420b6930e71f8bc289dcae3 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -331,5 +331,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
-     void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
+@@ -337,6 +337,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+     <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin);
  
      void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin);
 +
 +    void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin);
      // Pulvinar end
+ 
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 22ef2c2bd3f3e5f0f72003195d8327052385e03a..77f40130e6a69cee41103d01a89a3be0e70e555c 100644
+index e84b298e6d6a82f411bcb605ef161122a80385cc..ca20c153e80b5310f5f0024a59a4fe409fac7548 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -1001,5 +1001,10 @@ public final class SimplePluginManager implements PluginManager {
+@@ -1016,5 +1016,10 @@ public final class SimplePluginManager implements PluginManager {
      public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
      }
--    // Pulvinar end
 +
 +    @Override
 +    public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
 +        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
 +    }
-+    // Pulvinar start
+     // Pulvinar end
  }

@@ -1,0 +1,147 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Wed, 22 May 2024 08:45:21 +0200
+Subject: [PATCH] Rebrand to Pulvinar
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/Metrics.java b/src/main/java/com/destroystokyo/paper/Metrics.java
+index 4b002e8b75d117b726b0de274a76d3596fce015b..e869b04261cda69cdaa5c3af47272da63ba0812c 100644
+--- a/src/main/java/com/destroystokyo/paper/Metrics.java
++++ b/src/main/java/com/destroystokyo/paper/Metrics.java
+@@ -593,7 +593,7 @@ public class Metrics {
+             boolean logFailedRequests = config.getBoolean("logFailedRequests", false);
+             // Only start Metrics, if it's enabled in the config
+             if (config.getBoolean("enabled", true)) {
+-                Metrics metrics = new Metrics("Paper", serverUUID, logFailedRequests, Bukkit.getLogger());
++                Metrics metrics = new Metrics("Pulvinar", serverUUID, logFailedRequests, Bukkit.getLogger());
+ 
+                 metrics.addCustomChart(new Metrics.SimplePie("minecraft_version", () -> {
+                     String minecraftVersion = Bukkit.getVersion();
+@@ -607,11 +607,11 @@ public class Metrics {
+                 final String implVersion = org.bukkit.craftbukkit.Main.class.getPackage().getImplementationVersion();
+                 if (implVersion != null) {
+                     final String buildOrHash = implVersion.substring(implVersion.lastIndexOf('-') + 1);
+-                    paperVersion = "git-Paper-%s-%s".formatted(Bukkit.getServer().getMinecraftVersion(), buildOrHash);
++                    paperVersion = "git-Pulvinar-%s-%s".formatted(Bukkit.getServer().getMinecraftVersion(), buildOrHash); // Pulvinar
+                 } else {
+                     paperVersion = "unknown";
+                 }
+-                metrics.addCustomChart(new Metrics.SimplePie("paper_version", () -> paperVersion));
++                metrics.addCustomChart(new Metrics.SimplePie("pulvinar_version", () -> paperVersion)); // Pulvinar
+ 
+                 metrics.addCustomChart(new Metrics.DrilldownPie("java_version", () -> {
+                     Map<String, Map<String, Integer>> map = new HashMap<>();
+diff --git a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+index 532306cacd52579cdf37e4aca25887b1ed3ba6a1..20fda9c5ecf3a635ee166773a70516c8da41d882 100644
+--- a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
++++ b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+@@ -35,7 +35,7 @@ public class PaperVersionFetcher implements VersionFetcher {
+     private static final Logger LOGGER = LogUtils.getClassLogger();
+     private static final int DISTANCE_ERROR = -1;
+     private static final int DISTANCE_UNKNOWN = -2;
+-    private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/paper";
++    private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/paper"; // Pulvinar: TODO implement own api
+ 
+     @Override
+     public long getCacheTime() {
+@@ -49,7 +49,7 @@ public class PaperVersionFetcher implements VersionFetcher {
+         if (build.buildNumber().isEmpty() && build.gitCommit().isEmpty()) {
+             updateMessage = text("You are running a development version without access to version information", color(0xFF5300));
+         } else {
+-            updateMessage = getUpdateStatusMessage("PaperMC/Paper", build);
++            updateMessage = getUpdateStatusMessage("KissenPvP/Kissen", build);
+         }
+         final @Nullable Component history = this.getHistory();
+ 
+@@ -57,6 +57,12 @@ public class PaperVersionFetcher implements VersionFetcher {
+     }
+ 
+     private static Component getUpdateStatusMessage(final String repo, final ServerBuildInfo build) {
++        // Pulvinar start - TODO setup api server
++        if(true)
++        {
++            return text("You are running the latest version", NamedTextColor.GREEN);
++        }
++        // Pulvinar end
+         int distance = DISTANCE_ERROR;
+ 
+         final OptionalInt buildNumber = build.buildNumber();
+@@ -86,7 +92,7 @@ public class PaperVersionFetcher implements VersionFetcher {
+     private static int fetchDistanceFromSiteApi(final ServerBuildInfo build, final int jenkinsBuild) {
+         try {
+             try (final BufferedReader reader = Resources.asCharSource(
+-                URI.create("https://api.papermc.io/v2/projects/paper/versions/" + build.minecraftVersionId()).toURL(),
++                URI.create("https://api.papermc.io/v2/projects/paper/versions/" + build.minecraftVersionId()).toURL(), // Pulvinar: TODO implement own api
+                 Charsets.UTF_8
+             ).openBufferedStream()) {
+                 final JsonObject json = new Gson().fromJson(reader, JsonObject.class);
+@@ -97,7 +103,7 @@ public class PaperVersionFetcher implements VersionFetcher {
+                     .orElseThrow();
+                 return latest - jenkinsBuild;
+             } catch (final JsonSyntaxException ex) {
+-                LOGGER.error("Error parsing json from Paper's downloads API", ex);
++                LOGGER.error("Error parsing json from Pulvinar's downloads API", ex); // Pulvinar
+                 return DISTANCE_ERROR;
+             }
+         } catch (final IOException e) {
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+index 790bad0494454ca12ee152e3de6da3da634d9b20..c3633adb8d24e64b335ec022edcba8b6445bf001 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+@@ -30,7 +30,7 @@ public record ServerBuildInfoImpl(
+     private static final String ATTRIBUTE_GIT_BRANCH = "Git-Branch";
+     private static final String ATTRIBUTE_GIT_COMMIT = "Git-Commit";
+ 
+-    private static final String BRAND_PAPER_NAME = "Paper";
++    private static final String BRAND_PAPER_NAME = "Pulvinar"; // Pulvinar
+ 
+     private static final String BUILD_DEV = "DEV";
+ 
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index dbc86b8d4d2af6e5f7e678f2bb77fd39b85c04c5..7be1222dc02738d5a12f0a6f61626df7e9339cf3 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -959,7 +959,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         shutdownThread = Thread.currentThread();
+         org.spigotmc.WatchdogThread.doStop(); // Paper
+         if (!isSameThread()) {
+-            MinecraftServer.LOGGER.info("Stopping main thread (Ignore any thread death message you see! - DO NOT REPORT THREAD DEATH TO PAPER)");
++            MinecraftServer.LOGGER.info("Stopping main thread (Ignore any thread death message you see! - DO NOT REPORT THREAD DEATH TO PULVINAR)"); // Pulvinar
+             while (this.getRunningThread().isAlive()) {
+                 this.getRunningThread().stop();
+                 try {
+diff --git a/src/main/java/net/minecraft/world/level/chunk/storage/RegionFileStorage.java b/src/main/java/net/minecraft/world/level/chunk/storage/RegionFileStorage.java
+index f6e3b745fc417354380d4a969f83aee430bad785..2eed515c968be811e5d3ab3d4f0b78ff2fde58b9 100644
+--- a/src/main/java/net/minecraft/world/level/chunk/storage/RegionFileStorage.java
++++ b/src/main/java/net/minecraft/world/level/chunk/storage/RegionFileStorage.java
+@@ -155,7 +155,7 @@ public class RegionFileStorage implements AutoCloseable {
+ 
+     // Paper start
+     private static void printOversizedLog(String msg, Path file, int x, int z) {
+-        org.apache.logging.log4j.LogManager.getLogger().fatal(msg + " (" + file.toString().replaceAll(".+[\\\\/]", "") + " - " + x + "," + z + ") Go clean it up to remove this message. /minecraft:tp " + (x<<4)+" 128 "+(z<<4) + " - DO NOT REPORT THIS TO PAPER - You may ask for help on Discord, but do not file an issue. These error messages can not be removed.");
++        org.apache.logging.log4j.LogManager.getLogger().fatal(msg + " (" + file.toString().replaceAll(".+[\\\\/]", "") + " - " + x + "," + z + ") Go clean it up to remove this message. /minecraft:tp " + (x<<4)+" 128 "+(z<<4) + " - DO NOT REPORT THIS TO PULVINAR - You may ask for help on Discord, but do not file an issue. These error messages can not be removed."); // Pulvinar
+     }
+ 
+     private static CompoundTag readOversizedChunk(RegionFile regionfile, ChunkPos chunkCoordinate) throws IOException {
+diff --git a/src/main/java/org/spigotmc/WatchdogThread.java b/src/main/java/org/spigotmc/WatchdogThread.java
+index 6db566e3111ec08a99aa429624979cb83a85e272..b08dc5e0f8db0e4a7a9825df8076bd4961ed7de3 100644
+--- a/src/main/java/org/spigotmc/WatchdogThread.java
++++ b/src/main/java/org/spigotmc/WatchdogThread.java
+@@ -184,7 +184,7 @@ public final class WatchdogThread extends io.papermc.paper.util.TickThread // Pa
+                 // Paper end
+                 } else
+                 {
+-                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PAPER - THIS IS NOT A BUG OR A CRASH  - " + Bukkit.getServer().getVersion() + " ---");
++                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PULVINAR - THIS IS NOT A BUG OR A CRASH  - " + Bukkit.getServer().getVersion() + " ---"); // Pulvinar
+                     log.log(Level.SEVERE, "The server has not responded for " + (currentTime - lastTick) / 1000 + " seconds! Creating thread dump");
+                 }
+                 // Paper end - Different message for short timeout
+@@ -205,7 +205,7 @@ public final class WatchdogThread extends io.papermc.paper.util.TickThread // Pa
+                     WatchdogThread.dumpThread( thread, log );
+                 }
+                 } else {
+-                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PAPER - THIS IS NOT A BUG OR A CRASH ---");
++                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PULVINAR - THIS IS NOT A BUG OR A CRASH ---"); // Pulvinar
+                 }
+ 
+                 log.log( Level.SEVERE, "------------------------------" );
