@@ -37,54 +37,37 @@ index 0000000000000000000000000000000000000000..13fae9d695e3a80835414d00b06475b2
 +    LOCAL,
 +    GLOBAL
 +}
-diff --git a/src/main/java/net/kissenpvp/pulvinar/api/base/PaperKissen.java b/src/main/java/net/kissenpvp/pulvinar/api/base/PaperKissen.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/base/Pulvinar.java b/src/main/java/net/kissenpvp/pulvinar/api/base/Pulvinar.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..fbe2a96a62af4945a3366ad5f3809d018cf1a8b8
+index 0000000000000000000000000000000000000000..099bcd659c017047deda6cf67aa31a4fc6ecc911
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/pulvinar/api/base/PaperKissen.java
-@@ -0,0 +1,23 @@
-+/*
-+ * Copyright (C) 2023 KissenPvP
-+ *
-+ * This program is licensed under the Apache License, Version 2.0.
-+ *
-+ * This software may be redistributed and/or modified under the terms
-+ * of the Apache License as published by the Apache Software Foundation,
-+ * either version 2 of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
-+ * OR CONDITIONS OF ANY KIND, either express or implied. See the Apache
-+ * License, Version 2.0 for the specific language governing permissions
-+ * and limitations under the License.
-+ *
-+ * You should have received a copy of the Apache License, Version 2.0
-+ * along with this program. If not, see <http://www.apache.org/licenses/LICENSE-2.0>.
-+ */
-+
++++ b/src/main/java/net/kissenpvp/pulvinar/api/base/Pulvinar.java
+@@ -0,0 +1,6 @@
 +package net.kissenpvp.pulvinar.api.base;
 +
 +import net.kissenpvp.core.api.base.Kissen;
 +
-+public interface PaperKissen extends Kissen { }
++public interface Pulvinar extends Kissen {
++}
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index 71f1c361ebccbe83193c37ec3a90faa4085001c3..03a3037f78eb5d25df1220142233accc9483fdcb 100644
+index 83b979fbb8c0dd64f0a19feef654af2b165bd603..c056fb4f57656bdb8e8b810f9e57e563cf2da97a 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
-@@ -2907,4 +2907,17 @@ public final class Bukkit {
-     public static Server.Spigot spigot() {
-         return server.spigot();
+@@ -3036,4 +3036,17 @@ public final class Bukkit {
+         server.clearBlockHighlights();
      }
+     // Purpur end
 +
 +    // Pulvinar start
-+    private static net.kissenpvp.pulvinar.api.base.PaperKissen kissen;
-+    public static @org.jetbrains.annotations.NotNull net.kissenpvp.pulvinar.api.base.PaperKissen getKissen() {
-+        return kissen;
++    private static net.kissenpvp.pulvinar.api.base.Pulvinar pulvinar;
++    public static @org.jetbrains.annotations.NotNull net.kissenpvp.pulvinar.api.base.Pulvinar getPulvinar() {
++        return pulvinar;
 +    }
-+    public static void setKissen(@NotNull net.kissenpvp.pulvinar.api.base.PaperKissen kissen) {
-+        if (Bukkit.kissen != null) {
++    public static void setPulvinar(@NotNull net.kissenpvp.pulvinar.api.base.Pulvinar pulvinar) {
++        if (Bukkit.pulvinar != null) {
 +            throw new UnsupportedOperationException("Cannot redefine singleton Kissen");
 +        }
-+        Bukkit.kissen = kissen;
++        Bukkit.pulvinar = pulvinar;
 +    }
 +    // Pulvinar end
  }
@@ -118,7 +101,7 @@ index 47153dee66782a00b980ecf15e8774ab6f3d887d..7eda2d7931eb6f2ed542a1ff6b04d4b5
 +
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 07a9c9e254188c251165ca84c8e961fccda01175..ef2c29122649bc8cb7a420f0aca29664f9eec51c 100644
+index 07a9c9e254188c251165ca84c8e961fccda01175..a4a2eecfb5dc75d2239ddbe431900f4816606198 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 @@ -990,4 +990,14 @@ public final class SimplePluginManager implements PluginManager {
@@ -131,25 +114,9 @@ index 07a9c9e254188c251165ca84c8e961fccda01175..ef2c29122649bc8cb7a420f0aca29664
 +    @Override
 +    public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin)
 +    {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
++        org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
 +    }
 +
-+    // Pulvinar end
- }
-diff --git a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-index 34037d3da2c536bac088e0ff629ee8f1daccc65b..4b95d0e680a80fb8ecfa083523f4df20170a2a97 100644
---- a/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-+++ b/src/main/java/org/bukkit/plugin/java/JavaPlugin.java
-@@ -470,4 +470,11 @@ public abstract class JavaPlugin extends PluginBase {
-         return this.lifecycleEventManager;
-     }
-     // Paper end - lifecycle events
-+
-+    // Pulvinar start
-+    @Override
-+    public @NotNull net.kissenpvp.core.api.base.Kissen getKissen() {
-+        return org.bukkit.Bukkit.getKissen();
-+    }
 +    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java b/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java
@@ -165,19 +132,3 @@ index 7e4f7cb2afbc145e532285c793573ad107bc3033..5cdea21400ef131f6a290b37d5867bc7
      private final JavaPluginLoader loader;
      private final Map<String, Class<?>> classes = new ConcurrentHashMap<String, Class<?>>();
      private final PluginDescriptionFile description;
-diff --git a/src/test/java/org/bukkit/plugin/TestPlugin.java b/src/test/java/org/bukkit/plugin/TestPlugin.java
-index affe88cf8e98a787e197936f5fc443464a2343c6..a5d8251700c32d402d256306c05e91bb8475628e 100644
---- a/src/test/java/org/bukkit/plugin/TestPlugin.java
-+++ b/src/test/java/org/bukkit/plugin/TestPlugin.java
-@@ -140,4 +140,11 @@ public class TestPlugin extends PluginBase {
-         throw new UnsupportedOperationException("Not supported.");
-     }
-     // Paper end - lifecycle events
-+
-+    // Pulvinar start
-+    @Override
-+    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
-+        return org.bukkit.Bukkit.getKissen();
-+    }
-+    // Pulvinar end
- }

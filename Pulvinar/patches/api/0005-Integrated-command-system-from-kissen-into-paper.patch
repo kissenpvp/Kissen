@@ -198,7 +198,7 @@ index 0000000000000000000000000000000000000000..6e9fa6127922210633a7f51376a1b76e
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/command/parser/OfflinePlayerParser.java b/src/main/java/net/kissenpvp/pulvinar/api/command/parser/OfflinePlayerParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..161e40e6463a736e0ffed41b8602e6a03e959ed6
+index 0000000000000000000000000000000000000000..295d71ad9822adc85751cc9c2e92ac5fb08ee17c
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/command/parser/OfflinePlayerParser.java
 @@ -0,0 +1,76 @@
@@ -275,7 +275,7 @@ index 0000000000000000000000000000000000000000..161e40e6463a736e0ffed41b8602e6a0
 +
 +    @Override public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
 +    {
-+        return Bukkit.getKissen().getImplementation(UserImplementation.class).getUserProfiles().stream().map(UserInfo::getName).collect(Collectors.toSet());
++        return Bukkit.getPulvinar().getImplementation(UserImplementation.class).getUserProfiles().stream().map(UserInfo::getName).collect(Collectors.toSet());
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/command/parser/PlayerParser.java b/src/main/java/net/kissenpvp/pulvinar/api/command/parser/PlayerParser.java
@@ -348,10 +348,10 @@ index 0000000000000000000000000000000000000000..80840b8f912d0691e068a22e2b50b062
 +    }
 +}
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 3eb85b114247ead19827c4dafb4b3598dd0b5194..cf70f8373cbf5cd37bf32dd08d370f642a746bb8 100644
+index 7b44b0fefcde0ab0d96704a56556fece26d56973..52f205e5b4acc246d12dd590660217b9ea5fc18a 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -336,5 +336,11 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -365,5 +365,11 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
  
      // Pulvinar start
      void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin);
@@ -364,7 +364,7 @@ index 3eb85b114247ead19827c4dafb4b3598dd0b5194..cf70f8373cbf5cd37bf32dd08d370f64
      // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index c2bf2252c4d9eb223c69bc059d55a4190a2e7490..44fe2a51bd89f78077702e82c5b57fe38a263bb8 100644
+index 4270167e7ea3ae5bb25c0ee66525fcc67e357c9a..844fdf2b3e64eb11299b3c8939538859280ab99f 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 @@ -991,12 +991,25 @@ public final class SimplePluginManager implements PluginManager {
@@ -375,22 +375,22 @@ index c2bf2252c4d9eb223c69bc059d55a4190a2e7490..44fe2a51bd89f78077702e82c5b57fe3
      @Override
      public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin)
      {
-         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
+         org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
      }
  
 +    @Override
 +    public void registerCommand(@NotNull Plugin plugin, @NotNull Object... objects) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerCommand(objects));
++        org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerCommand(objects));
 +    }
 +
 +    @Override
 +    public void registerExceptionHandler(@NotNull net.kissenpvp.core.api.base.ExceptionHandler<?> exceptionHandler, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerExceptionHandler(exceptionHandler));
++        org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerExceptionHandler(exceptionHandler));
 +    }
 +
 +    @Override
 +    public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
++        org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
 +    }
      // Pulvinar end
  }

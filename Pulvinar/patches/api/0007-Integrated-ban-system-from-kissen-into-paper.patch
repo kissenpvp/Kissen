@@ -125,7 +125,7 @@ index 0000000000000000000000000000000000000000..253b87c7b446f403cc1c092da925fdea
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/ban/BanParser.java b/src/main/java/net/kissenpvp/pulvinar/api/ban/BanParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d362716fe937105e883888fe01dca3483075920e
+index 0000000000000000000000000000000000000000..5266e98c08e36ccc2a0faa65b64207a029e313c1
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/ban/BanParser.java
 @@ -0,0 +1,60 @@
@@ -152,7 +152,7 @@ index 0000000000000000000000000000000000000000..d362716fe937105e883888fe01dca348
 +public class BanParser implements ArgumentParser<BanTemplate>, CommandExceptionHandler<NonexistentBanException> {
 +
 +    private static @NotNull BanImplementation getBanImplementation() {
-+        return Bukkit.getKissen().getImplementation(BanImplementation.class);
++        return Bukkit.getPulvinar().getImplementation(BanImplementation.class);
 +    }
 +
 +    @Override
@@ -274,7 +274,7 @@ index 0000000000000000000000000000000000000000..cbd4f5d6edc3cbf8c1b190268098d716
 +public interface Punishment extends AbstractPunishment<Player>, BanEntry<PlayerProfile> {}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/ban/PunishmentParser.java b/src/main/java/net/kissenpvp/pulvinar/api/ban/PunishmentParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..5d3a48e74b3e17fddb993f9a2eaeaa58700fb243
+index 0000000000000000000000000000000000000000..3a9238d2096ea6eae7250fb732145b3ad10592f5
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/ban/PunishmentParser.java
 @@ -0,0 +1,44 @@
@@ -302,7 +302,7 @@ index 0000000000000000000000000000000000000000..5d3a48e74b3e17fddb993f9a2eaeaa58
 +
 +    @Override
 +    public @NotNull Punishment deserialize(@NotNull String input) {
-+        return Bukkit.getKissen().getImplementation(BanImplementation.class).getPunishmentSet().stream().filter(punishment -> punishment.getID().equals(input)).findFirst().orElseThrow(() -> new NonexistentPunishmentException(input));
++        return Bukkit.getPulvinar().getImplementation(BanImplementation.class).getPunishmentSet().stream().filter(punishment -> punishment.getID().equals(input)).findFirst().orElseThrow(() -> new NonexistentPunishmentException(input));
 +    }
 +
 +    @Override
@@ -313,7 +313,7 @@ index 0000000000000000000000000000000000000000..5d3a48e74b3e17fddb993f9a2eaeaa58
 +
 +    @Override
 +    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
-+        return Bukkit.getKissen().getImplementation(BanImplementation.class).getPunishmentSet().stream().map(AbstractPunishment::getID).collect(Collectors.toSet());
++        return Bukkit.getPulvinar().getImplementation(BanImplementation.class).getPunishmentSet().stream().map(AbstractPunishment::getID).collect(Collectors.toSet());
 +    }
 +
 +    @Override

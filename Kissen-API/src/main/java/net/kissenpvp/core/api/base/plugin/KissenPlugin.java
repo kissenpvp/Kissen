@@ -69,15 +69,6 @@ public interface KissenPlugin {
     File getDataFolder();
 
     /**
-     * Returns the Kissen instance associated with this plugin.
-     * This method is used to retrieve the instance of the Kissen class that is associated with this plugin.
-     *
-     * @return The Kissen instance.
-     */
-    @NotNull
-    Kissen getKissen();
-
-    /**
      * Returns whether the plugin is currently enabled.
      * <p>
      * This method is used to check if the plugin is enabled or disabled within the Kissen system.

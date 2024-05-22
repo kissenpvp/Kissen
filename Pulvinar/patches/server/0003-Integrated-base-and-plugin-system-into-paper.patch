@@ -23,7 +23,7 @@ index 3e82ea07ca4194844c5528446e2c4a46ff4acee5..0ed5926ec3bcc68f804eee728268a22f
      }
  
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index 097500a59336db1bbfffcd1aa4cff7a8586e46ec..44c641420cb1065b9b9218eed92a186674e6cad0 100644
+index 097500a59336db1bbfffcd1aa4cff7a8586e46ec..486ebc9c35d6942d7e7e015cbf7fc81f84e5ec23 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 @@ -243,4 +243,12 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
@@ -35,7 +35,7 @@ index 097500a59336db1bbfffcd1aa4cff7a8586e46ec..44c641420cb1065b9b9218eed92a1866
 +    @Override
 +    public void registerSetting(@NotNull net.kissenpvp.core.api.config.Option<?, ?> setting, @NotNull Plugin plugin)
 +    {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
++        org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.core.api.config.ConfigurationImplementation.class).registerSetting(plugin, setting);
 +    }
 +    // Pulvinar end
  }
@@ -65,7 +65,7 @@ index cb9b13522a976b82bcb71cef486f11f4172e3e99..71b2e53b8dbaf385fa2cadf654a720c8
              provided.getSLF4JLogger().error("Error initializing plugin '%s' in folder '%s' (Is it up to date?)".formatted(provider.getFileName(), provider.getParentSource()), ex);
 diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d42728840c132d180bdbd62081eda521f9eac1f6
+index 0000000000000000000000000000000000000000..82cdf5419e0d3bc295f1e45c4f6d14b31813c36d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
 @@ -0,0 +1,88 @@
@@ -93,7 +93,7 @@ index 0000000000000000000000000000000000000000..d42728840c132d180bdbd62081eda521
 +import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 +import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
 +import net.kissenpvp.core.base.KissenCore;
-+import net.kissenpvp.pulvinar.api.base.PaperKissen;
++import net.kissenpvp.pulvinar.api.base.Pulvinar;
 +import org.bukkit.Bukkit;
 +import org.bukkit.craftbukkit.scheduler.CraftScheduler;
 +import org.bukkit.plugin.Plugin;
@@ -104,7 +104,7 @@ index 0000000000000000000000000000000000000000..d42728840c132d180bdbd62081eda521
 +import java.util.UUID;
 +
 +// Pulvinar
-+public class PulvinarCore extends KissenCore implements PaperKissen {
++public class PulvinarCore extends KissenCore implements Pulvinar {
 +
 +    @Override
 +    public @NotNull Optional<KissenPlugin> getPlugin(@NotNull String plugin) {
@@ -300,7 +300,7 @@ index 0000000000000000000000000000000000000000..2992f55cb77bc26243d42991822c5ce7
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 7be1222dc02738d5a12f0a6f61626df7e9339cf3..100e8829bc4167f86353c54a8510da06c552f7c4 100644
+index 687a3d302cf94ba78099edcb900e734efefb8e70..6dd88101438c49e2fcf0572343b3951643c05cf8 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -192,7 +192,7 @@ import org.bukkit.event.server.ServerLoadEvent;
@@ -313,16 +313,16 @@ index 7be1222dc02738d5a12f0a6f61626df7e9339cf3..100e8829bc4167f86353c54a8510da06
      private static MinecraftServer SERVER; // Paper
      public static final Logger LOGGER = LogUtils.getLogger();
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 2eb9c584cc77237f1c82d880a51a3f8b51008d73..466ac80c423fd679ecdec505c6ed863ba305cd2b 100644
+index 957da64ddd0a56f457122a3f590b45e348f22382..47b56c0530c7c107fd8e82d6c36b44ad2a5ae33c 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -192,6 +192,13 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -193,6 +193,13 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
              DedicatedServer.LOGGER.warn("To start the server with more ram, launch it as \"java -Xmx1024M -Xms1024M -jar minecraft_server.jar\"");
          }
  
 +        // Pulvinar start - start system
 +        net.kissenpvp.pulvinar.base.PulvinarCore pulvinarCore = new net.kissenpvp.pulvinar.base.PulvinarCore();
-+        org.bukkit.Bukkit.setKissen(pulvinarCore);
++        org.bukkit.Bukkit.setPulvinar(pulvinarCore);
 +        //system start is asynchronous
 +        java.util.concurrent.CompletableFuture<Void> systemStart = java.util.concurrent.CompletableFuture.runAsync(pulvinarCore::initialize);
 +        // Pulvinar stop
@@ -330,7 +330,7 @@ index 2eb9c584cc77237f1c82d880a51a3f8b51008d73..466ac80c423fd679ecdec505c6ed863b
          // Paper start - detect running as root
          if (io.papermc.paper.util.ServerEnvironment.userIsRootOrAdmin()) {
              DedicatedServer.LOGGER.warn("****************************");
-@@ -226,6 +233,11 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -227,6 +234,11 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
          if (this.convertOldUsers()) {
              this.getProfileCache().save(false); // Paper
          }
@@ -342,7 +342,7 @@ index 2eb9c584cc77237f1c82d880a51a3f8b51008d73..466ac80c423fd679ecdec505c6ed863b
          this.getPlayerList().loadAndSaveFiles(); // Must be after convertNames
          // Paper end - fix converting txt to json file
          org.spigotmc.WatchdogThread.doStart(org.spigotmc.SpigotConfig.timeoutTime, org.spigotmc.SpigotConfig.restartOnCrash); // Paper - start watchdog thread
-@@ -308,6 +320,9 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -342,6 +354,9 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
              DedicatedServer.LOGGER.warn("To change this, set \"online-mode\" to \"true\" in the server.properties file.");
          }
  
@@ -352,90 +352,3 @@ index 2eb9c584cc77237f1c82d880a51a3f8b51008d73..466ac80c423fd679ecdec505c6ed863b
  
          if (!OldUsersConverter.serverReadyAfterUserconversion(this)) {
              return false;
-diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 2fa5507aa2153a05208077f9547c165a1099b5bb..afcf19544f7b7322ead89b06d612da1e4ac458df 100644
---- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-+++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -550,7 +550,13 @@ public final class CraftServer implements Server {
- 
-         for (Plugin plugin : plugins) {
-             if ((!plugin.isEnabled()) && (plugin.getDescription().getLoad() == type)) {
-+                // Pulvinar start
-+                net.kissenpvp.core.base.KissenCore.getInstance().enable(net.kissenpvp.core.base.PluginState.PRE, plugin);
-+                // Pulvinar end
-                 this.enablePlugin(plugin);
-+                // Pulvinar start
-+                net.kissenpvp.core.base.KissenCore.getInstance().enable(net.kissenpvp.core.base.PluginState.POST, plugin);
-+                // Pulvinar end
-             }
-         }
- 
-@@ -1001,6 +1007,12 @@ public final class CraftServer implements Server {
-             throw new IllegalStateException(org.bukkit.command.defaults.ReloadCommand.RELOADING_DISABLED_MESSAGE);
-         }
-         // Paper end - lifecycle events
-+
-+        // Pulvinar start - reinitialize core
-+        net.kissenpvp.core.base.KissenCore currentCore = net.kissenpvp.core.base.KissenCore.getInstance();
-+        currentCore.shutdown();
-+        // Pulvinar end - reinitialize core
-+
-         org.spigotmc.WatchdogThread.hasStarted = false; // Paper - Disable watchdog early timeout on reload
-         this.reloadCount++;
-         this.configuration = YamlConfiguration.loadConfiguration(this.getConfigFile());
-@@ -1061,6 +1073,11 @@ public final class CraftServer implements Server {
-             playerMetadata.removeAll(plugin);
-         }
-         // Paper end
-+
-+        // Pulvinar start - reinitialize core
-+        currentCore.initialize(); // will replace current instance by overriding static var
-+        // Pulvinar end - reinitialize core
-+
-         this.reloadData();
-         org.spigotmc.SpigotConfig.registerCommands(); // Spigot
-         io.papermc.paper.command.PaperCommands.registerCommands(this.console); // Paper
-@@ -1100,6 +1117,11 @@ public final class CraftServer implements Server {
-         this.syncCommands(); // Refresh commands after event
-         // Paper end - brigadier command API
-         this.getPluginManager().callEvent(new ServerLoadEvent(ServerLoadEvent.LoadType.RELOAD));
-+
-+        // Pulvinar start - reinitialize core
-+        currentCore.start();
-+        // Pulvinar end - reinitialize core
-+
-         org.spigotmc.WatchdogThread.hasStarted = true; // Paper - Disable watchdog early timeout on reload
-     }
- 
-diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
-index 66bdac50130f523f9dc4379b103b7a469f9ca36b..a85e78ffeed38eee1c5ee2fc954f852e8d63341f 100644
---- a/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
-+++ b/src/main/java/org/bukkit/craftbukkit/scheduler/MinecraftInternalPlugin.java
-@@ -150,4 +150,11 @@ public class MinecraftInternalPlugin extends PluginBase {
-         throw new UnsupportedOperationException("Not supported.");
-     }
-     // Paper end - lifecycle events
-+
-+    // Pulvinar start
-+    @Override
-+    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
-+        return org.bukkit.Bukkit.getKissen();
-+    }
-+    // Pulvinar end
- }
-diff --git a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
-index 90cf0c702ca2ff9de64d9718ecba5f2d128953a6..6fa873fa797d2c2878e328bbb0e548b5949f60cf 100644
---- a/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
-+++ b/src/test/java/io/papermc/paper/plugin/PaperTestPlugin.java
-@@ -150,4 +150,11 @@ public class PaperTestPlugin extends PluginBase {
-         throw new UnsupportedOperationException("Not supported.");
-     }
-     // Paper end - lifecycle events
-+
-+    // Pulvinar start
-+    @Override
-+    public net.kissenpvp.core.api.base.@org.jetbrains.annotations.NotNull Kissen getKissen() {
-+        return org.bukkit.Bukkit.getKissen();
-+    }
-+    // Pulvinar end
- }

@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated ban system from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
-index e83f9517b31c5171b8dc75ab63a5bfe654221c84..b1f0f882efd1c33ec36843c48650b890638fc67d 100644
+index e83f9517b31c5171b8dc75ab63a5bfe654221c84..f8d56e786b81d3763accd5bf84f7ae7c58e46c65 100644
 --- a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
 +++ b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
 @@ -145,9 +145,14 @@ public final class ChatProcessor {
@@ -13,7 +13,7 @@ index e83f9517b31c5171b8dc75ab63a5bfe654221c84..b1f0f882efd1c33ec36843c48650b890
  
      private void processModern(final ChatRenderer renderer, final Set<Audience> viewers, final Component message, final Player player, final boolean cancelled) {
 +        // Pulvinar start - integrate mute
-+        net.kissenpvp.pulvinar.api.ban.BanImplementation paperBanImplementation = org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.ban.BanImplementation.class);
++        net.kissenpvp.pulvinar.api.ban.BanImplementation paperBanImplementation = org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.ban.BanImplementation.class);
 +        java.util.Optional<net.kissenpvp.pulvinar.api.ban.Punishment> mute = paperBanImplementation.getLatestPunishment(player.getTotalID(), net.kissenpvp.core.api.ban.BanType.MUTE);
 +        // Pulvinar end
 +
@@ -152,7 +152,7 @@ index 0000000000000000000000000000000000000000..533aa48a0e3134278dd9b4330c44b62f
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..99b1e72ac36ee32728a06879f5aa79728c4bbfae
+index 0000000000000000000000000000000000000000..16a9656dc15d7954b2b4eb7e30dbc0913c69c6cd
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
 @@ -0,0 +1,464 @@
@@ -228,7 +228,7 @@ index 0000000000000000000000000000000000000000..99b1e72ac36ee32728a06879f5aa7972
 +
 +    @Override
 +    public boolean preStart() {
-+        DatabaseImplementation database = Bukkit.getKissen().getImplementation(DatabaseImplementation.class);
++        DatabaseImplementation database = Bukkit.getPulvinar().getImplementation(DatabaseImplementation.class);
 +        DatabaseConnection connection = database.getConnection("private").orElseGet(database::getPrimaryConnection);
 +        privateTable = (KissenTable) connection.createTable("kissen_private_ban_meta");
 +        return super.preStart();
@@ -261,7 +261,7 @@ index 0000000000000000000000000000000000000000..99b1e72ac36ee32728a06879f5aa7972
 +        kissenLocalizationImplementation.register("server.ban.player.warned.cause", new MessageFormat("Player {0} has been warned {1} times(s) with the cause: {2}."));
 +        kissenLocalizationImplementation.register("server.ban.player.warned.target", new MessageFormat("Warned for {0}!"));
 +
-+        InternalCommandImplementation<CommandSender> command = Bukkit.getKissen().getImplementation(InternalCommandImplementation.class);
++        InternalCommandImplementation<CommandSender> command = Bukkit.getPulvinar().getImplementation(InternalCommandImplementation.class);
 +        command.getInternalHandler().registerParser(BanTemplate.class, new BanParser());
 +        command.getInternalHandler().registerParser(Punishment.class, new PunishmentParser());
 +        command.getInternalHandler().registerExceptionHandler(new BanParser());
@@ -271,7 +271,7 @@ index 0000000000000000000000000000000000000000..99b1e72ac36ee32728a06879f5aa7972
 +
 +    @Override
 +    public void setupComplete() {
-+        InternalCommandImplementation<CommandSender> command = Bukkit.getKissen().getImplementation(InternalCommandImplementation.class);
++        InternalCommandImplementation<CommandSender> command = Bukkit.getPulvinar().getImplementation(InternalCommandImplementation.class);
 +        command.getInternalHandler().registerCommand(new BanCommand());
 +        command.getInternalHandler().registerCommand(new WarnCommand());
 +    }
@@ -530,7 +530,7 @@ index 0000000000000000000000000000000000000000..99b1e72ac36ee32728a06879f5aa7972
 +
 +            @Override
 +            public @NotNull Locale getCurrentLocale() {
-+                return Bukkit.getKissen().getImplementation(LocalizationImplementation.class).getDefaultLocale();
++                return Bukkit.getPulvinar().getImplementation(LocalizationImplementation.class).getDefaultLocale();
 +            }
 +
 +            @Override
@@ -592,7 +592,7 @@ index 0000000000000000000000000000000000000000..99b1e72ac36ee32728a06879f5aa7972
 +        return new DurationTransformer() {
 +            @Override
 +            public @Nullable AccurateDuration create() {
-+                return instant==null ? null:Bukkit.getKissen().getImplementation(TimeImplementation.class).millis(Instant.now().until(instant, ChronoUnit.MILLIS));
++                return instant==null ? null:Bukkit.getPulvinar().getImplementation(TimeImplementation.class).millis(Instant.now().until(instant, ChronoUnit.MILLIS));
 +            }
 +        };
 +    }
@@ -796,7 +796,7 @@ index 0000000000000000000000000000000000000000..b0fb7aa99b4446588249b4f8d9a98d2f
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarPunishmentList.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarPunishmentList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..e7aa9dd27b9b1340ea2872d99ba4d8e81120948d
+index 0000000000000000000000000000000000000000..4e2688d22f1edaa0799a44273f68c33d0219901f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarPunishmentList.java
 @@ -0,0 +1,167 @@
@@ -914,7 +914,7 @@ index 0000000000000000000000000000000000000000..e7aa9dd27b9b1340ea2872d99ba4d8e8
 +     */
 +    private @NotNull BanImplementation getBanImplementation()
 +    {
-+        return Bukkit.getKissen().getImplementation(BanImplementation.class);
++        return Bukkit.getPulvinar().getImplementation(BanImplementation.class);
 +    }
 +
 +    /**
@@ -944,7 +944,7 @@ index 0000000000000000000000000000000000000000..e7aa9dd27b9b1340ea2872d99ba4d8e8
 +        public @NotNull Component getDisplayName()
 +        {
 +
-+            UserImplementation userImplementation = Bukkit.getKissen().getImplementation(UserImplementation.class);
++            UserImplementation userImplementation = Bukkit.getPulvinar().getImplementation(UserImplementation.class);
 +            List<MutableComponent> componentStream = paperPunishment.getAffectedPlayers().stream().map(
 +                    uuid -> userImplementation.getCachedUserProfile(uuid).map(UserInfo::getName).map(
 +                            Component::literal).orElse(Component.translatable("commands.banlist.entry.unknown"))).toList();
@@ -969,7 +969,7 @@ index 0000000000000000000000000000000000000000..e7aa9dd27b9b1340ea2872d99ba4d8e8
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommand.java b/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..9344c977f5612559dd3f99f20d3a78cc68c1b6a0
+index 0000000000000000000000000000000000000000..9eec0bb7ec46a896637484baeb701d250fb42e72
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommand.java
 @@ -0,0 +1,142 @@
@@ -1040,7 +1040,7 @@ index 0000000000000000000000000000000000000000..9344c977f5612559dd3f99f20d3a78cc
 +     */
 +    @CommandData(value = "banidcreate", aliases = {"bidc", "createidban"}, description = "Command to create predefined ban types with a specified duration. These can be used as templates for various ban situations.")
 +    public void create(@NotNull CommandPayload<CommandSender> payload, @ArgumentName("id") int id, @NotNull @ArgumentName("name") String name, @NotNull @ArgumentName("type") BanType banType, @NotNull java.util.Optional<AccurateDuration> accurateDuration) throws BackendException {
-+        BanImplementation paperBanImplementation = Bukkit.getKissen().getImplementation(BanImplementation.class);
++        BanImplementation paperBanImplementation = Bukkit.getPulvinar().getImplementation(BanImplementation.class);
 +
 +        Runnable runnable = () -> {
 +            BanTemplate paperBan = paperBanImplementation.createBanTemplate(id, name, banType, accurateDuration.orElse(null));
@@ -1082,7 +1082,7 @@ index 0000000000000000000000000000000000000000..9344c977f5612559dd3f99f20d3a78cc
 +
 +    @TabCompleter("unban")
 +    public @NotNull Set<String> tabUnban() {
-+        BanImplementation ban = Bukkit.getKissen().getImplementation(BanImplementation.class);
++        BanImplementation ban = Bukkit.getPulvinar().getImplementation(BanImplementation.class);
 +        return ban.getPunishmentSet().stream().filter(TemporalObject::isValid).map(AbstractPunishment::getID).collect(Collectors.toSet());
 +    }
 +
@@ -1117,7 +1117,7 @@ index 0000000000000000000000000000000000000000..9344c977f5612559dd3f99f20d3a78cc
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommandMessages.java b/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommandMessages.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..94fb0b0c1c5ba18a27dbe284c6c68e20a1741122
+index 0000000000000000000000000000000000000000..71a75f50f3c901fe403f49cac706e514b49e80df
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommandMessages.java
 @@ -0,0 +1,256 @@
@@ -1166,8 +1166,8 @@ index 0000000000000000000000000000000000000000..94fb0b0c1c5ba18a27dbe284c6c68e20
 +     */
 +    public @NotNull Component getBanIDList(@NotNull CommandPayload<CommandSender> payload, final int page)
 +    {
-+        PageImplementation pageImplementation = Bukkit.getKissen().getImplementation(PageImplementation.class);
-+        BanImplementation banSystem = Bukkit.getKissen().getImplementation(BanImplementation.class);
++        PageImplementation pageImplementation = Bukkit.getPulvinar().getImplementation(PageImplementation.class);
++        BanImplementation banSystem = Bukkit.getPulvinar().getImplementation(BanImplementation.class);
 +
 +        List<BanTemplate> sorted = banSystem.getBanTemplates().stream().sorted(Comparator.comparingInt(AbstractBanTemplate::getID)).toList();
 +        if (sorted.isEmpty())
@@ -1400,7 +1400,7 @@ index 0000000000000000000000000000000000000000..07cdb5317025176973fc095a65d79386
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/warn/command/WarnCommand.java b/src/main/java/net/kissenpvp/pulvinar/ban/warn/command/WarnCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..300af4ce2858cdcec23de940ec2a2b67a145cda7
+index 0000000000000000000000000000000000000000..17bb9c8254a26ae7e05445f8bde91b15462cb630
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/warn/command/WarnCommand.java
 @@ -0,0 +1,151 @@
@@ -1483,7 +1483,7 @@ index 0000000000000000000000000000000000000000..300af4ce2858cdcec23de940ec2a2b67
 +            return;
 +        }
 +        Collections.reverse(paperWarns);
-+        PageBuilder<Warn> warnPages = Bukkit.getKissen().getImplementation(
++        PageBuilder<Warn> warnPages = Bukkit.getPulvinar().getImplementation(
 +                PageImplementation.class).createPageBuilder(paperWarns);
 +
 +
@@ -1556,10 +1556,10 @@ index 0000000000000000000000000000000000000000..300af4ce2858cdcec23de940ec2a2b67
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-index 2d1ebdfc361acf478690dd7f4c0d30e99497c8b8..2068b1c37ae59338d58ba6e40fcb193816db34ab 100644
+index e737bc37c973b41633194d252f47c355ae3f06e4..9200c70bb77729b2f026b0bbbb923c616493a91e 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-@@ -59,6 +59,7 @@ public class PulvinarCore extends KissenCore implements PaperKissen {
+@@ -59,6 +59,7 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
          loader.put(net.kissenpvp.pulvinar.api.command.CommandImplementation.class, commandImplementation);
          loader.put(net.kissenpvp.core.command.InternalCommandImplementation.class, commandImplementation);
          loader.put(net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation.class, new net.kissenpvp.pulvinar.command.confirmation.PulvinarConfirmationImplementation());
@@ -1580,7 +1580,7 @@ index 6bf95a6ba833df5733076befc3d3d030548fa289..cb430ffdd83e390963257ab6d6e80231
  import net.kissenpvp.pulvinar.api.ban.warn.Warn;
  import io.netty.channel.Channel;
 diff --git a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-index fd4f1929dadbacb909983bb08c64244f431f633e..645b528292c06202f5a5ad4f849a4f686d950103 100644
+index 06ab436a7ee928a31f4aedafaf58dd6e757fec14..654ca8d0312a46d772a6bebf8a3310c194b3cc68 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
 @@ -145,6 +145,6 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
@@ -1592,14 +1592,14 @@ index fd4f1929dadbacb909983bb08c64244f431f633e..645b528292c06202f5a5ad4f849a4f68
      }
  }
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 5f43a411d237c2b9ff3dbce30957473f10b64a84..15a65622c21e0b9a64cdcfb622c331e8d6e55407 100644
+index 4ff21b6c6003f4ed8a124288af16e5c0a3a470ac..0381a1cfb51731e067821f8bb7d754fe07aec3a6 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 @@ -446,6 +446,14 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                  return false;
              }
  
-+            net.kissenpvp.pulvinar.api.ban.BanImplementation banImplementation = org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.ban.BanImplementation.class);
++            net.kissenpvp.pulvinar.api.ban.BanImplementation banImplementation = org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.ban.BanImplementation.class);
 +            java.util.UUID totalId = user.getTotalId();
 +            net.kissenpvp.pulvinar.api.ban.Punishment paperPunishment = banImplementation.getLatestPunishment(totalId, net.kissenpvp.core.api.ban.BanType.BAN).orElse(null);
 +            if (paperPunishment != null) {
@@ -1611,7 +1611,7 @@ index 5f43a411d237c2b9ff3dbce30957473f10b64a84..15a65622c21e0b9a64cdcfb622c331e8
              disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
              return false;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index d8885af03d87ee2beaeab22a0f36ed2bbd1444ba..366256da7faeb2e26a0d5f3cd121c7effd8541c2 100644
+index dce653fd71d1f2fb833b4e7dd17940aee118bdbb..26508fd5dc9393f3072957f79b6a37cfc1835e96 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -111,7 +111,6 @@ import org.bukkit.Location;
@@ -1639,7 +1639,7 @@ index d8885af03d87ee2beaeab22a0f36ed2bbd1444ba..366256da7faeb2e26a0d5f3cd121c7ef
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
          this.ops = /*new ServerOpList(PlayerList.OPLIST_FILE);*/ new net.kissenpvp.pulvinar.user.PulvinarOperatorList(); // Pulvinar
          this.whitelist = /*new UserWhiteList(PlayerList.WHITELIST_FILE);*/ new net.kissenpvp.pulvinar.user.PulvinarUserWhiteList(); // Pulvinar
-@@ -737,6 +735,8 @@ public abstract class PlayerList {
+@@ -739,6 +737,8 @@ public abstract class PlayerList {
          Player player = entity.getBukkitEntity();
          PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
  
@@ -1648,7 +1648,7 @@ index d8885af03d87ee2beaeab22a0f36ed2bbd1444ba..366256da7faeb2e26a0d5f3cd121c7ef
          // Paper start - Fix MC-158900
          UserBanListEntry gameprofilebanentry;
          if (this.bans.isBanned(gameprofile) && (gameprofilebanentry = this.bans.get(gameprofile)) != null) {
-@@ -768,6 +768,8 @@ public abstract class PlayerList {
+@@ -770,6 +770,8 @@ public abstract class PlayerList {
                  event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.serverFullMessage)); // Spigot // Paper - Adventure
              }
          }
@@ -1658,29 +1658,29 @@ index d8885af03d87ee2beaeab22a0f36ed2bbd1444ba..366256da7faeb2e26a0d5f3cd121c7ef
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index afcf19544f7b7322ead89b06d612da1e4ac458df..05fae9f836c4ceaff2fd8fb13e5f4fe1a4aed192 100644
+index 85766b2e4656fd379ee7f49d83624173497e1bee..46ffe41df62761f7287736053d70909559337ab6 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -2226,6 +2226,11 @@ public final class CraftServer implements Server {
+@@ -2270,6 +2270,11 @@ public final class CraftServer implements Server {
  
      @Override
      public <T extends BanList<?>> T getBanList(BanList.Type type) {
 +        if(true)
 +        {
 +            // Pulvinar start - rework ban system
-+            return (T) Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.ban.BanImplementation.class).getPunishmentSet();
++            return (T) Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.ban.BanImplementation.class).getPunishmentSet();
 +        }
          Preconditions.checkArgument(type != null, "BanList.Type cannot be null");
  
          return switch (type) {
-@@ -2238,6 +2243,11 @@ public final class CraftServer implements Server {
+@@ -2282,6 +2287,11 @@ public final class CraftServer implements Server {
      @SuppressWarnings("unchecked")
      @Override
      public <B extends BanList<E>, E> B getBanList(final io.papermc.paper.ban.BanListType<B> type) {
 +        if(true)
 +        {
 +            // Pulvinar start - rework ban system
-+            return (B) Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.ban.BanImplementation.class);
++            return (B) Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.ban.BanImplementation.class);
 +        }
          Preconditions.checkArgument(type != null, "BanList.BanType cannot be null");
         if (type == io.papermc.paper.ban.BanListType.IP) {

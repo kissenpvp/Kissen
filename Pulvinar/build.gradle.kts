@@ -13,7 +13,7 @@ allprojects {
 
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(21))
+            languageVersion = JavaLanguageVersion.of(21)
         }
     }
 }
@@ -21,23 +21,6 @@ allprojects {
 val paperMavenPublicUrl = "https://repo.papermc.io/repository/maven-public/"
 
 subprojects {
-    tasks.withType<JavaCompile> {
-        options.encoding = Charsets.UTF_8.name()
-        options.release = 21
-    }
-    tasks.withType<Javadoc> {
-        options.encoding = Charsets.UTF_8.name()
-    }
-    tasks.withType<ProcessResources> {
-        filteringCharset = Charsets.UTF_8.name()
-    }
-    tasks.withType<Test> {
-        testLogging {
-            showStackTraces = true
-            exceptionFormat = TestExceptionFormat.FULL
-            events(TestLogEvent.STANDARD_OUT)
-        }
-    }
     repositories {
         mavenCentral()
         maven(paperMavenPublicUrl)
@@ -55,41 +38,48 @@ repositories {
 }
 
 dependencies {
-    remapper("net.fabricmc:tiny-remapper:0.10.1:fat")
-    decompiler("org.vineflower:vineflower:1.10.1")
+    remapper("net.fabricmc:tiny-remapper:0.8.10:fat")
+    decompiler("net.minecraftforge:forgeflower:2.0.627.2")
     paperclip("io.papermc:paperclip:3.0.3")
 }
 
 paperweight {
-    serverProject.set(project(":pulvinar:pulvinar-server"))
+    serverProject = project(":pulvinar:pulvinar-server")
 
-    remapRepo.set(paperMavenPublicUrl)
-    decompileRepo.set(paperMavenPublicUrl)
+    remapRepo = paperMavenPublicUrl
+    decompileRepo = paperMavenPublicUrl
 
-    usePaperUpstream(providers.gradleProperty("paperCommit")) {
-        withPaperPatcher {
-            apiPatchDir.set(layout.projectDirectory.dir("patches/api"))
-            apiOutputDir.set(layout.projectDirectory.dir("Pulvinar-API"))
+    useStandardUpstream("purpur") {
+        url = github("PurpurMC", "Purpur")
+        ref = providers.gradleProperty("purpurCommit")
 
-            serverPatchDir.set(layout.projectDirectory.dir("patches/server"))
-            serverOutputDir.set(layout.projectDirectory.dir("Pulvinar-Server"))
+        withStandardPatcher {
+            baseName("Purpur")
 
-            patchTasks.register("generatedApi") {
-                isBareDirectory = true
-                upstreamDirPath = "paper-api-generator/generated"
-                patchDir = layout.projectDirectory.dir("patches/generated-api")
-                outputDir = layout.projectDirectory.dir("paper-api-generator/generated")
-            }
+            apiPatchDir = layout.projectDirectory.dir("patches/api")
+            apiOutputDir = layout.projectDirectory.dir("Pulvinar-API")
+
+            serverPatchDir = layout.projectDirectory.dir("patches/server")
+            serverOutputDir = layout.projectDirectory.dir("Pulvinar-Server")
+        }
+
+        patchTasks.register("generatedApi") {
+            isBareDirectory = true
+            upstreamDirPath = "paper-api-generator/generated"
+            patchDir = layout.projectDirectory.dir("patches/generated-api")
+            outputDir = layout.projectDirectory.dir("paper-api-generator/generated")
         }
     }
 }
 
 tasks.generateDevelopmentBundle {
-    apiCoordinates.set("net.kissenpvp:pulvinar-api")
-    libraryRepositories = listOf(
+    apiCoordinates = "net.kissenpvp.pulvinar:pulvinar-api"
+    libraryRepositories.set(
+        listOf(
             "https://repo.maven.apache.org/maven2/",
             paperMavenPublicUrl,
-            "https://repo.kissenpvp.net/repository/maven-public/",
+            "https://repo.purpurmc.org/snapshots",
+        )
     )
 }
 
@@ -98,17 +88,5 @@ publishing {
         artifact(tasks.generateDevelopmentBundle) {
             artifactId = "dev-bundle"
         }
-    }
-}
-
-tasks.register("printMinecraftVersion") {
-    doLast {
-        println(providers.gradleProperty("mcVersion").get().trim())
-    }
-}
-
-tasks.register("printPulvinarVersion") {
-    doLast {
-        println(project.version)
     }
 }

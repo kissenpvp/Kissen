@@ -26,6 +26,7 @@ import net.kissenpvp.core.api.user.exception.UnauthorizedException;
 import net.kissenpvp.core.api.user.playersettting.AbstractBoundPlayerSetting;
 import net.kissenpvp.core.api.user.playersettting.RegisteredPlayerSetting;
 import net.kissenpvp.core.api.user.playersettting.UserValue;
+import net.kissenpvp.core.base.KissenCore;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -78,11 +79,12 @@ public abstract class KissenBoundPlayerSetting<T, S extends PlayerClient<?, ?>> 
     }
 
     protected void setValue(@NotNull User user, @NotNull T value) {
-        getSetting().getParent().setValue(getPlayer(), value);
+        KissenCore.getInstance().runTask(getSetting().getPlugin(), () -> getSetting().getParent().setValue(getPlayer(), value));;
         getRepository(user).set(getKey(), getSetting().getParent().serialize(value));
     }
 
     protected boolean reset(@NotNull User user) {
+        KissenCore.getInstance().runTask(getSetting().getPlugin(), () -> getSetting().getParent().reset(getPlayer()));;
         return Objects.nonNull(getRepository(user).delete(getKey()));
     }
 

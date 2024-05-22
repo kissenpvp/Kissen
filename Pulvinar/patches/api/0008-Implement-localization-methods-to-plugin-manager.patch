@@ -5,30 +5,29 @@ Subject: [PATCH] Implement localization methods to plugin manager
 
 
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index 3c392b48c69e14a23cc0cd7f999d6143cacb9fcd..8e1f7dfc7ec59bd08420b6930e71f8bc289dcae3 100644
+index df23b550fd56280d3b5834e4bb3a3be1ca4b2cde..e3d7fd8e3243114e47eda4d4fc10092e952c0d3c 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -337,6 +337,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -373,5 +373,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
      <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin);
  
      void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin);
 +
 +    void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin);
      // Pulvinar end
- 
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index e84b298e6d6a82f411bcb605ef161122a80385cc..ca20c153e80b5310f5f0024a59a4fe409fac7548 100644
+index 8eecce91bf01d6b99cd2842017e297e1086aab86..dad208820446bef0e12129e15e3c3701bd327549 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 @@ -1016,5 +1016,10 @@ public final class SimplePluginManager implements PluginManager {
      public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin) {
-         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
+         org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
      }
 +
 +    @Override
 +    public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
++        org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
 +    }
      // Pulvinar end
  }

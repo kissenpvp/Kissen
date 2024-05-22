@@ -5,35 +5,35 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index aecbec5ca49947a1649eb569cb1e715d762c1af2..a712df714ec0d2bcd348ea820227a77ce61ee243 100644
+index 4b011884c81b3056ffd509d37021aef584692b3f..40863f32b5227854eb6583482982f33d84a0c0fe 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 @@ -259,5 +259,20 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
      public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
-         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
+         org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
      }
 +
 +    @Override
 +    public void registerCommand(@NotNull Plugin plugin, @NotNull Object... objects) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerCommand(objects));
++        org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerCommand(objects));
 +    }
 +
 +    @Override
 +    public void registerExceptionHandler(@NotNull net.kissenpvp.core.api.base.ExceptionHandler<?> exceptionHandler, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerExceptionHandler(exceptionHandler));
++        org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerExceptionHandler(exceptionHandler));
 +    }
 +
 +    @Override
 +    public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
++        org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
 +    }
      // Pulvinar end
  }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-index d24f21cc56dfce0868abdb7588d5048d96b3f7c6..2d1ebdfc361acf478690dd7f4c0d30e99497c8b8 100644
+index 04d77fd9c819caaed6efa0c60db0b4acdc010ea3..e737bc37c973b41633194d252f47c355ae3f06e4 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-@@ -55,6 +55,10 @@ public class PulvinarCore extends KissenCore implements PaperKissen {
+@@ -55,6 +55,10 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
          loader.put(net.kissenpvp.pulvinar.api.permission.PermissionImplementation.class, permissionImplementation);
          loader.put(net.kissenpvp.core.permission.InternalPermissionImplementation.class, permissionImplementation);
          loader.put(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class, new net.kissenpvp.pulvinar.message.localization.PulvinarLocalizationImplementation());
@@ -46,7 +46,7 @@ index d24f21cc56dfce0868abdb7588d5048d96b3f7c6..2d1ebdfc361acf478690dd7f4c0d30e9
  
 diff --git a/src/main/java/net/kissenpvp/pulvinar/command/PulvinarCommandImplementation.java b/src/main/java/net/kissenpvp/pulvinar/command/PulvinarCommandImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..018021bedf948eea3ff59726c32b5b639b5ced77
+index 0000000000000000000000000000000000000000..9c367b682dc0492505c20f93a5a06501c92d00c3
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/command/PulvinarCommandImplementation.java
 @@ -0,0 +1,122 @@
@@ -131,7 +131,7 @@ index 0000000000000000000000000000000000000000..018021bedf948eea3ff59726c32b5b63
 +    @Override
 +    public boolean start()
 +    {
-+        KissenLocalizationImplementation kissenLocalizationImplementation = Bukkit.getKissen().getImplementation(
++        KissenLocalizationImplementation kissenLocalizationImplementation = Bukkit.getPulvinar().getImplementation(
 +                KissenLocalizationImplementation.class);
 +        kissenLocalizationImplementation.register("server.command.mojang.profile.invalid",
 +                new MessageFormat("Mojangs repository does not contain the specified profile."));
@@ -293,7 +293,7 @@ index 0000000000000000000000000000000000000000..c5bd35e458ca3a3b19ef74705fc70c2d
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..cca083a24418a09a46d2f1d08ad4cdaed0e46fce
+index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f027506ca
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java
 @@ -0,0 +1,477 @@
@@ -737,7 +737,7 @@ index 0000000000000000000000000000000000000000..cca083a24418a09a46d2f1d08ad4cdae
 +     */
 +    public @NotNull TargetValidator getTargetValidator()
 +    {
-+        return Bukkit.getKissen().getImplementation(
++        return Bukkit.getPulvinar().getImplementation(
 +                PulvinarCommandImplementation.class).getTargetValidator();
 +    }
 +
@@ -1075,7 +1075,7 @@ index 0000000000000000000000000000000000000000..b3fd327054c33f71849815cafbc0f909
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/command/confirmation/ConfirmCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/confirmation/ConfirmCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8b47a8647daf6d015d4393abd955d7060ac7ed4b
+index 0000000000000000000000000000000000000000..1741effd646acdc769b51631e88499e2a1ee854b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/command/confirmation/ConfirmCommand.java
 @@ -0,0 +1,67 @@
@@ -1143,12 +1143,12 @@ index 0000000000000000000000000000000000000000..8b47a8647daf6d015d4393abd955d706
 +     */
 +    private @NotNull PulvinarConfirmationImplementation getImplementation()
 +    {
-+        return Bukkit.getKissen().getImplementation(PulvinarConfirmationImplementation.class);
++        return Bukkit.getPulvinar().getImplementation(PulvinarConfirmationImplementation.class);
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/command/confirmation/PulvinarConfirmationImplementation.java b/src/main/java/net/kissenpvp/pulvinar/command/confirmation/PulvinarConfirmationImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7e6f70aeb8e2c89161021efc8283ed29d9dbac92
+index 0000000000000000000000000000000000000000..5e65591b66ff95a2f607a1b9c583216b7f5e6660
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/command/confirmation/PulvinarConfirmationImplementation.java
 @@ -0,0 +1,36 @@
@@ -1179,7 +1179,7 @@ index 0000000000000000000000000000000000000000..7e6f70aeb8e2c89161021efc8283ed29
 +
 +    @Override
 +    public void setupComplete() {
-+        CommandHandler<?, ?> handler = Bukkit.getKissen().getImplementation(PulvinarCommandImplementation.class).getInternalHandler();
++        CommandHandler<?, ?> handler = Bukkit.getPulvinar().getImplementation(PulvinarCommandImplementation.class).getInternalHandler();
 +        handler.registerCommand(new ConfirmCommand());
 +    }
 +

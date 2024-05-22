@@ -374,7 +374,7 @@ index 0000000000000000000000000000000000000000..08d8f8ef30340ecb3912099419bb7eb3
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionGroupParser.java b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionGroupParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..2d93cd17c2fd3ccdd5f3048932a2d925b7d41937
+index 0000000000000000000000000000000000000000..915db6025f7c5d4344a67bebd2080a38d96765d5
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/permission/PermissionGroupParser.java
 @@ -0,0 +1,38 @@
@@ -400,7 +400,7 @@ index 0000000000000000000000000000000000000000..2d93cd17c2fd3ccdd5f3048932a2d925
 +
 +    @Override
 +    public @NotNull PermissionGroup deserialize(@NotNull String input) {
-+        PermissionImplementation permission = Bukkit.getKissen().getImplementation(PermissionImplementation.class);
++        PermissionImplementation permission = Bukkit.getPulvinar().getImplementation(PermissionImplementation.class);
 +        return permission.getGroupNotNull(input);
 +    }
 +
@@ -411,7 +411,7 @@ index 0000000000000000000000000000000000000000..2d93cd17c2fd3ccdd5f3048932a2d925
 +
 +    @Override
 +    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
-+        PermissionImplementation permission = Bukkit.getKissen().getImplementation(PermissionImplementation.class);
++        PermissionImplementation permission = Bukkit.getPulvinar().getImplementation(PermissionImplementation.class);
 +        Stream<String> groupStream = permission.getGroups().stream().map(AbstractPermissionEntry::getPermissionID);
 +        return groupStream.collect(Collectors.toUnmodifiableSet());
 +    }
@@ -737,7 +737,7 @@ index 0000000000000000000000000000000000000000..fa721efe2ccb1df6bbd4d1af6739aa95
 +public interface RankImplementation extends AbstractRankImplementation<Rank> { }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankParser.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..604024bb91c67281cf66241b14cd8ab7651c3d49
+index 0000000000000000000000000000000000000000..9954be6b847096b6ee34a2db480af0ddcf33d40f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankParser.java
 @@ -0,0 +1,40 @@
@@ -764,7 +764,7 @@ index 0000000000000000000000000000000000000000..604024bb91c67281cf66241b14cd8ab7
 +    @Override
 +    public @NotNull Rank deserialize(@NotNull String input)
 +    {
-+        RankImplementation rankImplementation = Bukkit.getKissen().getImplementation(RankImplementation.class);
++        RankImplementation rankImplementation = Bukkit.getPulvinar().getImplementation(RankImplementation.class);
 +        return rankImplementation.getRank(input).orElseThrow(NullPointerException::new);
 +    }
 +
@@ -777,12 +777,12 @@ index 0000000000000000000000000000000000000000..604024bb91c67281cf66241b14cd8ab7
 +    @Override
 +    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
 +    {
-+        RankImplementation rankImplementation = Bukkit.getKissen().getImplementation(RankImplementation.class);
++        RankImplementation rankImplementation = Bukkit.getPulvinar().getImplementation(RankImplementation.class);
 +        return rankImplementation.getRankSet().stream().map(Rank::getName).collect(Collectors.toSet());
 +    }
 +}
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index 30298a629b39bd43ce14b414fc697b2dfcbea89c..f4571ea6af5477445ad481770fb1cd307299bc89 100644
+index ce00af9121de7a910aaea4e0685a06d4cf31b4e3..17448802b0fb028df4ea160fbc7b2f5b775dceea 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
 +++ b/src/main/java/org/bukkit/OfflinePlayer.java
 @@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
@@ -869,7 +869,7 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..8bff00621e832309de09636571b85222
 +    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index 6c327a07bf8a6aa11a2d7dad12b2830acc539484..9cb87f53bba2c440ceb5181a9268cbf06924ed2d 100644
+index d057743b8f6a463434c1f76398c7a98614b19d47..2af8335311717c2dc8bbffb04bb38b875f8ee259 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
 @@ -56,7 +56,7 @@ import org.jetbrains.annotations.Nullable;
@@ -882,44 +882,29 @@ index 6c327a07bf8a6aa11a2d7dad12b2830acc539484..9cb87f53bba2c440ceb5181a9268cbf0
      // Paper start
      @Override
 diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
-index cf70f8373cbf5cd37bf32dd08d370f642a746bb8..3c392b48c69e14a23cc0cd7f999d6143cacb9fcd 100644
+index 52f205e5b4acc246d12dd590660217b9ea5fc18a..df23b550fd56280d3b5834e4bb3a3be1ca4b2cde 100644
 --- a/src/main/java/org/bukkit/plugin/PluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/PluginManager.java
-@@ -121,13 +121,6 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
-      */
-     public void callEvent(@NotNull net.kissenpvp.core.api.event.EventClass event) throws IllegalStateException; // Pulvinar - integrate unified event system
- 
--    // Pulvinar start - keep compatibility with plugins
--    default void registerEvents(@NotNull Listener listener, @NotNull Plugin plugin)
--    {
--        registerEvents((net.kissenpvp.core.api.event.EventListener<?>) listener, plugin);
--    }
--    // Pulvinar end - keep compatibility with plugins
--
-     /**
-      * Registers all the events in the given listener class
-      *
-@@ -342,5 +335,8 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+@@ -371,5 +371,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
      void registerExceptionHandler(@NotNull net.kissenpvp.core.api.base.ExceptionHandler<?> exceptionHandler, @NotNull Plugin plugin);
  
      <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin);
 +
 +    void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin);
      // Pulvinar end
-+
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 44fe2a51bd89f78077702e82c5b57fe38a263bb8..e84b298e6d6a82f411bcb605ef161122a80385cc 100644
+index 844fdf2b3e64eb11299b3c8939538859280ab99f..8eecce91bf01d6b99cd2842017e297e1086aab86 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 @@ -1011,5 +1011,10 @@ public final class SimplePluginManager implements PluginManager {
      public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin) {
-         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
+         org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
      }
 +
 +    @Override
 +    public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
++        org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
 +    }
      // Pulvinar end
  }

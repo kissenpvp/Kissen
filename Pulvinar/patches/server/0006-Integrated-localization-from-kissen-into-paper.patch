@@ -5,25 +5,25 @@ Subject: [PATCH] Integrated localization from kissen into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
-index 0481cc27b761c4eee59338f1559dc53333296d54..aecbec5ca49947a1649eb569cb1e715d762c1af2 100644
+index 341bd527b6d5a955f23f22b352d14a4df964b353..4b011884c81b3056ffd509d37021aef584692b3f 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 @@ -254,5 +254,10 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
      public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin) {
-         org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
+         org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
      }
 +
 +    @Override
 +    public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
-+        org.bukkit.Bukkit.getKissen().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
++        org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
 +    }
      // Pulvinar end
  }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-index 472078d0fc404623e6cb46b45328e8d874011d81..d24f21cc56dfce0868abdb7588d5048d96b3f7c6 100644
+index 2bdd4e9ff1b7ebf5c820c17010c663dccd314c39..04d77fd9c819caaed6efa0c60db0b4acdc010ea3 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-@@ -54,6 +54,7 @@ public class PulvinarCore extends KissenCore implements PaperKissen {
+@@ -54,6 +54,7 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
          net.kissenpvp.pulvinar.permission.PulvinarPermissionImplementation permissionImplementation = new net.kissenpvp.pulvinar.permission.PulvinarPermissionImplementation();
          loader.put(net.kissenpvp.pulvinar.api.permission.PermissionImplementation.class, permissionImplementation);
          loader.put(net.kissenpvp.core.permission.InternalPermissionImplementation.class, permissionImplementation);
@@ -96,10 +96,10 @@ index 0000000000000000000000000000000000000000..8b5433ed6c03dd542fc249f99bd5b6f7
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index f99adfbe39393282aab1e87f0f00fe3d4db81a41..d57bedf000b6ed8b3c1590b1fc0232101b833682 100644
+index 80e47b5a3574e5c5c906e0057ca9ec3e00c1dc4d..d7278821c883d12294c72acbb6ed59d55d5b13a4 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2245,6 +2245,7 @@ public class ServerPlayer extends Player {
+@@ -2309,6 +2309,7 @@ public class ServerPlayer extends Player {
              PlayerLocaleChangeEvent event = new PlayerLocaleChangeEvent(this.getBukkitEntity(), clientOptions.language());
              this.server.server.getPluginManager().callEvent(event);
              this.server.server.getPluginManager().callEvent(new com.destroystokyo.paper.event.player.PlayerLocaleChangeEvent(this.getBukkitEntity(), this.language, clientOptions.language())); // Paper
@@ -107,10 +107,10 @@ index f99adfbe39393282aab1e87f0f00fe3d4db81a41..d57bedf000b6ed8b3c1590b1fc023210
          }
          // CraftBukkit end
          // Paper start - don't call options events on login
-@@ -2876,4 +2877,12 @@ public class ServerPlayer extends Player {
-         return (CraftPlayer) super.getBukkitEntity();
+@@ -3046,4 +3047,11 @@ public class ServerPlayer extends Player {
+         this.ramBar = ramBar;
      }
-     // CraftBukkit end
+     // Purpur end
 +
 +    // Pulvinar start
 +    public void updateLocale(@org.jetbrains.annotations.NotNull String locale)
@@ -118,13 +118,12 @@ index f99adfbe39393282aab1e87f0f00fe3d4db81a41..d57bedf000b6ed8b3c1590b1fc023210
 +        ((net.kissenpvp.core.user.KissenPublicUser<?>) getBukkitEntity().getUser()).updateLocale(locale);
 +    }
 +    // Pulvinar end
-+
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 7868352047fe8aca965d046f275f1234f9b72f79..7a253b026438c94483a8d3b89a9f75f6a04b1462 100644
+index 76f60e61809f393f3c8b41143c443aefa384d675..0ca06b5b840085d1cdbe1c576628be9aa942b22b 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-@@ -3314,7 +3314,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3345,7 +3345,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      @Override
      public void openBook(final net.kyori.adventure.inventory.Book book) {

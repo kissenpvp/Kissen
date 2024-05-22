@@ -56,7 +56,7 @@ index 0000000000000000000000000000000000000000..bd04997001648931fc9fb6d4c8888a04
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/PlayerAdvancements.java b/src/main/java/net/minecraft/server/PlayerAdvancements.java
-index c7e1f2bac3eca9bb72bf1f8c26cccb2905e1ddfc..42abbf41bc59b82b753a7e32857fc6dd459f7748 100644
+index ef520d1dd00ae9473c1f34e2df4d8b064fe4d6ea..77664f753d9b6535fb926f784763f35b62aa9ff9 100644
 --- a/src/main/java/net/minecraft/server/PlayerAdvancements.java
 +++ b/src/main/java/net/minecraft/server/PlayerAdvancements.java
 @@ -103,7 +103,7 @@ public class PlayerAdvancements {
@@ -95,7 +95,7 @@ index c7e1f2bac3eca9bb72bf1f8c26cccb2905e1ddfc..42abbf41bc59b82b753a7e32857fc6dd
          progressMap.forEach((minecraftkey, advancementprogress) -> {
              AdvancementHolder advancementholder = loader.get(minecraftkey);
  
-@@ -208,7 +208,7 @@ public class PlayerAdvancements {
+@@ -209,7 +209,7 @@ public class PlayerAdvancements {
          });
      }
  
@@ -104,7 +104,7 @@ index c7e1f2bac3eca9bb72bf1f8c26cccb2905e1ddfc..42abbf41bc59b82b753a7e32857fc6dd
          Map<ResourceLocation, AdvancementProgress> map = new LinkedHashMap();
  
          this.progress.forEach((advancementholder, advancementprogress) -> {
-@@ -416,14 +416,30 @@ public class PlayerAdvancements {
+@@ -418,14 +418,30 @@ public class PlayerAdvancements {
          });
      }
  
@@ -137,10 +137,10 @@ index c7e1f2bac3eca9bb72bf1f8c26cccb2905e1ddfc..42abbf41bc59b82b753a7e32857fc6dd
 +    // Pulvinar end - make player accessible from class children
  }
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 366256da7faeb2e26a0d5f3cd121c7effd8541c2..c01c949b5b24610c1ef5c22893b947b2e59fa789 100644
+index 26508fd5dc9393f3072957f79b6a37cfc1835e96..e2687c181b5fb6c544d326d7e31506af2e9fc637 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -1514,7 +1514,11 @@ public abstract class PlayerList {
+@@ -1552,7 +1552,11 @@ public abstract class PlayerList {
          if (advancementdataplayer == null) {
              Path path = this.server.getWorldPath(LevelResource.PLAYER_ADVANCEMENTS_DIR).resolve(String.valueOf(uuid) + ".json");
  

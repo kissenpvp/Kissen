@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: granny <granny@purpurmc.org>
+Date: Thu, 16 May 2024 20:37:05 -0700
+Subject: [PATCH] Rebrand to Pulvinar
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+index 7107eabf02d9d9b69d97c978ba421ad52031ec3f..e6070182c46efa0548e80eca2001d265062ef58c 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+@@ -25,6 +25,13 @@ public interface ServerBuildInfo {
+     Key BRAND_PURPUR_ID = Key.key("purpurmc", "purpur");
+     // Purpur end
+ 
++    // Pulvinar start
++    /**
++     * The brand id for Pulvinar.
++     */
++    Key BRAND_PULVINAR_ID = Key.key("kissenpvp", "pulvinar");
++    // Pulvinar end
++
+     /**
+      * Gets the {@code ServerBuildInfo}.
+      *

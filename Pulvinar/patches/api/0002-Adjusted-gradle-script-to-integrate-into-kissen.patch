@@ -5,7 +5,7 @@ Subject: [PATCH] Adjusted gradle script to integrate into kissen
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index fd39ed209b20c927054b8482c400beeeeab460a3..176b8490e35cd0e9a4522a44313e9f6803b98a2e 100644
+index 6aef83558a5ef7e84873b127c3bb43a6468c9a24..fc93b3a5c2c945d2388921575aa0e43dae078524 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -57,6 +57,10 @@ dependencies {

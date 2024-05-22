@@ -45,4 +45,7 @@ public interface AbstractPlayerSetting<T, S extends PlayerClient<?, ?>> extends 
 
     default void setValue(@NotNull S player, @Nullable T value) {
     }
+
+    default void reset(@NotNull S player) {
+    }
 }

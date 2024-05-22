@@ -58,3 +58,15 @@ subprojects {
         testCompileOnly("org.jetbrains:annotations:24.0.0")
     }
 }
+
+tasks.register("printMinecraftVersion") {
+    doLast {
+        println(providers.gradleProperty("mcVersion").get().trim())
+    }
+}
+
+tasks.register("printPulvinarVersion") {
+    doLast {
+        println(project.version)
+    }
+}
