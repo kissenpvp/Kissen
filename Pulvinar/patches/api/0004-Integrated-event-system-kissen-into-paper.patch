@@ -173,7 +173,7 @@ index 60e086be70529e0804280b24a2a3e7ae72d8d363..3281e86d6e04dee45df5d7329c804848
  public interface EventExecutor {
 +
 +    // Pulvinar - implement event system
-+    default void execute(net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull net.kissenpvp.core.api.event.EventClass event) throws EventException
++    default void execute(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull net.kissenpvp.core.api.event.EventClass event) throws EventException
 +    {
 +        execute((Listener) listener, (Event) event);
 +    }
