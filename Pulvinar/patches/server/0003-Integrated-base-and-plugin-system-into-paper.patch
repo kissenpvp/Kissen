@@ -5,10 +5,32 @@ Subject: [PATCH] Integrated base and plugin system into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-index 3e82ea07ca4194844c5528446e2c4a46ff4acee5..0ed5926ec3bcc68f804eee728268a22f554828f4 100644
+index 3e82ea07ca4194844c5528446e2c4a46ff4acee5..092d051863580ba725fb3fedb36b06e13026ee50 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-@@ -158,7 +158,13 @@ class PaperPluginInstanceManager {
+@@ -86,6 +86,10 @@ class PaperPluginInstanceManager {
+     }
+ 
+     public void loadPlugin(Plugin provided) {
++        // Pulvinar start
++        net.kissenpvp.core.base.KissenCore.getInstance().load(net.kissenpvp.core.base.PluginState.PRE, provided);
++        // Pulvinar end
++
+         PluginMeta configuration = provided.getPluginMeta();
+ 
+         this.plugins.add(provided);
+@@ -95,6 +99,10 @@ class PaperPluginInstanceManager {
+         }
+ 
+         this.dependencyTree.add(configuration);
++
++        // Pulvinar start
++        net.kissenpvp.core.base.KissenCore.getInstance().load(net.kissenpvp.core.base.PluginState.POST, provided);
++        // Pulvinar end
+     }
+ 
+     // InvalidDescriptionException is never used, because the old JavaPluginLoader would wrap the exception.
+@@ -158,7 +166,13 @@ class PaperPluginInstanceManager {
      public void disablePlugins() {
          Plugin[] plugins = this.getPlugins();
          for (int i = plugins.length - 1; i >= 0; i--) {
@@ -22,6 +44,48 @@ index 3e82ea07ca4194844c5528446e2c4a46ff4acee5..0ed5926ec3bcc68f804eee728268a22f
          }
      }
  
+@@ -175,6 +189,10 @@ class PaperPluginInstanceManager {
+             return;
+         }
+ 
++        // Pulvinar start
++        net.kissenpvp.core.base.KissenCore.getInstance().enable(net.kissenpvp.core.base.PluginState.PRE, plugin);
++        // Pulvinar end
++
+         if (plugin.getPluginMeta() instanceof PluginDescriptionFile) {
+             List<Command> bukkitCommands = PluginCommandYamlParser.parse(plugin);
+ 
+@@ -207,6 +225,9 @@ class PaperPluginInstanceManager {
+                 return;
+                 // Paper end
+             }
++            // Pulvinar start
++            net.kissenpvp.core.base.KissenCore.getInstance().enable(net.kissenpvp.core.base.PluginState.POST, plugin);
++            // Pulvinar end
+ 
+             // Perhaps abort here, rather than continue going, but as it stands,
+             // an abort is not possible the way it's currently written
+@@ -227,6 +248,10 @@ class PaperPluginInstanceManager {
+             return;
+         }
+ 
++        // Pulvinar start
++        net.kissenpvp.core.base.KissenCore.getInstance().disable(net.kissenpvp.core.base.PluginState.PRE, plugin);
++        // Pulvinar end
++
+         String pluginName = plugin.getPluginMeta().getDisplayName();
+ 
+         try {
+@@ -318,6 +343,9 @@ class PaperPluginInstanceManager {
+             this.handlePluginException("Error occurred (in the plugin loader) while removing chunk tickets for " + pluginName + " (Is it up to date?)", ex, plugin); // Paper
+         }
+ 
++        // Pulvinar start
++        net.kissenpvp.core.base.KissenCore.getInstance().disable(net.kissenpvp.core.base.PluginState.POST, plugin);
++        // Pulvinar end
+     }
+ 
+     // TODO: Implement event part in future patch (paper patch move up, this patch is lower)
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 index 097500a59336db1bbfffcd1aa4cff7a8586e46ec..486ebc9c35d6942d7e7e015cbf7fc81f84e5ec23 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
