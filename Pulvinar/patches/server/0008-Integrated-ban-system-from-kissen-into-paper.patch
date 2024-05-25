@@ -1580,10 +1580,30 @@ index 6bf95a6ba833df5733076befc3d3d030548fa289..cb430ffdd83e390963257ab6d6e80231
  import net.kissenpvp.pulvinar.api.ban.warn.Warn;
  import io.netty.channel.Channel;
 diff --git a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-index 06ab436a7ee928a31f4aedafaf58dd6e757fec14..654ca8d0312a46d772a6bebf8a3310c194b3cc68 100644
+index 06ab436a7ee928a31f4aedafaf58dd6e757fec14..f0df9b50005a21c067bd67272c3eefae22ee3b8e 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-@@ -145,6 +145,6 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
+@@ -52,6 +52,7 @@ import org.jetbrains.annotations.Nullable;
+ import org.jetbrains.annotations.Unmodifiable;
+ 
+ import java.time.Period;
++import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Set;
+ import java.util.function.Function;
+@@ -96,10 +97,7 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
+ 
+     @Override
+     public void clearActiveWarns() {
+-        //TODO
+-        /*List<WarnNode> nodes = new ArrayList<>(getUser().getListNotNull("warn_list", WarnNode.class));
+-        nodes.forEach(warn -> warn.temporalMeasure().end().setValue(System.currentTimeMillis()));
+-        getUser().setList("warn_list", nodes);*/
++        ((PulvinarPublicUser) getUser()).clearWarns();
+     }
+ 
+     @Override
+@@ -145,6 +143,6 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
  
      @Contract(pure = true, value = "-> new")
      protected @NotNull Function<WarnNode, Warn> transformWarn() {
@@ -1591,6 +1611,36 @@ index 06ab436a7ee928a31f4aedafaf58dd6e757fec14..654ca8d0312a46d772a6bebf8a3310c1
 +        return net.kissenpvp.pulvinar.ban.warn.KissenWarn::new;
      }
  }
+diff --git a/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
+index 6c724a54fc3c262e7b34378ebd62f4dfdc7ecea8..8e7a41806ea004d74975ac483b09ab4629671d4d 100644
+--- a/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
++++ b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
+@@ -42,9 +42,8 @@ import org.bukkit.Bukkit;
+ import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
+ 
+-import java.util.Map;
+-import java.util.Objects;
+-import java.util.UUID;
++import java.time.Instant;
++import java.util.*;
+ 
+ /**
+  * The {@code PulvinarPublicUser} class extends the {@link KissenPublicUser} class with {@link Permission}
+@@ -76,6 +75,13 @@ public class PulvinarPublicUser extends KissenPublicUser<Permission> {
+         return getRepository().getListNotNull("warn_list", WarnNode.class);
+     }
+ 
++    public void clearWarns() {
++        List<WarnNode> nodes = new ArrayList<>(getWarns());
++        //TODO make shorter
++        nodes.stream().filter(warn -> warn.temporalMeasure().end().toOptional().stream().anyMatch(lo -> Instant.ofEpochMilli(lo).isAfter(Instant.now()))).forEach(warn -> warn.temporalMeasure().end().setValue(System.currentTimeMillis()));
++        getRepository().setList("warn_list", nodes);
++    }
++
+     @Override
+     public @NotNull PlayerClient<?, ?> getPlayerClient() {
+         return getPrivateUserEntry().getPlayerClient();
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 index 4ff21b6c6003f4ed8a124288af16e5c0a3a470ac..0381a1cfb51731e067821f8bb7d754fe07aec3a6 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
