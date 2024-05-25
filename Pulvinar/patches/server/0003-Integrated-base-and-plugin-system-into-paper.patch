@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated base and plugin system into paper
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-index 3e82ea07ca4194844c5528446e2c4a46ff4acee5..092d051863580ba725fb3fedb36b06e13026ee50 100644
+index 3e82ea07ca4194844c5528446e2c4a46ff4acee5..59b80ff226a104c1cfada8a61a850ffe6d5e5cdf 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 @@ -86,6 +86,10 @@ class PaperPluginInstanceManager {
@@ -30,21 +30,7 @@ index 3e82ea07ca4194844c5528446e2c4a46ff4acee5..092d051863580ba725fb3fedb36b06e1
      }
  
      // InvalidDescriptionException is never used, because the old JavaPluginLoader would wrap the exception.
-@@ -158,7 +166,13 @@ class PaperPluginInstanceManager {
-     public void disablePlugins() {
-         Plugin[] plugins = this.getPlugins();
-         for (int i = plugins.length - 1; i >= 0; i--) {
-+            // Pulvinar start
-+            net.kissenpvp.core.base.KissenCore.getInstance().disable(net.kissenpvp.core.base.PluginState.PRE, plugins[i]);
-+            // Pulvinar end
-             this.disablePlugin(plugins[i]);
-+            // Pulvinar start
-+            net.kissenpvp.core.base.KissenCore.getInstance().disable(net.kissenpvp.core.base.PluginState.POST, plugins[i]);
-+            // Pulvinar end
-         }
-     }
- 
-@@ -175,6 +189,10 @@ class PaperPluginInstanceManager {
+@@ -175,6 +183,10 @@ class PaperPluginInstanceManager {
              return;
          }
  
@@ -55,7 +41,7 @@ index 3e82ea07ca4194844c5528446e2c4a46ff4acee5..092d051863580ba725fb3fedb36b06e1
          if (plugin.getPluginMeta() instanceof PluginDescriptionFile) {
              List<Command> bukkitCommands = PluginCommandYamlParser.parse(plugin);
  
-@@ -207,6 +225,9 @@ class PaperPluginInstanceManager {
+@@ -207,6 +219,9 @@ class PaperPluginInstanceManager {
                  return;
                  // Paper end
              }
@@ -65,7 +51,7 @@ index 3e82ea07ca4194844c5528446e2c4a46ff4acee5..092d051863580ba725fb3fedb36b06e1
  
              // Perhaps abort here, rather than continue going, but as it stands,
              // an abort is not possible the way it's currently written
-@@ -227,6 +248,10 @@ class PaperPluginInstanceManager {
+@@ -227,6 +242,10 @@ class PaperPluginInstanceManager {
              return;
          }
  
@@ -76,7 +62,7 @@ index 3e82ea07ca4194844c5528446e2c4a46ff4acee5..092d051863580ba725fb3fedb36b06e1
          String pluginName = plugin.getPluginMeta().getDisplayName();
  
          try {
-@@ -318,6 +343,9 @@ class PaperPluginInstanceManager {
+@@ -318,6 +337,9 @@ class PaperPluginInstanceManager {
              this.handlePluginException("Error occurred (in the plugin loader) while removing chunk tickets for " + pluginName + " (Is it up to date?)", ex, plugin); // Paper
          }
  
