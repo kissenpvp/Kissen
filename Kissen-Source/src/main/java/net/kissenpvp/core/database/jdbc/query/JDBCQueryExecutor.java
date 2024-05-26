@@ -32,7 +32,7 @@ public class JDBCQueryExecutor {
     protected static final String WHERE = "(%s) AND %s = ?";
     protected static final String WHERE_NO_FILTER = "%s = ?";
     protected static final String WHERE_INTERNAL = "(%s) AND %s IS NULL";
-    protected static final String WHERE_NO_FILTER_INTERNAL = "%s = IS NULL";
+    protected static final String WHERE_NO_FILTER_INTERNAL = "%s IS NULL";
     private final KissenJDBCMeta meta;
 
     protected void setStatementValues(@NotNull PreparedStatement preparedStatement, @NotNull String @NotNull [] parameterValues) throws SQLException {

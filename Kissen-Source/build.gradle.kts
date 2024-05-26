@@ -26,6 +26,7 @@ dependencies {
     testImplementation("net.kyori:adventure-text-serializer-legacy:4.14.0")
     testImplementation("net.kyori:adventure-text-minimessage:4.14.0")
     testImplementation("org.mockito:mockito-core:3.12.4")
+    testImplementation("org.slf4j:slf4j-api:2.0.1")
 }
 
 publishing {
