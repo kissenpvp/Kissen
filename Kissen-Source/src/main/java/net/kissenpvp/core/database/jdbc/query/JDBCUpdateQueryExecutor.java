@@ -84,10 +84,6 @@ public class JDBCUpdateQueryExecutor extends JDBCQueryExecutor {
      */
     private @NotNull String update(@NotNull List<String> values) {
         List<String> col = new ArrayList<>();
-        if (Objects.nonNull(getMeta().getPlugin())) {
-            col.add(getMeta().getTable().getPluginColumn());
-            values.add(getMeta().getPlugin().getName());
-        }
 
         for (Update column : getUpdate().getColumns()) {
             if (Objects.equals(column.column(), Column.VALUE)) {
