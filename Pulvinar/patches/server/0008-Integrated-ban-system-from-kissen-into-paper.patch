@@ -1708,10 +1708,10 @@ index dce653fd71d1f2fb833b4e7dd17940aee118bdbb..26508fd5dc9393f3072957f79b6a37cf
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 85766b2e4656fd379ee7f49d83624173497e1bee..46ffe41df62761f7287736053d70909559337ab6 100644
+index 6e78500a6265b0192095379704b1d661ef56ba32..82dd728957022500faf231e28c992c6c78802185 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -2270,6 +2270,11 @@ public final class CraftServer implements Server {
+@@ -2265,6 +2265,11 @@ public final class CraftServer implements Server {
  
      @Override
      public <T extends BanList<?>> T getBanList(BanList.Type type) {
@@ -1723,7 +1723,7 @@ index 85766b2e4656fd379ee7f49d83624173497e1bee..46ffe41df62761f7287736053d709095
          Preconditions.checkArgument(type != null, "BanList.Type cannot be null");
  
          return switch (type) {
-@@ -2282,6 +2287,11 @@ public final class CraftServer implements Server {
+@@ -2277,6 +2282,11 @@ public final class CraftServer implements Server {
      @SuppressWarnings("unchecked")
      @Override
      public <B extends BanList<E>, E> B getBanList(final io.papermc.paper.ban.BanListType<B> type) {
