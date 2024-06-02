@@ -169,6 +169,37 @@ index 330bae815c0a332e3dc9fa7b224c9f92098199b9..ad6594ef0618e5bc16b17c749e2fa8f5
              while (this.getRunningThread().isAlive()) {
                  this.getRunningThread().stop();
                  try {
+diff --git a/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java b/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
+index 8f74c2ec5252b6265549589310d742337c91cb2c..0fd35302180fce6c73efd759ffc6829ce3291f21 100644
+--- a/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
++++ b/src/main/java/net/minecraft/server/gui/MinecraftServerGui.java
+@@ -56,7 +56,7 @@ public class MinecraftServerGui extends JComponent {
+             ;
+         }
+ 
+-        final JFrame jframe = new JFrame("Purpur Minecraft server"); // Purpur
++        final JFrame jframe = new JFrame("Pulvinar Minecraft server"); // Purpur // Pulvinar
+         final MinecraftServerGui servergui = new MinecraftServerGui(server);
+ 
+         jframe.setDefaultCloseOperation(2);
+@@ -64,7 +64,7 @@ public class MinecraftServerGui extends JComponent {
+         jframe.pack();
+         jframe.setLocationRelativeTo((Component) null);
+         jframe.setVisible(true);
+-        jframe.setName("Purpur Minecraft server"); // Paper - Improve ServerGUI // Purpur
++        jframe.setName("Pulvinar Minecraft server"); // Paper - Improve ServerGUI // Purpur // Pulvinar
+ 
+         // Paper start - Improve ServerGUI
+         try {
+@@ -76,7 +76,7 @@ public class MinecraftServerGui extends JComponent {
+         jframe.addWindowListener(new WindowAdapter() {
+             public void windowClosing(WindowEvent windowevent) {
+                 if (!servergui.isClosing.getAndSet(true)) {
+-                    jframe.setTitle("Purpur Minecraft server - shutting down!"); // Purpur
++                    jframe.setTitle("Pulvinar Minecraft server - shutting down!"); // Purpur // Pulvinar
+                     server.halt(true);
+                     servergui.runFinalizers();
+                 }
 diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
 index ca8ae8e1c51b937dac916e0b0dc94b5e2e61efeb..a8d6c3e25da13c61b36d72415484df4746f05b1a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java

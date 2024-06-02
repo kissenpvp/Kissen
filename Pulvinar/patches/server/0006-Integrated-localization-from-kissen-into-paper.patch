@@ -96,10 +96,10 @@ index 0000000000000000000000000000000000000000..8b5433ed6c03dd542fc249f99bd5b6f7
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 80e47b5a3574e5c5c906e0057ca9ec3e00c1dc4d..d7278821c883d12294c72acbb6ed59d55d5b13a4 100644
+index 91b5954ace463cc0cba5a0985e0cd1f668a79f84..80b8fe09a6fc70437d329ed5535235c3ad35482d 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2309,6 +2309,7 @@ public class ServerPlayer extends Player {
+@@ -2310,6 +2310,7 @@ public class ServerPlayer extends Player {
              PlayerLocaleChangeEvent event = new PlayerLocaleChangeEvent(this.getBukkitEntity(), clientOptions.language());
              this.server.server.getPluginManager().callEvent(event);
              this.server.server.getPluginManager().callEvent(new com.destroystokyo.paper.event.player.PlayerLocaleChangeEvent(this.getBukkitEntity(), this.language, clientOptions.language())); // Paper
@@ -107,7 +107,7 @@ index 80e47b5a3574e5c5c906e0057ca9ec3e00c1dc4d..d7278821c883d12294c72acbb6ed59d5
          }
          // CraftBukkit end
          // Paper start - don't call options events on login
-@@ -3046,4 +3047,11 @@ public class ServerPlayer extends Player {
+@@ -3047,4 +3048,11 @@ public class ServerPlayer extends Player {
          this.ramBar = ramBar;
      }
      // Purpur end

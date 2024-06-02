@@ -4,6 +4,19 @@ Date: Thu, 16 May 2024 20:37:05 -0700
 Subject: [PATCH] Rebrand to Pulvinar
 
 
+diff --git a/src/main/java/co/aikar/timings/TimingsCommand.java b/src/main/java/co/aikar/timings/TimingsCommand.java
+index 1abfcee0f6d632f4cd8d74b4994a90c9ea9d254c..f8a667cf11ff9701eb2a7fe3c9a7dc01d01cab4d 100644
+--- a/src/main/java/co/aikar/timings/TimingsCommand.java
++++ b/src/main/java/co/aikar/timings/TimingsCommand.java
+@@ -56,7 +56,7 @@ public class TimingsCommand extends BukkitCommand {
+         }
+         if (true) {
+             net.kyori.adventure.text.minimessage.MiniMessage mm = net.kyori.adventure.text.minimessage.MiniMessage.miniMessage();
+-            sender.sendMessage(mm.deserialize("<gold>Purpur has removed timings to save your performance. Please use <click:suggest_command:'/spark'><grey>/spark</grey></click> instead"));
++            sender.sendMessage(mm.deserialize("<gold>Pulvinar has removed timings to save your performance. Please use <click:suggest_command:'/spark'><grey>/spark</grey></click> instead"));
+             sender.sendMessage(mm.deserialize("<gold>For more information, view its documentation at"));
+             sender.sendMessage(mm.deserialize("<gold><click:open_url:'https://spark.lucko.me/docs/Command-Usage'>https://spark.lucko.me/docs/Command-Usage</click>"));
+             return true;
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
 index 7107eabf02d9d9b69d97c978ba421ad52031ec3f..e6070182c46efa0548e80eca2001d265062ef58c 100644
 --- a/src/main/java/io/papermc/paper/ServerBuildInfo.java

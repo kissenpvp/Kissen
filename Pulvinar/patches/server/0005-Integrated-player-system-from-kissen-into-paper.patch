@@ -3898,7 +3898,7 @@ index 0000000000000000000000000000000000000000..e5419c6e5caaed5e7c9bc7becb78760f
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
-index 411f1f8c6be072cfc5ba88cbec38dbc4300a41d1..53f6078ea8bacc05d56f2fbe610447a9824b50c0 100644
+index 0f7d6da8685716604f0749d4f5b60730a44cde73..db8962b02212fb88650f39a753b007bdbbf62d14 100644
 --- a/src/main/java/net/minecraft/server/Main.java
 +++ b/src/main/java/net/minecraft/server/Main.java
 @@ -188,15 +188,17 @@ public class Main {
@@ -3953,10 +3953,10 @@ index 22c4f8dea99f92a1eb3da2baf0a15bf9d2ca0462..91bc235e7a7fbde5bde4a60a8f623bbf
          }
      }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index a7ba658a4dc6eeb9d5bc854289c21b3bd21646b1..80e47b5a3574e5c5c906e0057ca9ec3e00c1dc4d 100644
+index 4a29e90ff2a0fe9c5be094400d79ab89e61c437d..91b5954ace463cc0cba5a0985e0cd1f668a79f84 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2242,17 +2242,22 @@ public class ServerPlayer extends Player {
+@@ -2243,17 +2243,22 @@ public class ServerPlayer extends Player {
  
      public void sendSystemMessage(Component message, boolean overlay) {
          if (this.acceptsSystemMessages(overlay)) {

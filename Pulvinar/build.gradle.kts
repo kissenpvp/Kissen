@@ -79,6 +79,7 @@ tasks.generateDevelopmentBundle {
             "https://repo.maven.apache.org/maven2/",
             paperMavenPublicUrl,
             "https://repo.purpurmc.org/snapshots",
+            "https://repo.kissenpvp.net/repository/maven-public/",
         )
     )
 }
