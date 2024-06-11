@@ -30,7 +30,6 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
-import java.util.function.Function;
 
 public interface CommandHolder<S extends ServerEntity, C extends CommandHolder<S, C>> extends Iterable<CommandHolder<?, ?>> {
 
@@ -61,7 +60,7 @@ public interface CommandHolder<S extends ServerEntity, C extends CommandHolder<S
     default @NotNull Component getFormattedUsage(@NotNull CommandPayload<S> payload)
     {
         TextComponent.Builder builder = Component.text();
-        String[] usages = getUsage().split(";");
+        String[] usages = getUsage(payload).split(";");
         for (String usage : usages)
         {
             Component usageComponent = Component.text(usage);
@@ -78,6 +77,8 @@ public interface CommandHolder<S extends ServerEntity, C extends CommandHolder<S
     String getPermission();
 
     @NotNull String getUsage();
+
+    @NotNull String getUsage(@Nullable CommandPayload<S> context);
 
     int getPosition();
 

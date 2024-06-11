@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Groldi <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:30:00 +0200
-Subject: [PATCH] Integrated command system from kissen into paper
+Subject: [PATCH] Implemented new command framework into pulvinar
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
@@ -293,10 +293,10 @@ index 0000000000000000000000000000000000000000..c5bd35e458ca3a3b19ef74705fc70c2d
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f027506ca
+index 0000000000000000000000000000000000000000..478e4c8cb8afe2e54530f8cba06214cefed5c18d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java
-@@ -0,0 +1,477 @@
+@@ -0,0 +1,440 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -336,10 +336,12 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +import org.bukkit.command.CommandException;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
 +import java.util.*;
 +import java.util.function.Function;
++import java.util.function.Predicate;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
@@ -349,14 +351,13 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 + * This class extends the {@link KissenCommand} class and serves as a command implementation tailored for the Kissen Paper framework.
 + * It provides functionality for creating and managing sub-commands within the Kissen Paper command hierarchy.
 + */
-+public abstract class PulvinarAbstractCommand<C extends PulvinarAbstractCommand<C>> extends KissenCommand implements CommandHolder<CommandSender, C>
-+{
++public abstract class PulvinarAbstractCommand<C extends PulvinarAbstractCommand<C>> extends KissenCommand implements CommandHolder<CommandSender, C> {
 +    private final int position;
 +    private final List<C> children; //C can be plugin child or system child
++    private final CommandHandler<CommandSender, ?> handler;
 +    private CommandInfo commandInfo;
 +    private CommandExecutor<CommandSender> commandExecutor;
 +    private TabCompleterExecutor<CommandSender> tabExecutor;
-+    private final CommandHandler<CommandSender, ?> handler;
 +
 +    /**
 +     * Constructs a new {@link PulvinarAbstractCommand} instance with the provided plugin, name, and position.
@@ -367,90 +368,72 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +     * @param position The position of the command in the command hierarchy.
 +     * @throws NullPointerException If either the {@code plugin} or {@code name} parameter is null.
 +     */
-+    public PulvinarAbstractCommand(@NotNull String name, int position, @NotNull CommandHandler<CommandSender, ?> handler)
-+    {
++    public PulvinarAbstractCommand(@NotNull String name, int position, @NotNull CommandHandler<CommandSender, ?> handler) {
 +        super(name);
 +        this.position = position;
 +        this.children = new ArrayList<>();
 +        this.handler = handler;
 +    }
 +
-+    public @NotNull CommandHandler<CommandSender, ?> getHandler()
-+    {
++    public @NotNull CommandHandler<CommandSender, ?> getHandler() {
 +        return handler;
 +    }
 +
 +    @Override
-+    public int getPosition()
-+    {
++    public int getPosition() {
 +        return position;
 +    }
 +
 +    @Override
-+    public @NotNull CommandExecutor<CommandSender> getExecutor()
-+    {
-+        return (CommandExecutor<CommandSender>) Objects.requireNonNullElseGet(commandExecutor, () ->
-+        {
++    public @NotNull CommandExecutor<CommandSender> getExecutor() {
++        return (CommandExecutor<CommandSender>) Objects.requireNonNullElseGet(commandExecutor, () -> {
 +            Optional<CommandHolder<?, ?>> parent = getParent();
 +            return parent.map(CommandHolder::getExecutor).orElseThrow();
 +        });
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable List<C> getChildCommandList()
-+    {
++    public @NotNull @Unmodifiable List<C> getChildCommandList() {
 +        return Collections.unmodifiableList(children);
 +    }
 +
 +    @Override
-+    public @NotNull Optional<C> getChildCommand(@NotNull String name)
-+    {
-+        return getChildCommandList().stream().filter(
-+                child -> child.equals(name) || child.getAliases().contains(name)).findFirst();
++    public @NotNull Optional<C> getChildCommand(@NotNull String name) {
++        Predicate<C> equalsName = (child) -> child.equals(name) || child.getAliases().contains(name);
++        return getChildCommandList().stream().filter(equalsName).findFirst();
 +    }
 +
 +    @Override
-+    public @NotNull Optional<CommandInfo> getCommandInfo()
-+    {
++    public @NotNull Optional<CommandInfo> getCommandInfo() {
 +        return Optional.ofNullable(commandInfo);
 +    }
 +
 +    @Override
-+    public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args)
-+    {
-+        if (!validate(sender))
-+        {
++    public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
++        if (!validate(sender)) {
 +            return false;
 +        }
 +
-+        if (args.length > 0)
-+        {
-+            Function<C, Boolean> execute = command ->
-+            {
++        if (args.length > 0) {
++            Function<C, Boolean> execute = command -> {
 +                String[] newArgs = Arrays.copyOfRange(args, 1, args.length);
 +                return command.execute(sender, commandLabel, newArgs);
 +            };
 +
 +            Boolean data = getChildCommand(args[0]).map(execute).orElse(null);
-+            if (data != null)
-+            {
++            if (data!=null) {
 +                return data;
 +            }
 +        }
 +
-+        CommandPayload<CommandSender> payload = getCommandPayload(sender,
-+                commandLabel,
-+                args,
-+                getTargetValidator().parseSender(sender));
++        CommandPayload<CommandSender> payload = getCommandPayload(sender, commandLabel, args, getTargetValidator().parseSender(sender));
 +
-+        if (commandExecutor == null)
-+        {
++        if (commandExecutor==null) {
 +            sender.sendMessage(getFormattedUsage(payload));
 +            return false;
 +        }
 +
-+        if (commandInfo.isAsync())
-+        {
++        if (commandInfo.isAsync()) {
 +            runAsync(payload);
 +            return true;
 +        }
@@ -459,35 +442,28 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +    }
 +
 +    @Override
-+    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException
-+    {
++    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
 +        List<String> result = new ArrayList<>();
 +
-+        if (!validate(sender))
-+        {
++        if (!validate(sender)) {
 +            return result;
 +        }
 +
-+        if(Arrays.stream(args).filter(String::isBlank).count() > 1)
-+        {
++        if (Arrays.stream(args).filter(String::isBlank).count() > 1) {
 +            return Collections.emptyList();
 +        }
 +
-+        result.addAll(isChildCommand(sender, alias, args).orElseGet(() ->
-+        {
++        result.addAll(isChildCommand(sender, alias, args).orElseGet(() -> {
 +            //TODO add caching
 +            CommandTarget target = getTargetValidator().parseSender(sender);
 +            CommandPayload<CommandSender> payload = getCommandPayload(sender, alias, args, target);
 +            return getTabCompletions(payload);
 +        }));
 +
-+        final String argument = args.length > 0 ? args[args.length - 1] : ""; //namespaces
-+        return new ArrayList<>(result).stream().filter(currentSuggestion ->
-+        {
-+            for (String currentArgument : currentSuggestion.split(":"))
-+            {
-+                if(currentArgument.toLowerCase().startsWith(argument.toLowerCase()))
-+                {
++        final String argument = args.length > 0 ? args[args.length - 1]:""; //namespaces
++        return new ArrayList<>(result).stream().filter(currentSuggestion -> {
++            for (String currentArgument : currentSuggestion.split(":")) {
++                if (currentArgument.toLowerCase().startsWith(argument.toLowerCase())) {
 +                    return true;
 +                }
 +            }
@@ -497,23 +473,24 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +
 +
 +    @Override
-+    public @NotNull String getFullName()
-+    {
++    public @NotNull String getFullName() {
 +        return getCommandInfo().map(CommandInfo::getName).orElse(getName());
 +    }
 +
 +    @Override
-+    public @NotNull String getUsage()
-+    {
++    public @NotNull String getUsage() {
++        return getUsage(null);
++    }
++
++    @Override
++    public @NotNull String getUsage(@Nullable CommandPayload<CommandSender> context) {
 +        String usage = super.getUsage();
-+        if (!usage.isBlank())
-+        {
++        if (!usage.isBlank()) {
 +            return usage;
 +        }
 +
-+        if (getExecutor() instanceof KissenCommandExecutor<CommandSender> executor)
-+        {
-+            return String.join(";", getUsages(executor).stream().sorted(CharSequence::compare).toArray(String[]::new));
++        if (getExecutor() instanceof KissenCommandExecutor<CommandSender> executor) {
++            return String.join(";", getUsages(context, executor).stream().sorted(CharSequence::compare).toArray(String[]::new));
 +        }
 +
 +        return super.getUsage();
@@ -529,10 +506,8 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +     * @throws NullPointerException If either the {@code commandInfo} or {@code commandExecutor} parameter is null.
 +     */
 +    @Override
-+    public void initCommand(@NotNull CommandData commandData, @NotNull CommandExecutor<CommandSender> commandExecutor)
-+    {
-+        if (isRegistered())
-+        {
++    public void initCommand(@NotNull CommandData commandData, @NotNull CommandExecutor<CommandSender> commandExecutor) {
++        if (isRegistered()) {
 +            throw new IllegalStateException("This command is already registered.");
 +        }
 +        this.commandInfo = new CommandInfo(commandData);
@@ -540,21 +515,18 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +
 +        setAliases(Arrays.asList(commandInfo.getAliases()));
 +
-+        if (commandInfo.isPermissionRequired() && !commandInfo.getPermission().isBlank())
-+        {
++        if (commandInfo.isPermissionRequired() && !commandInfo.getPermission().isBlank()) {
 +            setPermission(commandInfo.getPermission());
 +        }
 +
-+        setUsage(commandInfo.getUsage()); // might be blank, will be processes later
++        setUsage(commandInfo.getUsage()); // might be blank, will be processed later
 +
 +        String description = commandInfo.getDescription();
-+        if (!description.isBlank())
-+        {
++        if (!description.isBlank()) {
 +            setDescription(description);
 +        }
 +
-+        if (commandExecutor instanceof KissenCommandExecutor<CommandSender> executor)
-+        {
++        if (commandExecutor instanceof KissenCommandExecutor<CommandSender> executor) {
 +            executor.setCommandHolder(this);
 +        }
 +    }
@@ -568,10 +540,8 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +     * @param tabExecutor The {@link TabCompleterExecutor} responsible for tab completion of the command. Must not be null.
 +     * @throws IllegalStateException If the tab completer has already been initialized for this command.
 +     */
-+    public final void initCompleter(@NotNull TabCompleterExecutor<CommandSender> tabExecutor)
-+    {
-+        if (this.tabExecutor != null)
-+        {
++    public final void initCompleter(@NotNull TabCompleterExecutor<CommandSender> tabExecutor) {
++        if (this.tabExecutor!=null) {
 +            throw new IllegalStateException("Initialization of Completer already executed.");
 +        }
 +
@@ -589,12 +559,10 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +     * @return The final {@link PulvinarAbstractCommand} instance at the bottom of the recursive hierarchy.
 +     * @throws NullPointerException If the provided {@code name} parameter is null.
 +     */
-+    public @NotNull PulvinarAbstractCommand<C> createRecursive(@NotNull String name)
-+    {
++    public @NotNull PulvinarAbstractCommand<C> createRecursive(@NotNull String name) {
 +
 +        int position = getPosition() + (name.split("\\.").length - 1);
-+        if (position == getPosition())
-+        {
++        if (position==getPosition()) {
 +            return this;
 +        }
 +
@@ -602,22 +570,17 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +
 +        int index = subName.indexOf('.');
 +        String nextSubCommand;
-+        if (index != -1)
-+        {
++        if (index!=-1) {
 +            nextSubCommand = subName.substring(0, index);
-+        }
-+        else
-+        {
++        } else {
 +            nextSubCommand = subName;
 +        }
 +
-+        if(!isRegistered())
-+        {
++        if (!isRegistered()) {
 +            setUsage("");
 +        }
 +
-+        return getChildCommand(nextSubCommand).orElseGet(() ->
-+        {
++        return getChildCommand(nextSubCommand).orElseGet(() -> {
 +            C child = createChildCommand(nextSubCommand, PulvinarAbstractCommand.this);
 +            children.add(child);
 +            return child;
@@ -625,71 +588,73 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +    }
 +
 +
-+    private @NotNull List<String> getUsages(@NotNull KissenCommandExecutor<CommandSender> executor)
-+    {
++    private @NotNull List<String> getUsages(@NotNull KissenCommandExecutor<CommandSender> executor) {
++        return getUsages(null, executor);
++    }
++
++    private @NotNull List<String> getUsages(@Nullable CommandPayload<CommandSender> context, @NotNull KissenCommandExecutor<CommandSender> executor) {
 +        List<String> usages = new ArrayList<>();
 +        String prefix = "/" + String.join(" ", getFullName().split("\\.")) + " ";
 +
 +        String builtUsage = executor.getEvaluator().buildUsage("").strip();
-+        if (!builtUsage.isBlank() && commandExecutor != null)
-+        {
++        boolean hasPermission = (Objects.isNull(context) || validate(context.getSender()));
++        if (!builtUsage.isBlank() && commandExecutor!=null && hasPermission) {
 +            usages.add(prefix + builtUsage);
 +        }
 +
-+        for (C child : children)
-+        {
++        for (C child : children) {
++            if (Objects.nonNull(context) && !child.validate(context.getSender())) {
++                continue;
++            }
 +            KissenCommandExecutor<CommandSender> childExecutor = ((KissenCommandExecutor<CommandSender>) child.getExecutor());
-+            usages.addAll(((PulvinarAbstractCommand<?>) child).getUsages(childExecutor));
++            usages.addAll(((PulvinarAbstractCommand<?>) child).getUsages(context, childExecutor));
 +        }
 +        return usages;
 +    }
 +
-+    private @NotNull Optional<List<String>> isChildCommand(@NotNull CommandSender commandSender, @NotNull String alias, @NotNull String @NotNull [] arguments)
-+    {
-+        for (var iterator = new Object()
-+        {
++    private @NotNull Optional<List<String>> isChildCommand(@NotNull CommandSender commandSender, @NotNull String alias, @NotNull String @NotNull [] arguments) {
++        for (var iterator = new Object() {
 +            private int index = 0;
 +
-+            private int getIndex()
-+            {
++            private int getIndex() {
 +                return index;
 +            }
-+        }; iterator.index < arguments.length; iterator.index++)
-+        {
++        }; iterator.index < arguments.length; iterator.index++) {
 +            Optional<C> commandHolder = getChildCommand(arguments[iterator.getIndex()]);
-+            if (commandHolder.isPresent())
-+            {
-+                return commandHolder.map(child -> child.tabComplete(commandSender, alias,
-+                        Arrays.copyOfRange(arguments, iterator.getIndex() + 1, arguments.length)));
++            if (commandHolder.isPresent()) {
++                return commandHolder.map(child -> child.tabComplete(commandSender, alias, Arrays.copyOfRange(arguments, iterator.getIndex() + 1, arguments.length)));
 +            }
 +        }
 +        return Optional.empty();
 +    }
 +
-+    private @NotNull List<String> getTabCompletions(@NotNull CommandPayload<CommandSender> commandPayload)
-+    {
-+        List<String> suggestions = new ArrayList<>(
-+                (tabExecutor != null ? tabExecutor.execute(commandPayload) : getAutoTabCompletion(
-+                        commandPayload)).stream().filter(Objects::nonNull).toList());
++    private @NotNull List<String> getTabCompletions(@NotNull CommandPayload<CommandSender> commandPayload) {
++        List<String> suggestions = new ArrayList<>();
++        if (Objects.isNull(tabExecutor)) {
++            suggestions.addAll(getAutoTabCompletion(commandPayload));
++        } else {
++            suggestions.addAll(tabExecutor.execute(commandPayload));
++        }
 +        suggestions.sort(String.CASE_INSENSITIVE_ORDER);
 +        return suggestions;
 +    }
 +
-+    private @NotNull Set<String> getAutoTabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
-+    {
++    private @NotNull Set<String> getAutoTabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
 +        int index = commandPayload.getArgumentCount();
-+        Set<String> data = getChildCommandList().stream().filter(
-+                child -> child.getPosition() == index + getPosition()).flatMap(
-+                command -> Stream.concat(Stream.of(command.getName()), command.getAliases().stream())).collect(
-+                Collectors.toSet());
++        Predicate<C> isCapable = (child) -> {
++            int position = index + getPosition();
++            return child.validate(commandPayload.getSender()) && Objects.equals(child.getPosition(), position);
++        };
 +
-+        if (hasOwnExecutor() && getExecutor() instanceof KissenCommandExecutor<CommandSender> executor)
-+        {
-+            if (executor.getEvaluator().arguments().size() > index)
-+            {
++        Set<String> data = getChildCommandList().stream().filter(isCapable).flatMap(command -> {
++            Stream<String> alias = command.getAliases().stream();
++            return Stream.concat(alias, Stream.of(command.getName()));
++        }).collect(Collectors.toSet());
++
++        if (hasOwnExecutor() && getExecutor() instanceof KissenCommandExecutor<CommandSender> executor) {
++            if (executor.getEvaluator().arguments().size() > index) {
 +                Argument<?, CommandSender> argument = executor.getEvaluator().arguments().get(index);
-+                if (argument.argumentParser() != null)
-+                {
++                if (argument.argumentParser()!=null) {
 +                    data.addAll(argument.argumentParser().tabCompletion(commandPayload));
 +                }
 +            }
@@ -721,10 +686,14 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +     * @throws CommandException     If the plugin associated with the command is not enabled.
 +     * @throws NullPointerException If the provided {@code commandSender} parameter is null.
 +     */
-+    public boolean validate(@NotNull CommandSender commandSender)
-+    {
-+        return getTargetValidator().validate(getCommandInfo().map(CommandInfo::getTarget).orElse(CommandTarget.ALL),
-+                commandSender);
++    public boolean validate(@NotNull CommandSender commandSender) {
++        if (Objects.isNull(commandExecutor) && children.stream().noneMatch(child -> child.validate(commandSender))) {
++            return false;
++        } else if (Objects.nonNull(getPermission()) && !commandSender.hasPermission(getPermission())) {
++            return false;
++        }
++        CommandTarget target = getCommandInfo().map(CommandInfo::getTarget).orElse(CommandTarget.ALL);
++        return getTargetValidator().validate(target, commandSender);
 +    }
 +
 +    /**
@@ -735,10 +704,8 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +     *
 +     * @return The {@link TargetValidator} associated with the command implementation.
 +     */
-+    public @NotNull TargetValidator getTargetValidator()
-+    {
-+        return Bukkit.getPulvinar().getImplementation(
-+                PulvinarCommandImplementation.class).getTargetValidator();
++    public @NotNull TargetValidator getTargetValidator() {
++        return Bukkit.getPulvinar().getImplementation(PulvinarCommandImplementation.class).getTargetValidator();
 +    }
 +
 +    /**
@@ -757,18 +724,14 @@ index 0000000000000000000000000000000000000000..6ea4f712a18a57a5e1784ecabfe9656f
 +     */
 +    public abstract void runAsync(@NotNull CommandPayload<CommandSender> payload);
 +
-+    private boolean hasOwnExecutor()
-+    {
-+        return commandExecutor != null;
++    private boolean hasOwnExecutor() {
++        return commandExecutor!=null;
 +    }
 +
-+    private @NotNull CommandPayload<CommandSender> getCommandPayload(@NotNull CommandSender sender, @NotNull String alias, @NotNull String @NotNull [] args, CommandTarget target)
-+    {
-+        return new KissenCommandPayload<>(alias, sender, target, args, PulvinarAbstractCommand.this)
-+        {
++    private @NotNull CommandPayload<CommandSender> getCommandPayload(@NotNull CommandSender sender, @NotNull String alias, @NotNull String @NotNull [] args, CommandTarget target) {
++        return new KissenCommandPayload<>(alias, sender, target, args, PulvinarAbstractCommand.this) {
 +            @Override
-+            protected @NotNull CommandHandler<CommandSender, ?> getHandler()
-+            {
++            protected @NotNull CommandHandler<CommandSender, ?> getHandler() {
 +                return PulvinarAbstractCommand.this.getHandler();
 +            }
 +        };
