@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Groldi <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:30:52 +0200
-Subject: [PATCH] Integrated ban system from kissen into paper
+Subject: [PATCH] Enhanced bansystem functionality
 
 
 diff --git a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
@@ -152,10 +152,10 @@ index 0000000000000000000000000000000000000000..533aa48a0e3134278dd9b4330c44b62f
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..16a9656dc15d7954b2b4eb7e30dbc0913c69c6cd
+index 0000000000000000000000000000000000000000..7af1f40a99cedaedbce4fe2a01fd316f170b5bcf
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
-@@ -0,0 +1,464 @@
+@@ -0,0 +1,465 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -238,6 +238,7 @@ index 0000000000000000000000000000000000000000..16a9656dc15d7954b2b4eb7e30dbc091
 +    public boolean start() {
 +        KissenLocalizationImplementation kissenLocalizationImplementation = KissenCore.getInstance().getImplementation(KissenLocalizationImplementation.class);
 +        kissenLocalizationImplementation.register("server.ban.created.permanent", new MessageFormat("The ban has been created with the ID {0}, designated with the name {1}, classified under the type {2}, and assigned a permanent duration."));
++        kissenLocalizationImplementation.register("server.ban.create.override", new MessageFormat("There is already a ban having the id {0}. If you want to override this ban type /confirm. If you don't want to override the ban use /cancel"));
 +        kissenLocalizationImplementation.register("server.ban.created", new MessageFormat("The ban has been created with the ID {0}, designated with the name {1}, classified under the type {2}, and assigned a duration of {3}."));
 +        kissenLocalizationImplementation.register("server.ban.deleted", new MessageFormat("The ban with ID {0} was successfully deleted."));
 +        kissenLocalizationImplementation.register("server.ban.invalid", new MessageFormat("The ban with ID {0} was not found."));
@@ -969,10 +970,10 @@ index 0000000000000000000000000000000000000000..4e2688d22f1edaa0799a44273f68c33d
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommand.java b/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..9eec0bb7ec46a896637484baeb701d250fb42e72
+index 0000000000000000000000000000000000000000..3708d6da3db09ae680c0b502d14ed05a16055a58
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommand.java
-@@ -0,0 +1,142 @@
+@@ -0,0 +1,145 @@
 +package net.kissenpvp.pulvinar.ban.command;
 +
 +import net.kissenpvp.core.api.ban.AbstractPunishment;
@@ -1000,6 +1001,7 @@ index 0000000000000000000000000000000000000000..9eec0bb7ec46a896637484baeb701d25
 +import java.time.Instant;
 +import java.util.Set;
 +import java.util.stream.Collectors;
++import java.util.stream.Stream;
 +
 +public class BanCommand {
 +
@@ -1038,12 +1040,12 @@ index 0000000000000000000000000000000000000000..9eec0bb7ec46a896637484baeb701d25
 +     * @param accurateDuration The duration which the ban (derived from this template) will last.
 +     * @throws BackendException If any error occurs during the creation of the ban template at the backend.
 +     */
-+    @CommandData(value = "banidcreate", aliases = {"bidc", "createidban"}, description = "Command to create predefined ban types with a specified duration. These can be used as templates for various ban situations.")
++    @CommandData(value = "ban.template.create", description = "Command to create predefined ban types with a specified duration. These can be used as templates for various ban situations.")
 +    public void create(@NotNull CommandPayload<CommandSender> payload, @ArgumentName("id") int id, @NotNull @ArgumentName("name") String name, @NotNull @ArgumentName("type") BanType banType, @NotNull java.util.Optional<AccurateDuration> accurateDuration) throws BackendException {
-+        BanImplementation paperBanImplementation = Bukkit.getPulvinar().getImplementation(BanImplementation.class);
++        BanImplementation banImplementation = Bukkit.getPulvinar().getImplementation(BanImplementation.class);
 +
 +        Runnable runnable = () -> {
-+            BanTemplate paperBan = paperBanImplementation.createBanTemplate(id, name, banType, accurateDuration.orElse(null));
++            BanTemplate paperBan = banImplementation.createBanTemplate(id, name, banType, accurateDuration.orElse(null));
 +
 +            Component idComponent = Component.text(paperBan.getID()), nameComponent = Component.text(paperBan.getName()), banTypeComponent = Component.text(paperBan.getBanType().toString());
 +            if (accurateDuration.isPresent()) {
@@ -1056,14 +1058,15 @@ index 0000000000000000000000000000000000000000..9eec0bb7ec46a896637484baeb701d25
 +        };
 +
 +        //Ask for confirmation if ban exists.
-+        if (paperBanImplementation.getBanTemplate(id).isPresent()) {
-+            payload.confirmRequest(runnable).send();
++        if (banImplementation.getBanTemplate(id).isPresent()) {
++            payload.getSender().sendMessage(Component.translatable("server.ban.create.override", Component.text(id)));
++            payload.confirmRequest(runnable).suppressMessage(true).send();
 +            return;
 +        }
 +        runnable.run();
 +    }
 +
-+    @CommandData(value = "baniddelete", aliases = {"bidd", "deleteidban"})
++    @CommandData(value = "ban.template.delete")
 +    public void delete(@NotNull CommandPayload<CommandSender> payload, @NotNull BanTemplate paperBan) throws BackendException {
 +        paperBan.delete();
 +        payload.getSender().sendMessage(Component.translatable("server.ban.deleted", Component.text(paperBan.getID())));
@@ -1082,16 +1085,17 @@ index 0000000000000000000000000000000000000000..9eec0bb7ec46a896637484baeb701d25
 +
 +    @TabCompleter("unban")
 +    public @NotNull Set<String> tabUnban() {
-+        BanImplementation ban = Bukkit.getPulvinar().getImplementation(BanImplementation.class);
-+        return ban.getPunishmentSet().stream().filter(TemporalObject::isValid).map(AbstractPunishment::getID).collect(Collectors.toSet());
++        BanImplementation banImplementation = Bukkit.getPulvinar().getImplementation(BanImplementation.class);
++        Stream<Punishment> punishments = banImplementation.getPunishmentSet().stream().filter(TemporalObject::isValid);
++        return punishments.map(AbstractPunishment::getID).collect(Collectors.toSet());
 +    }
 +
-+    @CommandData(value = "banhistory", aliases = "bh")
++    @CommandData(value = "ban.history")
 +    public void history(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer offlinePlayer, @NotNull @ArgumentName("page") java.util.Optional<Integer> page) {
 +        payload.getSender().sendMessage(messages().getHistory(payload, offlinePlayer, page.orElse(1)));
 +    }
 +
-+    @CommandData(value = "baninfo", aliases = {"punishmentinfo"})
++    @CommandData(value = "ban.info")
 +    public void banInfo(@NotNull CommandPayload<CommandSender> payload, @NotNull Punishment paperPunishment) {
 +        payload.getSender().sendMessage(messages().punishmentInfo(payload, paperPunishment));
 +    }
