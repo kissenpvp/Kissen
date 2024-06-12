@@ -798,7 +798,7 @@ index 0000000000000000000000000000000000000000..b0fb7aa99b4446588249b4f8d9a98d2f
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarPunishmentList.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarPunishmentList.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..4e2688d22f1edaa0799a44273f68c33d0219901f
+index 0000000000000000000000000000000000000000..53eef92912f62e0e911334150f132d75dc021c80
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarPunishmentList.java
 @@ -0,0 +1,167 @@
@@ -837,12 +837,12 @@ index 0000000000000000000000000000000000000000..4e2688d22f1edaa0799a44273f68c33d
 +
 +    
 +    @Override
-+    protected @NotNull StoredUserEntry<GameProfile> createEntry(JsonObject json) {
++    protected @NotNull StoredUserEntry<GameProfile> createEntry(@NotNull JsonObject json) {
 +        throw new UnsupportedOperationException();
 +    }
 +
 +    @Override
-+    public boolean isBanned(GameProfile profile) {
++    public boolean isBanned(@NotNull GameProfile profile) {
 +        return getBanImplementation().isBanned(String.valueOf(profile.getId()));
 +    }
 +
@@ -857,7 +857,7 @@ index 0000000000000000000000000000000000000000..4e2688d22f1edaa0799a44273f68c33d
 +    }
 +
 +    @Override
-+    public void add(UserBanListEntry entry) {
++    public void add(@NotNull UserBanListEntry entry) {
 +        getBanImplementation().addBan(String.valueOf(Objects.requireNonNull(entry.getUser()).getId()), entry.getReason(), entry.getExpires(), entry.getSource());
 +    }
 +
@@ -1122,18 +1122,16 @@ index 0000000000000000000000000000000000000000..3708d6da3db09ae680c0b502d14ed05a
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommandMessages.java b/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommandMessages.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..71a75f50f3c901fe403f49cac706e514b49e80df
+index 0000000000000000000000000000000000000000..f6d51b160b7a22273452ac80d7d6d93c0a81db3b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommandMessages.java
-@@ -0,0 +1,256 @@
+@@ -0,0 +1,253 @@
 +package net.kissenpvp.pulvinar.ban.command;
 +
 +import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 +import net.kissenpvp.core.api.ban.BanType;
 +import net.kissenpvp.core.api.command.CommandPayload;
 +import net.kissenpvp.core.api.util.PageBuilder;
-+import net.kissenpvp.core.api.util.PageImplementation;
-+import net.kissenpvp.core.util.KissenPageBuilder;
 +import net.kissenpvp.pulvinar.api.ban.BanImplementation;
 +import net.kissenpvp.pulvinar.api.ban.BanTemplate;
 +import net.kissenpvp.pulvinar.api.ban.Punishment;
@@ -1171,7 +1169,6 @@ index 0000000000000000000000000000000000000000..71a75f50f3c901fe403f49cac706e514
 +     */
 +    public @NotNull Component getBanIDList(@NotNull CommandPayload<CommandSender> payload, final int page)
 +    {
-+        PageImplementation pageImplementation = Bukkit.getPulvinar().getImplementation(PageImplementation.class);
 +        BanImplementation banSystem = Bukkit.getPulvinar().getImplementation(BanImplementation.class);
 +
 +        List<BanTemplate> sorted = banSystem.getBanTemplates().stream().sorted(Comparator.comparingInt(AbstractBanTemplate::getID)).toList();
@@ -1179,7 +1176,7 @@ index 0000000000000000000000000000000000000000..71a75f50f3c901fe403f49cac706e514
 +        {
 +            return Component.text("Gibt keine ban ids");
 +        }
-+        PageBuilder<BanTemplate> banIDPageBuilder = pageImplementation.createPageBuilder(sorted);
++        PageBuilder<BanTemplate> banIDPageBuilder = new PageBuilder<>(sorted);
 +
 +        Component header = banIDPageBuilder.getHeader(Component.text("BanIDs"), page);
 +        Component footer = banIDPageBuilder.getFooter(Component.text("BanIDs"), page);
@@ -1215,7 +1212,7 @@ index 0000000000000000000000000000000000000000..71a75f50f3c901fe403f49cac706e514
 +        {
 +            return Component.translatable("server.ban.history.empty", player.displayName());
 +        }
-+        PageBuilder<Punishment> pageBuilder = new KissenPageBuilder<>(playerHistory);
++        PageBuilder<Punishment> pageBuilder = new PageBuilder<>(playerHistory);
 +
 +        Component header = pageBuilder.getHeader(player.displayName(), page);
 +        Component footer = pageBuilder.getFooter(player.displayName(), page);
@@ -1405,10 +1402,10 @@ index 0000000000000000000000000000000000000000..07cdb5317025176973fc095a65d79386
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/warn/command/WarnCommand.java b/src/main/java/net/kissenpvp/pulvinar/ban/warn/command/WarnCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..bf60ebc384e35bdab9e7286c03204dbf57b4ffdb
+index 0000000000000000000000000000000000000000..a8442e2bb5f92bafab7616c4c70a402341ddddad
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/warn/command/WarnCommand.java
-@@ -0,0 +1,149 @@
+@@ -0,0 +1,146 @@
 +package net.kissenpvp.pulvinar.ban.warn.command;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -1417,7 +1414,6 @@ index 0000000000000000000000000000000000000000..bf60ebc384e35bdab9e7286c03204dbf
 +import net.kissenpvp.core.api.command.annotations.Optional;
 +import net.kissenpvp.core.api.time.TemporalObject;
 +import net.kissenpvp.core.api.util.PageBuilder;
-+import net.kissenpvp.core.api.util.PageImplementation;
 +import net.kissenpvp.pulvinar.api.ban.BanTemplate;
 +import net.kissenpvp.pulvinar.api.ban.warn.Warn;
 +import net.kissenpvp.pulvinar.ban.command.BanCommand;
@@ -1425,7 +1421,6 @@ index 0000000000000000000000000000000000000000..bf60ebc384e35bdab9e7286c03204dbf
 +import net.kyori.adventure.text.TextComponent;
 +import net.kyori.adventure.text.event.ClickEvent;
 +import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-+import org.bukkit.Bukkit;
 +import org.bukkit.OfflinePlayer;
 +import org.bukkit.command.CommandSender;
 +import org.jetbrains.annotations.Contract;
@@ -1488,8 +1483,7 @@ index 0000000000000000000000000000000000000000..bf60ebc384e35bdab9e7286c03204dbf
 +            return;
 +        }
 +        Collections.reverse(paperWarns);
-+        PageImplementation pageImplementation = Bukkit.getPulvinar().getImplementation(PageImplementation.class);
-+        PageBuilder<Warn> warnPages = pageImplementation.createPageBuilder(paperWarns);
++        PageBuilder<Warn> warnPages = new PageBuilder<>(paperWarns);
 +
 +        int titlePage = page.orElse(1);
 +        TextComponent.Builder builder = Component.text().append(warnPages.getHeader(player.displayName(), titlePage));

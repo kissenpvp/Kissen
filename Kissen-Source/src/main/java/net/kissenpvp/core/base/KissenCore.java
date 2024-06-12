@@ -32,7 +32,6 @@ import net.kissenpvp.core.api.message.ChatImplementation;
 import net.kissenpvp.core.api.networking.APIRequestImplementation;
 import net.kissenpvp.core.api.reflection.ReflectionImplementation;
 import net.kissenpvp.core.api.time.TimeImplementation;
-import net.kissenpvp.core.api.util.PageImplementation;
 import net.kissenpvp.core.command.InternalCommandImplementation;
 import net.kissenpvp.core.config.KissenConfigurationImplementation;
 import net.kissenpvp.core.database.KissenDatabaseImplementation;
@@ -42,7 +41,6 @@ import net.kissenpvp.core.message.KissenChatImplementation;
 import net.kissenpvp.core.networking.KissenAPIRequestImplementation;
 import net.kissenpvp.core.reflection.KissenReflectionImplementation;
 import net.kissenpvp.core.time.KissenTimeImplementation;
-import net.kissenpvp.core.util.KissenPageImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -96,7 +94,6 @@ public abstract class KissenCore implements Kissen {
         loader.put(APIRequestImplementation.class, new KissenAPIRequestImplementation());
         loader.put(ChatImplementation.class, new KissenChatImplementation());
         loader.put(DatabaseImplementation.class, new KissenDatabaseImplementation());
-        loader.put(PageImplementation.class, new KissenPageImplementation());
         loader.put(ReflectionImplementation.class, new KissenReflectionImplementation());
         loader.put(StorageImplementation.class, new KissenStorageImplementation());
         loader.put(TimeImplementation.class, new KissenTimeImplementation());

@@ -734,10 +734,10 @@ index 0000000000000000000000000000000000000000..4bd6d66ea7737798187653e2af2da9ca
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/permission/PulvinarPermissionImplementation.java b/src/main/java/net/kissenpvp/pulvinar/permission/PulvinarPermissionImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a2bdb7b60f871f241fee27b7e90f1c0147cfcecb
+index 0000000000000000000000000000000000000000..60fffb71e36eda1ec4ee994d6233aa6a26733d6b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/permission/PulvinarPermissionImplementation.java
-@@ -0,0 +1,318 @@
+@@ -0,0 +1,319 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -810,6 +810,7 @@ index 0000000000000000000000000000000000000000..a2bdb7b60f871f241fee27b7e90f1c01
 +
 +        localize.register("server.permission.set.success", new MessageFormat(prefix + " was successfully set {1} to {2}."));
 +        localize.register("server.permission.set.failed", new MessageFormat(prefix + " has already set {1} to {2}."));
++        localize.register("server.permission.wiped", new MessageFormat("{0} permission(s) were removed from permission entry {0}."));
 +        localize.register("server.permission.group.failed", new MessageFormat(prefix + " is already in this state within the relation to group {1}."));
 +        localize.register("server.permission.group.success", new MessageFormat(prefix + " has been set to the state."));
 +        localize.register("server.permission.unset.success", new MessageFormat("The permission {1} from the permission entry {0} was successfully unset."));
@@ -1097,10 +1098,10 @@ index 0000000000000000000000000000000000000000..acf50b8a6956d4f89e730e7e5c8f493c
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/permission/command/PermissionCommand.java b/src/main/java/net/kissenpvp/pulvinar/permission/command/PermissionCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..0c22bdd9e051ca5754416319d4d720c6bc269f01
+index 0000000000000000000000000000000000000000..18d896517f81d12e828d6334efbbb431e84d4411
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/permission/command/PermissionCommand.java
-@@ -0,0 +1,276 @@
+@@ -0,0 +1,240 @@
 +package net.kissenpvp.pulvinar.permission.command;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -1108,7 +1109,6 @@ index 0000000000000000000000000000000000000000..0c22bdd9e051ca5754416319d4d720c6
 +import net.kissenpvp.core.api.command.annotations.CommandData;
 +import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
 +import net.kissenpvp.core.api.util.PageBuilder;
-+import net.kissenpvp.core.api.util.PageImplementation;
 +import net.kissenpvp.pulvinar.api.base.Context;
 +import net.kissenpvp.pulvinar.api.permission.*;
 +import net.kyori.adventure.text.Component;
@@ -1125,43 +1125,36 @@ index 0000000000000000000000000000000000000000..0c22bdd9e051ca5754416319d4d720c6
 +import java.util.Optional;
 +import java.util.Set;
 +
-+public class PermissionCommand
-+{
++public class PermissionCommand {
 +    @CommandData(value = "permission", permission = "*")
-+    public void permissionGroup(CommandPayload<CommandSender> commandPayload)
-+    {
++    public void permissionGroup(CommandPayload<CommandSender> commandPayload) {
 +        throw new ArgumentMissingException();
 +    }
 +
 +    @CommandData(value = "permission.user", permission = "*")
-+    public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value)
-+    {
-+        commandPayload.confirmRequest(() ->
-+        {
++    public void permissionUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value) {
++        commandPayload.confirmRequest(() -> {
 +            Component response = execute(player, permission.permission(), value.orElse(null));
 +            commandPayload.getSender().sendMessage(response);
 +        }).send();
 +    }
 +
 +    @CommandData(value = "permission.user.wipe", permission = "*")
-+    public void permissionUserWipe(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player)
-+    {
-+        commandPayload.getSender().sendMessage(player.wipePermissions() + " permissions gewiped");
++    public void permissionUserWipe(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player) {
++        Component wipeCount = Component.text(player.wipePermissions());
++        commandPayload.getSender().sendMessage(Component.translatable("server.permission.wiped", wipeCount));
 +    }
 +
 +    @CommandData(value = "permission.group", permission = "*")
-+    public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value)
-+    {
-+        commandPayload.confirmRequest(() ->
-+        {
++    public void permissionGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group, @NotNull PermissionParser.PermissionArgument permission, @NotNull @ArgumentName("value") Optional<PermissionAction> value) {
++        commandPayload.confirmRequest(() -> {
 +            Component response = execute(group, permission.permission(), value.orElse(null));
 +            commandPayload.getSender().sendMessage(response);
 +        }).send();
 +    }
 +
 +    @CommandData(value = "permission.group.create", permission = "*")
-+    public void permissionGroupCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull String group)
-+    {
++    public void permissionGroupCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull String group) {
 +        PermissionImplementation implementation = Bukkit.getPulvinar().getImplementation(PermissionImplementation.class);
 +        PermissionGroup permissionGroup = implementation.getGroupNotNull(group);
 +        Component message = Component.translatable("server.permission.group.created", permissionGroup.displayName());
@@ -1169,70 +1162,64 @@ index 0000000000000000000000000000000000000000..0c22bdd9e051ca5754416319d4d720c6
 +    }
 +
 +    @CommandData(value = "permission.group.delete", permission = "*")
-+    public void permissionGroupCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group)
-+    {
++    public void permissionGroupCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group) {
 +        group.delete();
 +        Component message = Component.translatable("server.permission.group.deleted", group.displayName());
 +        commandPayload.getSender().sendMessage(message);
 +    }
 +
 +    @CommandData(value = "permission.group.wipe", permission = "*")
-+    public void permissionGroupWipe(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group)
-+    {
++    public void permissionGroupWipe(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group) {
 +        commandPayload.getSender().sendMessage(Component.translatable("server.permission.groups.clear", commandPayload.getSender().displayName(), Component.text(group.wipeGroups())));
 +    }
 +
 +    @CommandData(value = "group", permission = "*")
-+    public void group() {throw new ArgumentMissingException();}
++    public void group() {
++        throw new ArgumentMissingException();
++    }
 +
 +    @CommandData(value = "group.add.user", permission = "*")
-+    public void groupAddUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionGroup group)
-+    {
++    public void groupAddUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionGroup group) {
 +        commandPayload.getSender().sendMessage(executor().setGroup(true, player, group));
 +    }
 +
 +    @CommandData(value = "group.wipe.user", permission = "*")
-+    public void groupWipeUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player)
-+    {
++    public void groupWipeUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player) {
 +        commandPayload.getSender().sendMessage(Component.translatable("server.permission.groups.clear", player.displayName(), Component.text(player.wipeGroups())));
 +    }
 +
 +    @CommandData(value = "group.remove.user", permission = "*")
-+    public void groupRemoveUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionGroup group)
-+    {
++    public void groupRemoveUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionGroup group) {
 +        commandPayload.getSender().sendMessage(executor().setGroup(false, player, group));
 +    }
 +
 +    @CommandData(value = "group.add.group", permission = "*")
-+    public void groupAddGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group, @NotNull PermissionGroup group1)
-+    {
++    public void groupAddGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group, @NotNull PermissionGroup group1) {
 +        commandPayload.getSender().sendMessage(executor().setGroup(true, group, group1));
 +    }
 +
 +    @CommandData(value = "group.remove.group", permission = "*")
-+    public void groupRemoveGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group, @NotNull PermissionGroup group1)
-+    {
++    public void groupRemoveGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group, @NotNull PermissionGroup group1) {
 +        commandPayload.getSender().sendMessage(executor().setGroup(false, group, group1));
 +    }
 +
 +    @CommandData(value = "group.wipe.group", permission = "*")
-+    public void groupWipeGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group)
-+    {
++    public void groupWipeGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group) {
 +        commandPayload.getSender().sendMessage(Component.translatable("server.permission.permissions.clear", group.displayName(), Component.text(group.wipeGroups())));
 +    }
 +
 +    @CommandData(value = "permissioninfo", aliases = {"peri"})
-+    public void permissionInfo() {throw new ArgumentMissingException();}
++    public void permissionInfo() {
++        throw new ArgumentMissingException();
++    }
 +
 +    @CommandData(value = "permissioninfo.user")
-+    public void permissionInfoUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull @ArgumentName("page/permission") Optional<String> data)
-+    {
++    public void permissionInfoUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull @ArgumentName("page/permission") Optional<String> data) {
 +        commandPayload.getSender().sendMessage(info(player, data.orElse(null)));
 +    }
 +
 +    @CommandData(value = "permissioninfo.group")
-+    public void permissionInfoGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group, @NotNull @ArgumentName("page/permission") Optional<String> data)
-+    {
++    public void permissionInfoGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group, @NotNull @ArgumentName("page/permission") Optional<String> data) {
 +        commandPayload.getSender().sendMessage(info(group, data.orElse(null)));
 +    }
 +
@@ -1247,18 +1234,15 @@ index 0000000000000000000000000000000000000000..0c22bdd9e051ca5754416319d4d720c6
 +     * @return A Component representing the generated information.
 +     * @throws NullPointerException if entry is null.
 +     */
-+    private @NotNull Component info(@NotNull GroupablePermissionEntry entry, @Nullable String data)
-+    {
-+        if (data == null)
-+        {
++    private @NotNull Component info(@NotNull GroupablePermissionEntry entry, @Nullable String data) {
++        if (data==null) {
 +            return infoComponent(entry, 1);
 +        }
 +
-+        try
-+        {
++        try {
 +            return infoComponent(entry, Integer.parseInt(data));
++        } catch (NumberFormatException ignored) {
 +        }
-+        catch (NumberFormatException ignored) {}
 +
 +        return infoComponent(entry, data);
 +    }
@@ -1270,33 +1254,24 @@ index 0000000000000000000000000000000000000000..0c22bdd9e051ca5754416319d4d720c6
 +     * @param page            The page number for paginating the information (if applicable).
 +     * @return A formatted {@link Component} containing information about the permissions of the specified entry.
 +     */
-+    private @NotNull Component infoComponent(@NotNull GroupablePermissionEntry permissionEntry, int page)
-+    {
++    private @NotNull Component infoComponent(@NotNull GroupablePermissionEntry permissionEntry, int page) {
 +        Set<Permission> permissionSet = permissionEntry.getPermissionList();
-+        if (permissionSet.isEmpty())
-+        {
++        if (permissionSet.isEmpty()) {
 +            return Component.translatable("server.permission.info.clear", permissionEntry.displayName());
 +        }
 +
-+        Comparator<Permission> comparator = (a, b) -> CharSequence.compare(a.getOwner().getPermissionID(),
-+                b.getOwner().getPermissionID());
++        Comparator<Permission> comparator = (a, b) -> CharSequence.compare(a.getOwner().getPermissionID(), b.getOwner().getPermissionID());
 +
-+        PageImplementation pageBuilder = Bukkit.getPulvinar().getImplementation(PageImplementation.class);
 +        List<Permission> sorted = permissionSet.stream().sorted(comparator).toList();
 +
-+        PageBuilder<Permission> permissions = pageBuilder.createPageBuilder(sorted);
++        PageBuilder<Permission> permissions = new PageBuilder<>(sorted);
 +
 +        Component header = permissions.getHeader(permissionEntry.displayName(), page);
 +        Component footer = permissions.getFooter(permissionEntry.displayName(), page);
 +
 +        TextComponent.Builder builder = Component.text().append(header);
-+        permissions.getEntries(page).forEach(per ->
-+        {
-+            Component[] args = {
-+                    Component.text(per.getValue() ? "✔" : "❌"),
-+                    per.getOwner().displayName(),
-+                    Component.text(per.getName())
-+            };
++        permissions.getEntries(page).forEach(per -> {
++            Component[] args = {Component.text(per.getValue() ? "✔":"❌"), per.getOwner().displayName(), Component.text(per.getName())};
 +            builder.appendNewline().append(Component.translatable("server.permission.info.compact", args));
 +        });
 +        builder.appendNewline().append(footer);
@@ -1310,10 +1285,8 @@ index 0000000000000000000000000000000000000000..0c22bdd9e051ca5754416319d4d720c6
 +     * @param permission      The name of the specific permission.
 +     * @return A formatted {@link Component} containing information about the specified permission of the entry.
 +     */
-+    private @NotNull Component infoComponent(@NotNull GroupablePermissionEntry permissionEntry, @NotNull String permission)
-+    {
-+        return permissionEntry.getPermission(permission).map(paperPermission ->
-+        {
++    private @NotNull Component infoComponent(@NotNull GroupablePermissionEntry permissionEntry, @NotNull String permission) {
++        return permissionEntry.getPermission(permission).map(paperPermission -> {
 +
 +            Component header = Component.translatable("server.command.general.header", permissionEntry.displayName());
 +            Component footer = Component.translatable("server.command.general.footer", permissionEntry.displayName());
@@ -1327,8 +1300,7 @@ index 0000000000000000000000000000000000000000..0c22bdd9e051ca5754416319d4d720c6
 +            builder.appendNewline().append(keyValue.arguments(owner, paperPermission.getOwner().displayName()));
 +            builder.appendNewline().append(footer);
 +            return builder.asComponent();
-+        }).orElseGet(() -> Component.translatable("server.permission.entity.failed", permissionEntry.displayName(),
-+                Component.text(permission)));
++        }).orElseGet(() -> Component.translatable("server.permission.entity.failed", permissionEntry.displayName(), Component.text(permission)));
 +    }
 +
 +    /**
@@ -1341,16 +1313,13 @@ index 0000000000000000000000000000000000000000..0c22bdd9e051ca5754416319d4d720c6
 +     * @return A Component representing the result of the permission operation.
 +     * @throws NullPointerException if entry, permission, or executor() result in null.
 +     */
-+    private @NotNull Component execute(@NotNull GroupablePermissionEntry entry, @NotNull String permission, @Nullable PermissionAction action)
-+    {
++    private @NotNull Component execute(@NotNull GroupablePermissionEntry entry, @NotNull String permission, @Nullable PermissionAction action) {
 +        PermissionCommandExecutor executor = executor();
-+        if (action == null)
-+        {
++        if (action==null) {
 +            return executor.setPermission(entry, permission, null);
 +        }
 +
-+        if (action.equals(PermissionAction.UNSET))
-+        {
++        if (action.equals(PermissionAction.UNSET)) {
 +            return executor.unsetPermission(entry, permission);
 +        }
 +
@@ -1362,19 +1331,15 @@ index 0000000000000000000000000000000000000000..0c22bdd9e051ca5754416319d4d720c6
 +     *
 +     * @return A new PermissionCommandExecutor with the context set to LOCAL.
 +     */
-+    private @NotNull PermissionCommandExecutor executor()
-+    {
++    private @NotNull PermissionCommandExecutor executor() {
 +        return new PermissionCommandExecutor(Context.LOCAL);
 +    }
 +
 +    /**
 +     * Enum representing possible actions for permission operations.
 +     */
-+    public enum PermissionAction
-+    {
-+        TRUE,
-+        FALSE,
-+        UNSET
++    public enum PermissionAction {
++        TRUE, FALSE, UNSET
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/permission/command/PermissionCommandExecutor.java b/src/main/java/net/kissenpvp/pulvinar/permission/command/PermissionCommandExecutor.java
