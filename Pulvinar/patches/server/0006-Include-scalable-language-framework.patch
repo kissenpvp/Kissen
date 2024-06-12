@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ivo <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:28:51 +0200
-Subject: [PATCH] Integrated localization from kissen into paper
+Subject: [PATCH] Include scalable language framework
 
 
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
@@ -33,10 +33,10 @@ index 2bdd4e9ff1b7ebf5c820c17010c663dccd314c39..04d77fd9c819caaed6efa0c60db0b4ac
  
 diff --git a/src/main/java/net/kissenpvp/pulvinar/message/localization/PulvinarLocalizationImplementation.java b/src/main/java/net/kissenpvp/pulvinar/message/localization/PulvinarLocalizationImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8b5433ed6c03dd542fc249f99bd5b6f7a02860ac
+index 0000000000000000000000000000000000000000..af5fbd3c197f257f532cc8fefd7657490c993dc3
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/message/localization/PulvinarLocalizationImplementation.java
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,23 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -58,43 +58,8 @@ index 0000000000000000000000000000000000000000..8b5433ed6c03dd542fc249f99bd5b6f7
 +package net.kissenpvp.pulvinar.message.localization;
 +
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
-+import net.kyori.adventure.text.Component;
-+import net.kyori.adventure.text.minimessage.MiniMessage;
-+import org.jetbrains.annotations.Contract;
-+import org.jetbrains.annotations.NotNull;
 +
-+import java.text.MessageFormat;
-+
-+public class PulvinarLocalizationImplementation extends KissenLocalizationImplementation {
-+
-+    @Override
-+    public boolean postStart() {
-+
-+        //I love disconnect messages
-+        register("server.disconnect.server-shutdown", getTranslation("multiplayer.disconnect.server_shutdown"));
-+        register("server.disconnect.not-whitelisted", getTranslation("multiplayer.disconnect.not_whitelisted"));
-+        register("server.disconnect.server-full", getTranslation("multiplayer.disconnect.server_full"));
-+        register("server.disconnect.outdated-client", getTranslation("multiplayer.disconnect.outdated_client"));
-+        register("server.disconnect.outdated-server", getTranslation("multiplayer.disconnect.outdated_server"));
-+        register("server.disconnect.server-restart", getTranslation("multiplayer.disconnect.server_shutdown"));
-+
-+        register("paper.kick.connection-throttle", new MessageFormat("Connection throttled! Please wait before reconnecting."));
-+        register("paper.unauthorized", new MessageFormat("You do not have the permission to perform this command."));
-+
-+        return super.postStart();
-+    }
-+
-+    /**
-+     * Retrieves a translated message format based on the provided language key.
-+     *
-+     * @param languageKey the string representing the language key for the translation
-+     * @return the translated message format
-+     */
-+    @Contract("_ -> new")
-+    private @NotNull MessageFormat getTranslation(String languageKey) {
-+        return new MessageFormat(MiniMessage.miniMessage().serialize(Component.translatable(languageKey)));
-+    }
-+}
++public class PulvinarLocalizationImplementation extends KissenLocalizationImplementation { }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 index 91b5954ace463cc0cba5a0985e0cd1f668a79f84..80b8fe09a6fc70437d329ed5535235c3ad35482d 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
