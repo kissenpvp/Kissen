@@ -44,28 +44,28 @@ import java.util.Set;
 public interface LocalizationImplementation extends Implementation {
 
     /**
-     * Retrieves the set of available locales for a specific Kissen plugin.
+     * Retrieves the set of available locales for a specific {@link KissenPlugin}.
      * <p>
-     * This method is used to query the Kissen implementation for the set of locales that are available and supported
-     * by the specified plugin. A locale represents a specific language and country combination, and it is used for
+     * This method is used to query for the set of locales that are available and supported
+     * by the specified plugin. A {@link Locale} represents a specific language and country combination, and it is used for
      * translating messages and providing localized content to users based on their preferences.
      *
-     * @param kissenPlugin The {@link KissenPlugin} instance representing the plugin to query for available locales. Must not be null.
+     * @param kissenPlugin The {@link KissenPlugin} instance representing the plugin to query for available locales. Must not be {@code null}.
      * @return An unmodifiable set of {@link Locale} objects representing the available locales for the specified plugin.
-     * The set contains all the supported locales that the plugin can use for providing translated messages and content.
+     * The {@link Set} contains all the supported locales that the plugin can use for providing translated messages and content.
      * If no specific locales are supported, an empty set will be returned.
-     * @throws NullPointerException If the provided {@code kissenPlugin} parameter is null.
+     * @throws NullPointerException If the provided {@link KissenPlugin} parameter is null.
      */
     @Unmodifiable @NotNull Set<Locale> getAvailableLocales(@NotNull KissenPlugin kissenPlugin);
 
     /**
-     * Registers a translation key with its default message for a specific Kissen plugin.
+     * Registers a translation key with its default message for a specific {@link KissenPlugin}.
      * <p>
-     * This method is used to register a translation key along with its default message in the localization system of the Kissen framework.
+     * This method is used to register a translation key along with its default message in the localization system of the framework.
      * Translation keys are used as identifiers to retrieve translated messages for different locales, allowing plugins to provide multi-language support.
      * <p>
      * When a translation key is registered, it becomes accessible in the localization system, and plugins can use it to provide localized messages
-     * based on the user's preferred language or locale.
+     * based on the user's preferred language or locale. These can be either accessed using {@link Component#translatable(String)}
      *
      * @param kissenPlugin   The {@link KissenPlugin} instance representing the plugin where the translation key will be registered. Must not be null.
      * @param key            The string key used for translation. It serves as the identifier for the translated message and must be unique within the plugin. Must not be null.
@@ -75,13 +75,13 @@ public interface LocalizationImplementation extends Implementation {
     void register(@NotNull KissenPlugin kissenPlugin, @NotNull String key, @NotNull MessageFormat defaultMessage);
 
     /**
-     * Retrieves the default locale for the Kissen framework.
+     * Retrieves the default locale for the server.
      * <p>
-     * This method is used to obtain the default {@link Locale} used by the Kissen framework for translation purposes.
+     * This method is used to obtain the default {@link Locale} used throughout the server for translation purposes.
      * The default locale represents the fallback locale that the system uses when a specific translation for a locale is not available.
      * It serves as the base locale for providing translated messages and content when a user's preferred locale is not supported or available.
      *
-     * @return The default {@link Locale} used by the Kissen framework for translation purposes.
+     * @return The default {@link Locale} used by the server for translation purposes.
      */
     @NotNull Locale getDefaultLocale();
 
@@ -89,8 +89,10 @@ public interface LocalizationImplementation extends Implementation {
      * Retrieves the {@link Locale} object for a given locale tag.
      * <p>
      * This method is used to obtain the corresponding {@link Locale} object based on a provided locale tag.
-     * A locale tag is a string representation of a specific language and country combination, typically in the form of language tags, such as "en-US" for English (United States).
+     * A locale tag is a string representation of a specific language and country combination, typically in the form of language tags, such as "en_US" for English (United States).
      * The locale tag is used to identify the desired locale for translating messages and providing localized content to users.
+     * <p>
+     * Note that the {@link Locale} will get built if it is not yet registered.
      *
      * @param localeTag The locale tag as a string, representing the desired {@link Locale}. Must not be null.
      * @return The {@link Locale} object corresponding to the provided locale tag.
@@ -105,10 +107,12 @@ public interface LocalizationImplementation extends Implementation {
      * The localized name represents the display name of the locale, typically in the language of the locale itself.
      * It is used to present user-friendly locale names in the user interface or settings, enabling users to select their preferred language.
      *
+     * @deprecated use {@link Locale#getDisplayName()} when loading the locale with {@link #getLocale(String)}. This method will be removed in 1.21
      * @param locale The {@link Locale} for which the name will be retrieved. Must not be null.
      * @return The name of the provided {@link Locale} as a {@link Component}.
      * @throws NullPointerException If the provided {@code locale} parameter is null.
      */
+    @Deprecated(since = "1.20.6", forRemoval = true)
     @NotNull Component getLocaleName(@NotNull Locale locale);
 
     /**
@@ -118,6 +122,7 @@ public interface LocalizationImplementation extends Implementation {
      * The translation key serves as the identifier for the desired message, while the locale determines the language and country for the translation.
      * Additionally, the method allows for variable placeholders within the translated message, which can be replaced with specific values provided in the 'var' array.
      *
+     * @deprecated Use {@code Component#translatable}. Will get removed in 1.21.
      * @param kissenPlugin The {@link KissenPlugin} instance representing the plugin from which the translation is requested. Must not be null.
      * @param key          The string key used for translation. It identifies the message to be translated. Must not be null.
      * @param locale       The {@link Locale} for which the message will be translated. Must not be null.
@@ -128,6 +133,7 @@ public interface LocalizationImplementation extends Implementation {
      * If no translation is available for the key and the locale, the method may return the default message as obtained from the {@link #register} method.
      * @throws NullPointerException If any of the provided parameters ({@code kissenPlugin}, {@code key}, {@code locale}, or {@code var}) is null.
      */
+    @Deprecated(since = "1.20.6", forRemoval = true)
     @NotNull Component translate(@NotNull KissenPlugin kissenPlugin, @NotNull String key, @NotNull Locale locale, @NotNull String... var);
 
     /**
@@ -137,6 +143,7 @@ public interface LocalizationImplementation extends Implementation {
      * A {@link TranslatableComponent} is a specialized component that holds a translation key along with optional variables for dynamic content.
      * The translation key serves as the identifier for the desired message, while the locale determines the language and country for the translation.
      *
+     * @deprecated Use {@code Component#translatable}. Will get removed in 1.21.
      * @param kissenPlugin          The {@link KissenPlugin} instance representing the plugin from which the translation is requested. Must not be null.
      * @param translatableComponent The {@link TranslatableComponent} to be translated. It contains the translation key and optional variables for dynamic content. Must not be null.
      * @param locale                The {@link Locale} for which the message will be translated. Must not be null.
@@ -144,5 +151,6 @@ public interface LocalizationImplementation extends Implementation {
      * If no translation is available for the key and the locale, the method may return the default message as obtained from the {@link #register} method.
      * @throws NullPointerException If any of the provided parameters ({@code kissenPlugin}, {@code translatableComponent}, or {@code locale}) is null.
      */
+    @Deprecated(since = "1.20.6", forRemoval = true)
     @NotNull Component translate(@NotNull KissenPlugin kissenPlugin, @NotNull TranslatableComponent translatableComponent, @NotNull Locale locale);
 }
