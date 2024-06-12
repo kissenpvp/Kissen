@@ -44,7 +44,7 @@ import java.util.Collection;
  * @see TabCompleterExecutor
  * @see CommandPayload
  */
-public class KissenPaperCompleteExecutor<S extends ServerEntity> implements TabCompleterExecutor<S>
+public class KissenCompleteExecutor<S extends ServerEntity> implements TabCompleterExecutor<S>
 {
 
     private final Method method;
@@ -58,7 +58,7 @@ public class KissenPaperCompleteExecutor<S extends ServerEntity> implements TabC
      * @throws IllegalReturnValueException If the return type of the method is not a Collection.
      * @throws IllegalParameterException   If the method takes more than one parameter or takes a parameter that is not a CommandPayload.
      */
-    public KissenPaperCompleteExecutor(@NotNull Object holder, @NotNull Method method)
+    public KissenCompleteExecutor(@NotNull Object holder, @NotNull Method method)
     {
         final Class<?> returnType = method.getReturnType();
         final Class<?>[] parameters = method.getParameterTypes();

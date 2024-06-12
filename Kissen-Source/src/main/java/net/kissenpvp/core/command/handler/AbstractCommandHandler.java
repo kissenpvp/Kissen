@@ -16,7 +16,7 @@ import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.command.CommandHolder;
 import net.kissenpvp.core.command.argument.MethodEvaluator;
 import net.kissenpvp.core.command.executor.KissenCommandExecutor;
-import net.kissenpvp.core.command.executor.KissenPaperCompleteExecutor;
+import net.kissenpvp.core.command.executor.KissenCompleteExecutor;
 import net.kissenpvp.core.permission.InternalPermissionImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
@@ -133,7 +133,7 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
 
         TabCompleter tabCompleter = method.getAnnotation(TabCompleter.class);
         if (tabCompleter != null) {
-            KissenPaperCompleteExecutor<S> executor = new KissenPaperCompleteExecutor<>(instance, method);
+            KissenCompleteExecutor<S> executor = new KissenCompleteExecutor<>(instance, method);
             buildCommand(tabCompleter.value()).initCompleter(executor);
         }
     }
