@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Groldi <chniucg@gmail.com>
 Date: Fri, 15 Sep 2023 22:45:32 +0200
-Subject: [PATCH] Integrated player system from kissen into paper
+Subject: [PATCH] Implemented core player system
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
@@ -209,10 +209,10 @@ index 0000000000000000000000000000000000000000..6bf95a6ba833df5733076befc3d3d030
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..06ab436a7ee928a31f4aedafaf58dd6e757fec14
+index 0000000000000000000000000000000000000000..e02174fdf3f480949dda9a536699e54260de4d79
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-@@ -0,0 +1,150 @@
+@@ -0,0 +1,121 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -234,16 +234,12 @@ index 0000000000000000000000000000000000000000..06ab436a7ee928a31f4aedafaf58dd6e
 +package net.kissenpvp.pulvinar.networking.client.entity;
 +
 +import net.kissenpvp.core.api.database.DataWriter;
-+import net.kissenpvp.core.api.database.meta.list.MetaList;
-+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 +import net.kissenpvp.core.api.time.AccurateDuration;
-+import net.kissenpvp.core.api.time.TemporalData;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.api.user.UserImplementation;
 +import net.kissenpvp.core.ban.warn.WarnNode;
 +import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
 +import net.kissenpvp.core.user.rank.PlayerRankNode;
-+import net.kissenpvp.pulvinar.api.ban.BanTemplate;
 +import net.kissenpvp.pulvinar.api.ban.Punishment;
 +import net.kissenpvp.pulvinar.api.ban.warn.Warn;
 +import net.kissenpvp.pulvinar.api.base.Context;
@@ -258,7 +254,6 @@ index 0000000000000000000000000000000000000000..06ab436a7ee928a31f4aedafaf58dd6e
 +import net.kissenpvp.pulvinar.user.playersetting.PulvinarBoundPlayerSetting;
 +import net.kissenpvp.pulvinar.user.rank.PulvinarPlayerRank;
 +import net.kissenpvp.pulvinar.user.rank.PulvinarPlayerFallBackRank;
-+import net.kyori.adventure.text.Component;
 +import org.bukkit.Bukkit;
 +import org.bukkit.OfflinePlayer;
 +import org.jetbrains.annotations.Contract;
@@ -266,8 +261,6 @@ index 0000000000000000000000000000000000000000..06ab436a7ee928a31f4aedafaf58dd6e
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
-+import java.time.Period;
-+import java.util.List;
 +import java.util.Set;
 +import java.util.function.Function;
 +import java.util.stream.Collectors;
@@ -305,11 +298,6 @@ index 0000000000000000000000000000000000000000..06ab436a7ee928a31f4aedafaf58dd6e
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable List<Warn> getWarnHistory() {
-+        return ((PulvinarPublicUser) getUser()).getWarns().stream().map(transformWarn()).toList();
-+    }
-+
-+    @Override
 +    public void clearActiveWarns() {
 +        //TODO
 +        /*List<WarnNode> nodes = new ArrayList<>(getUser().getListNotNull("warn_list", WarnNode.class));
@@ -335,23 +323,6 @@ index 0000000000000000000000000000000000000000..06ab436a7ee928a31f4aedafaf58dd6e
 +    public @NotNull <X> BoundPlayerSetting<X> getSetting(@NotNull Class<? extends PlayerSetting<X>> settingClass, @NotNull Context context) {
 +        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(getUniqueId());
 +        return new PulvinarBoundPlayerSetting<>(getPlayerSetting(settingClass), offlinePlayer);
-+    }
-+
-+    @Override
-+    public @NotNull Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator) {
-+        return warn(ban, warnOperator, null);
-+    }
-+
-+    @Override
-+    public @NotNull Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason) {
-+        MetaList<WarnNode> nodes = ((PulvinarPublicUser) getUser()).getWarns();
-+
-+        AccurateDuration duration = new AccurateDuration(Period.ofWeeks(1));
-+        TemporalData temporalData = new TemporalData(duration);
-+
-+        WarnNode node = new WarnNode(ban.getID(), warnOperator.getName(), reason, temporalData);
-+        nodes.add(node);
-+        return transformWarn().apply(node);
 +    }
 +
 +    public @NotNull PulvinarPermissible getPermissionContext() throws PermissibleOverriddenException {
@@ -2590,10 +2561,10 @@ index 0000000000000000000000000000000000000000..e3fb9b7afda13bfa4603a4584fa85f09
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6c724a54fc3c262e7b34378ebd62f4dfdc7ecea8
+index 0000000000000000000000000000000000000000..32a7f1d8b301263e56abe2a94a368b492a22b1b5
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
-@@ -0,0 +1,242 @@
+@@ -0,0 +1,236 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2638,9 +2609,7 @@ index 0000000000000000000000000000000000000000..6c724a54fc3c262e7b34378ebd62f4df
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +
-+import java.util.Map;
-+import java.util.Objects;
-+import java.util.UUID;
++import java.util.*;
 +
 +/**
 + * The {@code PulvinarPublicUser} class extends the {@link KissenPublicUser} class with {@link Permission}
@@ -2666,10 +2635,6 @@ index 0000000000000000000000000000000000000000..6c724a54fc3c262e7b34378ebd62f4df
 +     */
 +    public PulvinarPublicUser(@Nullable UUID uuid, @Nullable String name) throws BackendException {
 +        super(uuid, name);
-+    }
-+
-+    public @NotNull MetaList<WarnNode> getWarns() {
-+        return getRepository().getListNotNull("warn_list", WarnNode.class);
 +    }
 +
 +    @Override

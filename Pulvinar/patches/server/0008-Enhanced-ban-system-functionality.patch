@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Groldi <chniucg@gmail.com>
 Date: Sun, 24 Sep 2023 13:30:52 +0200
-Subject: [PATCH] Enhanced bansystem functionality
+Subject: [PATCH] Enhanced ban system functionality
 
 
 diff --git a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
@@ -152,10 +152,10 @@ index 0000000000000000000000000000000000000000..533aa48a0e3134278dd9b4330c44b62f
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7af1f40a99cedaedbce4fe2a01fd316f170b5bcf
+index 0000000000000000000000000000000000000000..7c6d714ac14c06f83b7110b6e347cb074b71ae3c
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
-@@ -0,0 +1,465 @@
+@@ -0,0 +1,466 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -258,6 +258,7 @@ index 0000000000000000000000000000000000000000..7af1f40a99cedaedbce4fe2a01fd316f
 +        kissenLocalizationImplementation.register("server.ban.history.empty", new MessageFormat("The punishment history of {0} is empty."));
 +        kissenLocalizationImplementation.register("server.ban.warn.ban", new MessageFormat("The player {0} already has {1} warn(s). Do you want to punish the player instead?\n{2} {3}"));
 +        kissenLocalizationImplementation.register("server.ban.warn.clear", new MessageFormat("The warn(s) of the player {0} have been reset."));
++        kissenLocalizationImplementation.register("server.ban.no.warns", new MessageFormat("Player {0} has no warns yet."));
 +        kissenLocalizationImplementation.register("server.ban.player.warned", new MessageFormat("Player {0} has been warned {1} time(s)."));
 +        kissenLocalizationImplementation.register("server.ban.player.warned.cause", new MessageFormat("Player {0} has been warned {1} times(s) with the cause: {2}."));
 +        kissenLocalizationImplementation.register("server.ban.player.warned.target", new MessageFormat("Warned for {0}!"));
@@ -1404,10 +1405,10 @@ index 0000000000000000000000000000000000000000..07cdb5317025176973fc095a65d79386
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/warn/command/WarnCommand.java b/src/main/java/net/kissenpvp/pulvinar/ban/warn/command/WarnCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..17bb9c8254a26ae7e05445f8bde91b15462cb630
+index 0000000000000000000000000000000000000000..bf60ebc384e35bdab9e7286c03204dbf57b4ffdb
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/warn/command/WarnCommand.java
-@@ -0,0 +1,151 @@
+@@ -0,0 +1,149 @@
 +package net.kissenpvp.pulvinar.ban.warn.command;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -1477,23 +1478,21 @@ index 0000000000000000000000000000000000000000..17bb9c8254a26ae7e05445f8bde91b15
 +        runnable.run();
 +    }
 +
-+    @CommandData("warnhistory")
++    @CommandData(value = "warn.history", description = "This command shows the history of the warns the specified player has received. It also include warns that have expired already.")
 +    public void warnHistory(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer player, @NotNull java.util.Optional<Integer> page)
 +    {
 +        List<Warn> paperWarns = new ArrayList<>(player.getWarnHistory());
 +        if (paperWarns.isEmpty())
 +        {
-+            payload.getSender().sendMessage(Component.text("no warns")); //TODO
++            payload.getSender().sendMessage(Component.translatable("server.ban.no.warns", player.getName()));
 +            return;
 +        }
 +        Collections.reverse(paperWarns);
-+        PageBuilder<Warn> warnPages = Bukkit.getPulvinar().getImplementation(
-+                PageImplementation.class).createPageBuilder(paperWarns);
++        PageImplementation pageImplementation = Bukkit.getPulvinar().getImplementation(PageImplementation.class);
++        PageBuilder<Warn> warnPages = pageImplementation.createPageBuilder(paperWarns);
 +
-+
-+        TextComponent.Builder builder = Component.text().append(
-+                warnPages.getHeader(player.displayName(), page.orElse(1)));
-+
++        int titlePage = page.orElse(1);
++        TextComponent.Builder builder = Component.text().append(warnPages.getHeader(player.displayName(), titlePage));
 +
 +        for (Warn warn : warnPages.getEntries(page.orElse(1)))
 +        {
@@ -1505,11 +1504,11 @@ index 0000000000000000000000000000000000000000..17bb9c8254a26ae7e05445f8bde91b15
 +
 +            builder.appendNewline().append(Component.translatable("server.ban.compact", arguments));
 +        }
-+        builder.appendNewline().append(warnPages.getFooter(player.displayName(), page.orElse(1)));
++        builder.appendNewline().append(warnPages.getFooter(player.displayName(), titlePage));
 +        payload.getSender().sendMessage(builder.asComponent());
 +    }
 +
-+    @CommandData(value = "warnreset", aliases = "resetwarn")
++    @CommandData(value = "warn.reset", description = "This command resets the end time of all active warnings to the current time.")
 +    public void warnClear(@NotNull CommandPayload<CommandSender> payload, @NotNull OfflinePlayer player)
 +    {
 +        payload.confirmRequest(() ->
@@ -1584,30 +1583,92 @@ index 6bf95a6ba833df5733076befc3d3d030548fa289..cb430ffdd83e390963257ab6d6e80231
  import net.kissenpvp.pulvinar.api.ban.warn.Warn;
  import io.netty.channel.Channel;
 diff --git a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-index 06ab436a7ee928a31f4aedafaf58dd6e757fec14..f0df9b50005a21c067bd67272c3eefae22ee3b8e 100644
+index e02174fdf3f480949dda9a536699e54260de4d79..380a470e98063ddf58cd2a604bc67f38bd55b737 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-@@ -52,6 +52,7 @@ import org.jetbrains.annotations.Nullable;
+@@ -19,12 +19,16 @@
+ package net.kissenpvp.pulvinar.networking.client.entity;
+ 
+ import net.kissenpvp.core.api.database.DataWriter;
++import net.kissenpvp.core.api.database.meta.list.MetaList;
++import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+ import net.kissenpvp.core.api.time.AccurateDuration;
++import net.kissenpvp.core.api.time.TemporalData;
+ import net.kissenpvp.core.api.user.User;
+ import net.kissenpvp.core.api.user.UserImplementation;
+ import net.kissenpvp.core.ban.warn.WarnNode;
+ import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
+ import net.kissenpvp.core.user.rank.PlayerRankNode;
++import net.kissenpvp.pulvinar.api.ban.BanTemplate;
+ import net.kissenpvp.pulvinar.api.ban.Punishment;
+ import net.kissenpvp.pulvinar.api.ban.warn.Warn;
+ import net.kissenpvp.pulvinar.api.base.Context;
+@@ -39,6 +43,7 @@ import net.kissenpvp.pulvinar.user.PulvinarPublicUser;
+ import net.kissenpvp.pulvinar.user.playersetting.PulvinarBoundPlayerSetting;
+ import net.kissenpvp.pulvinar.user.rank.PulvinarPlayerRank;
+ import net.kissenpvp.pulvinar.user.rank.PulvinarPlayerFallBackRank;
++import net.kyori.adventure.text.Component;
+ import org.bukkit.Bukkit;
+ import org.bukkit.OfflinePlayer;
+ import org.jetbrains.annotations.Contract;
+@@ -46,6 +51,8 @@ import org.jetbrains.annotations.NotNull;
+ import org.jetbrains.annotations.Nullable;
  import org.jetbrains.annotations.Unmodifiable;
  
- import java.time.Period;
-+import java.util.ArrayList;
- import java.util.List;
++import java.time.Period;
++import java.util.List;
  import java.util.Set;
  import java.util.function.Function;
-@@ -96,10 +97,7 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
+ import java.util.stream.Collectors;
+@@ -82,14 +89,6 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
+         return getOnlineTime(getUser(context));
+     }
  
-     @Override
-     public void clearActiveWarns() {
+-    @Override
+-    public void clearActiveWarns() {
 -        //TODO
 -        /*List<WarnNode> nodes = new ArrayList<>(getUser().getListNotNull("warn_list", WarnNode.class));
 -        nodes.forEach(warn -> warn.temporalMeasure().end().setValue(System.currentTimeMillis()));
 -        getUser().setList("warn_list", nodes);*/
-+        ((PulvinarPublicUser) getUser()).clearWarns();
+-    }
+-
+     @Override
+     public @NotNull User getUser(@NotNull Context context) {
+         PulvinarPublicUser pulvinarUser = (PulvinarPublicUser) getUser();
+@@ -110,12 +109,39 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
+         return new PulvinarBoundPlayerSetting<>(getPlayerSetting(settingClass), offlinePlayer);
      }
  
-     @Override
-@@ -145,6 +143,6 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
++    @Override
++    public @NotNull @Unmodifiable List<Warn> getWarnHistory() {
++        return ((PulvinarPublicUser) getUser()).getWarns().stream().map(transformWarn()).toList();
++    }
++
++    @Override
++    public void clearActiveWarns() {
++        ((PulvinarPublicUser) getUser()).clearWarns();
++    }
++
++    @Override
++    public @NotNull Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator) {
++        return warn(ban, warnOperator, null);
++    }
++
++    @Override
++    public @NotNull Warn warn(@NotNull BanTemplate ban, @NotNull ServerEntity warnOperator, @Nullable Component reason) {
++        MetaList<WarnNode> nodes = ((PulvinarPublicUser) getUser()).getWarns();
++
++        AccurateDuration duration = new AccurateDuration(Period.ofWeeks(1));
++        TemporalData temporalData = new TemporalData(duration);
++
++        WarnNode node = new WarnNode(ban.getID(), warnOperator.getName(), reason, temporalData);
++        nodes.add(node);
++        return transformWarn().apply(node);
++    }
++
+     public @NotNull PulvinarPermissible getPermissionContext() throws PermissibleOverriddenException {
+         return (PulvinarPermissible) getPermissible();
+     }
  
      @Contract(pure = true, value = "-> new")
      protected @NotNull Function<WarnNode, Warn> transformWarn() {
@@ -1616,29 +1677,38 @@ index 06ab436a7ee928a31f4aedafaf58dd6e757fec14..f0df9b50005a21c067bd67272c3eefae
      }
  }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
-index 6c724a54fc3c262e7b34378ebd62f4dfdc7ecea8..8e7a41806ea004d74975ac483b09ab4629671d4d 100644
+index 32a7f1d8b301263e56abe2a94a368b492a22b1b5..45a08179e510a89586c9bc16a03014eff4f3ce71 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
-@@ -42,9 +42,8 @@ import org.bukkit.Bukkit;
+@@ -42,7 +42,9 @@ import org.bukkit.Bukkit;
  import org.jetbrains.annotations.NotNull;
  import org.jetbrains.annotations.Nullable;
  
--import java.util.Map;
--import java.util.Objects;
--import java.util.UUID;
 +import java.time.Instant;
-+import java.util.*;
+ import java.util.*;
++import java.util.function.Predicate;
  
  /**
   * The {@code PulvinarPublicUser} class extends the {@link KissenPublicUser} class with {@link Permission}
-@@ -76,6 +75,13 @@ public class PulvinarPublicUser extends KissenPublicUser<Permission> {
-         return getRepository().getListNotNull("warn_list", WarnNode.class);
+@@ -70,6 +72,24 @@ public class PulvinarPublicUser extends KissenPublicUser<Permission> {
+         super(uuid, name);
      }
  
++    public @NotNull MetaList<WarnNode> getWarns() {
++        return getRepository().getListNotNull("warn_list", WarnNode.class);
++    }
++
 +    public void clearWarns() {
 +        List<WarnNode> nodes = new ArrayList<>(getWarns());
-+        //TODO make shorter
-+        nodes.stream().filter(warn -> warn.temporalMeasure().end().toOptional().stream().anyMatch(lo -> Instant.ofEpochMilli(lo).isAfter(Instant.now()))).forEach(warn -> warn.temporalMeasure().end().setValue(System.currentTimeMillis()));
++        final long end = System.currentTimeMillis();
++
++        Predicate<WarnNode> isValid = warn ->
++        {
++            Instant now = Instant.now();
++            Optional<Long> optionalEnd = warn.temporalMeasure().end().toOptional();
++            return optionalEnd.stream().anyMatch(lo -> Instant.ofEpochMilli(lo).isAfter(now));
++        };
++        nodes.stream().filter(isValid).forEach(warn -> warn.temporalMeasure().end().setValue(end));
 +        getRepository().setList("warn_list", nodes);
 +    }
 +
