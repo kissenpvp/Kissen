@@ -44,7 +44,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * The KissenLocalizationImplementation class is an implementation of both the LocalizationImplementation and KissenImplementation interfaces.
@@ -89,6 +90,20 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
         this.globallyKnown = new HashSet<>();
     }
 
+    private static boolean populateMissingTranslations(@NotNull LocaleData localeData, @NotNull JsonObject jsonObject, @NotNull String locale, Map<String, MessageFormat> messageData) {
+        Predicate<String> notSet = translation -> !messageData.containsKey(translation);
+        Set<String> translations = localeData.data().keySet().stream().filter(notSet).collect(Collectors.toUnmodifiableSet());
+        translations.forEach(translation -> {
+            MessageFormat defaultMessage = localeData.data().get(translation);
+
+            String warnMessage = "The translation '{}' was not found in the file for locale '{}' from plugin '{}'. It will be set to the default message: '{}'.";
+            log.warn(warnMessage, translation, locale, localeData.translationRegistry.name().namespace(), defaultMessage.toPattern());
+            jsonObject.addProperty(translation, defaultMessage.toPattern());
+            messageData.put(translation, defaultMessage);
+        });
+        return !translations.isEmpty();
+    }
+
     @Override
     public boolean preStart() {
         localeDataList.add(new LocaleData(SYSTEM, new File("lang"), createTranslationRegistry("system", "systemtranslations")));
@@ -114,12 +129,6 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
     }
 
     @Override
-    public void stop() {
-        clearData(getData(SYSTEM));
-        globallyKnown.clear();
-    }
-
-    @Override
     public void load(@NotNull KissenPlugin kissenPlugin) {
         initializePlugin(kissenPlugin);
     }
@@ -132,6 +141,12 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
             String message = "The plugin {} encountered an issue while attempting to generate or retrieve translation files. Creation or loading of the translation files failed.";
             log.error(message, kissenPlugin, ioException);
         }
+    }
+
+    @Override
+    public void stop() {
+        clearData(getData(SYSTEM));
+        globallyKnown.clear();
     }
 
     @Override
@@ -334,12 +349,17 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
             File directory = localeData.directory();
             if (!directory.exists()) {
                 if (!directory.mkdirs()) {
-                    throw new IOException("Could not create language directory.");
+                    throw new IOException("Unable to create the language directory. Please check the permissions and ensure there is enough disk space.");
                 }
             }
 
-            Arrays.stream(Objects.requireNonNull(directory.listFiles(file -> file.isFile() && file.getName().toLowerCase().endsWith(".json")))).forEach(file -> registerFile(localeData, file));
+            FileFilter jsonFilter = file -> file.isFile() && file.getName().toLowerCase().endsWith(".json");
+            File[] loadedFiles = directory.listFiles(jsonFilter);
+            if (Objects.isNull(loadedFiles)) {
+                return;
+            }
 
+            Arrays.stream(loadedFiles).forEach(file -> registerFile(localeData, file));
             if (!localeData.installed().contains(getDefaultLocale())) {
                 writeDefaultLocaleFile(localeData, new File(directory, getDefaultLocale() + ".json"));
             }
@@ -358,7 +378,8 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
      * @throws NullPointerException If either the localeData or file parameter is null.
      */
     private void registerFile(@NotNull LocaleData localeData, @NotNull File file) {
-        loadJsonFromFile(file).ifPresent(jsonObject -> registerJson(localeData, jsonObject, file.getName().substring(0, file.getName().length() - 5)));
+        String langName = file.getName().substring(0, file.getName().length() - 5);
+        loadJsonFromFile(file).ifPresent(jsonObject -> registerJson(localeData, jsonObject, langName));
     }
 
     /**
@@ -376,7 +397,7 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
                 return Optional.ofNullable(JsonParser.parseReader(bufferedReader).getAsJsonObject());
             }
         } catch (IOException | JsonIOException | JsonSyntaxException exception) {
-            log.error("An error occurred when reading language file '{}'", file.getAbsolutePath(), exception);
+            log.error("Failed to read the language file at '{}'. Please check the file and ensure the file is accessible.", file.getAbsolutePath(), exception);
         }
         return Optional.empty();
     }
@@ -396,22 +417,18 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
      * @throws NullPointerException If any of the provided parameters (localeData, jsonObject, locale) are null.
      */
     private void registerJson(@NotNull LocaleData localeData, @NotNull JsonObject jsonObject, @NotNull String locale) {
-        Map<String, MessageFormat> stringStringMap = new HashMap<>();
-        jsonObject.asMap().forEach((key, value) -> stringStringMap.put(key, new MessageFormat(value.getAsString())));
+        Map<String, MessageFormat> messageData = new HashMap<>();
+        jsonObject.asMap().forEach((key, value) -> messageData.put(key, new MessageFormat(value.getAsString())));
 
-        AtomicBoolean rewrite = new AtomicBoolean(false);
-        localeData.data().keySet().stream().filter(translation -> !stringStringMap.containsKey(translation)).forEach(translation -> {
-            rewrite.set(true);
-            MessageFormat defaultMessage = localeData.data().get(translation);
-            log.warn("The translation '{}' was not found in the file for locale '{}' from plugin '{}'. It will be set to the default message: '{}'.", translation, locale, localeData.translationRegistry.name().namespace(), defaultMessage.toPattern());
-            jsonObject.addProperty(translation, defaultMessage.toPattern());
-            stringStringMap.put(translation, defaultMessage);
-        });
-        if (rewrite.get() && KissenCore.getInstance().getImplementation(ConfigurationImplementation.class).getSetting(InsertMissingTranslation.class)) {
+        boolean updated = populateMissingTranslations(localeData, jsonObject, locale, messageData);
+        ConfigurationImplementation configImplementation = KissenCore.getInstance().getImplementation(ConfigurationImplementation.class);
+        if (updated && configImplementation.getSetting(InsertMissingTranslation.class)) {
+            File langFile = new File(localeData.directory(), String.format("%s.json", locale));
             try {
-                writeJson(jsonObject, new File(localeData.directory(), locale + ".json"));
-            } catch (IOException e) {
-                log.info("");
+                writeJson(jsonObject, langFile);
+            } catch (IOException ioException) {
+                String errorMessage = "Failed to write missing translations to the file {}. Please check the file's permissions and available disk space.";
+                log.error(errorMessage, langFile.getAbsolutePath(), ioException);
             }
         }
 
@@ -421,13 +438,13 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
             log.info("Found and registered locale '{}' from '{}'.", parsedLocale.getDisplayName(), localeData.translationRegistry.name());
         }
 
-        localeData.translationRegistry().registerAll(Objects.requireNonNull(parsedLocale), stringStringMap);
+        localeData.translationRegistry().registerAll(Objects.requireNonNull(parsedLocale), messageData);
     }
 
     private @NotNull Locale buildLocale(@NotNull String locale) {
         Locale parseLocale = Translator.parseLocale(locale.toLowerCase()); //convert I guess
         globallyKnown.add(parseLocale);
-        assert parseLocale != null;
+        assert parseLocale!=null;
         return parseLocale;
     }
 
@@ -531,19 +548,13 @@ public class KissenLocalizationImplementation implements LocalizationImplementat
         @Contract(pure = true)
         @Override
         public @NotNull String toString() {
-            return "LocaleData{" +
-                    "name='" + name + '\'' +
-                    ", directory=" + directory +
-                    ", translationRegistry=" + translationRegistry +
-                    ", data=" + data +
-                    ", installed=" + installed +
-                    '}';
+            return "LocaleData{" + "name='" + name + '\'' + ", directory=" + directory + ", translationRegistry=" + translationRegistry + ", data=" + data + ", installed=" + installed + '}';
         }
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this==o) return true;
+            if (o==null || getClass()!=o.getClass()) return false;
             LocaleData that = (LocaleData) o;
             return Objects.equals(name, that.name);
         }
