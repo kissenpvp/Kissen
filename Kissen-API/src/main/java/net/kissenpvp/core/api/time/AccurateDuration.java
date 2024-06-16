@@ -17,34 +17,42 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * This is used to conveniently convert expire from various units to milliseconds.
  */
-public record AccurateDuration(long milliseconds) {
+public record AccurateDuration(long milliseconds)
+{
 
-    public AccurateDuration(@NotNull Duration duration) {
+    public AccurateDuration(@NotNull Duration duration)
+    {
         this(duration.toMillis());
     }
 
-    public AccurateDuration(@NotNull Period duration) {
+    public AccurateDuration(@NotNull Period duration)
+    {
         this(TimeUnit.DAYS.toMillis(duration.getDays()));
     }
 
-    public @NotNull Duration getDuration() {
+    public @NotNull Duration getDuration()
+    {
         return Duration.ofMillis(milliseconds);
     }
 
-    public @NotNull Period getPeriod() {
+    public @NotNull Period getPeriod()
+    {
         long days = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(milliseconds);
         return Period.ofDays((int) days);
     }
 
-    public long getMillis() {
+    public long getMillis()
+    {
         return milliseconds();
     }
 
-    public @NotNull @Unmodifiable Component toComponent(@NotNull ServerEntity entity) {
+    public @NotNull @Unmodifiable Component toComponent(@NotNull ServerEntity entity)
+    {
         return toComponent(entity.getCurrentLocale());
     }
 
-    public @NotNull @Unmodifiable Component toComponent(@NotNull Locale locale) {
+    public @NotNull @Unmodifiable Component toComponent(@NotNull Locale locale)
+    {
         long minutes = (milliseconds / 1000) / 60;
         long hours = minutes / 60;
         long days = hours / 24;
@@ -54,17 +62,28 @@ public record AccurateDuration(long milliseconds) {
         TextComponent.Builder builder = Component.text();
 
         long[] data = {months, days %= 365, hours %= 24, minutes %= 60};
-        Component[] componentData = {Component.text(months).appendSpace().append(Component.translatable("mco.configure.world.subscription.months")), Component.translatable("gui.days", Component.text(numberFormat.format(days))), Component.translatable("gui.hours", Component.text(numberFormat.format(hours))), Component.translatable("gui.minutes", Component.text(numberFormat.format(minutes)))};
+        Component[] componentData = {
+                Component.text(months).appendSpace().append(Component.translatable(
+                        "mco.configure.world.subscription.months")),
+                Component.translatable("gui.days", Component.text(numberFormat.format(days))),
+                Component.translatable("gui.hours", Component.text(numberFormat.format(hours))),
+                Component.translatable("gui.minutes", Component.text(numberFormat.format(minutes)))
+        };
+        int nonZeroCount = 0;
         for (int i = 0; i < data.length; i++) {
-            if (data[i]!=0) {
-                builder.append(componentData[i]);
-                if (i < data.length - 2) {
-                    builder.append(Component.text(", "));
-                } else if (i < data.length - 1) {
-                    builder.append(Component.text(" and "));
+            if (data[i] != 0) {
+                if (nonZeroCount > 0) {
+                    if (nonZeroCount == 1 && i == data.length - 1) {
+                        builder.append(Component.text(" and "));
+                    } else if (nonZeroCount >= 1) {
+                        builder.append(Component.text(", "));
+                    }
                 }
+                builder.append(componentData[i]);
+                nonZeroCount++;
             }
         }
+
 
         return builder.asComponent();
     }
