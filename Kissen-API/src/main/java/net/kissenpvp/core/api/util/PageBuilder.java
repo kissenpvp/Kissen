@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -52,7 +53,7 @@ public class PageBuilder<T> {
      * @param entries the list of entries to paginate
      * @param splitter the number of entries per page
      */
-    public PageBuilder(@NotNull List<T> entries, int splitter) {
+    public PageBuilder(@NotNull Collection<T> entries, int splitter) {
         this(splitter);
         this.entries.addAll(entries);
     }
@@ -62,7 +63,7 @@ public class PageBuilder<T> {
      *
      * @param entries the list of entries to paginate
      */
-    public PageBuilder(@NotNull List<T> entries) {
+    public PageBuilder(@NotNull Collection<T> entries) {
         this(5);
         this.entries.addAll(entries);
     }
