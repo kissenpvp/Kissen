@@ -5,7 +5,7 @@ Subject: [PATCH] Enhanced ban system functionality
 
 
 diff --git a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
-index e83f9517b31c5171b8dc75ab63a5bfe654221c84..f8d56e786b81d3763accd5bf84f7ae7c58e46c65 100644
+index 14e412ebf75b0e06ab53a1c8f9dd1be6ad1e2680..a12bdc7947db1e085ba575fc0560610bb7a01538 100644
 --- a/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
 +++ b/src/main/java/io/papermc/paper/adventure/ChatProcessor.java
 @@ -145,9 +145,14 @@ public final class ChatProcessor {
@@ -1697,10 +1697,10 @@ index 32a7f1d8b301263e56abe2a94a368b492a22b1b5..45a08179e510a89586c9bc16a03014ef
      public @NotNull PlayerClient<?, ?> getPlayerClient() {
          return getPrivateUserEntry().getPlayerClient();
 diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-index 4ff21b6c6003f4ed8a124288af16e5c0a3a470ac..0381a1cfb51731e067821f8bb7d754fe07aec3a6 100644
+index f063aadc2659ec6b706a48c693b08749338dfe59..bebb546dd538e4c9ea961b320a65ab435c1cbb57 100644
 --- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
 +++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
-@@ -446,6 +446,14 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
+@@ -448,6 +448,14 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
                  return false;
              }
  
@@ -1716,7 +1716,7 @@ index 4ff21b6c6003f4ed8a124288af16e5c0a3a470ac..0381a1cfb51731e067821f8bb7d754fe
              disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
              return false;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index dce653fd71d1f2fb833b4e7dd17940aee118bdbb..26508fd5dc9393f3072957f79b6a37cfc1835e96 100644
+index ac4f2aaaa154fd088ccf40fb6b0705d9556559d5..1534c17a0327443e0d6d25f89940ecdfa1456df0 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -111,7 +111,6 @@ import org.bukkit.Location;
@@ -1744,7 +1744,7 @@ index dce653fd71d1f2fb833b4e7dd17940aee118bdbb..26508fd5dc9393f3072957f79b6a37cf
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
          this.ops = /*new ServerOpList(PlayerList.OPLIST_FILE);*/ new net.kissenpvp.pulvinar.user.PulvinarOperatorList(); // Pulvinar
          this.whitelist = /*new UserWhiteList(PlayerList.WHITELIST_FILE);*/ new net.kissenpvp.pulvinar.user.PulvinarUserWhiteList(); // Pulvinar
-@@ -739,6 +737,8 @@ public abstract class PlayerList {
+@@ -732,6 +730,8 @@ public abstract class PlayerList {
          Player player = entity.getBukkitEntity();
          PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
  
@@ -1753,7 +1753,7 @@ index dce653fd71d1f2fb833b4e7dd17940aee118bdbb..26508fd5dc9393f3072957f79b6a37cf
          // Paper start - Fix MC-158900
          UserBanListEntry gameprofilebanentry;
          if (this.bans.isBanned(gameprofile) && (gameprofilebanentry = this.bans.get(gameprofile)) != null) {
-@@ -770,6 +770,8 @@ public abstract class PlayerList {
+@@ -763,6 +763,8 @@ public abstract class PlayerList {
                  event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.serverFullMessage)); // Spigot // Paper - Adventure
              }
          }
@@ -1763,10 +1763,10 @@ index dce653fd71d1f2fb833b4e7dd17940aee118bdbb..26508fd5dc9393f3072957f79b6a37cf
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index f6b6d0d753e81d58cd21ba41d1e2f3e63267b743..a9a431b57997a1a107c57e56dad795d41c9d6a18 100644
+index 002a3ee08d7e009ef1e4bd3bc274aa608846b219..c282ba0ac2f66bc98c64445a8ac137b600337262 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -2266,6 +2266,11 @@ public final class CraftServer implements Server {
+@@ -2293,6 +2293,11 @@ public final class CraftServer implements Server {
  
      @Override
      public <T extends BanList<?>> T getBanList(BanList.Type type) {
@@ -1778,7 +1778,7 @@ index f6b6d0d753e81d58cd21ba41d1e2f3e63267b743..a9a431b57997a1a107c57e56dad795d4
          Preconditions.checkArgument(type != null, "BanList.Type cannot be null");
  
          return switch (type) {
-@@ -2278,6 +2283,11 @@ public final class CraftServer implements Server {
+@@ -2305,6 +2310,11 @@ public final class CraftServer implements Server {
      @SuppressWarnings("unchecked")
      @Override
      public <B extends BanList<E>, E> B getBanList(final io.papermc.paper.ban.BanListType<B> type) {

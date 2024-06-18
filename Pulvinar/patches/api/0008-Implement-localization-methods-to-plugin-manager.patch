@@ -17,10 +17,10 @@ index df23b550fd56280d3b5834e4bb3a3be1ca4b2cde..e3d7fd8e3243114e47eda4d4fc10092e
      // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 8eecce91bf01d6b99cd2842017e297e1086aab86..dad208820446bef0e12129e15e3c3701bd327549 100644
+index 0bb81833e15c55e3640063b458e21b7b021fe6d3..7f3388d485d8da625f61b46492f015c6461dc6c9 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -1016,5 +1016,10 @@ public final class SimplePluginManager implements PluginManager {
+@@ -1017,5 +1017,10 @@ public final class SimplePluginManager implements PluginManager {
      public void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.core.api.user.UserImplementation.class).registerPlayerSetting(plugin, playerSetting);
      }

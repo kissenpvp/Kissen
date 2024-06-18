@@ -1,9 +1,26 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Groldi <chniucg@gmail.com>
 Date: Mon, 11 Sep 2023 01:08:59 +0200
-Subject: [PATCH] Integrated player system from kissen into paper
+Subject: [PATCH] Implemented api endpoints the kissen player system
 
 
+diff --git a/src/main/java/com/destroystokyo/paper/event/server/PaperServerListPingEvent.java b/src/main/java/com/destroystokyo/paper/event/server/PaperServerListPingEvent.java
+index acff2ff570f8419ffa4dfefe890795c63d75325d..6986bb9572d4167d5030d9e1951fc96346c7409b 100644
+--- a/src/main/java/com/destroystokyo/paper/event/server/PaperServerListPingEvent.java
++++ b/src/main/java/com/destroystokyo/paper/event/server/PaperServerListPingEvent.java
+@@ -498,5 +498,12 @@ public class PaperServerListPingEvent extends ServerListPingEvent implements Can
+         public @NotNull Map<String, Object> serialize() {
+             throw new UnsupportedOperationException();
+         }
++
++        // Pulvinar start
++        @Override
++        public @NotNull net.kissenpvp.core.api.user.User getUser() {
++            throw new UnsupportedOperationException();
++        }
++        // Pulvinar start
+     }
+ }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/networking/PaperNetworkImplementation.java b/src/main/java/net/kissenpvp/pulvinar/api/networking/PaperNetworkImplementation.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..eb86fc35ba2ac1e7c2fe4ad0e4a0fd1b8820c8be
@@ -782,7 +799,7 @@ index 0000000000000000000000000000000000000000..9954be6b847096b6ee34a2db480af0dd
 +    }
 +}
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index ce00af9121de7a910aaea4e0685a06d4cf31b4e3..17448802b0fb028df4ea160fbc7b2f5b775dceea 100644
+index d0206c9c2f423a9b77237d9a005b9ee139dae70f..bff5cba98080427cae76e0cbe30f538a519397e8 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
 +++ b/src/main/java/org/bukkit/OfflinePlayer.java
 @@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
@@ -869,10 +886,10 @@ index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..8bff00621e832309de09636571b85222
 +    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index d057743b8f6a463434c1f76398c7a98614b19d47..2af8335311717c2dc8bbffb04bb38b875f8ee259 100644
+index eb79e62e753524d6782842c662b0a50ab5ac0811..eba109dfafb9076b320c21209278028292b04423 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
-@@ -56,7 +56,7 @@ import org.jetbrains.annotations.Nullable;
+@@ -57,7 +57,7 @@ import org.jetbrains.annotations.Nullable;
  /**
   * Represents a player, connected or not
   */
@@ -894,10 +911,10 @@ index 52f205e5b4acc246d12dd590660217b9ea5fc18a..df23b550fd56280d3b5834e4bb3a3be1
      // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 844fdf2b3e64eb11299b3c8939538859280ab99f..8eecce91bf01d6b99cd2842017e297e1086aab86 100644
+index 921e3dc788337ee2c1ea5dd15e05d3fc2bb503b4..0bb81833e15c55e3640063b458e21b7b021fe6d3 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -1011,5 +1011,10 @@ public final class SimplePluginManager implements PluginManager {
+@@ -1012,5 +1012,10 @@ public final class SimplePluginManager implements PluginManager {
      public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin) {
          org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
      }
@@ -909,7 +926,7 @@ index 844fdf2b3e64eb11299b3c8939538859280ab99f..8eecce91bf01d6b99cd2842017e297e1
      // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/profile/PlayerProfile.java b/src/main/java/org/bukkit/profile/PlayerProfile.java
-index d36b3e3c7e53840132011add365ca2a26d799064..c04b6c883cb46f6283aea44248c28b74527edb65 100644
+index f4ab961647826b8717466be0d8c202b12749e9b4..f9199ed0d38005729769dd652e516b19260bf4cc 100644
 --- a/src/main/java/org/bukkit/profile/PlayerProfile.java
 +++ b/src/main/java/org/bukkit/profile/PlayerProfile.java
 @@ -100,4 +100,8 @@ public interface PlayerProfile extends Cloneable, ConfigurationSerializable {

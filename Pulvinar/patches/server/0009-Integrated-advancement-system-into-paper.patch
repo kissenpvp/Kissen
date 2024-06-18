@@ -56,7 +56,7 @@ index 0000000000000000000000000000000000000000..bd04997001648931fc9fb6d4c8888a04
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/PlayerAdvancements.java b/src/main/java/net/minecraft/server/PlayerAdvancements.java
-index ef520d1dd00ae9473c1f34e2df4d8b064fe4d6ea..77664f753d9b6535fb926f784763f35b62aa9ff9 100644
+index fc87e3cfff1221a6cbaf3463ce972870f17c776a..71593d1b358859257282b739aeff637017cdb87a 100644
 --- a/src/main/java/net/minecraft/server/PlayerAdvancements.java
 +++ b/src/main/java/net/minecraft/server/PlayerAdvancements.java
 @@ -103,7 +103,7 @@ public class PlayerAdvancements {
@@ -137,10 +137,10 @@ index ef520d1dd00ae9473c1f34e2df4d8b064fe4d6ea..77664f753d9b6535fb926f784763f35b
 +    // Pulvinar end - make player accessible from class children
  }
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 26508fd5dc9393f3072957f79b6a37cfc1835e96..e2687c181b5fb6c544d326d7e31506af2e9fc637 100644
+index 1534c17a0327443e0d6d25f89940ecdfa1456df0..51d8628023adc001e692e66d36fece70fe34bab2 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -1552,7 +1552,11 @@ public abstract class PlayerList {
+@@ -1492,7 +1492,11 @@ public abstract class PlayerList {
          if (advancementdataplayer == null) {
              Path path = this.server.getWorldPath(LevelResource.PLAYER_ADVANCEMENTS_DIR).resolve(String.valueOf(uuid) + ".json");
  

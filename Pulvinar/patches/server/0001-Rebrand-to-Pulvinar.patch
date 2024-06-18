@@ -5,7 +5,7 @@ Subject: [PATCH] Rebrand to Pulvinar
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index d23ecfabf6bf1e355fb2efe5abd80236259ce3c4..777694a037d7fc0d9ffc54228ec6b38e4d1b5f9e 100644
+index 0635aacceec1ba9c753b4dde057876b91336d416..af8a8ea6dbfd98bde79842528f4f901d603171f7 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -13,7 +13,7 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
@@ -144,27 +144,27 @@ index a6e5950b5875cafd734300cdfbf58f5d3736f3c8..0f8c66b3c96a0d918a9ac9be1853396f
  
      @Override
 diff --git a/src/main/java/net/minecraft/CrashReport.java b/src/main/java/net/minecraft/CrashReport.java
-index c366d84518979e842a6f10f969a5951539ecac93..a5c985279b62b56334c7db3d11d67befed8163dd 100644
+index 710477ae27ebc5afdf0012ef0867d05efd293c24..d5e382ed3747ad6fad12d1bd887cb62adbd1298e 100644
 --- a/src/main/java/net/minecraft/CrashReport.java
 +++ b/src/main/java/net/minecraft/CrashReport.java
-@@ -127,7 +127,7 @@ public class CrashReport {
-         stringbuilder.append("---- Minecraft Crash Report ----\n");
-         // Purpur start
-         stringbuilder.append("// ");
--        stringbuilder.append("// DO NOT REPORT THIS TO PAPER! REPORT TO PURPUR INSTEAD!");
-+        stringbuilder.append("// DO NOT REPORT THIS TO PURPUR! REPORT TO PULVINAR INSTEAD!"); // Pulvinar
-         // Purpur end
-         stringbuilder.append("// ");
-         stringbuilder.append(CrashReport.getErrorComment());
+@@ -32,7 +32,7 @@ public class CrashReport {
+     private boolean trackingStackTrace = true;
+     private StackTraceElement[] uncategorizedStackTrace = new StackTraceElement[0];
+     private final SystemReport systemReport = new SystemReport();
+-    private List<String> extraInfo = List.of("", "DO NOT REPORT THIS TO PAPER! REPORT TO PURPUR INSTEAD!", ""); // Purpur - Rebrand
++    private List<String> extraInfo = List.of("", "DO NOT REPORT THIS TO PAPER OR PURPUR! REPORT TO PULVINAR INSTEAD!", ""); // Pulvinar - rebrand
+ 
+     public CrashReport(String message, Throwable cause) {
+         io.papermc.paper.util.StacktraceDeobfuscator.INSTANCE.deobfuscateThrowable(cause); // Paper
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 330bae815c0a332e3dc9fa7b224c9f92098199b9..ad6594ef0618e5bc16b17c749e2fa8f52d2a9d12 100644
+index cfa43c14ad1d42e8ba4a28a492dfcb679e05ef10..0bead5e319a843acd98319b25d90bc1b46c67448 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -959,7 +959,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -969,7 +969,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
          shutdownThread = Thread.currentThread();
          org.spigotmc.WatchdogThread.doStop(); // Paper
          if (!isSameThread()) {
--            MinecraftServer.LOGGER.info("Stopping main thread (Ignore any thread death message you see! - DO NOT REPORT THREAD DEATH TO PURPUR)"); // Purpur
+-            MinecraftServer.LOGGER.info("Stopping main thread (Ignore any thread death message you see! - DO NOT REPORT THREAD DEATH TO PAPER)");
 +            MinecraftServer.LOGGER.info("Stopping main thread (Ignore any thread death message you see! - DO NOT REPORT THREAD DEATH TO PULVINAR)"); // Purpur // Pulvinar
              while (this.getRunningThread().isAlive()) {
                  this.getRunningThread().stop();
@@ -227,10 +227,10 @@ index 99597258e8e88cd9e2c901c4ac3ff7faeeabee2b..bb3b699c5b6cb2d419d23a1b139695e9
  
          if (stream != null) {
 diff --git a/src/main/java/org/spigotmc/WatchdogThread.java b/src/main/java/org/spigotmc/WatchdogThread.java
-index a353eb9f45af7b7f9bfd92a4a89403335b841840..de37a76db26c8617b19109f165a74b93c7977b95 100644
+index 38a6ffd0e21e29601443ce5b5f66f4f69c4ebde0..9f77d48cb202652166b4aff6603a710facdae6d9 100644
 --- a/src/main/java/org/spigotmc/WatchdogThread.java
 +++ b/src/main/java/org/spigotmc/WatchdogThread.java
-@@ -155,14 +155,14 @@ public final class WatchdogThread extends io.papermc.paper.util.TickThread // Pa
+@@ -83,14 +83,14 @@ public class WatchdogThread extends Thread
                  if (isLongTimeout) {
                  // Paper end
                  log.log( Level.SEVERE, "------------------------------" );
@@ -248,7 +248,7 @@ index a353eb9f45af7b7f9bfd92a4a89403335b841840..de37a76db26c8617b19109f165a74b93
                  //
                  if ( net.minecraft.world.level.Level.lastPhysicsProblem != null )
                  {
-@@ -184,12 +184,12 @@ public final class WatchdogThread extends io.papermc.paper.util.TickThread // Pa
+@@ -112,12 +112,12 @@ public class WatchdogThread extends Thread
                  // Paper end
                  } else
                  {
@@ -260,10 +260,10 @@ index a353eb9f45af7b7f9bfd92a4a89403335b841840..de37a76db26c8617b19109f165a74b93
                  log.log( Level.SEVERE, "------------------------------" );
 -                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Purpur!):" ); // Paper // Purpur
 +                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Pulvinar!):" ); // Paper // Purpur // Pulvinar
-                 io.papermc.paper.chunk.system.scheduling.ChunkTaskScheduler.dumpAllChunkLoadInfo(isLongTimeout); // Paper - rewrite chunk system
-                 this.dumpTickingInfo(); // Paper - log detailed tick information
+                 ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkTaskScheduler.dumpAllChunkLoadInfo(isLongTimeout); // Paper - rewrite chunk system
                  WatchdogThread.dumpThread( ManagementFactory.getThreadMXBean().getThreadInfo( MinecraftServer.getServer().serverThread.getId(), Integer.MAX_VALUE ), log );
-@@ -205,7 +205,7 @@ public final class WatchdogThread extends io.papermc.paper.util.TickThread // Pa
+                 log.log( Level.SEVERE, "------------------------------" );
+@@ -132,7 +132,7 @@ public class WatchdogThread extends Thread
                      WatchdogThread.dumpThread( thread, log );
                  }
                  } else {
