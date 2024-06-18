@@ -61,7 +61,7 @@ import java.util.stream.Stream;
 public abstract class KissenBanImplementation<B extends AbstractBanTemplate, P extends AbstractPunishment<?>> implements AbstractBanImplementation<B, P> {
 
     private static final String STORAGE_KEY = "ban_storage";
-    private static final MessageFormat TOTAL_ID_KEY = new MessageFormat("ban_{0}"); // TODO use String#format(String, Object...)
+    private static final String TOTAL_ID_KEY = "ban_%s";
     private final Set<B> cachedBans;
     private KissenTable banTable;
 
@@ -229,7 +229,7 @@ public abstract class KissenBanImplementation<B extends AbstractBanTemplate, P e
     protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID, @NotNull Meta meta) {
         StorageImplementation storage = KissenCore.getInstance().getImplementation(StorageImplementation.class);
         Map<String, Object> cache = storage.getStorage(STORAGE_KEY, Duration.ofHours(1));
-        return (Set<P>) cache.computeIfAbsent(TOTAL_ID_KEY.format(new Object[]{totalID}), (k) -> loadPunishments(totalID, meta));
+        return (Set<P>) cache.computeIfAbsent(String.format(TOTAL_ID_KEY, totalID), (k) -> loadPunishments(totalID, meta));
     }
 
     /**
@@ -308,7 +308,7 @@ public abstract class KissenBanImplementation<B extends AbstractBanTemplate, P e
      */
     private void invalidateCache(@NotNull UUID totalID) {
         StorageImplementation storage = KissenCore.getInstance().getImplementation(StorageImplementation.class);
-        storage.getStorage(STORAGE_KEY).remove(TOTAL_ID_KEY.format(new Object[]{totalID}));
+        storage.getStorage(STORAGE_KEY).remove(String.format(TOTAL_ID_KEY, totalID));
     }
 
     /**
