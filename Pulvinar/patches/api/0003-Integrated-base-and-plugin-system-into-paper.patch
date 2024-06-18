@@ -50,7 +50,7 @@ index 0000000000000000000000000000000000000000..099bcd659c017047deda6cf67aa31a4f
 +public interface Pulvinar extends Kissen {
 +}
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index 83b979fbb8c0dd64f0a19feef654af2b165bd603..c056fb4f57656bdb8e8b810f9e57e563cf2da97a 100644
+index bb09c468ab1261ea4eaf59012d30a2e45199caf7..68f6d8463ce9c142d1cbff429c1eaa2a58e6ece8 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
 @@ -3036,4 +3036,17 @@ public final class Bukkit {
@@ -101,10 +101,10 @@ index 47153dee66782a00b980ecf15e8774ab6f3d887d..7eda2d7931eb6f2ed542a1ff6b04d4b5
 +
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 07a9c9e254188c251165ca84c8e961fccda01175..a4a2eecfb5dc75d2239ddbe431900f4816606198 100644
+index 003bece642b682985625db93cad93026352bfc66..e23acd9631468b01bdeac74322e38a938744a573 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -990,4 +990,14 @@ public final class SimplePluginManager implements PluginManager {
+@@ -991,4 +991,14 @@ public final class SimplePluginManager implements PluginManager {
          this.paperPluginManager.addPermissions(perm);
      }
      // Paper end

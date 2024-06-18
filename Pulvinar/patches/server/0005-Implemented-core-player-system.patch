@@ -4592,7 +4592,7 @@ index 90265b6f2acd43713b61e277799dd31311b6b7e2..197403817f4f3019b549174b05105368
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 241340a6d66f17f2a31fb03ff0dfab121b856368..76f60e61809f393f3c8b41143c443aefa384d675 100644
+index aac21ff5418f76b0d06b6a49a4021bde194cf1da..f5a75ecce046113943122b7d21929ba6acbf8e22 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -191,6 +191,33 @@ import org.jetbrains.annotations.NotNull;
@@ -4640,7 +4640,7 @@ index 241340a6d66f17f2a31fb03ff0dfab121b856368..76f60e61809f393f3c8b41143c443aef
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2652,7 +2683,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2653,7 +2684,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -4658,7 +4658,7 @@ index 241340a6d66f17f2a31fb03ff0dfab121b856368..76f60e61809f393f3c8b41143c443aef
      }
  
      @Override
-@@ -3016,7 +3056,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3026,7 +3066,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -4667,7 +4667,7 @@ index 241340a6d66f17f2a31fb03ff0dfab121b856368..76f60e61809f393f3c8b41143c443aef
      }
      // Paper end
      @Override
-@@ -3151,7 +3191,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3161,7 +3201,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
          if (getHandle().connection == null) return;
          final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
@@ -4683,7 +4683,7 @@ index 241340a6d66f17f2a31fb03ff0dfab121b856368..76f60e61809f393f3c8b41143c443aef
      }
  
      @Override
-@@ -3413,7 +3460,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3423,7 +3470,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          public void sendMessage(net.md_5.bungee.api.ChatMessageType position, UUID sender, BaseComponent... components) {
              if ( CraftPlayer.this.getHandle().connection == null ) return;
  
@@ -4700,7 +4700,7 @@ index 241340a6d66f17f2a31fb03ff0dfab121b856368..76f60e61809f393f3c8b41143c443aef
          }
  
          // Paper start
-@@ -3616,4 +3671,352 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3626,4 +3681,352 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket(getEntityId(), io.papermc.paper.adventure.PaperAdventure.asVanilla(message)));
      }
      // Purpur end

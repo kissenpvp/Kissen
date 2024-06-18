@@ -364,10 +364,10 @@ index 7b44b0fefcde0ab0d96704a56556fece26d56973..52f205e5b4acc246d12dd590660217b9
      // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 4270167e7ea3ae5bb25c0ee66525fcc67e357c9a..844fdf2b3e64eb11299b3c8939538859280ab99f 100644
+index 0a9144f894dbd9d7c9a707dfd36f4e31c1ceb050..921e3dc788337ee2c1ea5dd15e05d3fc2bb503b4 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -991,12 +991,25 @@ public final class SimplePluginManager implements PluginManager {
+@@ -992,12 +992,25 @@ public final class SimplePluginManager implements PluginManager {
      // Paper end
  
      // Pulvinar start
