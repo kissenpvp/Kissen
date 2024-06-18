@@ -118,9 +118,6 @@ public abstract class KissenSavable<T> extends HashMap<KissenPlugin, SavableMap>
 
     @Override
     public int delete() {
-        /*sendData(KissenCore.getInstance() //TODO
-                .getImplementation(NetworkImplementation.class)
-                .createPackage("savable_delete", getSerializableSavableHandler()));*/
         return softDelete();
     }
 
