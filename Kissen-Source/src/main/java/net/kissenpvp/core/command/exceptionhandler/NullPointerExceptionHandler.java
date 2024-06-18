@@ -16,6 +16,7 @@ public class NullPointerExceptionHandler<S extends ServerEntity> implements Abst
         if(commandPayload.getSender() instanceof MessageReceiver messageReceiver)
         {
             messageReceiver.getKyoriAudience().sendMessage(Component.translatable("command.unknown.argument"));
+            return true;
         }
         return false;
     }

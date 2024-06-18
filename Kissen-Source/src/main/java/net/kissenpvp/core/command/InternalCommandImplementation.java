@@ -90,8 +90,6 @@ public abstract class InternalCommandImplementation<S extends ServerEntity> impl
         // Handler
         getInternalHandler().registerExceptionHandler(new BackendExceptionHandler<>());
         getInternalHandler().registerExceptionHandler(new NumberFormatExceptionHandler<>());
-        getInternalHandler().registerExceptionHandler(new CommandSystemExceptionHandler<>());
-        getInternalHandler().registerExceptionHandler(new InvocationTargetExceptionHandler<>());
         getInternalHandler().registerExceptionHandler(new DateTimeParseExceptionHandler<>());
         getInternalHandler().registerExceptionHandler(new NullPointerExceptionHandler<>());
         getInternalHandler().registerExceptionHandler(new InvalidColorExceptionHandler<>());

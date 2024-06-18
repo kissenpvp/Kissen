@@ -17,7 +17,8 @@ public class InvalidColorExceptionHandler<S extends ServerEntity> implements Abs
         if(commandPayload.getSender() instanceof MessageReceiver messageReceiver)
         {
             messageReceiver.getKyoriAudience().sendMessage(Component.translatable("server.command.invalid.color", Component.text(throwable.getInput())));
+            return true;
         }
-        return true;
+        return false;
     }
 }
