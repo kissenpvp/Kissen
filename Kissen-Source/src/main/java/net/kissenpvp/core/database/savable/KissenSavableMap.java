@@ -277,7 +277,7 @@ public class KissenSavableMap extends HashMap<String, Object> implements Savable
             }
 
             if (!(obj instanceof Collection<?> collection)) {
-                throw new IllegalArgumentException(); //Type not matching todo
+                throw new IllegalStateException(String.format("Object in %s is not a Collection.", key));
             }
             metaList.addAll((Collection<? extends T>) collection);
         }
