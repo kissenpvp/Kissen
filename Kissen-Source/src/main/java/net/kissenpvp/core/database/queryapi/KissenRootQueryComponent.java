@@ -30,7 +30,7 @@ public class KissenRootQueryComponent<T extends QueryComponent<?>> implements Ro
     @Getter(AccessLevel.PROTECTED) @Setter(AccessLevel.PROTECTED) private KissenQueryComponent<T> queryComponent;
 
     @Override
-    public @NotNull T where(@NotNull Column column, @NotNull String value) {
+    public @NotNull T where(@NotNull Column column, @NotNull Object value) {
         return getQueryComponent().initialise(column, value);
     }
 

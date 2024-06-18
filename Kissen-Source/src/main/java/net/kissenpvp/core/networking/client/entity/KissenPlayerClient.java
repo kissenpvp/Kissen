@@ -87,13 +87,8 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<UUID> getAltAccounts() throws BackendException {
-        return Collections.emptySet(); //TODO
-        /*QuerySelect query = getUser().getMeta().select(Column.TOTAL_ID, Column.VALUE).where(Column.KEY, "total_id");
-        return Arrays.stream(query.execute().join()).filter(current -> current[1].equals(getTotalID())).map(current -> {
-            String raw = current[0].toString();
-            return UUID.fromString(raw);
-        }).collect(Collectors.toUnmodifiableSet());^*/
+    public @NotNull @Unmodifiable Set<UUID> getAltAccounts() {
+        return ((KissenPublicUser<?>) getUser()).getAltAccounts();
     }
 
     @Override
