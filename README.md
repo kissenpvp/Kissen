@@ -1,6 +1,6 @@
 # Kissen
 
-![KissenPaper Logo](kissenpaper-logo.png)
+<img alt="KissenPaper Logo" height="300" src="kissenpaper-logo.png" width="300"/>
 
 ## Minecraft Server API - An API for Minecraft Server Software Forks
 
