@@ -43,6 +43,12 @@ public abstract class KissenGroupablePermissionEntry<T, X extends AbstractPermis
     }
 
     @Override
+    protected void applyHooks() {
+        getRepository().applyHook("permission_group_list", (s, object) -> permissionUpdate());
+        super.applyHooks();
+    }
+
+    @Override
     public @NotNull X setPermission(@NotNull String permission, boolean value) throws EventCancelledException
     {
         Optional<X> currentPermission = getOwnPermission(permission);
@@ -104,19 +110,5 @@ public abstract class KissenGroupablePermissionEntry<T, X extends AbstractPermis
     @Override
     public boolean inGroup(@NotNull AbstractPermissionGroup<X> permissionGroup) {
         return permissionGroup.getMember().contains(getPermissionID());
-    }
-
-/*    @Override //TODO
-    public <X> @Nullable Object putList(@NotNull String key, @Nullable Collection<X> value) {
-        Object result = super.putList(key, value);
-        if (key.equals("permission_group_list")) {
-            permissionUpdate();
-        }
-        return result;
-    }*/
-
-    private @NotNull InternalPermissionImplementation<X> getImplementation()
-    {
-        return KissenCore.getInstance().getImplementation(InternalPermissionImplementation.class);
     }
 }
