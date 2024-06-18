@@ -43,13 +43,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -64,16 +61,19 @@ import java.util.stream.Collectors;
 @Slf4j(topic = "Kissen")
 public abstract class KissenUserImplementation implements UserImplementation {
 
-    @Getter private final static Set<User> onlineUserSet;
+    @Getter
+    private final static Set<User> onlineUserSet;
 
     static {
         onlineUserSet = new HashSet<>(); // persist when reloading
     }
 
-    @Getter(AccessLevel.PROTECTED) private final Set<UserInfoNode> cachedProfiles;
+    @Getter(AccessLevel.PROTECTED)
+    private final Set<UserInfoNode> cachedProfiles;
     private final Set<KissenRegisteredPlayerSetting<?, ?>> pluginSettings;
     private final ScheduledExecutorService tickExecutor;
-    @Getter private KissenTable Table;
+    @Getter
+    private KissenTable Table;
 
     /**
      * Initializes the KissenUserImplementation instance.
@@ -141,7 +141,8 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
     @Override
     public @NotNull User getUser(@NotNull String name) throws BackendException {
-        return getOnlineUser().stream().filter(user -> Objects.equals(user.getPlayerClient().getName(), name)).findFirst().orElseGet(() -> {
+        Predicate<User> nameEquals = user -> Objects.equals(user.getName(), name);
+        return getOnlineUser().stream().filter(nameEquals).findFirst().orElseGet(() -> {
             //TODO make this work someday
             throw new BackendException();
         });
@@ -310,15 +311,6 @@ public abstract class KissenUserImplementation implements UserImplementation {
         return false;
     }
 
-    public @NotNull CompletableFuture<Long> rewriteTotalID(@NotNull UUID from, @NotNull UUID to) {
-        //return getUserMeta().update(new Update(Column.VALUE, to.toString())).where(Column.TOTAL_ID, getUserSaveID()).and(Column.KEY, "total_id", FilterType.EXACT_MATCH).and(Column.VALUE, from.toString(), FilterType.EXACT_MATCH).execute();
-        return CompletableFuture.completedFuture(0L); //TODO
-    }
-
-    private @NotNull Optional<UserInfo> getUserInfo(@NotNull Predicate<UserInfoNode> name) {
-        return getCachedProfiles().stream().filter(name).map(UserInfoNode::getUserInfo).findFirst();
-    }
-
     public void cacheProfile(@NotNull UserInfoNode userInfoNode) {
         if (getCachedProfiles().stream().anyMatch(current -> current.uuid().equals(userInfoNode.uuid()) && current.name().equals(userInfoNode.name()))) {
             return;
@@ -326,5 +318,9 @@ public abstract class KissenUserImplementation implements UserImplementation {
         getCachedProfiles().remove(userInfoNode);
         getCachedProfiles().add(userInfoNode);
         log.info("The profile {} has been cached.", userInfoNode);
+    }
+
+    private @NotNull Optional<UserInfo> getUserInfo(@NotNull Predicate<UserInfoNode> name) {
+        return getCachedProfiles().stream().filter(name).map(UserInfoNode::getUserInfo).findFirst();
     }
 }
