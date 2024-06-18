@@ -35,7 +35,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface RootQueryComponent<T extends QueryComponent<?>> {
 
-    @NotNull T where(@NotNull Column column, @NotNull String value);
+    @NotNull T where(@NotNull Column column, @NotNull Object value);
 
     @NotNull T whereExact(@NotNull Column column, @NotNull String value);
 }
