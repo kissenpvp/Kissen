@@ -4,7 +4,7 @@
 
 ## Minecraft Server API - An API for Minecraft Server Software Forks
 
-This project provides a robust and comprehensive API solution specifically designed for software forks of the popular game Minecraft server.
+This project provides a robust and comprehensive API solution specifically designed for servers of the popular game Minecraft server.
 
 **Note:** This API does not operate as a standalone.
 
