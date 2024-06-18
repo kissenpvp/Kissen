@@ -181,7 +181,7 @@ public abstract class KissenPunishment<T> extends KissenTemporalObject implement
                 getCause().ifPresent(cause -> banMessage.appendNewline().append(cause));
             }
             case KICK -> {
-                //TODO
+                banMessage.append(Component.translatable("multiplayer.disconnect.kicked"));
             }
         }
         return banMessage.asComponent();
