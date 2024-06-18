@@ -20,21 +20,24 @@ package net.kissenpvp.core.user;
 
 import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.database.meta.BackendException;
+import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
+import net.kissenpvp.core.api.database.queryapi.Column;
+import net.kissenpvp.core.api.database.queryapi.select.QuerySelect;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
 import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.base.KissenCore;
+import net.kissenpvp.core.database.savable.KissenSavableMap;
 import net.kissenpvp.core.user.rank.PlayerRankNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j(topic = "Kissen")
 public abstract class KissenPublicUser<T extends AbstractPermission> extends KissenUser<T> implements User {
@@ -48,12 +51,21 @@ public abstract class KissenPublicUser<T extends AbstractPermission> extends Kis
     public KissenPublicUser(@Nullable UUID uuid, @Nullable String name) {
         super(uuid, name);
 
-        if (name!=null && uuid!=null) {
+        if (name != null && uuid != null) {
             String currentName = getRepository().getNotNull("name", String.class);
             if (!Objects.equals(currentName, name)) {
                 updateName(name, currentName);
             }
         }
+    }
+
+    public @NotNull @Unmodifiable Set<UUID> getAltAccounts() {
+        Meta meta = ((KissenSavableMap) getRepository()).getMeta();
+        QuerySelect query = meta.select(Column.TOTAL_ID).where(Column.VALUE, getTotalId()).andExact(Column.KEY, "total_id");
+        return query.execute().thenApply(data -> Arrays.stream(data).map(columns -> {
+            String uuid = String.valueOf(columns[0]).substring(getSaveID().length());
+            return UUID.fromString(uuid);
+        }).collect(Collectors.toUnmodifiableSet())).join();
     }
 
     public @NotNull MetaList<PlayerRankNode> getRankNodes() {
