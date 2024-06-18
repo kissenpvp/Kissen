@@ -137,7 +137,7 @@ public abstract class KissenCommandPayload<S extends ServerEntity> implements ne
         return (builder) -> {
             if (getTarget().equals(CommandTarget.SYSTEM)) {
                 builder.runnable.run();
-                return; // TODO implement confirmation for console as well
+                return;
             }
             Class<KissenConfirmationImplementation> confirmClass = KissenConfirmationImplementation.class;
             KissenConfirmationImplementation implementation = KissenCore.getInstance().getImplementation(confirmClass);
