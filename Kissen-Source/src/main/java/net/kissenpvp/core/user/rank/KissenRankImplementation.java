@@ -85,9 +85,7 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
 
     @Override
     public @NotNull T createRank(@NotNull String name, int priority) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("priority", priority);
-        return createRank(name, data);
+        return createRank(name, Collections.singletonMap("priority", priority));
     }
 
     @Override
@@ -135,9 +133,8 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
      * @return An initialized rank object of type T.
      */
     protected @NotNull T setup(@NotNull String name, @NotNull Map<String, Object> data) {
-        return (T) getSavableType().setup(name);
+        return (T) getSavableType().setup(name, data);
     }
-
 
     /**
      * Retrieves the concrete implementation of the Savable interface associated with the ranks.
