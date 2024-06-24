@@ -152,7 +152,7 @@ index 0000000000000000000000000000000000000000..533aa48a0e3134278dd9b4330c44b62f
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..38747289863f8ad9798e842d0b74afed6abff2f1
+index 0000000000000000000000000000000000000000..41cbc31a653cae48fea685f19349dbc5d860d9ab
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
 @@ -0,0 +1,468 @@
@@ -303,12 +303,12 @@ index 0000000000000000000000000000000000000000..38747289863f8ad9798e842d0b74afed
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<Punishment> getPunishmentSet(@NotNull Context context) throws BackendException {
-+        return getPunishmentSet(getMeta(context));
++        return getPunishments(getMeta(context));
 +    }
 +
 +    @Override
 +    public @NotNull @Unmodifiable Set<Punishment> getPunishmentSet(@NotNull UUID totalID, @NotNull Context context) throws BackendException {
-+        return getPunishmentSet(totalID, getMeta(context));
++        return getPunishments(totalID, getMeta(context));
 +    }
 +
 +    @Override
@@ -382,7 +382,7 @@ index 0000000000000000000000000000000000000000..38747289863f8ad9798e842d0b74afed
 +
 +    @Override
 +    public @NotNull <E extends BanEntry<? super PlayerProfile>> Set<E> getEntries() {
-+        return getPunishmentSet().stream().map(punishment -> (E) punishment).collect(Collectors.toSet());
++        return getPunishments().stream().map(punishment -> (E) punishment).collect(Collectors.toSet());
 +    }
 +
 +    @Override
@@ -398,7 +398,7 @@ index 0000000000000000000000000000000000000000..38747289863f8ad9798e842d0b74afed
 +    @SuppressWarnings("rawtypes") // overridden (minecraft)
 +    @Override
 +    public @NotNull Set<BanEntry> getBanEntries() {
-+        return getPunishmentSet().stream().map(punishment -> (BanEntry<?>) punishment).collect(Collectors.toSet());
++        return getPunishments().stream().map(punishment -> (BanEntry<?>) punishment).collect(Collectors.toSet());
 +    }
 +
 +    @SuppressWarnings("deprecation")
@@ -973,7 +973,7 @@ index 0000000000000000000000000000000000000000..53eef92912f62e0e911334150f132d75
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommand.java b/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..18bd11f4cb465f9e862a17ae35e4f870b016d30d
+index 0000000000000000000000000000000000000000..0891afefff45b9bb20ff30d7c8885bc2d214e4ab
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/command/BanCommand.java
 @@ -0,0 +1,150 @@
@@ -1094,7 +1094,7 @@ index 0000000000000000000000000000000000000000..18bd11f4cb465f9e862a17ae35e4f870
 +    @TabCompleter("unban")
 +    public @NotNull Set<String> tabUnban() {
 +        BanImplementation banImplementation = Bukkit.getPulvinar().getImplementation(BanImplementation.class);
-+        Stream<Punishment> punishments = banImplementation.getPunishmentSet().stream().filter(TemporalObject::isValid);
++        Stream<Punishment> punishments = banImplementation.getPunishments().stream().filter(TemporalObject::isValid);
 +        return punishments.map(AbstractPunishment::getID).collect(Collectors.toSet());
 +    }
 +
@@ -1763,7 +1763,7 @@ index ac4f2aaaa154fd088ccf40fb6b0705d9556559d5..1534c17a0327443e0d6d25f89940ecdf
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 002a3ee08d7e009ef1e4bd3bc274aa608846b219..c282ba0ac2f66bc98c64445a8ac137b600337262 100644
+index 002a3ee08d7e009ef1e4bd3bc274aa608846b219..a44029d014289a65b46b115851a056a84be9fcf8 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -2293,6 +2293,11 @@ public final class CraftServer implements Server {
@@ -1773,7 +1773,7 @@ index 002a3ee08d7e009ef1e4bd3bc274aa608846b219..c282ba0ac2f66bc98c64445a8ac137b6
 +        if(true)
 +        {
 +            // Pulvinar start - rework ban system
-+            return (T) Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.ban.BanImplementation.class).getPunishmentSet();
++            return (T) Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.ban.BanImplementation.class).getPunishments();
 +        }
          Preconditions.checkArgument(type != null, "BanList.Type cannot be null");
  

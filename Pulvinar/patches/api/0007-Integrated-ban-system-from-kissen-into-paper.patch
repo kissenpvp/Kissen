@@ -274,7 +274,7 @@ index 0000000000000000000000000000000000000000..cbd4f5d6edc3cbf8c1b190268098d716
 +public interface Punishment extends AbstractPunishment<Player>, BanEntry<PlayerProfile> {}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/ban/PunishmentParser.java b/src/main/java/net/kissenpvp/pulvinar/api/ban/PunishmentParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3a9238d2096ea6eae7250fb732145b3ad10592f5
+index 0000000000000000000000000000000000000000..19c26ddb3dace598cbe0ae7a2cd98a8f75668d2f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/ban/PunishmentParser.java
 @@ -0,0 +1,44 @@
@@ -302,7 +302,7 @@ index 0000000000000000000000000000000000000000..3a9238d2096ea6eae7250fb732145b3a
 +
 +    @Override
 +    public @NotNull Punishment deserialize(@NotNull String input) {
-+        return Bukkit.getPulvinar().getImplementation(BanImplementation.class).getPunishmentSet().stream().filter(punishment -> punishment.getID().equals(input)).findFirst().orElseThrow(() -> new NonexistentPunishmentException(input));
++        return Bukkit.getPulvinar().getImplementation(BanImplementation.class).getPunishments().stream().filter(punishment -> punishment.getID().equals(input)).findFirst().orElseThrow(() -> new NonexistentPunishmentException(input));
 +    }
 +
 +    @Override
@@ -313,7 +313,7 @@ index 0000000000000000000000000000000000000000..3a9238d2096ea6eae7250fb732145b3a
 +
 +    @Override
 +    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload) {
-+        return Bukkit.getPulvinar().getImplementation(BanImplementation.class).getPunishmentSet().stream().map(AbstractPunishment::getID).collect(Collectors.toSet());
++        return Bukkit.getPulvinar().getImplementation(BanImplementation.class).getPunishments().stream().map(AbstractPunishment::getID).collect(Collectors.toSet());
 +    }
 +
 +    @Override
