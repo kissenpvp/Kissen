@@ -3585,7 +3585,7 @@ index 0000000000000000000000000000000000000000..e9a7bac8907dcbcc863e34aa5b447ad0
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/RankCommand.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/RankCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d8163edc6ec7184df8298c228aac190164cbebbd
+index 0000000000000000000000000000000000000000..05d67b448034883857bb7e5fec8796a90f98cc60
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/rank/RankCommand.java
 @@ -0,0 +1,154 @@
@@ -3657,7 +3657,7 @@ index 0000000000000000000000000000000000000000..d8163edc6ec7184df8298c228aac1901
 +    public void rankCreate(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull @ArgumentName("name") String name, @ArgumentName("priority") int priority) {
 +        Class<PulvinarRankImplementation> clazz = PulvinarRankImplementation.class;
 +        PulvinarRankImplementation rankImplementation = Bukkit.getPulvinar().getImplementation(clazz);
-+        Rank paperRank = rankImplementation.createRank(name, priority);
++        Rank paperRank = rankImplementation.createRankTemplate(name, priority);
 +
 +        Component[] args = {Component.text(paperRank.getName()), Component.text(priority)};
 +        commandPayload.getSender().sendMessage(Component.translatable("server.rank.created", args));

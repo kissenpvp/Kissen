@@ -754,7 +754,7 @@ index 0000000000000000000000000000000000000000..fa721efe2ccb1df6bbd4d1af6739aa95
 +public interface RankImplementation extends AbstractRankImplementation<Rank> { }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankParser.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankParser.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..9954be6b847096b6ee34a2db480af0ddcf33d40f
+index 0000000000000000000000000000000000000000..9210eb1b7adea37b4c103cf670b59b2c29c1127b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/RankParser.java
 @@ -0,0 +1,40 @@
@@ -782,7 +782,7 @@ index 0000000000000000000000000000000000000000..9954be6b847096b6ee34a2db480af0dd
 +    public @NotNull Rank deserialize(@NotNull String input)
 +    {
 +        RankImplementation rankImplementation = Bukkit.getPulvinar().getImplementation(RankImplementation.class);
-+        return rankImplementation.getRank(input).orElseThrow(NullPointerException::new);
++        return rankImplementation.getRankTemplate(input).orElseThrow(NullPointerException::new);
 +    }
 +
 +    @Override
@@ -795,7 +795,7 @@ index 0000000000000000000000000000000000000000..9954be6b847096b6ee34a2db480af0dd
 +    public @NotNull Collection<String> tabCompletion(@NotNull CommandPayload<CommandSender> commandPayload)
 +    {
 +        RankImplementation rankImplementation = Bukkit.getPulvinar().getImplementation(RankImplementation.class);
-+        return rankImplementation.getRankSet().stream().map(Rank::getName).collect(Collectors.toSet());
++        return rankImplementation.getRankTemplates().stream().map(Rank::getName).collect(Collectors.toSet());
 +    }
 +}
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
