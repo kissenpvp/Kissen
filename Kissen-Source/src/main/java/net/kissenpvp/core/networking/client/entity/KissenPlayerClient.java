@@ -113,7 +113,7 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
 
     @Override
     public @NotNull @Unmodifiable List<B> getPunishmentHistory() throws BackendException {
-        return KissenCore.getInstance().getImplementation(AbstractBanImplementation.class).getPunishmentSet(getTotalID()).stream().sorted((Comparator<B>) (punishment1, punishment2) -> punishment2.getStart().compareTo(punishment1.getStart())).toList();
+        return KissenCore.getInstance().getImplementation(AbstractBanImplementation.class).getPunishments(getTotalID()).stream().sorted((Comparator<B>) (punishment1, punishment2) -> punishment2.getStart().compareTo(punishment1.getStart())).toList();
     }
 
     @Override

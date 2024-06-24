@@ -161,13 +161,13 @@ public abstract class KissenBanImplementation<B extends AbstractBanTemplate, P e
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID) {
-        return getPunishmentSet(totalID, getMeta());
+    public @NotNull @Unmodifiable Set<P> getPunishments(@NotNull UUID totalID) {
+        return getPunishments(totalID, getMeta());
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<P> getPunishmentSet() {
-        return getPunishmentSet(getMeta());
+    public @NotNull @Unmodifiable Set<P> getPunishments() {
+        return getPunishments(getMeta());
     }
 
     /**
@@ -202,7 +202,7 @@ public abstract class KissenBanImplementation<B extends AbstractBanTemplate, P e
      * @ if there is an error retrieving the ban from the backend
      */
     protected @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull Meta meta) {
-        return getPunishmentSet(totalID, meta).stream().filter(TemporalObject::isValid).min(Comparator.comparing(TemporalObject::getStart));
+        return getPunishments(totalID, meta).stream().filter(TemporalObject::isValid).min(Comparator.comparing(TemporalObject::getStart));
     }
 
     /**
@@ -215,7 +215,7 @@ public abstract class KissenBanImplementation<B extends AbstractBanTemplate, P e
      * @ if there is an error retrieving the ban from the backend
      */
     protected @NotNull Optional<P> getLatestPunishment(@NotNull UUID totalID, @NotNull BanType banType, @NotNull Meta meta) {
-        return getPunishmentSet(totalID, meta).stream().filter(TemporalObject::isValid).filter(punishment -> punishment.getBanType().equals(banType)).min(Comparator.comparing(TemporalObject::getStart));
+        return getPunishments(totalID, meta).stream().filter(TemporalObject::isValid).filter(punishment -> punishment.getBanType().equals(banType)).min(Comparator.comparing(TemporalObject::getStart));
     }
 
     /**
@@ -226,7 +226,7 @@ public abstract class KissenBanImplementation<B extends AbstractBanTemplate, P e
      * @return The set of player bans, wrapped in an {@link Optional}.
      * @ If an error occurs while accessing the backend.
      */
-    protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull UUID totalID, @NotNull Meta meta) {
+    protected @NotNull @Unmodifiable Set<P> getPunishments(@NotNull UUID totalID, @NotNull Meta meta) {
         StorageImplementation storage = KissenCore.getInstance().getImplementation(StorageImplementation.class);
         Map<String, Object> cache = storage.getStorage(STORAGE_KEY, Duration.ofHours(1));
         return (Set<P>) cache.computeIfAbsent(String.format(TOTAL_ID_KEY, totalID), (k) -> loadPunishments(totalID, meta));
@@ -269,7 +269,7 @@ public abstract class KissenBanImplementation<B extends AbstractBanTemplate, P e
      * @return an unmodifiable set of player bans
      * @ if there is an issue retrieving the player bans from the backend
      */
-    protected @NotNull @Unmodifiable Set<P> getPunishmentSet(@NotNull Meta meta) {
+    protected @NotNull @Unmodifiable Set<P> getPunishments(@NotNull Meta meta) {
         QuerySelect querySelect = meta.select(Column.KEY, Column.VALUE).whereExact(Column.TOTAL_ID, "punishment");
         Object[][] objects = querySelect.execute().exceptionally((t) -> new Object[0][]).join();
 

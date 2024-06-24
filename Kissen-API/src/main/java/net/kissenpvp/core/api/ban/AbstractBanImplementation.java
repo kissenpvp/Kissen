@@ -246,19 +246,19 @@ public interface AbstractBanImplementation<B extends AbstractBanTemplate, P exte
      */
     @NotNull
     @Unmodifiable
-    Set<P> getPunishmentSet(@NotNull UUID totalID);
+    Set<P> getPunishments(@NotNull UUID totalID);
 
     /**
      * Returns an unmodifiable set of all the bans associated with any id.
      * These bans include both valid and invalid bans.
      *
      * @return an unmodifiable {@link Set} of all the {@link P} objects associated with any player.
-     * @see #getPunishmentSet(UUID)
+     * @see #getPunishments(UUID)
      * @see #getLatestPunishment(UUID)
      * @see #getLatestPunishment(UUID, BanType)
      */
     @NotNull
     @Unmodifiable
-    Set<P> getPunishmentSet();
+    Set<P> getPunishments();
 
 }
