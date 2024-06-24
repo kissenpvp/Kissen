@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 
 @Getter @Slf4j(topic = "Kissen")
 public abstract class InternalCommandImplementation<S extends ServerEntity> implements KissenImplementation {
@@ -119,7 +120,8 @@ public abstract class InternalCommandImplementation<S extends ServerEntity> impl
     @Override
     public void postEnable(@NotNull KissenPlugin kissenPlugin) {
         log.debug("Initialize command handler from plugin {}.", kissenPlugin);
-        getHandler().stream().filter(handler -> handler.getPlugin().equals(kissenPlugin)).findFirst().ifPresent(AbstractCommandHandler::registerCachedCommands);
+        Predicate<PluginCommandHandler<?, ?>> pluginEquals = handler -> Objects.equals(handler.getPlugin(), kissenPlugin);
+        getHandler().stream().filter(pluginEquals).findFirst().ifPresent(AbstractCommandHandler::registerCachedCommands);
     }
 
     @Override

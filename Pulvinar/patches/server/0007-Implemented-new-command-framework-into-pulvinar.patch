@@ -174,10 +174,10 @@ index 0000000000000000000000000000000000000000..9c367b682dc0492505c20f93a5a06501
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/command/PulvinarInternalCommandHandler.java b/src/main/java/net/kissenpvp/pulvinar/command/PulvinarInternalCommandHandler.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3cafa41511370e5e74d5fbb60530332718b44059
+index 0000000000000000000000000000000000000000..f992acc27681505f369c03c411f23ecd15a30c64
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/command/PulvinarInternalCommandHandler.java
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,53 @@
 +package net.kissenpvp.pulvinar.command;
 +
 +import net.kissenpvp.core.command.handler.InternalCommandHandler;
@@ -187,9 +187,13 @@ index 0000000000000000000000000000000000000000..3cafa41511370e5e74d5fbb605303327
 +import org.bukkit.command.CommandSender;
 +import org.bukkit.craftbukkit.CraftServer;
 +import org.jetbrains.annotations.NotNull;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
 +
 +public class PulvinarInternalCommandHandler extends InternalCommandHandler<CommandSender, PulvinarCommand>
 +{
++    private static final Logger log = LoggerFactory.getLogger(PulvinarInternalCommandHandler.class);
++
 +    @Override
 +    protected void registerCommand(@NotNull PulvinarCommand command)
 +    {
@@ -739,7 +743,7 @@ index 0000000000000000000000000000000000000000..478e4c8cb8afe2e54530f8cba06214ce
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/command/command/plugin/PulvinarPluginChildCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/command/plugin/PulvinarPluginChildCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..2f037214cce4747fd6f23c598be54655fe8a6818
+index 0000000000000000000000000000000000000000..8c97261922f332b82cf7800ee2c99c6d2f5f6052
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/command/command/plugin/PulvinarPluginChildCommand.java
 @@ -0,0 +1,61 @@
@@ -794,7 +798,7 @@ index 0000000000000000000000000000000000000000..2f037214cce4747fd6f23c598be54655
 +
 +    @Override
 +    public @NotNull String getFullName() {
-+        return parent.getFullName() + " " + getName();
++        return parent.getFullName() + "." + getName();
 +    }
 +
 +
@@ -901,7 +905,7 @@ index 0000000000000000000000000000000000000000..7689da7004aa5fa83b67fb1e6b237fbf
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/command/command/system/PulvinarChildCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/command/system/PulvinarChildCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..22e8210d12f7784a2d8b2c64e9bc78698403120e
+index 0000000000000000000000000000000000000000..848da333c2f6770a6a486739a55915334a810df7
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/command/command/system/PulvinarChildCommand.java
 @@ -0,0 +1,60 @@
@@ -956,7 +960,7 @@ index 0000000000000000000000000000000000000000..22e8210d12f7784a2d8b2c64e9bc7869
 +
 +    @Override
 +    public @NotNull String getFullName() {
-+        return parent.getFullName() + " " + getName();
++        return parent.getFullName() + "." + getName();
 +    }
 +
 +    @Override

@@ -69,6 +69,8 @@ public interface CommandHolder<S extends ServerEntity, C extends CommandHolder<S
         return Component.translatable("server.command.incorrect-usage", builder);
     }
 
+    boolean isRegistered();
+
     @NotNull String getName();
 
     @NotNull String getFullName();

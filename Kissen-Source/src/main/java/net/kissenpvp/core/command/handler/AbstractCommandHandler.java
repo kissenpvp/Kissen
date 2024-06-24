@@ -21,10 +21,14 @@ import net.kissenpvp.core.permission.InternalPermissionImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.*;
 
-@Getter @Slf4j(topic = "Kissen")
+@Getter
+@Slf4j(topic = "Kissen")
 public abstract class AbstractCommandHandler<S extends ServerEntity, C extends CommandHolder<S, ? extends C>> implements CommandHandler<S, C> {
     @Getter(AccessLevel.PROTECTED)
     private final Set<C> commands;
@@ -41,6 +45,12 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
         this.exceptionHandler = new HashSet<>();
         this.initialized = false;
         this.evaluator = new MethodEvaluator<>(this::getParser);
+    }
+
+    private static @NotNull CommandData dummyCommandData(@NotNull String rootName) {
+        InvocationHandler handler = (proxy, method, args) -> Objects.requireNonNullElse(method.getDefaultValue(), rootName);
+        ClassLoader loader = CommandData.class.getClassLoader();
+        return (CommandData) Proxy.newProxyInstance(loader, new Class[]{CommandData.class}, handler);
     }
 
     public @NotNull @Unmodifiable Set<ExceptionHandler<?>> getExceptionHandler() {
@@ -83,59 +93,69 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
     }
 
     public void registerCachedCommands() {
+        List<CommandContainer<CommandData>> commands = new ArrayList<>();
+        List<CommandContainer<TabCompleter>> tabCompleter = new ArrayList<>();
         for (Object object : cached) {
             for (Method method : object.getClass().getDeclaredMethods()) {
-                injectMethod(object, method);
+                CommandData commandData = method.getAnnotation(CommandData.class);
+                if (Objects.nonNull(commandData)) {
+                    commands.add(new CommandContainer<>(commandData, object, method));
+                }
+
+                TabCompleter tabComplete = method.getAnnotation(TabCompleter.class);
+                if (Objects.nonNull(tabComplete)) {
+                    tabCompleter.add(new CommandContainer<>(tabComplete, object, method));
+                }
             }
         }
-        log.debug("Class(es) {} has been registered as command holder from handler {}..", cached, getHandlerName());
+
+        commands.sort(Comparator.comparingInt(o -> o.annotation().value().split("\\.").length));
+        commands.forEach(this::loadCommand);
+        tabCompleter.forEach(this::loadTabCompleter);
+
+        log.debug("Class(es) {} has been registered as command holder from handler {}.", cached, getHandlerName());
         cached.clear();
         initialized = true;
     }
 
-    public void unregister()
-    {
-        getCommands().stream().filter(command -> command.getPosition()==0).forEach(this::unregisterCommand);
+    public void unregister() {
+        getCommands().stream().filter(command -> command.getPosition() == 0).forEach(this::unregisterCommand);
     }
 
-    protected abstract void registerCommand(@NotNull C command);
+    private void loadCommand(@NotNull CommandContainer<CommandData> data) {
 
-    protected abstract @NotNull C buildCommand(@NotNull String name);
-
-    protected abstract @NotNull String getHandlerName();
-
-    protected abstract void unregisterCommand(@NotNull C command);
-
-    private void injectMethod(@NotNull Object instance, @NotNull Method method) {
-        CommandData commandData = method.getAnnotation(CommandData.class);
-        if (commandData != null) {
-            C command = buildCommand(commandData.value());
-            CommandExecutor<S> executor = new KissenCommandExecutor<>(this, instance, method) {
-                @Override
-                protected boolean handleThrowable(@NotNull CommandPayload<S> commandPayload, @NotNull Throwable throwable) {
-                    do
-                    {
-                        if (AbstractCommandHandler.this.handleThrowable(commandPayload, throwable)) {
-                            return true;
-                        }
-                    } while((throwable = throwable.getCause()) != null);
-                    return false;
-                }
-            };
-            command.initCommand(commandData, executor);
-            addPermissions(command);
-
-            if (command.getPosition() == 0) {
-                registerCommand(command);
+        C command = buildCommand(data.annotation().value());
+        CommandExecutor<S> executor = new KissenCommandExecutor<>(this, data.container(), data.method()) {
+            @Override
+            protected boolean handleThrowable(@NotNull CommandPayload<S> commandPayload, @NotNull Throwable throwable) {
+                do {
+                    if (AbstractCommandHandler.this.handleThrowable(commandPayload, throwable)) {
+                        return true;
+                    }
+                } while ((throwable = throwable.getCause()) != null);
+                return false;
             }
+        };
+        command.initCommand(data.annotation(), executor);
+        addPermissions(command);
+
+        if (command.getPosition() == 0) {
+            registerCommand(command);
             return;
         }
 
-        TabCompleter tabCompleter = method.getAnnotation(TabCompleter.class);
-        if (tabCompleter != null) {
-            KissenCompleteExecutor<S> executor = new KissenCompleteExecutor<>(instance, method);
-            buildCommand(tabCompleter.value()).initCompleter(executor);
+        // No root registered? No worries the system got you covered
+        String rootName = command.getFullName().split("\\.")[0];
+        C root = getCommands().stream().filter(c -> Objects.equals(c.getName(), rootName)).findFirst().orElseThrow();
+        if (!root.isRegistered()) {
+            root.initCommand(dummyCommandData(rootName), executor);
+            registerCommand(root);
         }
+    }
+
+    private void loadTabCompleter(@NotNull CommandContainer<TabCompleter> completer) {
+        KissenCompleteExecutor<S> executor = new KissenCompleteExecutor<>(completer.container(), completer.method());
+        buildCommand(completer.annotation().value()).initCompleter(executor);
     }
 
     private void addPermissions(@NotNull C command) {
@@ -170,5 +190,17 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
 
     private <T extends Throwable> boolean handleCommandExceptionHandler(@NotNull AbstractCommandExceptionHandler<T, S> exceptionHandler, @NotNull CommandPayload<S> commandPayload, @NotNull T throwable) {
         return exceptionHandler.handle(commandPayload, throwable);
+    }
+
+    protected abstract void registerCommand(@NotNull C command);
+
+    protected abstract @NotNull C buildCommand(@NotNull String name);
+
+    protected abstract @NotNull String getHandlerName();
+
+    protected abstract void unregisterCommand(@NotNull C command);
+
+    private record CommandContainer<T extends Annotation>(@NotNull T annotation, @NotNull Object container,
+                                                          @NotNull Method method) {
     }
 }
