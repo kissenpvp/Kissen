@@ -39,12 +39,12 @@ public class SerializableRankHandler implements SerializableSavableHandler {
 
     @Override
     public Savable getSavable() {
-        return (Savable) KissenCore.getInstance().getImplementation(AbstractRankImplementation.class).getRank(rankName).orElse(null);
+        return (Savable) KissenCore.getInstance().getImplementation(AbstractRankImplementation.class).getRankTemplate(rankName).orElse(null);
     }
 
     @Override
     public void create(@NotNull String name, @NotNull Map<String, String> data) {
-        KissenCore.getInstance().getImplementation(AbstractRankImplementation.class).createRank(name, data);
+        KissenCore.getInstance().getImplementation(AbstractRankImplementation.class).createRankTemplate(name, data);
     }
 
     @Override

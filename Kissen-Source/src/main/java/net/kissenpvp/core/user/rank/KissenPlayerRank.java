@@ -60,7 +60,7 @@ public class KissenPlayerRank<T extends AbstractRank> extends KissenTemporalObje
     public @NotNull T getSource()
     {
         AbstractRankImplementation<T> rankImplementation = KissenCore.getInstance().getImplementation(AbstractRankImplementation.class);
-        return rankImplementation.getRank(playerRankNode.rankID()).orElseThrow(NullPointerException::new);
+        return rankImplementation.getRankTemplate(playerRankNode.rankID()).orElseThrow(NullPointerException::new);
     }
 
     @Override

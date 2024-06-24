@@ -28,13 +28,13 @@ import java.util.Set;
 
 public interface AbstractRankImplementation<T extends AbstractRank> extends Implementation
 {
-    @NotNull Set<T> getRankSet();
+    @NotNull Set<T> getRankTemplates();
 
-    @NotNull Optional<T> getRank(@NotNull String name);
+    @NotNull Optional<T> getRankTemplate(@NotNull String name);
 
-    @NotNull T createRank(@NotNull String name, @NotNull Map<String, Object> data);
+    @NotNull T createRankTemplate(@NotNull String name, @NotNull Map<String, Object> data);
 
-    @NotNull T createRank(@NotNull String name, int priority);
+    @NotNull T createRankTemplate(@NotNull String name, int priority);
 
-    @NotNull T getDefaultRank();
+    @NotNull T getDefaultRankTemplate();
 }

@@ -67,34 +67,34 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
     }
 
     @Override
-    public @NotNull @Unmodifiable Set<T> getRankSet() {
+    public @NotNull @Unmodifiable Set<T> getRankTemplates() {
         return cached.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
-    public @NotNull Optional<T> getRank(@NotNull String name) {
+    public @NotNull Optional<T> getRankTemplate(@NotNull String name) {
         return cached.stream().filter(rank -> rank.getName().equals(name)).findFirst();
     }
 
     @Override
-    public @NotNull T createRank(@NotNull String name, @NotNull Map<String, Object> data) {
+    public @NotNull T createRankTemplate(@NotNull String name, @NotNull Map<String, Object> data) {
         T rank = setup(name, data);
         cached.add(rank);
         return rank;
     }
 
     @Override
-    public @NotNull T createRank(@NotNull String name, int priority) {
-        return createRank(name, Collections.singletonMap("priority", priority));
+    public @NotNull T createRankTemplate(@NotNull String name, int priority) {
+        return createRankTemplate(name, Collections.singletonMap("priority", priority));
     }
 
     @Override
-    public @NotNull T getDefaultRank() {
+    public @NotNull T getDefaultRankTemplate() {
         return getMeta().getString("default_rank").handle(((string, throwable) -> {
             if (Objects.nonNull(throwable)) {
                 return getFallbackRank();
             }
-            return getRank(string).orElseGet(this::getFallbackRank);
+            return getRankTemplate(string).orElseGet(this::getFallbackRank);
         })).join();
     }
 
