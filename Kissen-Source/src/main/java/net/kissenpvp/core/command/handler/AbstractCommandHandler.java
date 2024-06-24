@@ -149,6 +149,7 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
         C root = getCommands().stream().filter(c -> Objects.equals(c.getName(), rootName)).findFirst().orElseThrow();
         if (!root.isRegistered()) {
             root.initCommand(dummyCommandData(rootName), executor);
+            getCommands().add(root);
             registerCommand(root);
         }
     }
