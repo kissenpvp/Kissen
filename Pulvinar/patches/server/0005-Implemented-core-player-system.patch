@@ -3520,10 +3520,10 @@ index 0000000000000000000000000000000000000000..30e28b7899abe6268ad00b16546b8a8c
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarRankImplementation.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarRankImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3740160cd1f362fea0a1ebc45eff14b0750ebc9b
+index 0000000000000000000000000000000000000000..e9a7bac8907dcbcc863e34aa5b447ad0f5aeeb64
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarRankImplementation.java
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,59 @@
 +package net.kissenpvp.pulvinar.user.rank;
 +
 +import net.kissenpvp.core.api.database.savable.Savable;
@@ -3532,6 +3532,7 @@ index 0000000000000000000000000000000000000000..3740160cd1f362fea0a1ebc45eff14b0
 +import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 +import net.kissenpvp.core.user.rank.KissenRankImplementation;
 +import net.kissenpvp.pulvinar.api.user.rank.Rank;
++import net.kissenpvp.pulvinar.api.user.rank.RankImplementation;
 +import net.kissenpvp.pulvinar.api.user.rank.RankParser;
 +import org.bukkit.Bukkit;
 +import org.bukkit.command.CommandSender;
@@ -3539,7 +3540,7 @@ index 0000000000000000000000000000000000000000..3740160cd1f362fea0a1ebc45eff14b0
 +
 +import java.text.MessageFormat;
 +
-+public class PulvinarRankImplementation extends KissenRankImplementation<Rank> implements KissenImplementation
++public class PulvinarRankImplementation extends KissenRankImplementation<Rank> implements RankImplementation, KissenImplementation
 +{
 +
 +    @Override
@@ -3828,7 +3829,7 @@ index 0000000000000000000000000000000000000000..e5419c6e5caaed5e7c9bc7becb78760f
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
-index abb60e5cf3ecdb40561510dc53294e3010fbe039..f881d6e772d7a792ace2e6f25f3cfc938d783824 100644
+index 0f7d6da8685716604f0749d4f5b60730a44cde73..db8962b02212fb88650f39a753b007bdbbf62d14 100644
 --- a/src/main/java/net/minecraft/server/Main.java
 +++ b/src/main/java/net/minecraft/server/Main.java
 @@ -188,15 +188,17 @@ public class Main {
