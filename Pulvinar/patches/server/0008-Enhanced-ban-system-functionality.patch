@@ -152,7 +152,7 @@ index 0000000000000000000000000000000000000000..533aa48a0e3134278dd9b4330c44b62f
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..41cbc31a653cae48fea685f19349dbc5d860d9ab
+index 0000000000000000000000000000000000000000..dbb46057178b6353981705369682f852e05b9e7a
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
 @@ -0,0 +1,468 @@
@@ -302,12 +302,12 @@ index 0000000000000000000000000000000000000000..41cbc31a653cae48fea685f19349dbc5
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<Punishment> getPunishmentSet(@NotNull Context context) throws BackendException {
++    public @NotNull @Unmodifiable Set<Punishment> getPunishments(@NotNull Context context) throws BackendException {
 +        return getPunishments(getMeta(context));
 +    }
 +
 +    @Override
-+    public @NotNull @Unmodifiable Set<Punishment> getPunishmentSet(@NotNull UUID totalID, @NotNull Context context) throws BackendException {
++    public @NotNull @Unmodifiable Set<Punishment> getPunishments(@NotNull UUID totalID, @NotNull Context context) throws BackendException {
 +        return getPunishments(totalID, getMeta(context));
 +    }
 +

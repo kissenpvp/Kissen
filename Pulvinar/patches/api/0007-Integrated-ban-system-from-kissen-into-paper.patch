@@ -6,7 +6,7 @@ Subject: [PATCH] Integrated ban system from kissen into paper
 
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/ban/BanImplementation.java b/src/main/java/net/kissenpvp/pulvinar/api/ban/BanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..253b87c7b446f403cc1c092da925fdea1149d31f
+index 0000000000000000000000000000000000000000..cd997631fdefd66f34317338151f990a3b198348
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/ban/BanImplementation.java
 @@ -0,0 +1,113 @@
@@ -64,7 +64,7 @@ index 0000000000000000000000000000000000000000..253b87c7b446f403cc1c092da925fdea
 +     * @return An unmodifiable set containing all punishments in the context.
 +     * @throws BackendException if an error occurs when retrieving the punishment data.
 +     */
-+    @NotNull @Unmodifiable Set<Punishment> getPunishmentSet(@NotNull Context context) throws BackendException;
++    @NotNull @Unmodifiable Set<Punishment> getPunishments(@NotNull Context context) throws BackendException;
 +
 +    /**
 +     * Returns an unmodifiable set of all punishments applied to the player with the given UUID within the specified context.
@@ -74,7 +74,7 @@ index 0000000000000000000000000000000000000000..253b87c7b446f403cc1c092da925fdea
 +     * @return An unmodifiable set containing all punishments for the player in the context.
 +     * @throws BackendException if an error occurs when retrieving the punishment data.
 +     */
-+    @NotNull @Unmodifiable Set<Punishment> getPunishmentSet(@NotNull UUID totalID, @NotNull Context context) throws BackendException;
++    @NotNull @Unmodifiable Set<Punishment> getPunishments(@NotNull UUID totalID, @NotNull Context context) throws BackendException;
 +
 +    /**
 +     * Returns the most recent punishment applied to the player with the given UUID within the specified context, if such a punishment exists.
