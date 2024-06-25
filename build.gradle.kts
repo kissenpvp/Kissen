@@ -18,8 +18,8 @@ allprojects {
 
     publishing {
         repositories {
-            maven("https://repo.kissenpvp.net/repository/maven-snapshots/") {
-                name = "kissenpvp"
+            maven("https://repo.kissenpvp.net/snapshots") {
+                name = "kissen"
                 credentials(PasswordCredentials::class)
             }
         }
