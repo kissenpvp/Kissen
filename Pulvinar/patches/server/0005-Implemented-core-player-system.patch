@@ -1124,10 +1124,10 @@ index 0000000000000000000000000000000000000000..acf50b8a6956d4f89e730e7e5c8f493c
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/permission/command/PermissionCommand.java b/src/main/java/net/kissenpvp/pulvinar/permission/command/PermissionCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..18d896517f81d12e828d6334efbbb431e84d4411
+index 0000000000000000000000000000000000000000..27263b1333191ee59a7c3f81a8cc601c3333194a
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/permission/command/PermissionCommand.java
-@@ -0,0 +1,240 @@
+@@ -0,0 +1,235 @@
 +package net.kissenpvp.pulvinar.permission.command;
 +
 +import net.kissenpvp.core.api.command.CommandPayload;
@@ -1199,37 +1199,32 @@ index 0000000000000000000000000000000000000000..18d896517f81d12e828d6334efbbb431
 +        commandPayload.getSender().sendMessage(Component.translatable("server.permission.groups.clear", commandPayload.getSender().displayName(), Component.text(group.wipeGroups())));
 +    }
 +
-+    @CommandData(value = "group", permission = "*")
-+    public void group() {
-+        throw new ArgumentMissingException();
-+    }
-+
-+    @CommandData(value = "group.add.user", permission = "*")
++    @CommandData(value = "permission.group.add.user", permission = "*")
 +    public void groupAddUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionGroup group) {
 +        commandPayload.getSender().sendMessage(executor().setGroup(true, player, group));
 +    }
 +
-+    @CommandData(value = "group.wipe.user", permission = "*")
++    @CommandData(value = "permission.group.wipe.user", permission = "*")
 +    public void groupWipeUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player) {
 +        commandPayload.getSender().sendMessage(Component.translatable("server.permission.groups.clear", player.displayName(), Component.text(player.wipeGroups())));
 +    }
 +
-+    @CommandData(value = "group.remove.user", permission = "*")
++    @CommandData(value = "permission.group.remove.user", permission = "*")
 +    public void groupRemoveUser(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer player, @NotNull PermissionGroup group) {
 +        commandPayload.getSender().sendMessage(executor().setGroup(false, player, group));
 +    }
 +
-+    @CommandData(value = "group.add.group", permission = "*")
++    @CommandData(value = "permission.group.add.group", permission = "*")
 +    public void groupAddGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group, @NotNull PermissionGroup group1) {
 +        commandPayload.getSender().sendMessage(executor().setGroup(true, group, group1));
 +    }
 +
-+    @CommandData(value = "group.remove.group", permission = "*")
++    @CommandData(value = "permission.group.remove.group", permission = "*")
 +    public void groupRemoveGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group, @NotNull PermissionGroup group1) {
 +        commandPayload.getSender().sendMessage(executor().setGroup(false, group, group1));
 +    }
 +
-+    @CommandData(value = "group.wipe.group", permission = "*")
++    @CommandData(value = "permission.group.wipe.group", permission = "*")
 +    public void groupWipeGroup(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull PermissionGroup group) {
 +        commandPayload.getSender().sendMessage(Component.translatable("server.permission.permissions.clear", group.displayName(), Component.text(group.wipeGroups())));
 +    }
