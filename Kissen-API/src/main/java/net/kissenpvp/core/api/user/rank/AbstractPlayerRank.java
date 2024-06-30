@@ -22,9 +22,10 @@ package net.kissenpvp.core.api.user.rank;
 import net.kissenpvp.core.api.time.TemporalObject;
 import org.jetbrains.annotations.NotNull;
 
-public interface AbstractPlayerRank<RANK extends AbstractRank> extends TemporalObject {
+public interface AbstractPlayerRank<T extends AbstractRank> extends TemporalObject {
 
     @NotNull String getID();
 
-    @NotNull RANK getSource();
+    @NotNull
+    T getSource();
 }

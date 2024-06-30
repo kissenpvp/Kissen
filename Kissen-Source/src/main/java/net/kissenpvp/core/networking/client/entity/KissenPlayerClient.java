@@ -24,6 +24,7 @@ import net.kissenpvp.core.api.ban.AbstractPunishment;
 import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.AccurateDuration;
@@ -34,10 +35,12 @@ import net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting;
 import net.kissenpvp.core.api.user.playersettting.RegisteredPlayerSetting;
 import net.kissenpvp.core.api.user.rank.AbstractPlayerRank;
 import net.kissenpvp.core.api.user.rank.AbstractRank;
+import net.kissenpvp.core.api.user.rank.event.AbstractRankGrantEvent;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.user.KissenPublicUser;
 import net.kissenpvp.core.user.rank.KissenPlayerRank;
 import net.kissenpvp.core.user.rank.PlayerRankNode;
+import net.kissenpvp.core.user.rank.event.InternalRankExpireEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +51,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> implements PlayerClient<R, B> {
+public abstract class KissenPlayerClient<P extends AbstractPlayerRank<?>, B extends AbstractPunishment<?>> implements PlayerClient<P, B> {
 
     /**
      * Retrieves a player setting of the specified type from the user system.
@@ -71,17 +74,17 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
     }
 
     @Override
-    public @NotNull R getRank() {
+    public @NotNull P getRank() {
         return getRankIndex().map(index -> getRankHistory().get(index)).orElse(fallbackRank());
     }
 
     @Override
-    public @NotNull R grantRank(@NotNull AbstractRank rank) {
+    public @NotNull P grantRank(@NotNull AbstractRank rank) {
         return grantRank(rank, null);
     }
 
     @Override
-    public @NotNull @Unmodifiable List<R> getRankHistory() {
+    public @NotNull @Unmodifiable List<P> getRankHistory() {
         MetaList<PlayerRankNode> ranks = ((KissenPublicUser<?>) getUser()).getRankNodes();
         return ranks.stream().map(this::translateRank).sorted(Comparator.comparing(AbstractPlayerRank::getStart)).toList();
     }
@@ -147,14 +150,14 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
      * <p>The {@code setRank(@NotNull R playerRank)} method sets the specified player rank for the associated entity.
      * It translates the rank using the associated data writer for {@link PlayerRankNode} instances.</p>
      *
-     * @param playerRank the {@link R} (generic) representing the player rank to be set
+     * @param playerRank the {@link P} (generic) representing the player rank to be set
      * @return the translated player rank
      * @throws NullPointerException if the specified player rank is `null`
      * @see #setRankNode(PlayerRankNode)
      * @see #rankDataWriter()
      * @see #translateRank(PlayerRankNode, DataWriter)
      */
-    public @NotNull R setRank(@NotNull R playerRank) {
+    public @NotNull P setRank(@NotNull P playerRank) {
         PlayerRankNode rankNode = ((KissenPlayerRank<?>) playerRank).getPlayerRankNode();
         return translateRank(setRankNode(rankNode), rankDataWriter());
     }
@@ -203,13 +206,28 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
      */
     protected Optional<Integer> getRankIndex() {
         Integer index = null;
-        List<R> rankList = getRankHistory();
+        List<P> rankList = getRankHistory();
 
         if (rankList.isEmpty()) {
             return Optional.empty();
         }
+
         for (int i = rankList.size() - 1; i > -1; i--) {
             if (rankList.get(i).isValid()) {
+                Map<String, Object> storage = getUser().getStorage();
+                if(storage.containsKey("rank_id") && ((int) storage.get("rank_id")) < i)
+                { // This is dumb, but the only way to get whether it expired or no
+                    int previousRankId = (int)storage.get("rank_id");
+                    InternalRankExpireEvent<P> rankExpireEvent = rankExpireEvent(rankList.get(previousRankId));
+                    if(rankExpireEvent.isCancelled())
+                    {
+                        rankList.get(previousRankId).setEnd(rankExpireEvent.getCancelled());
+                    }
+                    index = previousRankId;
+                    break;
+                }
+
+                getUser().getStorage().put("rank_id", i);
                 index = i;
                 break;
             }
@@ -217,13 +235,23 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
         return Optional.ofNullable(index);
     }
 
+    protected abstract @NotNull InternalRankExpireEvent<P> rankExpireEvent(@NotNull P rank);
+
     @Override
-    public @NotNull R grantRank(@NotNull AbstractRank rank, @Nullable AccurateDuration accurateDuration) {
+    public @NotNull P grantRank(@NotNull AbstractRank rank, @Nullable AccurateDuration accurateDuration) {
         String id = UUID.randomUUID().toString().split("-")[1];
         PlayerRankNode playerRankNode = new PlayerRankNode(id, rank.getName(), new TemporalData(accurateDuration));
-        return setRank(translateRank(playerRankNode, record -> {
-        }));
+        AbstractRankGrantEvent<P> event = grantRankEvent(translateRank(playerRankNode, record -> {}));
+
+        if(event.isCancelled())
+        {
+            throw new EventCancelledException();
+        }
+
+        return setRank(event.getPlayerRank());
     }
+
+    protected abstract @NotNull AbstractRankGrantEvent<P> grantRankEvent(@NotNull P rank);
 
     /**
      * Retrieves the accurate online time for the specified user.
@@ -248,25 +276,6 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
     }
 
     /**
-     * Retrieves the last text color used in the specified text component.
-     *
-     * <p>The {@code getLastColor} method examines the provided text component and retrieves the last text color used.
-     * If the component has children, it checks the last child's color. If no color is found, an empty optional is returned.</p>
-     *
-     * @param component  the {@link Component} from which to retrieve the last text color
-     * @return           an {@link Optional} containing the last {@link TextColor}, or an empty optional if no color is found
-     * @throws NullPointerException if the component parameter is {@code null}
-     * @see TextColor
-     */
-    private @NotNull Optional<TextColor> getLastColor(@NotNull Component component) {
-        TextColor color = component.color();
-        if (!component.children().isEmpty()) {
-            color = component.children().getLast().color();
-        }
-        return Optional.ofNullable(color);
-    }
-
-    /**
      * Translates the provided {@link PlayerRankNode} into a result of type {@code R} using the default {@link DataWriter}.
      *
      * <p>The {@code translateRank} method is responsible for translating the given {@link PlayerRankNode} into a result of type {@code R}
@@ -278,7 +287,7 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
      * @throws NullPointerException if the playerRankNode parameter is {@code null}
      * @see #translateRank(PlayerRankNode, DataWriter)
      */
-    private @NotNull R translateRank(@NotNull PlayerRankNode playerRankNode) {
+    private @NotNull P translateRank(@NotNull PlayerRankNode playerRankNode) {
         return translateRank(playerRankNode, rankDataWriter());
     }
 
@@ -294,7 +303,7 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
      * @return                a result of type {@code R} representing the translation
      * @throws NullPointerException if the playerRankNode parameter is {@code null}
      */
-    protected abstract @NotNull R translateRank(@NotNull PlayerRankNode playerRankNode, @Nullable DataWriter<PlayerRankNode> dataWriter);
+    protected abstract @NotNull P translateRank(@NotNull PlayerRankNode playerRankNode, @Nullable DataWriter<PlayerRankNode> dataWriter);
 
     /**
      * Provides a fallback result of type {@code R} when translation fails or is not applicable.
@@ -304,5 +313,5 @@ public abstract class KissenPlayerClient<R extends AbstractPlayerRank<?>, B exte
      *
      * @return a fallback result of type {@code R}
      */
-    protected abstract @NotNull R fallbackRank();
+    protected abstract @NotNull P fallbackRank();
 }

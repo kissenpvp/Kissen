@@ -798,6 +798,58 @@ index 0000000000000000000000000000000000000000..9210eb1b7adea37b4c103cf670b59b2c
 +        return rankImplementation.getRankTemplates().stream().map(Rank::getName).collect(Collectors.toSet());
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..e67a60567f6dae79b6b6435b674750b2f9d9740b
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankEvent.java
+@@ -0,0 +1,7 @@
++package net.kissenpvp.pulvinar.api.user.rank.event;
++
++import net.kissenpvp.core.api.user.rank.event.AbstractRankEvent;
++import net.kissenpvp.pulvinar.api.user.rank.Rank;
++
++public interface RankEvent extends AbstractRankEvent<Rank> {
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankExpireEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankExpireEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4c562e1a2b4c8ef29093476a534f73c936dd7135
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankExpireEvent.java
+@@ -0,0 +1,7 @@
++package net.kissenpvp.pulvinar.api.user.rank.event;
++
++import net.kissenpvp.core.api.user.rank.event.AbstractRankExpireEvent;
++import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
++
++public interface RankExpireEvent extends AbstractRankExpireEvent<PlayerRank> {
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankGrantEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankGrantEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ead7b474dea2c70ea0c4f0dc06172117ffd7cc69
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankGrantEvent.java
+@@ -0,0 +1,7 @@
++package net.kissenpvp.pulvinar.api.user.rank.event;
++
++import net.kissenpvp.core.api.user.rank.event.UndefinedAbstractRankEvent;
++import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
++
++public interface RankGrantEvent extends UndefinedAbstractRankEvent<PlayerRank> {
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankPriorityChangeEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankPriorityChangeEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4cdfe444286e532cb2b4d504c295303a821bf473
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankPriorityChangeEvent.java
+@@ -0,0 +1,7 @@
++package net.kissenpvp.pulvinar.api.user.rank.event;
++
++import net.kissenpvp.core.api.user.rank.event.AbstractRankPriorityChangeEvent;
++import net.kissenpvp.pulvinar.api.user.rank.Rank;
++
++public interface RankPriorityChangeEvent extends AbstractRankPriorityChangeEvent<Rank> {
++}
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
 index d0206c9c2f423a9b77237d9a005b9ee139dae70f..bff5cba98080427cae76e0cbe30f538a519397e8 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java

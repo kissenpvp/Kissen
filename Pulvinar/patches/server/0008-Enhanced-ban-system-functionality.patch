@@ -1564,10 +1564,10 @@ index 6bf95a6ba833df5733076befc3d3d030548fa289..cb430ffdd83e390963257ab6d6e80231
  import net.kissenpvp.pulvinar.api.ban.warn.Warn;
  import io.netty.channel.Channel;
 diff --git a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-index e02174fdf3f480949dda9a536699e54260de4d79..380a470e98063ddf58cd2a604bc67f38bd55b737 100644
+index f36474c6612645bc988b04757e17c9bc5a8c19ee..5a9555ce9b36b9577b562019bea749a6925b9b74 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-@@ -19,12 +19,16 @@
+@@ -19,18 +19,18 @@
  package net.kissenpvp.pulvinar.networking.client.entity;
  
  import net.kissenpvp.core.api.database.DataWriter;
@@ -1577,22 +1577,32 @@ index e02174fdf3f480949dda9a536699e54260de4d79..380a470e98063ddf58cd2a604bc67f38
 +import net.kissenpvp.core.api.time.TemporalData;
  import net.kissenpvp.core.api.user.User;
  import net.kissenpvp.core.api.user.UserImplementation;
+ import net.kissenpvp.core.api.user.rank.event.AbstractRankGrantEvent;
  import net.kissenpvp.core.ban.warn.WarnNode;
  import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
  import net.kissenpvp.core.user.rank.PlayerRankNode;
-+import net.kissenpvp.pulvinar.api.ban.BanTemplate;
+-<<<<<<< Updated upstream
+-=======
+ import net.kissenpvp.core.user.rank.event.InternalRankExpireEvent;
+ import net.kissenpvp.pulvinar.api.ban.BanTemplate;
+->>>>>>> Stashed changes
  import net.kissenpvp.pulvinar.api.ban.Punishment;
  import net.kissenpvp.pulvinar.api.ban.warn.Warn;
  import net.kissenpvp.pulvinar.api.base.Context;
-@@ -39,6 +43,7 @@ import net.kissenpvp.pulvinar.user.PulvinarPublicUser;
+@@ -45,12 +45,9 @@ import net.kissenpvp.pulvinar.user.PulvinarPublicUser;
  import net.kissenpvp.pulvinar.user.playersetting.PulvinarBoundPlayerSetting;
  import net.kissenpvp.pulvinar.user.rank.PulvinarPlayerRank;
  import net.kissenpvp.pulvinar.user.rank.PulvinarPlayerFallBackRank;
-+import net.kyori.adventure.text.Component;
+-<<<<<<< Updated upstream
+-=======
+ import net.kissenpvp.pulvinar.user.rank.event.PulvinarRankExpireEvent;
+ import net.kissenpvp.pulvinar.user.rank.event.PulvinarRankGrantEvent;
+ import net.kyori.adventure.text.Component;
+->>>>>>> Stashed changes
  import org.bukkit.Bukkit;
  import org.bukkit.OfflinePlayer;
  import org.jetbrains.annotations.Contract;
-@@ -46,6 +51,8 @@ import org.jetbrains.annotations.NotNull;
+@@ -58,10 +55,15 @@ import org.jetbrains.annotations.NotNull;
  import org.jetbrains.annotations.Nullable;
  import org.jetbrains.annotations.Unmodifiable;
  
@@ -1601,7 +1611,14 @@ index e02174fdf3f480949dda9a536699e54260de4d79..380a470e98063ddf58cd2a604bc67f38
  import java.util.Set;
  import java.util.function.Function;
  import java.util.stream.Collectors;
-@@ -82,14 +89,6 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
+ 
++import net.kyori.adventure.text.Component;
++import net.kissenpvp.pulvinar.api.ban.BanTemplate;
++
+ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<PlayerRank, Punishment> implements PulvinarPlayerClient {
+ 
+     @Override
+@@ -108,14 +110,6 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
          return getOnlineTime(getUser(context));
      }
  
@@ -1616,7 +1633,7 @@ index e02174fdf3f480949dda9a536699e54260de4d79..380a470e98063ddf58cd2a604bc67f38
      @Override
      public @NotNull User getUser(@NotNull Context context) {
          PulvinarPublicUser pulvinarUser = (PulvinarPublicUser) getUser();
-@@ -110,12 +109,39 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
+@@ -136,12 +130,39 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
          return new PulvinarBoundPlayerSetting<>(getPlayerSetting(settingClass), offlinePlayer);
      }
  
