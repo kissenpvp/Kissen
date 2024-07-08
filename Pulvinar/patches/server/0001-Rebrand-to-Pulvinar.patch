@@ -5,7 +5,7 @@ Subject: [PATCH] Rebrand to Pulvinar
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 0635aacceec1ba9c753b4dde057876b91336d416..af8a8ea6dbfd98bde79842528f4f901d603171f7 100644
+index 42fa7df2badca3fe26258ce0db934ba33f9cec80..ce592390a1854f4da822cd43f95ac2c870df3974 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -13,7 +13,7 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
@@ -157,10 +157,10 @@ index 710477ae27ebc5afdf0012ef0867d05efd293c24..d5e382ed3747ad6fad12d1bd887cb62a
      public CrashReport(String message, Throwable cause) {
          io.papermc.paper.util.StacktraceDeobfuscator.INSTANCE.deobfuscateThrowable(cause); // Paper
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 6dbea75748021ecc950888213a431ab2495c4a18..690af8a6a5f362c73cf1564608e0433561877573 100644
+index e6a23507b69a128aabf4f811d6099281b24583fd..550fd224a391c16e604c9d4b329cbc6caeb43537 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
-@@ -969,7 +969,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+@@ -1031,7 +1031,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
          shutdownThread = Thread.currentThread();
          org.spigotmc.WatchdogThread.doStop(); // Paper
          if (!isSameThread()) {

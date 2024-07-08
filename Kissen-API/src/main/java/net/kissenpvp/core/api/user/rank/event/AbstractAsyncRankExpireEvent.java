@@ -8,7 +8,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.Period;
 
-public interface AbstractRankExpireEvent<T extends AbstractPlayerRank<?>> extends AbstractPlayerRankEvent<T>
+public interface AbstractAsyncRankExpireEvent<T extends AbstractPlayerRank<?>> extends AbstractPlayerRankEvent<T>
 {
     void setCancelled(@NotNull Instant expiration);
 

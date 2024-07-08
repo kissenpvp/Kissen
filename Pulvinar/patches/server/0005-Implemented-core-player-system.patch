@@ -209,10 +209,10 @@ index 0000000000000000000000000000000000000000..6bf95a6ba833df5733076befc3d3d030
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f36474c6612645bc988b04757e17c9bc5a8c19ee
+index 0000000000000000000000000000000000000000..fc9219b725af86d4b27bc33cba9442467a0d2d43
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-@@ -0,0 +1,147 @@
+@@ -0,0 +1,135 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -237,17 +237,11 @@ index 0000000000000000000000000000000000000000..f36474c6612645bc988b04757e17c9bc
 +import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.api.user.UserImplementation;
-+import net.kissenpvp.core.api.user.rank.event.AbstractRankGrantEvent;
-+import net.kissenpvp.core.ban.warn.WarnNode;
 +import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
 +import net.kissenpvp.core.user.rank.PlayerRankNode;
-+<<<<<<< Updated upstream
-+=======
-+import net.kissenpvp.core.user.rank.event.InternalRankExpireEvent;
-+import net.kissenpvp.pulvinar.api.ban.BanTemplate;
-+>>>>>>> Stashed changes
++import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpireEvent;
++import net.kissenpvp.core.user.rank.event.InternalRankGrantEvent;
 +import net.kissenpvp.pulvinar.api.ban.Punishment;
-+import net.kissenpvp.pulvinar.api.ban.warn.Warn;
 +import net.kissenpvp.pulvinar.api.base.Context;
 +import net.kissenpvp.pulvinar.api.networking.client.entity.PulvinarOnlinePlayerClient;
 +import net.kissenpvp.pulvinar.api.networking.client.entity.PulvinarPlayerClient;
@@ -255,26 +249,22 @@ index 0000000000000000000000000000000000000000..f36474c6612645bc988b04757e17c9bc
 +import net.kissenpvp.pulvinar.api.user.playersetting.BoundPlayerSetting;
 +import net.kissenpvp.pulvinar.api.user.playersetting.PlayerSetting;
 +import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
++import net.kissenpvp.pulvinar.api.user.rank.event.AsyncRankExpireEvent;
++import net.kissenpvp.pulvinar.api.user.rank.event.RankGrantEvent;
 +import net.kissenpvp.pulvinar.permission.permissible.PulvinarPermissible;
 +import net.kissenpvp.pulvinar.user.PulvinarPublicUser;
 +import net.kissenpvp.pulvinar.user.playersetting.PulvinarBoundPlayerSetting;
 +import net.kissenpvp.pulvinar.user.rank.PulvinarPlayerRank;
 +import net.kissenpvp.pulvinar.user.rank.PulvinarPlayerFallBackRank;
-+<<<<<<< Updated upstream
-+=======
-+import net.kissenpvp.pulvinar.user.rank.event.PulvinarRankExpireEvent;
++import net.kissenpvp.pulvinar.user.rank.event.PulvinarAsyncRankExpireEvent;
 +import net.kissenpvp.pulvinar.user.rank.event.PulvinarRankGrantEvent;
-+import net.kyori.adventure.text.Component;
-+>>>>>>> Stashed changes
 +import org.bukkit.Bukkit;
 +import org.bukkit.OfflinePlayer;
-+import org.jetbrains.annotations.Contract;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +import org.jetbrains.annotations.Unmodifiable;
 +
 +import java.util.Set;
-+import java.util.function.Function;
 +import java.util.stream.Collectors;
 +
 +public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<PlayerRank, Punishment> implements PulvinarPlayerClient {
@@ -286,12 +276,12 @@ index 0000000000000000000000000000000000000000..f36474c6612645bc988b04757e17c9bc
 +
 +    @Override
 +    protected @NotNull PlayerRank translateRank(@NotNull PlayerRankNode playerRankNode, @Nullable DataWriter<PlayerRankNode> dataWriter) {
-+        return new PulvinarPlayerRank(playerRankNode, dataWriter);
++        return new PulvinarPlayerRank(Bukkit.getOfflinePlayer(getUniqueId()), playerRankNode, dataWriter);
 +    }
 +
 +    @Override
 +    protected @NotNull PlayerRank fallbackRank() {
-+        return new PulvinarPlayerFallBackRank();
++        return new PulvinarPlayerFallBackRank(Bukkit.getOfflinePlayer(getUniqueId()));
 +    }
 +
 +    @Override
@@ -305,30 +295,22 @@ index 0000000000000000000000000000000000000000..f36474c6612645bc988b04757e17c9bc
 +    }
 +
 +    @Override
-+    protected @NotNull InternalRankExpireEvent<PlayerRank> rankExpireEvent(@NotNull PlayerRank rank) {
-+        PulvinarRankExpireEvent rankExpireEvent = new PulvinarRankExpireEvent(rank);
++    protected @NotNull InternalAsyncRankExpireEvent<PlayerRank> rankExpireEvent(@NotNull PlayerRank rank) {
++        AsyncRankExpireEvent rankExpireEvent = new PulvinarAsyncRankExpireEvent(rank);
 +        Bukkit.getPluginManager().callEvent(rankExpireEvent);
-+        return rankExpireEvent;
++        return (InternalAsyncRankExpireEvent<PlayerRank>) rankExpireEvent;
 +    }
 +
 +    @Override
-+    protected @NotNull AbstractRankGrantEvent<PlayerRank> grantRankEvent(@NotNull PlayerRank rank) {
-+        PulvinarRankGrantEvent rankGrantEvent = new PulvinarRankGrantEvent(getRank(), rank);
++    protected @NotNull InternalRankGrantEvent<PlayerRank> grantRankEvent(@NotNull PlayerRank rank) {
++        RankGrantEvent rankGrantEvent = new PulvinarRankGrantEvent(getRank(), rank);
 +        Bukkit.getPluginManager().callEvent(rankGrantEvent);
-+        return rankGrantEvent;
++        return (InternalRankGrantEvent<PlayerRank>) rankGrantEvent;
 +    }
 +
 +    @Override
 +    public @NotNull AccurateDuration getOnlineTime(@NotNull Context context) {
 +        return getOnlineTime(getUser(context));
-+    }
-+
-+    @Override
-+    public void clearActiveWarns() {
-+        //TODO
-+        /*List<WarnNode> nodes = new ArrayList<>(getUser().getListNotNull("warn_list", WarnNode.class));
-+        nodes.forEach(warn -> warn.temporalMeasure().end().setValue(System.currentTimeMillis()));
-+        getUser().setList("warn_list", nodes);*/
 +    }
 +
 +    @Override
@@ -351,13 +333,19 @@ index 0000000000000000000000000000000000000000..f36474c6612645bc988b04757e17c9bc
 +        return new PulvinarBoundPlayerSetting<>(getPlayerSetting(settingClass), offlinePlayer);
 +    }
 +
++    /**
++     * Returns the permissible as a {@link PulvinarPermissible} featuring advanced permission features.
++     *
++     * @return the context as permissible
++     * @throws PermissibleOverriddenException when a plugin has been installed which alters the permissible
++     */
 +    public @NotNull PulvinarPermissible getPermissionContext() throws PermissibleOverriddenException {
 +        return (PulvinarPermissible) getPermissible();
 +    }
 +
-+    @Contract(pure = true, value = "-> new")
-+    protected @NotNull Function<WarnNode, Warn> transformWarn() {
-+        return (w) -> null; //TODO
++    @Override
++    public void clearActiveWarns() {
++        //TODO
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/permission/AttachmentAbstractPermission.java b/src/main/java/net/kissenpvp/pulvinar/permission/AttachmentAbstractPermission.java
@@ -3376,10 +3364,10 @@ index 0000000000000000000000000000000000000000..c7628e16d053649ef2a129deac2c9bec
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarPlayerFallBackRank.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarPlayerFallBackRank.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b2cb0ba40d13509a6cd4cc14ba9c3c67f22c8336
+index 0000000000000000000000000000000000000000..2458fb71b6e1e021d2bb298da28dfb18c213c11f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarPlayerFallBackRank.java
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,49 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -3400,24 +3388,41 @@ index 0000000000000000000000000000000000000000..b2cb0ba40d13509a6cd4cc14ba9c3c67
 +
 +package net.kissenpvp.pulvinar.user.rank;
 +
++import net.kissenpvp.core.api.database.DataWriter;
 +import net.kissenpvp.core.user.rank.KissenPlayerFallBackRank;
++import net.kissenpvp.core.user.rank.PlayerRankNode;
 +import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
 +import net.kissenpvp.pulvinar.api.user.rank.Rank;
++import org.bukkit.OfflinePlayer;
 +import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
 +
 +public class PulvinarPlayerFallBackRank extends KissenPlayerFallBackRank<Rank> implements PlayerRank
 +{
++
++    private final OfflinePlayer player;
++
++    public PulvinarPlayerFallBackRank(@NotNull OfflinePlayer player) {
++        this.player = player;
++    }
++
 +    @Override public @NotNull Rank getSource()
 +    {
 +        return new PulvinarFallBackRank();
 +    }
++
++    @NotNull
++    @Override
++    public OfflinePlayer getPlayer() {
++        return player;
++    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarPlayerRank.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarPlayerRank.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6fb230c27edbaa181bb6ed6945cfe4330c1b9f7c
+index 0000000000000000000000000000000000000000..be73cf4bd19f515f1910d917b08014909f0598c8
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarPlayerRank.java
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,44 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -3443,12 +3448,23 @@ index 0000000000000000000000000000000000000000..6fb230c27edbaa181bb6ed6945cfe433
 +import net.kissenpvp.core.user.rank.PlayerRankNode;
 +import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
 +import net.kissenpvp.pulvinar.api.user.rank.Rank;
++import org.bukkit.OfflinePlayer;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
 +
 +public class PulvinarPlayerRank extends KissenPlayerRank<Rank> implements PlayerRank {
-+    public PulvinarPlayerRank(@NotNull PlayerRankNode playerRankNode, @Nullable DataWriter<PlayerRankNode> dataWriter) {
++
++    private final OfflinePlayer player;
++
++    public PulvinarPlayerRank(@NotNull OfflinePlayer player, @NotNull PlayerRankNode playerRankNode, @Nullable DataWriter<PlayerRankNode> dataWriter) {
 +        super(playerRankNode, dataWriter);
++        this.player = player;
++    }
++
++    @NotNull
++    @Override
++    public OfflinePlayer getPlayer() {
++        return player;
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarRank.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarRank.java
@@ -3763,6 +3779,24 @@ index 0000000000000000000000000000000000000000..05d67b448034883857bb7e5fec8796a9
 +        };
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarAsyncRankExpireEvent.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarAsyncRankExpireEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d7fe0584e09f819ff9c4a9ecf5e64c981501c1a3
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarAsyncRankExpireEvent.java
+@@ -0,0 +1,12 @@
++package net.kissenpvp.pulvinar.user.rank.event;
++
++import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpireEvent;
++import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
++import net.kissenpvp.pulvinar.api.user.rank.event.AsyncRankExpireEvent;
++import org.jetbrains.annotations.NotNull;
++
++public class PulvinarAsyncRankExpireEvent extends InternalAsyncRankExpireEvent<PlayerRank> implements AsyncRankExpireEvent {
++    public PulvinarAsyncRankExpireEvent(@NotNull PlayerRank playerRank) {
++        super(playerRank);
++    }
++}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarRankEvent.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarRankEvent.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..3a667d0f69ff253f573a04d08191784ce67c6757
@@ -3779,24 +3813,6 @@ index 0000000000000000000000000000000000000000..3a667d0f69ff253f573a04d08191784c
 +public class PulvinarRankEvent extends InternalRankEvent<Rank> implements RankEvent {
 +    public PulvinarRankEvent(@NotNull Rank rank) {
 +        super(rank);
-+    }
-+}
-diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarRankExpireEvent.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarRankExpireEvent.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..4f5817134fcc2de42ec5995fceca6b5b2ebc7134
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarRankExpireEvent.java
-@@ -0,0 +1,12 @@
-+package net.kissenpvp.pulvinar.user.rank.event;
-+
-+import net.kissenpvp.core.user.rank.event.InternalRankExpireEvent;
-+import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
-+import net.kissenpvp.pulvinar.api.user.rank.event.RankExpireEvent;
-+import org.jetbrains.annotations.NotNull;
-+
-+public class PulvinarRankExpireEvent extends InternalRankExpireEvent<PlayerRank> implements RankExpireEvent {
-+    public PulvinarRankExpireEvent(@NotNull PlayerRank playerRank) {
-+        super(playerRank);
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarRankGrantEvent.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarRankGrantEvent.java
@@ -3891,10 +3907,10 @@ index 22c4f8dea99f92a1eb3da2baf0a15bf9d2ca0462..91bc235e7a7fbde5bde4a60a8f623bbf
          }
      }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index d9fbc5c1f4c6317165d8daa104d3d0896b52c240..6c537412ab9c477449d6d1f01ad03f0000a1a30a 100644
+index c8ccf4b847ba3803b48c26ad6e6acecb327c76c5..080bad9dcf85b8f9ae15f459c3fd9214ff7ccf43 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2284,17 +2284,22 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
+@@ -2286,17 +2286,22 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
  
      public void sendSystemMessage(Component message, boolean overlay) {
          if (this.acceptsSystemMessages(overlay)) {
@@ -4034,7 +4050,7 @@ index 34b4166adfae8ff7d1eb73d56a72931b005330a7..5534457a2898ea447aaeab997adad93e
          private final GameProfile profile;
          final Date expirationDate;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 10c59d30da3c4713fb7cdcf2e600508c0dd3acf0..ac4f2aaaa154fd088ccf40fb6b0705d9556559d5 100644
+index 74c6f43a26ca1b36e7121dddd9f065b2a9254493..6e93ac56db0429a0e9fb494aab4972bd03bdf4c8 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -168,8 +168,8 @@ public abstract class PlayerList {
@@ -4587,7 +4603,7 @@ index 4b7d38a5ac6247c6e9d71ac7f3b65765ed3cf3ee..877438db64d9a089e77616f94f048d81
 +    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
-index 90265b6f2acd43713b61e277799dd31311b6b7e2..197403817f4f3019b549174b05105368252b4391 100644
+index 69304fa6eb65dd37e74db9ad62eac0bddfdea2c1..abbfe95c425ebe9a66cd60c4ef1c8ac2d7feddc8 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftHumanEntity.java
 @@ -70,7 +70,7 @@ import org.bukkit.plugin.Plugin;
@@ -4600,7 +4616,7 @@ index 90265b6f2acd43713b61e277799dd31311b6b7e2..197403817f4f3019b549174b05105368
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 41863584c3a85068b807a5aeb93c3da70f133b47..af10a1d0f76fd0d0d391b9d59b715a88f979f1f5 100644
+index 6a3b023b0f60dbb350943bdd7f0bfead9e8e3ce0..f634554385ea5046ff8129a16615d1fac409bea6 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -193,6 +193,33 @@ import org.jetbrains.annotations.NotNull;
@@ -4648,7 +4664,7 @@ index 41863584c3a85068b807a5aeb93c3da70f133b47..af10a1d0f76fd0d0d391b9d59b715a88
      public CraftPlayer(CraftServer server, ServerPlayer entity) {
          super(server, entity);
  
-@@ -2668,7 +2699,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -2669,7 +2700,16 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
  
      public void disconnect(String reason) {
          this.conversationTracker.abandonAllConversations();
@@ -4666,7 +4682,7 @@ index 41863584c3a85068b807a5aeb93c3da70f133b47..af10a1d0f76fd0d0d391b9d59b715a88
      }
  
      @Override
-@@ -3041,7 +3081,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3042,7 +3082,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      // Paper start
      @Override
      public java.util.Locale locale() {
@@ -4675,7 +4691,7 @@ index 41863584c3a85068b807a5aeb93c3da70f133b47..af10a1d0f76fd0d0d391b9d59b715a88
      }
      // Paper end
      @Override
-@@ -3176,7 +3216,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3177,7 +3217,14 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
      public void sendMessage(final net.kyori.adventure.identity.Identity identity, final net.kyori.adventure.text.Component message, final net.kyori.adventure.audience.MessageType type) {
          if (getHandle().connection == null) return;
          final net.minecraft.core.Registry<net.minecraft.network.chat.ChatType> chatTypeRegistry = this.getHandle().level().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.CHAT_TYPE);
@@ -4691,7 +4707,7 @@ index 41863584c3a85068b807a5aeb93c3da70f133b47..af10a1d0f76fd0d0d391b9d59b715a88
      }
  
      @Override
-@@ -3438,7 +3485,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3439,7 +3486,15 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          public void sendMessage(net.md_5.bungee.api.ChatMessageType position, UUID sender, BaseComponent... components) {
              if ( CraftPlayer.this.getHandle().connection == null ) return;
  
@@ -4708,7 +4724,7 @@ index 41863584c3a85068b807a5aeb93c3da70f133b47..af10a1d0f76fd0d0d391b9d59b715a88
          }
  
          // Paper start
-@@ -3647,4 +3702,352 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3648,4 +3703,352 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket(getEntityId(), io.papermc.paper.adventure.PaperAdventure.asVanilla(message)));
      }
      // Purpur end

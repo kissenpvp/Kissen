@@ -657,10 +657,10 @@ index 0000000000000000000000000000000000000000..82260903bc6dff7f285d3f04147bc6e0
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/PlayerRank.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/PlayerRank.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d50ef6b9a4d72c3b9f9ba233ade20936e6fc5e62
+index 0000000000000000000000000000000000000000..4b22a80e71ffdd7c32a1cfbf89b75021ced712ed
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/PlayerRank.java
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,29 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -682,8 +682,14 @@ index 0000000000000000000000000000000000000000..d50ef6b9a4d72c3b9f9ba233ade20936
 +package net.kissenpvp.pulvinar.api.user.rank;
 +
 +import net.kissenpvp.core.api.user.rank.AbstractPlayerRank;
++import org.bukkit.OfflinePlayer;
++import org.jetbrains.annotations.NotNull;
 +
-+public interface PlayerRank extends AbstractPlayerRank<Rank> { }
++public interface PlayerRank extends AbstractPlayerRank<Rank> {
++
++    @NotNull OfflinePlayer getPlayer();
++
++}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/Rank.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/Rank.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..e67f99e939c1cccb2edc10e7d4746fadb8c50b12
@@ -798,6 +804,32 @@ index 0000000000000000000000000000000000000000..9210eb1b7adea37b4c103cf670b59b2c
 +        return rankImplementation.getRankTemplates().stream().map(Rank::getName).collect(Collectors.toSet());
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/AsyncRankExpireEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/AsyncRankExpireEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..224448f897932e1f47f4ef56d498be72c6cc044f
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/AsyncRankExpireEvent.java
+@@ -0,0 +1,7 @@
++package net.kissenpvp.pulvinar.api.user.rank.event;
++
++import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpireEvent;
++import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
++
++public interface AsyncRankExpireEvent extends AbstractAsyncRankExpireEvent<PlayerRank>, PlayerRankEvent {
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/PlayerRankEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/PlayerRankEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d414c0173ce21bfdb4f5a28c83ca3c35f4594359
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/PlayerRankEvent.java
+@@ -0,0 +1,7 @@
++package net.kissenpvp.pulvinar.api.user.rank.event;
++
++import net.kissenpvp.core.api.user.rank.event.AbstractPlayerRankEvent;
++import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
++
++public interface PlayerRankEvent extends AbstractPlayerRankEvent<PlayerRank> {
++}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankEvent.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..e67a60567f6dae79b6b6435b674750b2f9d9740b
@@ -811,35 +843,22 @@ index 0000000000000000000000000000000000000000..e67a60567f6dae79b6b6435b674750b2
 +
 +public interface RankEvent extends AbstractRankEvent<Rank> {
 +}
-diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankExpireEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankExpireEvent.java
-new file mode 100644
-index 0000000000000000000000000000000000000000..4c562e1a2b4c8ef29093476a534f73c936dd7135
---- /dev/null
-+++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankExpireEvent.java
-@@ -0,0 +1,7 @@
-+package net.kissenpvp.pulvinar.api.user.rank.event;
-+
-+import net.kissenpvp.core.api.user.rank.event.AbstractRankExpireEvent;
-+import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
-+
-+public interface RankExpireEvent extends AbstractRankExpireEvent<PlayerRank> {
-+}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankGrantEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankGrantEvent.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..ead7b474dea2c70ea0c4f0dc06172117ffd7cc69
+index 0000000000000000000000000000000000000000..56f3c9144f6af9f32b465afaa01ccea15a24ce80
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankGrantEvent.java
 @@ -0,0 +1,7 @@
 +package net.kissenpvp.pulvinar.api.user.rank.event;
 +
-+import net.kissenpvp.core.api.user.rank.event.UndefinedAbstractRankEvent;
++import net.kissenpvp.core.api.user.rank.event.AbstractRankGrantEvent;
 +import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
 +
-+public interface RankGrantEvent extends UndefinedAbstractRankEvent<PlayerRank> {
++public interface RankGrantEvent extends AbstractRankGrantEvent<PlayerRank>, PlayerRankEvent {
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankPriorityChangeEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankPriorityChangeEvent.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..4cdfe444286e532cb2b4d504c295303a821bf473
+index 0000000000000000000000000000000000000000..0ab2894763f536b84ff98a382abecb3492ae5ea9
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/RankPriorityChangeEvent.java
 @@ -0,0 +1,7 @@
@@ -848,7 +867,7 @@ index 0000000000000000000000000000000000000000..4cdfe444286e532cb2b4d504c295303a
 +import net.kissenpvp.core.api.user.rank.event.AbstractRankPriorityChangeEvent;
 +import net.kissenpvp.pulvinar.api.user.rank.Rank;
 +
-+public interface RankPriorityChangeEvent extends AbstractRankPriorityChangeEvent<Rank> {
++public interface RankPriorityChangeEvent extends AbstractRankPriorityChangeEvent<Rank>, RankEvent {
 +}
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
 index d0206c9c2f423a9b77237d9a005b9ee139dae70f..bff5cba98080427cae76e0cbe30f538a519397e8 100644

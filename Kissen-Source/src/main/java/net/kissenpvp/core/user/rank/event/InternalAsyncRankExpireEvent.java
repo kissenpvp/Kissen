@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.user.rank.AbstractPlayerRank;
-import net.kissenpvp.core.api.user.rank.event.AbstractRankExpireEvent;
+import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpireEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -13,7 +13,7 @@ import java.time.Period;
 import java.util.Objects;
 
 @RequiredArgsConstructor @Getter
-public class InternalRankExpireEvent<T extends AbstractPlayerRank<?>> implements AbstractRankExpireEvent<T> {
+public class InternalAsyncRankExpireEvent<T extends AbstractPlayerRank<?>> implements AbstractAsyncRankExpireEvent<T> {
 
     private final T playerRank;
     private Instant cancelled;

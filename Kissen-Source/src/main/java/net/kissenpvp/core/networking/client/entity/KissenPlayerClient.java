@@ -40,9 +40,9 @@ import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.user.KissenPublicUser;
 import net.kissenpvp.core.user.rank.KissenPlayerRank;
 import net.kissenpvp.core.user.rank.PlayerRankNode;
-import net.kissenpvp.core.user.rank.event.InternalRankExpireEvent;
+import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpireEvent;
+import net.kissenpvp.core.user.rank.event.InternalRankGrantEvent;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -75,7 +75,7 @@ public abstract class KissenPlayerClient<P extends AbstractPlayerRank<?>, B exte
 
     @Override
     public @NotNull P getRank() {
-        return getRankIndex().map(index -> getRankHistory().get(index)).orElse(fallbackRank());
+        return getRankIndex().orElse(fallbackRank());
     }
 
     @Override
@@ -204,8 +204,7 @@ public abstract class KissenPlayerClient<P extends AbstractPlayerRank<?>, B exte
      * @return an {@link Optional} containing the index of the most recent valid rank, or an empty optional if no valid ranks are found
      * @see #getRankHistory()
      */
-    protected Optional<Integer> getRankIndex() {
-        Integer index = null;
+    protected Optional<P> getRankIndex() {
         List<P> rankList = getRankHistory();
 
         if (rankList.isEmpty()) {
@@ -213,29 +212,15 @@ public abstract class KissenPlayerClient<P extends AbstractPlayerRank<?>, B exte
         }
 
         for (int i = rankList.size() - 1; i > -1; i--) {
-            if (rankList.get(i).isValid()) {
-                Map<String, Object> storage = getUser().getStorage();
-                if(storage.containsKey("rank_id") && ((int) storage.get("rank_id")) < i)
-                { // This is dumb, but the only way to get whether it expired or no
-                    int previousRankId = (int)storage.get("rank_id");
-                    InternalRankExpireEvent<P> rankExpireEvent = rankExpireEvent(rankList.get(previousRankId));
-                    if(rankExpireEvent.isCancelled())
-                    {
-                        rankList.get(previousRankId).setEnd(rankExpireEvent.getCancelled());
-                    }
-                    index = previousRankId;
-                    break;
-                }
-
-                getUser().getStorage().put("rank_id", i);
-                index = i;
-                break;
+            P rank = rankList.get(i);
+            if (rank.isValid()) {
+                return Optional.of(rank);
             }
         }
-        return Optional.ofNullable(index);
+        return Optional.empty();
     }
 
-    protected abstract @NotNull InternalRankExpireEvent<P> rankExpireEvent(@NotNull P rank);
+    protected abstract @NotNull InternalAsyncRankExpireEvent<P> rankExpireEvent(@NotNull P rank);
 
     @Override
     public @NotNull P grantRank(@NotNull AbstractRank rank, @Nullable AccurateDuration accurateDuration) {
@@ -251,7 +236,7 @@ public abstract class KissenPlayerClient<P extends AbstractPlayerRank<?>, B exte
         return setRank(event.getPlayerRank());
     }
 
-    protected abstract @NotNull AbstractRankGrantEvent<P> grantRankEvent(@NotNull P rank);
+    protected abstract @NotNull InternalRankGrantEvent<P> grantRankEvent(@NotNull P rank);
 
     /**
      * Retrieves the accurate online time for the specified user.
