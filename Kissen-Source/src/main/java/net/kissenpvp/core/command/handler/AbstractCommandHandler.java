@@ -10,6 +10,7 @@ import net.kissenpvp.core.api.command.CommandPayload;
 import net.kissenpvp.core.api.command.annotations.CommandData;
 import net.kissenpvp.core.api.command.annotations.TabCompleter;
 import net.kissenpvp.core.api.command.exception.AbstractCommandExceptionHandler;
+import net.kissenpvp.core.api.command.exception.ArgumentMissingException;
 import net.kissenpvp.core.api.command.executor.CommandExecutor;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
@@ -125,17 +126,7 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
     private void loadCommand(@NotNull CommandContainer<CommandData> data) {
 
         C command = buildCommand(data.annotation().value());
-        CommandExecutor<S> executor = new KissenCommandExecutor<>(this, data.container(), data.method()) {
-            @Override
-            protected boolean handleThrowable(@NotNull CommandPayload<S> commandPayload, @NotNull Throwable throwable) {
-                do {
-                    if (AbstractCommandHandler.this.handleThrowable(commandPayload, throwable)) {
-                        return true;
-                    }
-                } while ((throwable = throwable.getCause()) != null);
-                return false;
-            }
-        };
+        CommandExecutor<S> executor = new InternalExceptionHandler(this, data.container(), data.method());
         command.initCommand(data.annotation(), executor);
         addPermissions(command);
 
@@ -148,9 +139,15 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
         String rootName = command.getFullName().split("\\.")[0];
         C root = getCommands().stream().filter(c -> Objects.equals(c.getName(), rootName)).findFirst().orElseThrow();
         if (!root.isRegistered()) {
-            root.initCommand(dummyCommandData(rootName), executor);
-            getCommands().add(root);
-            registerCommand(root);
+            try {
+                Method method = AbstractCommandHandler.class.getDeclaredMethod("dummyCommand");
+                CommandExecutor<S> commandExecutor = new InternalExceptionHandler(this, this, method);
+                root.initCommand(dummyCommandData(rootName), commandExecutor);
+                getCommands().add(root);
+                registerCommand(root);
+            } catch (NoSuchMethodException noSuchMethodException) {
+                log.error("Could not synthesize root for command {}.", rootName, noSuchMethodException);
+            }
         }
     }
 
@@ -201,7 +198,28 @@ public abstract class AbstractCommandHandler<S extends ServerEntity, C extends C
 
     protected abstract void unregisterCommand(@NotNull C command);
 
+    protected void dummyCommand() {
+        throw new ArgumentMissingException();
+    }
+
     private record CommandContainer<T extends Annotation>(@NotNull T annotation, @NotNull Object container,
                                                           @NotNull Method method) {
+    }
+
+    private class InternalExceptionHandler extends KissenCommandExecutor<S> {
+
+        public InternalExceptionHandler(@NotNull AbstractCommandHandler<S, ?> handler, @NotNull Object holder, @NotNull Method method) {
+            super(handler, holder, method);
+        }
+
+        @Override
+        protected boolean handleThrowable(@NotNull CommandPayload<S> commandPayload, @NotNull Throwable throwable) {
+            do {
+                if (AbstractCommandHandler.this.handleThrowable(commandPayload, throwable)) {
+                    return true;
+                }
+            } while ((throwable = throwable.getCause()) != null);
+            return false;
+        }
     }
 }
