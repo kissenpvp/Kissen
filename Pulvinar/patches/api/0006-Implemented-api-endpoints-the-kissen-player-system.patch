@@ -817,6 +817,19 @@ index 0000000000000000000000000000000000000000..224448f897932e1f47f4ef56d498be72
 +
 +public interface AsyncRankExpireEvent extends AbstractAsyncRankExpireEvent<PlayerRank>, PlayerRankEvent {
 +}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/AsyncRankExpiredEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/AsyncRankExpiredEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4fd99871cbeff4a1124d0a0e28b1478f79763618
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/AsyncRankExpiredEvent.java
+@@ -0,0 +1,7 @@
++package net.kissenpvp.pulvinar.api.user.rank.event;
++
++import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpiredEvent;
++import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
++
++public interface AsyncRankExpiredEvent extends AbstractAsyncRankExpiredEvent<PlayerRank>, PlayerRankEvent {
++}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/PlayerRankEvent.java b/src/main/java/net/kissenpvp/pulvinar/api/user/rank/event/PlayerRankEvent.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..d414c0173ce21bfdb4f5a28c83ca3c35f4594359

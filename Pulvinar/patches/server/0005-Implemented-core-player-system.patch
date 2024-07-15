@@ -209,10 +209,10 @@ index 0000000000000000000000000000000000000000..6bf95a6ba833df5733076befc3d3d030
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..fc9219b725af86d4b27bc33cba9442467a0d2d43
+index 0000000000000000000000000000000000000000..0cb2d1ad7ea5212c03d8d8ef6c2c46e30f803ecf
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-@@ -0,0 +1,135 @@
+@@ -0,0 +1,154 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -237,9 +237,20 @@ index 0000000000000000000000000000000000000000..fc9219b725af86d4b27bc33cba944246
 +import net.kissenpvp.core.api.time.AccurateDuration;
 +import net.kissenpvp.core.api.user.User;
 +import net.kissenpvp.core.api.user.UserImplementation;
++<<<<<<< Updated upstream
++<<<<<<< Updated upstream
++=======
++=======
++import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpiredEvent;
++import net.kissenpvp.core.ban.warn.WarnNode;
++>>>>>>> Stashed changes
++import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpireEvent;
++import net.kissenpvp.core.ban.warn.WarnNode;
++>>>>>>> Stashed changes
 +import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
 +import net.kissenpvp.core.user.rank.PlayerRankNode;
 +import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpireEvent;
++import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpiredEvent;
 +import net.kissenpvp.core.user.rank.event.InternalRankGrantEvent;
 +import net.kissenpvp.pulvinar.api.ban.Punishment;
 +import net.kissenpvp.pulvinar.api.base.Context;
@@ -250,6 +261,7 @@ index 0000000000000000000000000000000000000000..fc9219b725af86d4b27bc33cba944246
 +import net.kissenpvp.pulvinar.api.user.playersetting.PlayerSetting;
 +import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
 +import net.kissenpvp.pulvinar.api.user.rank.event.AsyncRankExpireEvent;
++import net.kissenpvp.pulvinar.api.user.rank.event.AsyncRankExpiredEvent;
 +import net.kissenpvp.pulvinar.api.user.rank.event.RankGrantEvent;
 +import net.kissenpvp.pulvinar.permission.permissible.PulvinarPermissible;
 +import net.kissenpvp.pulvinar.user.PulvinarPublicUser;
@@ -257,6 +269,7 @@ index 0000000000000000000000000000000000000000..fc9219b725af86d4b27bc33cba944246
 +import net.kissenpvp.pulvinar.user.rank.PulvinarPlayerRank;
 +import net.kissenpvp.pulvinar.user.rank.PulvinarPlayerFallBackRank;
 +import net.kissenpvp.pulvinar.user.rank.event.PulvinarAsyncRankExpireEvent;
++import net.kissenpvp.pulvinar.user.rank.event.PulvinarAsyncRankExpiredEvent;
 +import net.kissenpvp.pulvinar.user.rank.event.PulvinarRankGrantEvent;
 +import org.bukkit.Bukkit;
 +import org.bukkit.OfflinePlayer;
@@ -296,9 +309,15 @@ index 0000000000000000000000000000000000000000..fc9219b725af86d4b27bc33cba944246
 +
 +    @Override
 +    protected @NotNull InternalAsyncRankExpireEvent<PlayerRank> rankExpireEvent(@NotNull PlayerRank rank) {
-+        AsyncRankExpireEvent rankExpireEvent = new PulvinarAsyncRankExpireEvent(rank);
++        AsyncRankExpireEvent rankExpireEvent = new PulvinarAsyncRankExpireEvent(AbstractAsyncRankExpireEvent.ExpiryCause.AUTOMATIC, rank);
 +        Bukkit.getPluginManager().callEvent(rankExpireEvent);
 +        return (InternalAsyncRankExpireEvent<PlayerRank>) rankExpireEvent;
++    }
++
++    @Override
++    protected void rankExpiredEvent(@NotNull PlayerRank rank) {
++        AsyncRankExpiredEvent rankExpireEvent = new PulvinarAsyncRankExpiredEvent(AbstractAsyncRankExpiredEvent.ExpiryCause.AUTOMATIC, rank);
++        Bukkit.getPluginManager().callEvent(rankExpireEvent);
 +    }
 +
 +    @Override
@@ -3419,10 +3438,10 @@ index 0000000000000000000000000000000000000000..2458fb71b6e1e021d2bb298da28dfb18
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarPlayerRank.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarPlayerRank.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..be73cf4bd19f515f1910d917b08014909f0598c8
+index 0000000000000000000000000000000000000000..10544a799e8824e32889dee136044f3ccaf9a61a
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarPlayerRank.java
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,76 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -3444,13 +3463,23 @@ index 0000000000000000000000000000000000000000..be73cf4bd19f515f1910d917b0801490
 +package net.kissenpvp.pulvinar.user.rank;
 +
 +import net.kissenpvp.core.api.database.DataWriter;
++import net.kissenpvp.core.api.event.EventCancelledException;
++import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpireEvent;
++import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpiredEvent;
 +import net.kissenpvp.core.user.rank.KissenPlayerRank;
 +import net.kissenpvp.core.user.rank.PlayerRankNode;
 +import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
 +import net.kissenpvp.pulvinar.api.user.rank.Rank;
++import net.kissenpvp.pulvinar.user.rank.event.PulvinarAsyncRankExpireEvent;
++import net.kissenpvp.pulvinar.user.rank.event.PulvinarAsyncRankExpiredEvent;
++import org.bukkit.Bukkit;
 +import org.bukkit.OfflinePlayer;
++import org.bukkit.entity.Player;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Nullable;
++
++import java.time.Instant;
++import java.util.Objects;
 +
 +public class PulvinarPlayerRank extends KissenPlayerRank<Rank> implements PlayerRank {
 +
@@ -3465,6 +3494,28 @@ index 0000000000000000000000000000000000000000..be73cf4bd19f515f1910d917b0801490
 +    @Override
 +    public OfflinePlayer getPlayer() {
 +        return player;
++    }
++
++    @Override
++    public void setEnd(@Nullable Instant end) throws EventCancelledException {
++        if (Objects.nonNull(end) && Instant.now().plusMillis(1).isAfter(end)) {
++            PulvinarAsyncRankExpireEvent asyncRankExpireEvent = new PulvinarAsyncRankExpireEvent(AbstractAsyncRankExpireEvent.ExpiryCause.MANUAL, this);
++            Bukkit.getPluginManager().callEvent(asyncRankExpireEvent);
++            if (asyncRankExpireEvent.isCancelled()) {
++                super.setEnd(asyncRankExpireEvent.getCancelled());
++                return;
++            }
++            super.setEnd(end);
++            if(getPlayer() instanceof Player)
++            {
++                getPlayer().getUser().getStorage().remove("rank_current_index");
++            }
++            PulvinarAsyncRankExpiredEvent asyncRankExpiredEvent = new PulvinarAsyncRankExpiredEvent(AbstractAsyncRankExpiredEvent.ExpiryCause.MANUAL, this);
++            Bukkit.getPluginManager().callEvent(asyncRankExpiredEvent);
++            return;
++        }
++
++        super.setEnd(end);
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarRank.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/PulvinarRank.java
@@ -3621,7 +3672,7 @@ index 0000000000000000000000000000000000000000..e9a7bac8907dcbcc863e34aa5b447ad0
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/RankCommand.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/RankCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..05d67b448034883857bb7e5fec8796a90f98cc60
+index 0000000000000000000000000000000000000000..087868fa8b853f51cd6dd19d5ad9d581416af4e7
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/rank/RankCommand.java
 @@ -0,0 +1,154 @@
@@ -3676,7 +3727,7 @@ index 0000000000000000000000000000000000000000..05d67b448034883857bb7e5fec8796a9
 +        commandPayload.getSender().sendMessage(rankGrant(offlinePlayer, accurateDuration.map(grant).orElseGet(orElse)));
 +    }
 +
-+    @CommandData(value = "rank.revoke")
++    @CommandData(value = "rank.revoke", runAsync = true)
 +    public void rankRevoke(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull OfflinePlayer offlinePlayer, @ArgumentName("playerrankid") @NotNull String id) {
 +        commandPayload.getSender().sendMessage(rankRevoke(offlinePlayer, id));
 +    }
@@ -3781,7 +3832,7 @@ index 0000000000000000000000000000000000000000..05d67b448034883857bb7e5fec8796a9
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarAsyncRankExpireEvent.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarAsyncRankExpireEvent.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d7fe0584e09f819ff9c4a9ecf5e64c981501c1a3
+index 0000000000000000000000000000000000000000..e37ade2a2099f6f2c9d7d1068d25c93a37d5011f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarAsyncRankExpireEvent.java
 @@ -0,0 +1,12 @@
@@ -3793,8 +3844,27 @@ index 0000000000000000000000000000000000000000..d7fe0584e09f819ff9c4a9ecf5e64c98
 +import org.jetbrains.annotations.NotNull;
 +
 +public class PulvinarAsyncRankExpireEvent extends InternalAsyncRankExpireEvent<PlayerRank> implements AsyncRankExpireEvent {
-+    public PulvinarAsyncRankExpireEvent(@NotNull PlayerRank playerRank) {
-+        super(playerRank);
++    public PulvinarAsyncRankExpireEvent(@NotNull ExpiryCause expiryCause, @NotNull PlayerRank playerRank) {
++        super(expiryCause, playerRank);
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarAsyncRankExpiredEvent.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarAsyncRankExpiredEvent.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..0380767577821f7472cd27ee6326445486632470
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarAsyncRankExpiredEvent.java
+@@ -0,0 +1,13 @@
++package net.kissenpvp.pulvinar.user.rank.event;
++
++import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpiredEvent;
++import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
++import net.kissenpvp.pulvinar.api.user.rank.event.AsyncRankExpiredEvent;
++import org.jetbrains.annotations.NotNull;
++
++public class PulvinarAsyncRankExpiredEvent extends InternalAsyncRankExpiredEvent<PlayerRank> implements AsyncRankExpiredEvent {
++
++    public PulvinarAsyncRankExpiredEvent(@NotNull ExpiryCause expiryCause, @NotNull PlayerRank playerRank) {
++        super(expiryCause, playerRank);
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarRankEvent.java b/src/main/java/net/kissenpvp/pulvinar/user/rank/event/PulvinarRankEvent.java

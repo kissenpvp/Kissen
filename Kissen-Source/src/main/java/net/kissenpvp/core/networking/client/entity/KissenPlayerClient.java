@@ -18,8 +18,8 @@
 
 package net.kissenpvp.core.networking.client.entity;
 
-import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 import net.kissenpvp.core.api.ban.AbstractBanImplementation;
+import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 import net.kissenpvp.core.api.ban.AbstractPunishment;
 import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.api.database.meta.BackendException;
@@ -75,7 +75,7 @@ public abstract class KissenPlayerClient<P extends AbstractPlayerRank<?>, B exte
 
     @Override
     public @NotNull P getRank() {
-        return getRankIndex().orElse(fallbackRank());
+        return calculateCurrentRank().orElse(fallbackRank());
     }
 
     @Override
@@ -204,32 +204,65 @@ public abstract class KissenPlayerClient<P extends AbstractPlayerRank<?>, B exte
      * @return an {@link Optional} containing the index of the most recent valid rank, or an empty optional if no valid ranks are found
      * @see #getRankHistory()
      */
-    protected Optional<P> getRankIndex() {
+    protected @NotNull Optional<P> calculateCurrentRank() {
         List<P> rankList = getRankHistory();
+        int rankListSize = rankList.size();
 
         if (rankList.isEmpty()) {
             return Optional.empty();
         }
 
-        for (int i = rankList.size() - 1; i > -1; i--) {
-            P rank = rankList.get(i);
-            if (rank.isValid()) {
-                return Optional.of(rank);
+        Map<String, Object> cache = getUser().getStorage();
+        Integer index = (Integer) cache.get("rank_current_index");
+        Instant expiry = (Instant) cache.get("rank_current_expiry");
+        Integer oldSize = (Integer) cache.get("rank_current_size");
+        boolean expired = (expiry != null && Instant.now().isAfter(expiry));
+
+        if (index == null || rankListSize != (oldSize != null ? oldSize : 0) || expired) {
+            cache.put("rank_current_size", rankListSize);
+            if (expired && index != null) {
+                P rank = rankList.get(index);
+                InternalAsyncRankExpireEvent<P> rankExpireEvent = rankExpireEvent(rank);
+                if (rankExpireEvent.isCancelled()) {
+                    rankList.get(index).setEnd(rankExpireEvent.getCancelled());
+                    return Optional.of(rankList.get(index));
+                }
+                rankExpiredEvent(rank);
             }
+
+            for (int i = rankListSize - 1; i >= 0; i--) {
+                P rank = rankList.get(i);
+                if (rank.isValid()) {
+                    cache.put("rank_current_index", i);
+                    rank.getEnd().ifPresent(end -> cache.put("rank_current_expiry", end));
+                    return Optional.of(rank);
+                }
+            }
+
+            cache.put("rank_current_index", -1);
+            cache.remove("rank_current_expiry");
+            return Optional.empty();
         }
+
+        if (index >= 0 && index < rankListSize) {
+            return Optional.of(rankList.get(index));
+        }
+
         return Optional.empty();
     }
 
     protected abstract @NotNull InternalAsyncRankExpireEvent<P> rankExpireEvent(@NotNull P rank);
 
+    protected abstract void rankExpiredEvent(@NotNull P rank);
+
     @Override
     public @NotNull P grantRank(@NotNull AbstractRank rank, @Nullable AccurateDuration accurateDuration) {
         String id = UUID.randomUUID().toString().split("-")[1];
         PlayerRankNode playerRankNode = new PlayerRankNode(id, rank.getName(), new TemporalData(accurateDuration));
-        AbstractRankGrantEvent<P> event = grantRankEvent(translateRank(playerRankNode, record -> {}));
+        AbstractRankGrantEvent<P> event = grantRankEvent(translateRank(playerRankNode, record -> {
+        }));
 
-        if(event.isCancelled())
-        {
+        if (event.isCancelled()) {
             throw new EventCancelledException();
         }
 
@@ -245,8 +278,8 @@ public abstract class KissenPlayerClient<P extends AbstractPlayerRank<?>, B exte
      * from the user's data, or a default duration if no online time is found. If the user is currently connected, additional
      * online time since the last update may be calculated (TODO section).</p>
      *
-     * @param user  the {@link User} for whom the online time is retrieved
-     * @return      an {@link AccurateDuration} instance representing the user's online time
+     * @param user the {@link User} for whom the online time is retrieved
+     * @return an {@link AccurateDuration} instance representing the user's online time
      * @throws NullPointerException if the user parameter is {@code null}
      * @see AccurateDuration
      */
@@ -267,8 +300,8 @@ public abstract class KissenPlayerClient<P extends AbstractPlayerRank<?>, B exte
      * using the default {@link DataWriter}. This method acts as a convenient wrapper for the more customizable {@link #translateRank(PlayerRankNode, DataWriter)}
      * method, allowing for translation with the default writer.</p>
      *
-     * @param playerRankNode  the {@link PlayerRankNode} to be translated
-     * @return                a result of type {@code R} representing the translation
+     * @param playerRankNode the {@link PlayerRankNode} to be translated
+     * @return a result of type {@code R} representing the translation
      * @throws NullPointerException if the playerRankNode parameter is {@code null}
      * @see #translateRank(PlayerRankNode, DataWriter)
      */
@@ -283,9 +316,9 @@ public abstract class KissenPlayerClient<P extends AbstractPlayerRank<?>, B exte
      * a specific translation logic for the given {@link PlayerRankNode}. It allows for customization by accepting
      * a {@link DataWriter<PlayerRankNode>} parameter, which can be used to write data related to the translation.</p>
      *
-     * @param playerRankNode  the {@link PlayerRankNode} to be translated
-     * @param dataWriter      a custom {@link DataWriter<PlayerRankNode>} for writing data related to the translation, or {@code null} if not needed
-     * @return                a result of type {@code R} representing the translation
+     * @param playerRankNode the {@link PlayerRankNode} to be translated
+     * @param dataWriter     a custom {@link DataWriter<PlayerRankNode>} for writing data related to the translation, or {@code null} if not needed
+     * @return a result of type {@code R} representing the translation
      * @throws NullPointerException if the playerRankNode parameter is {@code null}
      */
     protected abstract @NotNull P translateRank(@NotNull PlayerRankNode playerRankNode, @Nullable DataWriter<PlayerRankNode> dataWriter);

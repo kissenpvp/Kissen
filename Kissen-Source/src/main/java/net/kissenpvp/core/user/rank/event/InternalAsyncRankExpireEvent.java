@@ -15,6 +15,7 @@ import java.util.Objects;
 @RequiredArgsConstructor @Getter
 public class InternalAsyncRankExpireEvent<T extends AbstractPlayerRank<?>> implements AbstractAsyncRankExpireEvent<T> {
 
+    private final ExpiryCause expiryCause;
     private final T playerRank;
     private Instant cancelled;
 
@@ -53,5 +54,10 @@ public class InternalAsyncRankExpireEvent<T extends AbstractPlayerRank<?>> imple
         {
             this.cancelled = Instant.now().plus(Period.ofDays(1));
         }
+    }
+
+    @Override
+    public boolean isAsynchronous() {
+        return true;
     }
 }
