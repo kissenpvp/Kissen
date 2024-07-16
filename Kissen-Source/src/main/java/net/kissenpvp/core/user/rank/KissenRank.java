@@ -19,6 +19,8 @@
 package net.kissenpvp.core.user.rank;
 
 import net.kissenpvp.core.api.event.EventCancelledException;
+import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
+import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.api.user.rank.AbstractRank;
 import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankDeleteEvent;
 import net.kissenpvp.core.base.KissenCore;
@@ -62,7 +64,16 @@ public abstract class KissenRank extends KissenSavable<String> implements Abstra
         {
             throw new EventCancelledException();
         }
+        KissenCore.getInstance().getImplementation(UserImplementation.class).getOnlineUser().forEach(user ->
+        {
+            PlayerClient<?, ?> player = user.getPlayerClient();
+            if(Objects.equals(player.getRank().getSource(), this))
+            {
+                player.getUser().getStorage().remove("rank_current_index");
+            }
+        });
         KissenCore.getInstance().getImplementation(KissenRankImplementation.class).removeRank(this);
+        deletedEvent();
         return super.softDelete();
     }
 
