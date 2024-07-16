@@ -1724,7 +1724,7 @@ index f063aadc2659ec6b706a48c693b08749338dfe59..bebb546dd538e4c9ea961b320a65ab43
              disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
              return false;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 6e93ac56db0429a0e9fb494aab4972bd03bdf4c8..78708bc5bfbb92691d8f9824b45e3f27a203ca87 100644
+index 9cbb8e26c9f835b788282b9836a74bfa1b8a9df9..0ffd63c656d5fde350254c0eac39240855e21b50 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -111,7 +111,6 @@ import org.bukkit.Location;
@@ -1752,7 +1752,7 @@ index 6e93ac56db0429a0e9fb494aab4972bd03bdf4c8..78708bc5bfbb92691d8f9824b45e3f27
          this.ipBans = new IpBanList(PlayerList.IPBANLIST_FILE);
          this.ops = /*new ServerOpList(PlayerList.OPLIST_FILE);*/ new net.kissenpvp.pulvinar.user.PulvinarOperatorList(); // Pulvinar
          this.whitelist = /*new UserWhiteList(PlayerList.WHITELIST_FILE);*/ new net.kissenpvp.pulvinar.user.PulvinarUserWhiteList(); // Pulvinar
-@@ -732,6 +730,8 @@ public abstract class PlayerList {
+@@ -733,6 +731,8 @@ public abstract class PlayerList {
          Player player = entity.getBukkitEntity();
          PlayerLoginEvent event = new PlayerLoginEvent(player, loginlistener.connection.hostname, ((java.net.InetSocketAddress) socketaddress).getAddress(), ((java.net.InetSocketAddress) loginlistener.connection.channel.remoteAddress()).getAddress());
  
@@ -1761,7 +1761,7 @@ index 6e93ac56db0429a0e9fb494aab4972bd03bdf4c8..78708bc5bfbb92691d8f9824b45e3f27
          // Paper start - Fix MC-158900
          UserBanListEntry gameprofilebanentry;
          if (this.bans.isBanned(gameprofile) && (gameprofilebanentry = this.bans.get(gameprofile)) != null) {
-@@ -763,6 +763,8 @@ public abstract class PlayerList {
+@@ -764,6 +764,8 @@ public abstract class PlayerList {
                  event.disallow(PlayerLoginEvent.Result.KICK_FULL, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.serverFullMessage)); // Spigot // Paper - Adventure
              }
          }

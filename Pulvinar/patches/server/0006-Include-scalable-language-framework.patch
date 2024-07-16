@@ -61,10 +61,10 @@ index 0000000000000000000000000000000000000000..af5fbd3c197f257f532cc8fefd765749
 +
 +public class PulvinarLocalizationImplementation extends KissenLocalizationImplementation { }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 080bad9dcf85b8f9ae15f459c3fd9214ff7ccf43..a64c100222ab3b4aa328483ac9979a344ba03635 100644
+index 18141baee317e2a0cab36664fc097cd4a0883609..49d9bd26b04d17cc19bd48defad2b9cb5b778fdd 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2352,6 +2352,7 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
+@@ -2353,6 +2353,7 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
          if (this.language == null || !this.language.equals(clientOptions.language())) { // Paper
              PlayerLocaleChangeEvent event = new PlayerLocaleChangeEvent(this.getBukkitEntity(), clientOptions.language());
              this.server.server.getPluginManager().callEvent(event);
@@ -72,7 +72,7 @@ index 080bad9dcf85b8f9ae15f459c3fd9214ff7ccf43..a64c100222ab3b4aa328483ac9979a34
          }
          // CraftBukkit end
          // Paper start - don't call options events on login
-@@ -3119,4 +3120,11 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
+@@ -3120,4 +3121,11 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
          this.ramBar = ramBar;
      }
      // Purpur end
