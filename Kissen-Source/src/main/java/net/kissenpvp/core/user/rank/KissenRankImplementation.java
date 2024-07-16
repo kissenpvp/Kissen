@@ -23,10 +23,12 @@ import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableMap;
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.user.rank.AbstractRank;
 import net.kissenpvp.core.api.user.rank.AbstractRankImplementation;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.KissenTable;
+import net.kissenpvp.core.user.rank.event.InternalAsyncRankCreateEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -78,8 +80,17 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
 
     @Override
     public @NotNull T createRankTemplate(@NotNull String name, @NotNull Map<String, Object> data) {
+
         T rank = setup(name, data);
+        InternalAsyncRankCreateEvent<? extends AbstractRank> createEvent = createEvent(rank);
+        if(createEvent.isCancelled())
+        {
+            rank.delete();
+            throw new EventCancelledException();
+        }
         cached.add(rank);
+
+        postCreateEvent(rank);
         return rank;
     }
 
@@ -97,6 +108,32 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
             return getRankTemplate(string).orElseGet(this::getFallbackRank);
         })).join();
     }
+
+    /**
+     * Creates an event for asynchronously creating a rank.
+     * <p>
+     * This method is responsible for creating and executing an instance of {@link InternalAsyncRankCreateEvent}
+     * associated with the given rank. The event can be used to manage and control the creation
+     * process of the rank, allowing for handling asynchronous operations and cancellations.
+     *
+     * @param rank the rank object that is in the process of being created
+     * @return the previously called instance of {@link InternalAsyncRankCreateEvent} associated with the given rank
+     *
+     * @see InternalAsyncRankCreateEvent
+     * @see AbstractRank
+     */
+    protected abstract @NotNull InternalAsyncRankCreateEvent<? extends AbstractRank> createEvent(@NotNull T rank);
+
+    /**
+     * Executes a post-processing event after the rank creation event has been handled.
+     * <p>
+     * This method is intended to be called after the rank creation has been processed. It allows for
+     * performing any necessary post-creation actions, such as updating caches, notifying listeners, or
+     * performing additional setup for the rank.
+     *
+     * @param rank the rank object that has been successfully created and processed
+     */
+    protected abstract void postCreateEvent(@NotNull T rank);
 
     /**
      * Removes a {@link AbstractRank} from the {@link #cached} when {@link AbstractRank#delete()} is called.

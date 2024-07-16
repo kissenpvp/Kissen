@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.user.rank;
 
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.user.rank.AbstractRank;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,8 +40,7 @@ public class KissenFallBackRank implements AbstractRank
         throw new UnsupportedOperationException();
     }
 
-    @Override public int delete()
-    {
-        throw new UnsupportedOperationException();
+    @Override public int delete() throws EventCancelledException {
+        throw new EventCancelledException();
     }
 }

@@ -18,12 +18,11 @@
 
 package net.kissenpvp.core.user.rank;
 
-import net.kissenpvp.core.api.database.meta.BackendException;
-import net.kissenpvp.core.api.database.savable.Savable;
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.user.rank.AbstractRank;
+import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankDeleteEvent;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.KissenSavable;
-import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -56,12 +55,13 @@ public abstract class KissenRank extends KissenSavable<String> implements Abstra
     }
 
     @Override
-    public SerializableSavableHandler getSerializableSavableHandler() {
-        return new SerializableRankHandler(this.getName());
-    }
+    public int softDelete() {
 
-    @Override
-    public int softDelete() throws BackendException {
+        AbstractAsyncRankDeleteEvent<?> rankDeleteEvent = deleteEvent();
+        if(rankDeleteEvent.isCancelled())
+        {
+            throw new EventCancelledException();
+        }
         KissenCore.getInstance().getImplementation(KissenRankImplementation.class).removeRank(this);
         return super.softDelete();
     }
@@ -70,4 +70,8 @@ public abstract class KissenRank extends KissenSavable<String> implements Abstra
     public int hashCode() {
         return Objects.hash(getDatabaseID(), getPriority());
     }
+
+    protected abstract @NotNull AbstractAsyncRankDeleteEvent<?> deleteEvent();
+
+    protected abstract void deletedEvent();
 }

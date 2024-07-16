@@ -157,11 +157,6 @@ public abstract class KissenPermissionGroup<T extends AbstractPermission> extend
     }
 
     @Override
-    public SerializableSavableHandler getSerializableSavableHandler() {
-        return new SerializablePermissionGroupHandler(getPermissionID());
-    }
-
-    @Override
     public @NotNull KissenTable getTable() {
         return KissenCore.getInstance().getImplementation(InternalKissenPermissionImplementation.class).getTable();
     }

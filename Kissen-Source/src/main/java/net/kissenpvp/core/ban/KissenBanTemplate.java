@@ -20,7 +20,6 @@ package net.kissenpvp.core.ban;
 
 import net.kissenpvp.core.api.ban.AbstractBanTemplate;
 import net.kissenpvp.core.api.ban.BanType;
-import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.savable.SavableMap;
@@ -119,18 +118,8 @@ public abstract class KissenBanTemplate extends KissenSavable<Integer> implement
     }
 
     @Override
-    public int softDelete() throws BackendException {
+    public int softDelete() {
         KissenCore.getInstance().getImplementation(KissenBanImplementation.class).remove(this);
         return super.softDelete();
-    }
-
-    @Override
-    public void sendData(@NotNull DataPackage dataPackage) {
-
-    }
-
-    @Override
-    public SerializableSavableHandler getSerializableSavableHandler() {
-        return null;
     }
 }

@@ -37,6 +37,7 @@ import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
@@ -79,20 +80,42 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     }
 
     @Override
-    public void purge(@NotNull String totalID) throws BackendException {
-        getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ?;", getTable(), getTable().getColumn(Column.TOTAL_ID)), preparedStatement -> {
-            preparedStatement.setString(1, totalID);
+    public void purge(@NotNull String totalID) {
+
+        if(Objects.isNull(getPlugin()))
+        {
+            getPreparedStatement(String.format("DELETE FROM %s WHERE %s IS NULL AND (%s = ?);", getTable(), getTable().getPluginColumn(), getTable().getColumn(Column.TOTAL_ID)), preparedStatement -> {
+                preparedStatement.setString(1, totalID);
+                preparedStatement.executeUpdate();
+            });
+            return;
+        }
+
+        getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND (%s = ?);", getTable(), getTable().getPluginColumn(), getTable().getColumn(Column.TOTAL_ID)), preparedStatement -> {
+            preparedStatement.setString(1, getPluginName());
+            preparedStatement.setString(2, totalID);
             preparedStatement.executeUpdate();
         });
     }
 
     @Override
-    protected void setJson(@NotNull String totalID, @NotNull String key, @Nullable Object object) {
+    protected void setJson(@NotNull String totalID, @NotNull String key, @Nullable Object object) { //TODO add plugin to delete
         String[] serialized = serialize(object);
         if (serialized==null) {
-            getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND %s = ?;", getTable(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY)), (preparedStatement -> {
-                preparedStatement.setString(1, totalID);
-                preparedStatement.setString(2, key);
+
+            if(Objects.isNull(getPlugin()))
+            {
+                getPreparedStatement(String.format("DELETE FROM %s WHERE %s IS NULL AND (%s = ? AND %s = ?);", getTable(), getTable().getPluginColumn(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY)), (preparedStatement -> {
+                    preparedStatement.setString(1, totalID);
+                    preparedStatement.setString(2, key);
+                    preparedStatement.executeUpdate();
+                }));
+                return;
+            }
+            getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND (%s = ? AND %s = ?);", getTable(), getTable().getPluginColumn(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY)), (preparedStatement -> {
+                preparedStatement.setString(1, getPluginName());
+                preparedStatement.setString(2, totalID);
+                preparedStatement.setString(3, key);
                 preparedStatement.executeUpdate();
             }));
             return;

@@ -626,10 +626,10 @@ index 0000000000000000000000000000000000000000..dbb46057178b6353981705369682f852
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanTemplate.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanTemplate.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..d82276ecaf2a74e5fc488526509e4b802050954c
+index 0000000000000000000000000000000000000000..955f9e8f4f67b187ea5ad6310ef3dc849f1bb40b
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanTemplate.java
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,27 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -656,10 +656,6 @@ index 0000000000000000000000000000000000000000..d82276ecaf2a74e5fc488526509e4b80
 +import org.jetbrains.annotations.NotNull;
 +
 +public class PulvinarBanTemplate extends KissenBanTemplate implements BanTemplate {
-+    @Override
-+    public void sendData(@NotNull DataPackage dataPackage) {
-+        //TODO
-+    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarPunishment.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarPunishment.java
 new file mode 100644
@@ -1564,32 +1560,46 @@ index 6bf95a6ba833df5733076befc3d3d030548fa289..cb430ffdd83e390963257ab6d6e80231
  import net.kissenpvp.pulvinar.api.ban.warn.Warn;
  import io.netty.channel.Channel;
 diff --git a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-index 0cb2d1ad7ea5212c03d8d8ef6c2c46e30f803ecf..c30239fe32ab161093290f677d09c22ea39c4ae3 100644
+index fa63478eb75fc1c11d49b2c0dfca08202d024a14..24f8472909ad5fd26d435015c38c1b8e3eefb14b 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-@@ -22,20 +22,11 @@ import net.kissenpvp.core.api.database.DataWriter;
+@@ -22,25 +22,16 @@ import net.kissenpvp.core.api.database.DataWriter;
  import net.kissenpvp.core.api.time.AccurateDuration;
  import net.kissenpvp.core.api.user.User;
  import net.kissenpvp.core.api.user.UserImplementation;
 -<<<<<<< Updated upstream
 -<<<<<<< Updated upstream
+-<<<<<<< Updated upstream
 -=======
 -=======
 -import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpiredEvent;
--import net.kissenpvp.core.ban.warn.WarnNode;
++import net.kissenpvp.core.api.user.rank.event.AbstractPostAsyncRankExpireEvent;
+ import net.kissenpvp.core.ban.warn.WarnNode;
 ->>>>>>> Stashed changes
  import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpireEvent;
--import net.kissenpvp.core.ban.warn.WarnNode;
+ import net.kissenpvp.core.ban.warn.WarnNode;
 ->>>>>>> Stashed changes
-+import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpiredEvent;
+-=======
+ import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpireEvent;
+ import net.kissenpvp.core.api.user.rank.event.AbstractPostAsyncRankExpireEvent;
+->>>>>>> Stashed changes
  import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
  import net.kissenpvp.core.user.rank.PlayerRankNode;
  import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpireEvent;
 -import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpiredEvent;
++import net.kissenpvp.core.user.rank.event.InternalPostAsyncRankExpireEvent;
  import net.kissenpvp.core.user.rank.event.InternalRankGrantEvent;
  import net.kissenpvp.pulvinar.api.ban.Punishment;
  import net.kissenpvp.pulvinar.api.base.Context;
-@@ -65,8 +56,26 @@ import org.jetbrains.annotations.Unmodifiable;
+@@ -51,7 +42,6 @@ import net.kissenpvp.pulvinar.api.user.playersetting.BoundPlayerSetting;
+ import net.kissenpvp.pulvinar.api.user.playersetting.PlayerSetting;
+ import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
+ import net.kissenpvp.pulvinar.api.user.rank.event.AsyncRankExpireEvent;
+-import net.kissenpvp.pulvinar.api.user.rank.event.PostAsyncRankExpireEvent;
+ import net.kissenpvp.pulvinar.api.user.rank.event.RankGrantEvent;
+ import net.kissenpvp.pulvinar.permission.permissible.PulvinarPermissible;
+ import net.kissenpvp.pulvinar.user.PulvinarPublicUser;
+@@ -70,8 +60,26 @@ import org.jetbrains.annotations.Unmodifiable;
  import java.util.Set;
  import java.util.stream.Collectors;
  
@@ -1616,7 +1626,16 @@ index 0cb2d1ad7ea5212c03d8d8ef6c2c46e30f803ecf..c30239fe32ab161093290f677d09c22e
      @Override
      public @NotNull User getUser() {
          return Bukkit.getPulvinar().getImplementation(UserImplementation.class).getUser(getUniqueId());
-@@ -149,6 +158,28 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
+@@ -106,7 +114,7 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
+ 
+     @Override
+     protected void rankExpiredEvent(@NotNull PlayerRank rank) {
+-        PostAsyncRankExpireEvent rankExpireEvent = new PulvinarPostAsyncRankExpireEvent(AbstractPostAsyncRankExpireEvent.ExpiryCause.AUTOMATIC, rank);
++        PulvinarPostAsyncRankExpireEvent rankExpireEvent = new PulvinarPostAsyncRankExpireEvent(AbstractPostAsyncRankExpireEvent.ExpiryCause.AUTOMATIC, rank);
+         Bukkit.getPluginManager().callEvent(rankExpireEvent);
+     }
+ 
+@@ -154,6 +162,28 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
  
      @Override
      public void clearActiveWarns() {
@@ -1647,7 +1666,7 @@ index 0cb2d1ad7ea5212c03d8d8ef6c2c46e30f803ecf..c30239fe32ab161093290f677d09c22e
      }
  }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
-index 32a7f1d8b301263e56abe2a94a368b492a22b1b5..45a08179e510a89586c9bc16a03014eff4f3ce71 100644
+index 6056885d449b3930a5a429f3b380a5bdbe458838..d408a0a1ee017025b62205c4ac1e4a8cadeb1cbe 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
 @@ -42,7 +42,9 @@ import org.bukkit.Bukkit;

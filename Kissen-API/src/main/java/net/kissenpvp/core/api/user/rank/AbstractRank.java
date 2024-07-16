@@ -18,7 +18,6 @@
 
 package net.kissenpvp.core.api.user.rank;
 
-import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,5 +29,5 @@ public interface AbstractRank {
 
     void setPriority(int priority) throws EventCancelledException;
 
-    int delete() throws BackendException;
+    int delete() throws EventCancelledException;
 }

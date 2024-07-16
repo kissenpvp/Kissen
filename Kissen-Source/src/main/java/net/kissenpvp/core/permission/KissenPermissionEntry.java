@@ -19,7 +19,6 @@
 package net.kissenpvp.core.permission;
 
 import net.kissenpvp.core.api.database.DataWriter;
-import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.permission.AbstractPermissionEntry;
@@ -266,7 +265,7 @@ public abstract class KissenPermissionEntry<T, X extends AbstractPermission> ext
     protected abstract @NotNull X translatePermission(@NotNull PermissionNode permissionNode, @Nullable DataWriter<PermissionNode> dataWriter);
 
     @Override
-    public int softDelete() throws BackendException {
+    public int softDelete() {
         int rows = super.softDelete();
         permissionUpdate();
         return rows;

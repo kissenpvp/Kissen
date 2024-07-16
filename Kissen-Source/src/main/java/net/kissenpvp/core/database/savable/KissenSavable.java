@@ -23,11 +23,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.StorageImplementation;
-import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.Meta;
 import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
 import net.kissenpvp.core.api.database.savable.SavableMap;
+import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.networking.socket.DataPackage;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.database.savable.event.SavableDeletedEvent;
@@ -117,7 +117,7 @@ public abstract class KissenSavable<T> extends HashMap<KissenPlugin, SavableMap>
     }
 
     @Override
-    public int delete() {
+    public int delete() throws EventCancelledException {
         return softDelete();
     }
 
@@ -145,21 +145,12 @@ public abstract class KissenSavable<T> extends HashMap<KissenPlugin, SavableMap>
     /**
      * Deletes the object without sending a {@link DataPackage} to the other servers.
      */
-    public int softDelete() throws BackendException {
+    public int softDelete() {
         int count = size();
         clear();
-        //this.getMeta().purge(this.getDatabaseID());
+        getRepository().delete(getDatabaseID()); // TODO also clear plugin data somehow...
         KissenCore.getInstance().getImplementation(EventImplementation.class).call(new SavableDeletedEvent(this));
         KissenCore.getInstance().getImplementation(StorageImplementation.class).dropStorage(getDatabaseID());
         return count;
     }
-
-    /**
-     * Sends a {@link DataPackage} to the servers which needs to be informed of changes in the data.
-     *
-     * @param dataPackage the changes.
-     */
-    public abstract void sendData(@NotNull DataPackage dataPackage);
-
-    public abstract SerializableSavableHandler getSerializableSavableHandler();
 }

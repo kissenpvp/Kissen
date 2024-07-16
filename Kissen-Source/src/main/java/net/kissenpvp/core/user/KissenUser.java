@@ -98,16 +98,6 @@ public abstract class KissenUser<T extends AbstractPermission> extends KissenGro
     }
 
     @Override
-    public void sendData(@NotNull DataPackage dataPackage) {
-
-    }
-
-    @Override
-    public SerializableSavableHandler getSerializableSavableHandler() {
-        return new SerializableUserHandler(getRawID());
-    }
-
-    @Override
     public @NotNull Component displayName() {
         return getPlayerClient().displayName();
     }
