@@ -9,4 +9,9 @@ public class InternalPostAsyncRankCreateEvent<T extends AbstractRank> extends In
     public InternalPostAsyncRankCreateEvent(@NotNull T rankTemplate) {
         super(rankTemplate);
     }
+
+    @Override
+    public boolean isAsynchronous() {
+        return true;
+    }
 }

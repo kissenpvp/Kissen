@@ -30,7 +30,7 @@ import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.networking.socket.DataPackage;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.database.savable.event.SavableDeletedEvent;
+import net.kissenpvp.core.database.savable.event.VolatileSavableDeletedEvent;
 import net.kissenpvp.core.event.EventImplementation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -149,7 +149,7 @@ public abstract class KissenSavable<T> extends HashMap<KissenPlugin, SavableMap>
         int count = size();
         clear();
         getRepository().delete(getDatabaseID()); // TODO also clear plugin data somehow...
-        KissenCore.getInstance().getImplementation(EventImplementation.class).call(new SavableDeletedEvent(this));
+        KissenCore.getInstance().getImplementation(EventImplementation.class).call(new VolatileSavableDeletedEvent(this));
         KissenCore.getInstance().getImplementation(StorageImplementation.class).dropStorage(getDatabaseID());
         return count;
     }

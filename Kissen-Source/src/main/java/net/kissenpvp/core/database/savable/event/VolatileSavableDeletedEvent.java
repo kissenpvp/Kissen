@@ -22,4 +22,9 @@ import net.kissenpvp.core.api.database.savable.Savable;
 import net.kissenpvp.core.api.event.EventClass;
 import org.jetbrains.annotations.NotNull;
 
-public record SavableDeletedEvent(@NotNull Savable savable) implements EventClass { }
+public record VolatileSavableDeletedEvent(@NotNull Savable<?> savable) implements EventClass {
+    @Override
+    public boolean volatileEvent() {
+        return true;
+    }
+}

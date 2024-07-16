@@ -16,4 +16,9 @@ public class InternalAsyncRankDeleteEvent<T extends AbstractRank> extends Intern
     public InternalAsyncRankDeleteEvent(@NotNull T rankTemplate) {
         super(rankTemplate);
     }
+
+    @Override
+    public boolean isAsynchronous() {
+        return true;
+    }
 }
