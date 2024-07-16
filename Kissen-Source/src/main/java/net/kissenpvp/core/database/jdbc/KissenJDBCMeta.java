@@ -99,7 +99,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     }
 
     @Override
-    protected void setJson(@NotNull String totalID, @NotNull String key, @Nullable Object object) { //TODO add plugin to delete
+    protected void setJson(@NotNull String totalID, @NotNull String key, @Nullable Object object) {
         String[] serialized = serialize(object);
         if (serialized==null) {
 

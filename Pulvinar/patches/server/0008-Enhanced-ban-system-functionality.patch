@@ -152,7 +152,7 @@ index 0000000000000000000000000000000000000000..533aa48a0e3134278dd9b4330c44b62f
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..dbb46057178b6353981705369682f852e05b9e7a
+index 0000000000000000000000000000000000000000..5c257c83143b9c62dc217d91126a4bc43ca8dc3f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
 @@ -0,0 +1,468 @@
@@ -425,18 +425,18 @@ index 0000000000000000000000000000000000000000..dbb46057178b6353981705369682f852
 +
 +    @Override
 +    public void pardon(@NotNull String target) {
-+        //TODO
++        throw new UnsupportedOperationException();
 +    }
 +
 +    @Override
 +    public void pardon(@NotNull PlayerProfile target) {
-+        //TODO
++        throw new UnsupportedOperationException();
 +    }
 +
 +    @SuppressWarnings("deprecation")
 +    @Override
 +    public void pardon(@NotNull org.bukkit.profile.PlayerProfile target) {
-+        //TODO
++        throw new UnsupportedOperationException();
 +    }
 +
 +    @Override
@@ -659,7 +659,7 @@ index 0000000000000000000000000000000000000000..955f9e8f4f67b187ea5ad6310ef3dc84
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarPunishment.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarPunishment.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..b0fb7aa99b4446588249b4f8d9a98d2ff1f91087
+index 0000000000000000000000000000000000000000..943f75486c4f83bc5c1f327b9dc2512e5d136d58
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarPunishment.java
 @@ -0,0 +1,131 @@
@@ -736,12 +736,12 @@ index 0000000000000000000000000000000000000000..b0fb7aa99b4446588249b4f8d9a98d2f
 +
 +    @Override
 +    public @NotNull String getTarget() {
-+        return null; //TODO
++        throw new UnsupportedOperationException();
 +    }
 +
 +    @Override
 +    public @NotNull PlayerProfile getBanTarget() {
-+        return null; //TODO
++        throw new UnsupportedOperationException();
 +    }
 +
 +    @Override
@@ -1547,6 +1547,19 @@ index e737bc37c973b41633194d252f47c355ae3f06e4..9200c70bb77729b2f026b0bbbb923c61
          super.loadImplementations(loader);
      }
  
+diff --git a/src/main/java/net/kissenpvp/pulvinar/command/handler/CompletionExceptionHandler.java b/src/main/java/net/kissenpvp/pulvinar/command/handler/CompletionExceptionHandler.java
+index 23fbb791771528850391a5cf8fe366b5a9cb9efd..3d3cea3fa6e23241b7a8a809eec6fe7b732e80a8 100644
+--- a/src/main/java/net/kissenpvp/pulvinar/command/handler/CompletionExceptionHandler.java
++++ b/src/main/java/net/kissenpvp/pulvinar/command/handler/CompletionExceptionHandler.java
+@@ -10,7 +10,6 @@ import java.util.concurrent.CompletionException;
+ public class CompletionExceptionHandler implements CommandExceptionHandler<CompletionException> {
+     @Override
+     public boolean handle(@NotNull CommandPayload<CommandSender> commandPayload, @NotNull CompletionException throwable) {
+-        return true;
+-        // TODO return Optional.ofNullable(throwable.getCause()).map(cause -> KissenCore.getInstance().getImplementation(KissenCommandImplementation.class).handle(commandPayload, cause)).orElse(false);
++        return false;
+     }
+ }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarOnlinePlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarOnlinePlayerClient.java
 index 6bf95a6ba833df5733076befc3d3d030548fa289..cb430ffdd83e390963257ab6d6e802311600c267 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarOnlinePlayerClient.java
@@ -1560,10 +1573,10 @@ index 6bf95a6ba833df5733076befc3d3d030548fa289..cb430ffdd83e390963257ab6d6e80231
  import net.kissenpvp.pulvinar.api.ban.warn.Warn;
  import io.netty.channel.Channel;
 diff --git a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-index fa63478eb75fc1c11d49b2c0dfca08202d024a14..24f8472909ad5fd26d435015c38c1b8e3eefb14b 100644
+index d637dfb63bb0866be7377d8e8a8d72bc6335d174..5c975b7c518ac252cb7c9a3e7f57ddb26f4a1bbd 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/networking/client/entity/InternalPulvinarPlayerClient.java
-@@ -22,25 +22,16 @@ import net.kissenpvp.core.api.database.DataWriter;
+@@ -22,31 +22,11 @@ import net.kissenpvp.core.api.database.DataWriter;
  import net.kissenpvp.core.api.time.AccurateDuration;
  import net.kissenpvp.core.api.user.User;
  import net.kissenpvp.core.api.user.UserImplementation;
@@ -1573,49 +1586,44 @@ index fa63478eb75fc1c11d49b2c0dfca08202d024a14..24f8472909ad5fd26d435015c38c1b8e
 -=======
 -=======
 -import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpiredEvent;
-+import net.kissenpvp.core.api.user.rank.event.AbstractPostAsyncRankExpireEvent;
- import net.kissenpvp.core.ban.warn.WarnNode;
+-import net.kissenpvp.core.ban.warn.WarnNode;
 ->>>>>>> Stashed changes
- import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpireEvent;
- import net.kissenpvp.core.ban.warn.WarnNode;
+-import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpireEvent;
+-<<<<<<< Updated upstream
+-import net.kissenpvp.core.ban.warn.WarnNode;
 ->>>>>>> Stashed changes
 -=======
  import net.kissenpvp.core.api.user.rank.event.AbstractAsyncRankExpireEvent;
  import net.kissenpvp.core.api.user.rank.event.AbstractPostAsyncRankExpireEvent;
 ->>>>>>> Stashed changes
+-import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
+-import net.kissenpvp.core.user.rank.PlayerRankNode;
+-import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpireEvent;
+-import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpiredEvent;
+-=======
  import net.kissenpvp.core.networking.client.entity.KissenPlayerClient;
  import net.kissenpvp.core.user.rank.PlayerRankNode;
  import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpireEvent;
--import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpiredEvent;
-+import net.kissenpvp.core.user.rank.event.InternalPostAsyncRankExpireEvent;
+->>>>>>> Stashed changes
  import net.kissenpvp.core.user.rank.event.InternalRankGrantEvent;
  import net.kissenpvp.pulvinar.api.ban.Punishment;
  import net.kissenpvp.pulvinar.api.base.Context;
-@@ -51,7 +42,6 @@ import net.kissenpvp.pulvinar.api.user.playersetting.BoundPlayerSetting;
- import net.kissenpvp.pulvinar.api.user.playersetting.PlayerSetting;
- import net.kissenpvp.pulvinar.api.user.rank.PlayerRank;
- import net.kissenpvp.pulvinar.api.user.rank.event.AsyncRankExpireEvent;
--import net.kissenpvp.pulvinar.api.user.rank.event.PostAsyncRankExpireEvent;
- import net.kissenpvp.pulvinar.api.user.rank.event.RankGrantEvent;
- import net.kissenpvp.pulvinar.permission.permissible.PulvinarPermissible;
- import net.kissenpvp.pulvinar.user.PulvinarPublicUser;
-@@ -70,8 +60,26 @@ import org.jetbrains.annotations.Unmodifiable;
+@@ -76,9 +56,8 @@ import org.jetbrains.annotations.Unmodifiable;
  import java.util.Set;
  import java.util.stream.Collectors;
  
-+// Ban System
+-<<<<<<< Updated upstream
+-=======
+ // Ban System
 +import net.kissenpvp.core.ban.warn.WarnNode;
-+import net.kissenpvp.core.api.time.TemporalData;
-+import net.kissenpvp.core.api.database.meta.list.MetaList;
-+import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
-+import net.kissenpvp.pulvinar.api.ban.BanTemplate;
-+import net.kissenpvp.pulvinar.api.ban.warn.Warn;
-+import net.kyori.adventure.text.Component;
-+import org.jetbrains.annotations.Contract;
-+import java.time.Period;
-+import java.util.List;
-+import java.util.function.Function;
-+
+ import net.kissenpvp.core.api.time.TemporalData;
+ import net.kissenpvp.core.api.database.meta.list.MetaList;
+ import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
+@@ -90,9 +69,13 @@ import java.time.Period;
+ import java.util.List;
+ import java.util.function.Function;
+ 
+->>>>>>> Stashed changes
  public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<PlayerRank, Punishment> implements PulvinarPlayerClient {
  
 +    @Contract(pure = true, value = "-> new")
@@ -1626,16 +1634,7 @@ index fa63478eb75fc1c11d49b2c0dfca08202d024a14..24f8472909ad5fd26d435015c38c1b8e
      @Override
      public @NotNull User getUser() {
          return Bukkit.getPulvinar().getImplementation(UserImplementation.class).getUser(getUniqueId());
-@@ -106,7 +114,7 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
- 
-     @Override
-     protected void rankExpiredEvent(@NotNull PlayerRank rank) {
--        PostAsyncRankExpireEvent rankExpireEvent = new PulvinarPostAsyncRankExpireEvent(AbstractPostAsyncRankExpireEvent.ExpiryCause.AUTOMATIC, rank);
-+        PulvinarPostAsyncRankExpireEvent rankExpireEvent = new PulvinarPostAsyncRankExpireEvent(AbstractPostAsyncRankExpireEvent.ExpiryCause.AUTOMATIC, rank);
-         Bukkit.getPluginManager().callEvent(rankExpireEvent);
-     }
- 
-@@ -154,6 +162,28 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
+@@ -175,6 +158,28 @@ public abstract class InternalPulvinarPlayerClient extends KissenPlayerClient<Pl
  
      @Override
      public void clearActiveWarns() {
@@ -1666,10 +1665,10 @@ index fa63478eb75fc1c11d49b2c0dfca08202d024a14..24f8472909ad5fd26d435015c38c1b8e
      }
  }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
-index 6056885d449b3930a5a429f3b380a5bdbe458838..d408a0a1ee017025b62205c4ac1e4a8cadeb1cbe 100644
+index d652421988cb96606afa92da88694d8970c222fa..f3b2c79da9bb3feeb5dcc6ae932f05435dc32921 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarPublicUser.java
-@@ -42,7 +42,9 @@ import org.bukkit.Bukkit;
+@@ -41,7 +41,9 @@ import org.bukkit.Bukkit;
  import org.jetbrains.annotations.NotNull;
  import org.jetbrains.annotations.Nullable;
  
@@ -1679,7 +1678,7 @@ index 6056885d449b3930a5a429f3b380a5bdbe458838..d408a0a1ee017025b62205c4ac1e4a8c
  
  /**
   * The {@code PulvinarPublicUser} class extends the {@link KissenPublicUser} class with {@link Permission}
-@@ -70,6 +72,24 @@ public class PulvinarPublicUser extends KissenPublicUser<Permission> {
+@@ -69,6 +71,24 @@ public class PulvinarPublicUser extends KissenPublicUser<Permission> {
          super(uuid, name);
      }
  
