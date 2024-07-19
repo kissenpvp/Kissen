@@ -20,14 +20,19 @@ index 341bd527b6d5a955f23f22b352d14a4df964b353..4b011884c81b3056ffd509d37021aef5
      // Pulvinar end
  }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-index 2bdd4e9ff1b7ebf5c820c17010c663dccd314c39..04d77fd9c819caaed6efa0c60db0b4acdc010ea3 100644
+index f7c4d650a5299d2daff37176472a155d963d8b9f..8988db1efa131be485a38492682c311171dcb678 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-@@ -54,6 +54,7 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
-         net.kissenpvp.pulvinar.permission.PulvinarPermissionImplementation permissionImplementation = new net.kissenpvp.pulvinar.permission.PulvinarPermissionImplementation();
+@@ -54,12 +54,6 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
          loader.put(net.kissenpvp.pulvinar.api.permission.PermissionImplementation.class, permissionImplementation);
          loader.put(net.kissenpvp.core.permission.InternalPermissionImplementation.class, permissionImplementation);
-+        loader.put(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class, new net.kissenpvp.pulvinar.message.localization.PulvinarLocalizationImplementation());
+         loader.put(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class, new net.kissenpvp.pulvinar.message.localization.PulvinarLocalizationImplementation());
+-        net.kissenpvp.pulvinar.command.PulvinarCommandImplementation commandImplementation = new net.kissenpvp.pulvinar.command.PulvinarCommandImplementation();
+-        loader.put(net.kissenpvp.pulvinar.api.command.CommandImplementation.class, commandImplementation);
+-        loader.put(net.kissenpvp.core.command.InternalCommandImplementation.class, commandImplementation);
+-        loader.put(net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation.class, new net.kissenpvp.pulvinar.command.confirmation.PulvinarConfirmationImplementation());
+-        loader.put(net.kissenpvp.pulvinar.api.ban.BanImplementation.class, new net.kissenpvp.pulvinar.ban.PulvinarBanImplementation());
+-        loader.put(net.kissenpvp.core.event.EventImplementation.class, new net.kissenpvp.pulvinar.event.KissenEventImplementation());
          super.loadImplementations(loader);
      }
  
@@ -61,10 +66,10 @@ index 0000000000000000000000000000000000000000..af5fbd3c197f257f532cc8fefd765749
 +
 +public class PulvinarLocalizationImplementation extends KissenLocalizationImplementation { }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 18141baee317e2a0cab36664fc097cd4a0883609..49d9bd26b04d17cc19bd48defad2b9cb5b778fdd 100644
+index b3e4f10b29645e41025a3ddec8cdf45f6e35ff1c..652687bcdf2ef95d92a7da1a00fa1493f48b30e3 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2353,6 +2353,7 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
+@@ -2351,6 +2351,7 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
          if (this.language == null || !this.language.equals(clientOptions.language())) { // Paper
              PlayerLocaleChangeEvent event = new PlayerLocaleChangeEvent(this.getBukkitEntity(), clientOptions.language());
              this.server.server.getPluginManager().callEvent(event);
@@ -72,7 +77,7 @@ index 18141baee317e2a0cab36664fc097cd4a0883609..49d9bd26b04d17cc19bd48defad2b9cb
          }
          // CraftBukkit end
          // Paper start - don't call options events on login
-@@ -3120,4 +3121,11 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
+@@ -3118,4 +3119,11 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
          this.ramBar = ramBar;
      }
      // Purpur end
@@ -85,7 +90,7 @@ index 18141baee317e2a0cab36664fc097cd4a0883609..49d9bd26b04d17cc19bd48defad2b9cb
 +    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index f634554385ea5046ff8129a16615d1fac409bea6..ddcc0f65d2f6f00bd002b54e97e758c325049b01 100644
+index 45df7be2cf14854a6ec8bc3d3e106d1714becabf..0b532de8d50cf4562dc3f59685ea410e82b24db0 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -3371,7 +3371,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
