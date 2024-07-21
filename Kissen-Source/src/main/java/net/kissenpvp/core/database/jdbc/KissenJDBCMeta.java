@@ -82,8 +82,7 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     @Override
     public void purge(@NotNull String totalID) {
 
-        if(Objects.isNull(getPlugin()))
-        {
+        if (Objects.isNull(getPlugin())) {
             getPreparedStatement(String.format("DELETE FROM %s WHERE %s IS NULL AND (%s = ?);", getTable(), getTable().getPluginColumn(), getTable().getColumn(Column.TOTAL_ID)), preparedStatement -> {
                 preparedStatement.setString(1, totalID);
                 preparedStatement.executeUpdate();
@@ -101,30 +100,16 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
     @Override
     protected void setJson(@NotNull String totalID, @NotNull String key, @Nullable Object object) {
         String[] serialized = serialize(object);
-        if (serialized==null) {
+        if (serialized == null) {
 
-            if(Objects.isNull(getPlugin()))
-            {
-                getPreparedStatement(String.format("DELETE FROM %s WHERE %s IS NULL AND (%s = ? AND %s = ?);", getTable(), getTable().getPluginColumn(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY)), (preparedStatement -> {
-                    preparedStatement.setString(1, totalID);
-                    preparedStatement.setString(2, key);
-                    preparedStatement.executeUpdate();
-                }));
-                return;
-            }
-            getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND (%s = ? AND %s = ?);", getTable(), getTable().getPluginColumn(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY)), (preparedStatement -> {
-                preparedStatement.setString(1, getPluginName());
-                preparedStatement.setString(2, totalID);
-                preparedStatement.setString(3, key);
-                preparedStatement.executeUpdate();
-            }));
+            internalDelete(totalID, key);
             return;
         }
 
-        assert object!=null;
+        assert object != null;
         Update update = new Update(Column.VALUE, object);
         QueryUpdate queryUpdate = update(update).where(Column.TOTAL_ID, totalID).and(Column.KEY, key);
-        if (queryUpdate.execute().exceptionally((t) -> 0L).join()==0) {
+        if (queryUpdate.execute().exceptionally((t) -> 0L).join() == 0) {
             insert(totalID, key, serialized);
         }
     }
@@ -198,6 +183,23 @@ public abstract class KissenJDBCMeta extends KissenBaseMeta {
             preparedStatement.setString(3, getPluginName());
             preparedStatement.setString(4, values[0]); // type
             preparedStatement.setString(5, values[1]); // value
+            preparedStatement.executeUpdate();
+        }));
+    }
+
+    private void internalDelete(@NotNull String totalID, @NotNull String key) {
+        if (Objects.isNull(getPlugin())) {
+            getPreparedStatement(String.format("DELETE FROM %s WHERE %s IS NULL AND (%s = ? AND %s = ?);", getTable(), getTable().getPluginColumn(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY)), (preparedStatement -> {
+                preparedStatement.setString(1, totalID);
+                preparedStatement.setString(2, key);
+                preparedStatement.executeUpdate();
+            }));
+            return;
+        }
+        getPreparedStatement(String.format("DELETE FROM %s WHERE %s = ? AND (%s = ? AND %s = ?);", getTable(), getTable().getPluginColumn(), getTable().getColumn(Column.TOTAL_ID), getTable().getColumn(Column.KEY)), (preparedStatement -> {
+            preparedStatement.setString(1, getPluginName());
+            preparedStatement.setString(2, totalID);
+            preparedStatement.setString(3, key);
             preparedStatement.executeUpdate();
         }));
     }
