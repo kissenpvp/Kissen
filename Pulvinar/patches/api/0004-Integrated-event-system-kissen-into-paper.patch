@@ -5,10 +5,10 @@ Subject: [PATCH] Integrated event system kissen into paper
 
 
 diff --git a/src/main/java/co/aikar/timings/TimedEventExecutor.java b/src/main/java/co/aikar/timings/TimedEventExecutor.java
-index 6fbc64e0f214d0c8e5afcbe385e414a4e1fe1c72..00e811f56334b4b65331ce908dcdfad5d806d1cb 100644
+index 438a9c76381ea3f5b774e2232ff56c5dc6f82586..e8575533869bcc01762d909634e446a1c3698ecf 100644
 --- a/src/main/java/co/aikar/timings/TimedEventExecutor.java
 +++ b/src/main/java/co/aikar/timings/TimedEventExecutor.java
-@@ -48,7 +48,7 @@ public class TimedEventExecutor implements EventExecutor {
+@@ -51,7 +51,7 @@ public class TimedEventExecutor implements EventExecutor {
       * @param method EventHandler method
       * @param eventClass Owning class
       */
@@ -17,7 +17,7 @@ index 6fbc64e0f214d0c8e5afcbe385e414a4e1fe1c72..00e811f56334b4b65331ce908dcdfad5
          this.executor = executor;
          String id;
  
-@@ -72,7 +72,7 @@ public class TimedEventExecutor implements EventExecutor {
+@@ -75,7 +75,7 @@ public class TimedEventExecutor implements EventExecutor {
      }
  
      @Override
