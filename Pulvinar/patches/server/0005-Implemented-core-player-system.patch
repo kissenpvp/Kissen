@@ -3978,7 +3978,7 @@ index 22c4f8dea99f92a1eb3da2baf0a15bf9d2ca0462..91bc235e7a7fbde5bde4a60a8f623bbf
          }
      }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index 21dfca344a7b98dfd4e20bebde6c743e5cd8c932..b3e4f10b29645e41025a3ddec8cdf45f6e35ff1c 100644
+index e1fc3c20cae14d8cb0727fb8f99d00c7ee23a7fe..82298c4582c0ac9c34f0434d927cc5c9b94d2c41 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
 @@ -2285,17 +2285,22 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
@@ -4687,7 +4687,7 @@ index 69304fa6eb65dd37e74db9ad62eac0bddfdea2c1..abbfe95c425ebe9a66cd60c4ef1c8ac2
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index e3100e65fea02374d4393bab48d63ddeaecef0ab..9b7ffc579b892bdc2a7501e03b5d653b44505a39 100644
+index e3100e65fea02374d4393bab48d63ddeaecef0ab..6221e79bc851a85cc7b389f95d72133020d1bce4 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -193,6 +193,33 @@ import org.jetbrains.annotations.NotNull;
@@ -4795,7 +4795,7 @@ index e3100e65fea02374d4393bab48d63ddeaecef0ab..9b7ffc579b892bdc2a7501e03b5d653b
          }
  
          // Paper start
-@@ -3649,4 +3704,352 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
+@@ -3649,4 +3704,357 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
          this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket(getEntityId(), io.papermc.paper.adventure.PaperAdventure.asVanilla(message)));
      }
      // Purpur end
@@ -4804,6 +4804,11 @@ index e3100e65fea02374d4393bab48d63ddeaecef0ab..9b7ffc579b892bdc2a7501e03b5d653b
 +    private @NotNull net.kissenpvp.pulvinar.networking.client.entity.InternalPulvinarOnlinePlayerClient getPulvinarPlayer() {
 +        if (pulvinarPlayer== null) {
 +            pulvinarPlayer = new net.kissenpvp.pulvinar.networking.client.entity.InternalPulvinarOnlinePlayerClient() {
++                @Override
++                public long getLastLogin() {
++                    return CraftPlayer.this.getLastLogin();
++                }
++
 +                @Override
 +                public @NotNull CraftPlayer getCraftPlayer() {
 +                    return CraftPlayer.this;

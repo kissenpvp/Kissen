@@ -22,14 +22,12 @@ import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.database.savable.SavableInitializeException;
 import net.kissenpvp.core.api.database.savable.SavableMap;
 import net.kissenpvp.core.api.message.localization.LocalizationImplementation;
-import net.kissenpvp.core.api.networking.socket.DataPackage;
 import net.kissenpvp.core.api.permission.AbstractGroupablePermissionEntry;
 import net.kissenpvp.core.api.permission.AbstractPermission;
 import net.kissenpvp.core.api.time.AccurateDuration;
 import net.kissenpvp.core.api.user.User;
 import net.kissenpvp.core.api.user.UserImplementation;
 import net.kissenpvp.core.base.KissenCore;
-import net.kissenpvp.core.database.savable.SerializableSavableHandler;
 import net.kissenpvp.core.permission.KissenGroupablePermissionEntry;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -57,11 +55,6 @@ public abstract class KissenUser<T extends AbstractPermission> extends KissenGro
     @Override
     public @NotNull Table getTable() {
         return getImplementation().getTable();
-    }
-
-    @Override
-    public @NotNull AccurateDuration getOnlineTime() {
-        return getRepository().get("online_time", AccurateDuration.class).orElse(new AccurateDuration(0));
     }
 
     @Override
@@ -132,6 +125,10 @@ public abstract class KissenUser<T extends AbstractPermission> extends KissenGro
         AccurateDuration duration = getCurrentOnlineTime();
         Duration plus = Duration.between(loginTime, Instant.now());
         getRepository().set("online_time", new AccurateDuration(plus.toMillis() + duration.milliseconds()));
+    }
+
+    public @NotNull AccurateDuration getSavedOnlineTime() {
+        return getRepository().get("online_time", AccurateDuration.class).orElse(new AccurateDuration(0));
     }
 
     private @NotNull AccurateDuration getCurrentOnlineTime() {
