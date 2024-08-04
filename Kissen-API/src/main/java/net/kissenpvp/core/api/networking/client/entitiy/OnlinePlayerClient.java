@@ -35,6 +35,8 @@ public interface OnlinePlayerClient<P extends AbstractPermission, R extends Abst
 
     void killConnection();
 
+    long getLastLogin();
+
     @NotNull Channel getConnection();
 
     void sendPacket(@NotNull Object object) throws ClassNotFoundException, ClassCastException;

@@ -992,10 +992,10 @@ index f309c2ed39bcc700e5b491ff549bf0608a07aab8..d105bce3788d1bef72fc8426b9bb40e5
 +public interface ConsoleCommandSender extends CommandSender, Conversable, net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient { // Pulvinar
  }
 diff --git a/src/main/java/org/bukkit/command/MessageCommandSender.java b/src/main/java/org/bukkit/command/MessageCommandSender.java
-index 9d263ab3afb938c215c0b64d9171345fca6ceb2c..8bff00621e832309de09636571b85222585929be 100644
+index 946d2f0ef37c6cf895caf8d3c6963c7889e0567b..5d2e8ef1461b0d0f894f011f41a890beaa358066 100644
 --- a/src/main/java/org/bukkit/command/MessageCommandSender.java
 +++ b/src/main/java/org/bukkit/command/MessageCommandSender.java
-@@ -132,4 +132,25 @@ public interface MessageCommandSender extends CommandSender {
+@@ -135,4 +135,25 @@ public interface MessageCommandSender extends CommandSender {
          throw new UnsupportedOperationException();
      }
  

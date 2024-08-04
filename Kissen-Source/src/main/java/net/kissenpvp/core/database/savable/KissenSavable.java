@@ -148,7 +148,7 @@ public abstract class KissenSavable<T> extends HashMap<KissenPlugin, SavableMap>
     public int softDelete() {
         int count = size();
         clear();
-        getRepository().delete(getDatabaseID()); // TODO also clear plugin data somehow...
+        ((KissenSavableMap) getRepository()).getMeta().purge(getDatabaseID()); //TODO also purge plugins
         KissenCore.getInstance().getImplementation(EventImplementation.class).call(new VolatileSavableDeletedEvent(this));
         KissenCore.getInstance().getImplementation(StorageImplementation.class).dropStorage(getDatabaseID());
         return count;

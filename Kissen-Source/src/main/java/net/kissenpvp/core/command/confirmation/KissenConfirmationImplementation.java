@@ -1,6 +1,5 @@
 package net.kissenpvp.core.command.confirmation;
 
-import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.base.KissenCore;
@@ -9,11 +8,9 @@ import net.kissenpvp.core.message.localization.KissenLocalizationImplementation;
 import net.kissenpvp.core.user.KissenUserImplementation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.text.MessageFormat;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -152,7 +149,8 @@ public abstract class KissenConfirmationImplementation implements KissenImplemen
         {
             KissenCore.getInstance().runTask(confirmationNode.confirmationNode().plugin(), time);
         }
-        KissenCore.getInstance().runTask(time, 0, "Cancel");
+        time.run(); // I'm not sure this works?
+        //KissenCore.getInstance().runTask(time, 0, "Cancel");
     }
 
     protected abstract boolean isServerRunning();

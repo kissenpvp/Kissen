@@ -214,13 +214,13 @@ index 486ebc9c35d6942d7e7e015cbf7fc81f84e5ec23..83717633afdf4d97ea3cf58dcc4dcda6
  
      @Override
 diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-index 82cdf5419e0d3bc295f1e45c4f6d14b31813c36d..dc322ad654a8a879d5b11c0bec6c704927366099 100644
+index 1e637e15367271ce44250b8543c49d17015fd7e3..f7c4d650a5299d2daff37176472a155d963d8b9f 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-@@ -48,6 +48,7 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
-     @Override
-     protected void loadImplementations(@NotNull Map<Class<? extends Implementation>, Implementation> loader) {
-         loader.put(net.kissenpvp.core.api.config.ConfigurationImplementation.class, new net.kissenpvp.pulvinar.config.PulvinarConfigurationImplementation());
+@@ -59,6 +59,7 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
+         loader.put(net.kissenpvp.core.command.InternalCommandImplementation.class, commandImplementation);
+         loader.put(net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation.class, new net.kissenpvp.pulvinar.command.confirmation.PulvinarConfirmationImplementation());
+         loader.put(net.kissenpvp.pulvinar.api.ban.BanImplementation.class, new net.kissenpvp.pulvinar.ban.PulvinarBanImplementation());
 +        loader.put(net.kissenpvp.core.event.EventImplementation.class, new net.kissenpvp.pulvinar.event.KissenEventImplementation());
          super.loadImplementations(loader);
      }

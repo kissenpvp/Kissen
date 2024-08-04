@@ -25,6 +25,7 @@ import net.kissenpvp.core.api.database.DataWriter;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.database.meta.list.MetaList;
 import net.kissenpvp.core.api.event.EventCancelledException;
+import net.kissenpvp.core.api.networking.client.entitiy.OnlinePlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import net.kissenpvp.core.api.time.AccurateDuration;
@@ -38,6 +39,7 @@ import net.kissenpvp.core.api.user.rank.AbstractRank;
 import net.kissenpvp.core.api.user.rank.event.AbstractRankGrantEvent;
 import net.kissenpvp.core.base.KissenCore;
 import net.kissenpvp.core.user.KissenPublicUser;
+import net.kissenpvp.core.user.KissenUser;
 import net.kissenpvp.core.user.rank.KissenPlayerRank;
 import net.kissenpvp.core.user.rank.PlayerRankNode;
 import net.kissenpvp.core.user.rank.event.InternalAsyncRankExpireEvent;
@@ -284,10 +286,11 @@ public abstract class KissenPlayerClient<P extends AbstractPlayerRank<?>, B exte
      * @see AccurateDuration
      */
     protected @NotNull AccurateDuration getOnlineTime(@NotNull User user) {
-        AccurateDuration onlineTime = user.getOnlineTime();
+        AccurateDuration onlineTime = ((KissenUser<?>) user).getSavedOnlineTime();
 
-        if (isConnected()) {
-            Duration onlineSince = Duration.between(Instant.now(), Instant.now()); //TODO
+        if (isConnected() && getUser().getPlayerClient() instanceof OnlinePlayerClient<?,?,?> onlinePlayerClient) {
+            Instant lastLogin = Instant.ofEpochMilli(onlinePlayerClient.getLastLogin());
+            Duration onlineSince = Duration.between(lastLogin, Instant.now());
             return new AccurateDuration(onlineTime.milliseconds() + onlineSince.toMillis());
         }
         return onlineTime;

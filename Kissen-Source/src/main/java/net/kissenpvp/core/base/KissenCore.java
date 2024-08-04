@@ -230,8 +230,6 @@ public abstract class KissenCore implements Kissen {
 
     public abstract void runTask(@NotNull KissenPlugin kissenPlugin, @NotNull Runnable runnable);
 
-    public abstract void runTask(@NotNull Runnable runnable, int delay, @NotNull String name);
-
     private enum OperationState {
         PRE, START, POST
     }

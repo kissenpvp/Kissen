@@ -5,10 +5,10 @@ Subject: [PATCH] Rebrand to Pulvinar
 
 
 diff --git a/src/main/java/co/aikar/timings/TimingsCommand.java b/src/main/java/co/aikar/timings/TimingsCommand.java
-index 1abfcee0f6d632f4cd8d74b4994a90c9ea9d254c..f8a667cf11ff9701eb2a7fe3c9a7dc01d01cab4d 100644
+index b831a23999c94cb1bdf7f5d2cd719d0b846242ad..35385bff036bec0e9d339ab8723587fbd87fe556 100644
 --- a/src/main/java/co/aikar/timings/TimingsCommand.java
 +++ b/src/main/java/co/aikar/timings/TimingsCommand.java
-@@ -56,7 +56,7 @@ public class TimingsCommand extends BukkitCommand {
+@@ -58,7 +58,7 @@ public class TimingsCommand extends BukkitCommand {
          }
          if (true) {
              net.kyori.adventure.text.minimessage.MiniMessage mm = net.kyori.adventure.text.minimessage.MiniMessage.miniMessage();

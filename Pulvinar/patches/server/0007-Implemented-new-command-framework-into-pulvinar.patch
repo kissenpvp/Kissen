@@ -30,10 +30,10 @@ index 4b011884c81b3056ffd509d37021aef584692b3f..40863f32b5227854eb6583482982f33d
      // Pulvinar end
  }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-index 04d77fd9c819caaed6efa0c60db0b4acdc010ea3..e737bc37c973b41633194d252f47c355ae3f06e4 100644
+index 8988db1efa131be485a38492682c311171dcb678..fb4dfde59e4b7f280987c953203cea18af0a5f79 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-@@ -55,6 +55,10 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
+@@ -54,6 +54,10 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
          loader.put(net.kissenpvp.pulvinar.api.permission.PermissionImplementation.class, permissionImplementation);
          loader.put(net.kissenpvp.core.permission.InternalPermissionImplementation.class, permissionImplementation);
          loader.put(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class, new net.kissenpvp.pulvinar.message.localization.PulvinarLocalizationImplementation());
