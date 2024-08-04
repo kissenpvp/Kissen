@@ -95,10 +95,10 @@ index 0000000000000000000000000000000000000000..16f0b5951a8a46239e8c78032eb2ad7c
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/biome/BiomeSection.java b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/BiomeSection.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8f75ea99a090d504073586f3ebf15ecb5a897c43
+index 0000000000000000000000000000000000000000..df6cad39d6ffb64f7cc3e872c42a88763606c985
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/BiomeSection.java
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,73 @@
 +package net.kissenpvp.pulvinar.api.world.biome;
 +
 +import net.kissenpvp.pulvinar.api.world.CustomWorld;
@@ -122,9 +122,6 @@ index 0000000000000000000000000000000000000000..8f75ea99a090d504073586f3ebf15ecb
 +    void calculate();
 +
 +    void calculate(@NotNull NoiseFactory factory);
-+
-+    @NotNull
-+    CustomWorld getWorld();
 +
 +    @NotNull
 +    ExactLocation2D getLocation();

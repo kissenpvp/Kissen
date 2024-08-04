@@ -6,7 +6,7 @@ Subject: [PATCH] Populated custom world system
 
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java b/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..109bcae87a057b3e8dfdbe0d3d7e817995b11b5b
+index 0000000000000000000000000000000000000000..1a69c18a6cdd90fc741e72f86b48b2dad240db07
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java
 @@ -0,0 +1,178 @@
@@ -100,7 +100,7 @@ index 0000000000000000000000000000000000000000..109bcae87a057b3e8dfdbe0d3d7e8179
 +        int maskRadius = 5;
 +        int maskDiameter = (maskRadius*2) + 1;
 +        //int maskDiameterSquared = maskDiameter*maskDiameter;
-+        double coreHeight = 0;
++        double coreHeight;
 +
 +        InternalChunkCache mainCache = getCache(exactLocation2D);
 +
@@ -305,7 +305,7 @@ index 0000000000000000000000000000000000000000..8797adb3d79169763dfbdf968c10b0a3
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8e6b58d15e74c718ee3b5515a7cd46cdcc0d5036
+index 0000000000000000000000000000000000000000..263ebc3ea3d5e6591c2c58671af064291198e84e
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java
 @@ -0,0 +1,239 @@
@@ -395,7 +395,7 @@ index 0000000000000000000000000000000000000000..8e6b58d15e74c718ee3b5515a7cd46cd
 +    }
 +
 +    private @NotNull BiomeSection getBiomeSectionFromBlockCoords(@NotNull ExactLocation2D exactLocation2D) {
-+        BiomeSection section = new InternalBiomeSection(this, getWorld(), exactLocation2D);
++        BiomeSection section = new InternalBiomeSection(this, exactLocation2D);
 +        try {
 +            section = getBiomeSectionCache().getUnchecked(section);
 +        } catch (Throwable throwable) {
@@ -525,7 +525,7 @@ index 0000000000000000000000000000000000000000..8e6b58d15e74c718ee3b5515a7cd46cd
 +        int x = exactLocation2D.x();
 +        int z = exactLocation2D.x();
 +        ExactLocation2D modified = new ExactLocation2D(useSectionCoords ? x : x << 4, useSectionCoords ? z : z << 4); //16 blocks (bitshift 4)
-+        BiomeSection biomeSection = new InternalBiomeSection(this, getWorld(), modified, useSectionCoords);
++        BiomeSection biomeSection = new InternalBiomeSection(this, modified, useSectionCoords);
 +        biomeSection.calculate(new NoiseFactory() {
 +            @Override
 +            public @NotNull FastNoise assemble(@NotNull CustomWorld kissenWorld) {
@@ -550,13 +550,14 @@ index 0000000000000000000000000000000000000000..8e6b58d15e74c718ee3b5515a7cd46cd
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d97614d4ab1f
+index 0000000000000000000000000000000000000000..5c5b03d98085670858b36b49b99cd5a16ce870fe
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java
-@@ -0,0 +1,307 @@
+@@ -0,0 +1,388 @@
 +package net.kissenpvp.pulvinar.world.biome;
 +
 +import net.kissenpvp.pulvinar.api.world.CustomWorld;
++import net.kissenpvp.pulvinar.api.world.Environment;
 +import net.kissenpvp.pulvinar.api.world.biome.BiomeSection;
 +import net.kissenpvp.pulvinar.api.world.biome.BiomeSubSection;
 +import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
@@ -578,8 +579,6 @@ index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d976
 +import java.util.stream.Stream;
 +
 +public class InternalBiomeSection implements BiomeSection {
-+    private static final Logger log = LoggerFactory.getLogger(InternalBiomeSection.class);
-+    private final CustomWorld customWorld;
 +    private final ExactLocation2D exactLocation2D;
 +    private final BiomeManager manager;
 +    private float temperature, moisture;
@@ -587,19 +586,40 @@ index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d976
 +    private CustomBiome biome;
 +    private Noise shape;
 +
-+    public InternalBiomeSection(@NotNull BiomeManager manager, @NotNull CustomWorld customWorld, @NotNull ExactLocation2D exactLocation2D) {
-+        this(manager, customWorld, exactLocation2D, false);
++    /**
++     * Constructs an {@code InternalBiomeSection} with the specified {@link BiomeManager},
++     * {@link CustomWorld}, and {@link ExactLocation2D}.
++     * <p>
++     * This constructor defaults to not using section coordinates, instead transforming
++     * the provided {@code exactLocation2D} into world coordinates.
++     *
++     * @param manager         The {@link BiomeManager} responsible for managing biome data.
++     *                        Must not be null.
++     * @param exactLocation2D The exact 2D location within the custom world. This will be
++     *                        transformed to world coordinates. Must not be null.
++     */
++    public InternalBiomeSection(@NotNull BiomeManager manager, @NotNull ExactLocation2D exactLocation2D) {
++        this(manager, exactLocation2D, false);
 +    }
 +
-+    public InternalBiomeSection(@NotNull BiomeManager manager, @NotNull CustomWorld customWorld, @NotNull ExactLocation2D exactLocation2D, boolean useSectionCoords) {
++    /**
++     * Constructs an {@code InternalBiomeSection} with the specified {@link BiomeManager},
++     * {@link CustomWorld}, {@link ExactLocation2D}, and a flag to determine if section
++     * coordinates should be used.
++     * <p>
++     * If {@code useSectionCoords} is true, the provided {@code exactLocation2D} is used
++     * directly. Otherwise, it is transformed into world coordinates using the
++     * {@code transformToWorld} method.
++     *
++     * @param manager          The {@link BiomeManager} responsible for managing biome data.
++     *                         Must not be null.
++     * @param exactLocation2D  The exact 2D location within the custom world. Must not be null.
++     * @param useSectionCoords If true, the provided {@code exactLocation2D} is used as-is.
++     *                         If false, the location is transformed into world coordinates.
++     */
++    public InternalBiomeSection(@NotNull BiomeManager manager, @NotNull ExactLocation2D exactLocation2D, boolean useSectionCoords) {
 +        this.manager = manager;
-+        this.customWorld = customWorld;
 +        this.exactLocation2D = useSectionCoords ? exactLocation2D : transformToWorld(exactLocation2D);
-+    }
-+
-+    @NotNull
-+    private static ExactLocation2D transformToWorld(@NotNull ExactLocation2D exactLocation2D) {
-+        return new ExactLocation2D(exactLocation2D.x() >> bitshift, exactLocation2D.z() >> bitshift);
 +    }
 +
 +    //TODO maybe create util class
@@ -622,11 +642,15 @@ index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d976
 +        return isNegativeRange ? -randomNum : randomNum;
 +    }
 +
++    @NotNull
++    private static ExactLocation2D transformToWorld(@NotNull ExactLocation2D exactLocation2D) {
++        return new ExactLocation2D(exactLocation2D.x() >> bitshift, exactLocation2D.z() >> bitshift);
++    }
 +
 +    @Override
 +    public void calculate() {
 +        int x = getLocation().x(), z = getLocation().z();
-+        int hash = Objects.hash(getWorld().getBukkitWorld().getSeed(), x, z);
++        int hash = Objects.hash(getManager().getWorld().getBukkitWorld().getSeed(), x, z);
 +        calculate(world -> {
 +            FastNoise fastNoise = new FastNoise(hash);
 +            fastNoise.setNoiseType(NoiseType.SIMPLEX_FRACTAL);
@@ -639,11 +663,7 @@ index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d976
 +    @Override
 +    public void calculate(@NotNull NoiseFactory noiseFactory) {
 +        this.radius = randInt(getSectionRandom(), minSize / 2, 5 * minSize / 4);
-+        this.shape = noiseFactory.assemble(getWorld());
-+        // TODO experiential
-+        this.temperature = getWorld().getEnvironment().getTemperatureNoise().getNoise(getLocation());
-+        this.moisture = getWorld().getEnvironment().getMoistureNoise().getNoise(getLocation());
-+
++        this.shape = noiseFactory.assemble(getManager().getWorld());
 +        this.biome = selectBiome();
 +    }
 +
@@ -651,25 +671,6 @@ index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d976
 +    @Override
 +    public float getDominance(@NotNull ExactLocation3D target) {
 +        return getDominanceBasedOnRadius(target.exactLocation2D());
-+    }
-+
-+    private float getDominanceBasedOnRadius(@NotNull ExactLocation2D location) {
-+        ExactLocation2D center = this.getCenter();
-+
-+        int xOffset = center.x() - location.x();
-+        int zOffset = center.z() - location.z();
-+
-+        double x = Math.pow(xOffset, 2) / Math.pow(radius, 2);
-+        double z = Math.pow(zOffset, 2) / Math.pow(radius, 2);
-+
-+        double equationResult = x + z + 0.7 * getShape().getNoise(xOffset, zOffset);
-+
-+        return (float) (1 - 1 * (equationResult));
-+    }
-+
-+    @Override
-+    public @NotNull CustomWorld getWorld() {
-+        return customWorld;
 +    }
 +
 +    @Override
@@ -708,7 +709,7 @@ index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d976
 +
 +    @Override
 +    public @NotNull Random getSectionRandom(int multiplier) {
-+        return new Random((long) multiplier * Objects.hash(getWorld().getBukkitWorld().getSeed(), getLocation().x(), getLocation().z()));
++        return new Random((long) multiplier * Objects.hash(getManager().getWorld().getBukkitWorld().getSeed(), getLocation().x(), getLocation().z()));
 +    }
 +
 +    @Override
@@ -719,16 +720,7 @@ index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d976
 +
 +    @Override
 +    public float getRadiusPriority(@NotNull ExactLocation2D block) {
-+        ExactLocation2D center = getCenter();
-+
-+        int xOffset = center.x() - block.x();
-+        int zOffset = center.z() - block.z();
-+
-+        double x = Math.pow(xOffset, 2) / Math.pow(radius, 2);
-+        double z = Math.pow(zOffset, 2) / Math.pow(radius, 2);
-+        double equationResult = (x + z) + 0.6 * shape.getNoise(xOffset, zOffset);
-+
-+        return (float) (1 - (1 * equationResult));
++        return (float) (1 - (1 * calculateDistanceWithNoise(block, this.getCenter(), 0.6f)));
 +    }
 +
 +    @Override
@@ -774,21 +766,71 @@ index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d976
 +        int relXFromCenter = exactLocation2D.x() - sectionCenter.x();
 +        int relZFromCenter = exactLocation2D.z() - sectionCenter.z();
 +
-+        return evaluateCoordinates(new ExactLocation2D(relXFromCenter, relZFromCenter));
++        return evaluateSubsection(new ExactLocation2D(relXFromCenter, relZFromCenter));
 +    }
 +
 +    @Override
 +    public double getOceanLevel() {
-+        return getWorld().getEnvironment().getOceanicNoise().getNoise(getLocation()) * 50;
++        return getManager().getWorld().getEnvironment().getOceanicNoise().getNoise(getLocation()) * 50;
 +    }
 +
 +    @Override
 +    public double getMountainLevel() {
-+        return getWorld().getEnvironment().getMountainousNoise().getNoise(getLocation()) * 50;
++        return getManager().getWorld().getEnvironment().getMountainousNoise().getNoise(getLocation()) * 50;
 +    }
 +
++    /**
++     * Calculates and returns the dominance factor of a given location based on its distance
++     * from a central point, modified by a specific noise factor. The dominance is determined
++     * by subtracting a scaled distance value (calculated with noise) from 1.
++     *
++     * @param location The {@link ExactLocation2D} for which the dominance is to be calculated.
++     * @return A float value representing the dominance based on the distance and noise,
++     *         where higher values indicate closer proximity to the center.
++     */
++    private float getDominanceBasedOnRadius(@NotNull ExactLocation2D location) {
++        return (float) (1 - 1 * (calculateDistanceWithNoise(location, this.getCenter(), 0.7f)));
++    }
++
++    /**
++     * Selects and returns a {@link CustomBiome} based on the temperature and moisture values
++     * calculated from the current environment's noise at the given location. The temperature
++     * and moisture are computed by scaling the noise values retrieved from the environment.
++     *
++     * @return A non-null {@link CustomBiome} object selected based on the calculated
++     * temperature and moisture values.
++     */
 +    private @NotNull CustomBiome selectBiome() {
-+        BiomeClimate biomeClimate = selectClimate(temperature, moisture);
++        Environment environment = getManager().getWorld().getEnvironment();
++        this.temperature = 3.0f * 2.5f * environment.getTemperatureNoise().getNoise(getLocation());
++        this.moisture = 3.0f * 2.5f * environment.getMoistureNoise().getNoise(getLocation());
++
++        return pickBiome();
++    }
++
++    /**
++     * Calculates a modified distance metric between a given block location and a center location,
++     * incorporating noise to the result. The distance is computed based on the squared offsets
++     * between the block and center in the x and z dimensions, scaled by a given radius.
++     * An additional noise factor is added to the result, which is influenced by the offset
++     * and a provided time or scale parameter.
++     *
++     * @param block The location of the block for which the distance is calculated.
++     * @param center The central reference location used to calculate offsets.
++     * @param t A time or scale parameter that influences the noise factor added to the distance.
++     * @return A double value representing the modified distance with added noise.
++     */
++    private double calculateDistanceWithNoise(@NotNull ExactLocation2D block, @NotNull ExactLocation2D center, float t) {
++        int xOffset = center.x() - block.x();
++        int zOffset = center.z() - block.z();
++
++        double x = Math.pow(xOffset, 2) / Math.pow(radius, 2);
++        double z = Math.pow(zOffset, 2) / Math.pow(radius, 2);
++        return (x + z) + t * getShape().getNoise(xOffset, zOffset);
++    }
++
++    private @NotNull CustomBiome pickBiome() {
++        BiomeClimate biomeClimate = pickClimate();
 +        Optional<BiomeType> biomeType = getOceanBiomeType(getOceanLevel()).or(() -> getMountainBiomeType(getMountainLevel()));
 +
 +        List<CustomBiome> contenderBiomes = new ArrayList<>(getManager().getBiomes().stream().flatMap(biomeHolder -> {
@@ -808,22 +850,44 @@ index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d976
 +        }).toList());
 +
 +        if (contenderBiomes.isEmpty()) {
-+            return null; // TODO
++            return (CustomBiome) biomeType.map(type -> switch (type) {
++                case FLAT -> null;
++                case BEACH -> null;
++                case RIVER -> null;
++                case OCEANIC -> null;
++                case DEEP_OCEANIC -> null;
++                case HIGH_MOUNTAINOUS -> null;
++                case MOUNTAINOUS -> null;
++            }).orElse(null); //TODO
 +        }
 +
 +        Collections.shuffle(contenderBiomes, getSectionRandom());
 +        return contenderBiomes.getFirst();
 +    }
 +
-+    private @NotNull BiomeClimate selectClimate(float temperature, float moisture) {
++    /**
++     * Picks the climate based on the temperature and the moisture.
++     * <p>
++     * This method selects the climate based on {@link #getTemperature()} and {@link #getMoisture()}.
++     *
++     * @return the climate or if no climate was found a {@link TransitionClimate}
++     */
++    private @NotNull BiomeClimate pickClimate() {
 +        return getManager().getClimates().stream().filter(climate -> {
-+            boolean containsTemperature = climate.getTemperatureRange().contains(temperature);
-+            boolean containsMoisture = climate.getMoistureRange().contains(moisture);
++            boolean containsTemperature = climate.getTemperatureRange().contains(getTemperature());
++            boolean containsMoisture = climate.getMoistureRange().contains(getMoisture());
 +            return containsMoisture && containsTemperature;
-+        }).max(Comparator.comparing(BiomeClimate::getPriority)).orElseGet(() -> new TransitionClimate() {
-+        });
++        }).max(Comparator.comparing(BiomeClimate::getPriority)).orElseGet(TransitionClimate::new);
 +    }
 +
++    /**
++     * Checks if the given noise results in an ocean biome type.
++     * <p>
++     * This method check whether the given noise would be an ocean biome type.
++     *
++     * @param noise the noise to check.
++     * @return an optional with the ocean type, or an {@link Optional#empty()}
++     */
 +    private @NotNull Optional<BiomeType> getOceanBiomeType(double noise) {
 +        if (noise < 0) {
 +            noise = Math.abs(noise);
@@ -836,6 +900,14 @@ index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d976
 +        return Optional.empty();
 +    }
 +
++    /**
++     * Checks if the given noise results in a mountain biome type.
++     * <p>
++     * This method check whether the given noise would be a mountain biome type.
++     *
++     * @param noise the noise to check.
++     * @return an optional with the mountain type, or an {@link Optional#empty()}
++     */
 +    private @NotNull Optional<BiomeType> getMountainBiomeType(double noise) {
 +        if (noise > 0) {
 +            if (noise >= 27.5) {
@@ -847,7 +919,16 @@ index 0000000000000000000000000000000000000000..508ae82945e213ae2b1db0b0c4a2d976
 +        return Optional.empty();
 +    }
 +
-+    private @NotNull BiomeSubSection evaluateCoordinates(@NotNull ExactLocation2D location) {
++    /**
++     * Evaluates the {@link BiomeSubSection} for the given {@link ExactLocation2D}.
++     * The method determines which quadrant or axis-aligned section the given
++     * location falls into based on its x and z coordinates.
++     *
++     * @param location The exact 2D location being evaluated. Must not be null.
++     * @return The {@link BiomeSubSection} corresponding to the section or quadrant
++     * the location falls into. Never null.
++     */
++    private @NotNull BiomeSubSection evaluateSubsection(@NotNull ExactLocation2D location) {
 +        int absX = Math.abs(location.x()), absZ = Math.abs(location.z());
 +        if (location.x() > 0 && location.x() >= absZ) {
 +            return BiomeSubSection.POSITIVE_X;
