@@ -44,6 +44,25 @@ index 0000000000000000000000000000000000000000..eef05741da231e58200de0e933395621
 +    int getSeaLevel();
 +
 +}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/DefaultBiomes.java b/src/main/java/net/kissenpvp/pulvinar/api/world/DefaultBiomes.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..8638ef6d8dc433fb467d8f93d24ab625f59d0fb8
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/world/DefaultBiomes.java
+@@ -0,0 +1,13 @@
++package net.kissenpvp.pulvinar.api.world;
++
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
++import org.jetbrains.annotations.NotNull;
++
++public record DefaultBiomes(@NotNull CustomBiome flat,
++                            @NotNull CustomBiome beach,
++                            @NotNull CustomBiome river,
++                            @NotNull CustomBiome oceanic,
++                            @NotNull CustomBiome deepOceanic,
++                            @NotNull CustomBiome highMountainous,
++                            @NotNull CustomBiome mountainous) {
++}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/Environment.java b/src/main/java/net/kissenpvp/pulvinar/api/world/Environment.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..86017a7b11bb61c9976c59c84472433161fffc6d
@@ -70,10 +89,10 @@ index 0000000000000000000000000000000000000000..86017a7b11bb61c9976c59c844724331
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/Landscape.java b/src/main/java/net/kissenpvp/pulvinar/api/world/Landscape.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..37a071e63fb03fa02c2b736b565ee2da9c7d4be9
+index 0000000000000000000000000000000000000000..096d5f5f695b969a345bc869150eea17a69f1e86
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/world/Landscape.java
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,21 @@
 +package net.kissenpvp.pulvinar.api.world;
 +
 +import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
@@ -93,9 +112,7 @@ index 0000000000000000000000000000000000000000..37a071e63fb03fa02c2b736b565ee2da
 +
 +    @NotNull HeightMap getAttrition();
 +
-+    @NotNull CustomBiome getDefaultRiver();
-+
-+    @NotNull CustomBiome getDefaultBeach();
++    @NotNull DefaultBiomes getDefaultBiomes();
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/biome/BiomeSection.java b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/BiomeSection.java
 new file mode 100644

@@ -305,16 +305,17 @@ index 0000000000000000000000000000000000000000..8797adb3d79169763dfbdf968c10b0a3
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..253f42478eda99e2823df0c8b6f8c28f9910512f
+index 0000000000000000000000000000000000000000..673fe2481392a8f61f22a0b0ea59b49f3977e2cb
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java
-@@ -0,0 +1,259 @@
+@@ -0,0 +1,264 @@
 +package net.kissenpvp.pulvinar.world.biome;
 +
 +import com.google.common.cache.CacheBuilder;
 +import com.google.common.cache.LoadingCache;
 +import com.mojang.serialization.Lifecycle;
 +import net.kissenpvp.pulvinar.api.world.CustomWorld;
++import net.kissenpvp.pulvinar.api.world.DefaultBiomes;
 +import net.kissenpvp.pulvinar.api.world.biome.BiomeSection;
 +import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
 +import net.kissenpvp.pulvinar.api.world.biome.properties.BiomeClimate;
@@ -337,6 +338,7 @@ index 0000000000000000000000000000000000000000..253f42478eda99e2823df0c8b6f8c28f
 +
 +import java.util.*;
 +import java.util.stream.Collectors;
++import java.util.stream.Stream;
 +
 +public class BiomeManager {
 +
@@ -362,11 +364,11 @@ index 0000000000000000000000000000000000000000..253f42478eda99e2823df0c8b6f8c28f
 +
 +        this.registry = new MappedRegistry<>(ResourceKey.createRegistryKey(resourceLocation), Lifecycle.stable());
 +
-+        heightIndependentBiomeCache = CacheBuilder.newBuilder().maximumSize(500).build(new HeightIndependentBiomeCacheLoader());
++        this.heightIndependentBiomeCache = CacheBuilder.newBuilder().maximumSize(500).build(new HeightIndependentBiomeCacheLoader());
 +
 +        // register fallback biomes for certain cases
-+        registerBiome(getWorld().getLandscape().getDefaultBeach());
-+        registerBiome(getWorld().getLandscape().getDefaultRiver());
++        registerBiome(getWorld().getLandscape().getDefaultBiomes().beach());
++        registerBiome(getWorld().getLandscape().getDefaultBiomes().river());
 +    }
 +
 +    private static double randDouble(@NotNull Random rand, double min, double max) {
@@ -374,10 +376,14 @@ index 0000000000000000000000000000000000000000..253f42478eda99e2823df0c8b6f8c28f
 +    }
 +
 +    public void registerBiome(@NotNull CustomBiome biome) {
-+        if (getBiomes().stream().anyMatch(biomeHolder -> biomeHolder.getCustomBiome().getName().equals(biome.getName()))) {
++        if (getBiomes().stream().anyMatch(biomeHolder -> {
++            String biomeName = biomeHolder.getCustomBiome().getName();
++            return Objects.equals(biomeName, biome.getName());
++        })) {
 +            String errorMessage = "The name %s is already registered.";
 +            throw new IllegalArgumentException(String.format(errorMessage, biome.getName()));
 +        }
++
 +        biomes.add(new BiomeHolder(biome) {
 +            @Override
 +            protected @NotNull WritableRegistry<Biome> biomeRegistry() {
@@ -389,8 +395,9 @@ index 0000000000000000000000000000000000000000..253f42478eda99e2823df0c8b6f8c28f
 +    public @NotNull BiomeHolder calculateBiome(@NotNull ExactLocation3D exactLocation3D) {
 +        BiomeHolder holder = calculateHeightIndependentBiome(exactLocation3D.exactLocation2D());
 +
-+        BiomeHolder fallbackRiver = getBiome(getWorld().getLandscape().getDefaultRiver()).orElseThrow(FallbackBiomeMissingException::new);
-+        BiomeHolder fallbackBeach = getBiome(getWorld().getLandscape().getDefaultBeach()).orElseThrow(FallbackBiomeMissingException::new);
++        DefaultBiomes defaultBiomes = getWorld().getLandscape().getDefaultBiomes();
++        BiomeHolder fallbackRiver = getBiome(defaultBiomes.river()).orElseThrow(FallbackBiomeMissingException::new);
++        BiomeHolder fallbackBeach = getBiome(defaultBiomes.beach()).orElseThrow(FallbackBiomeMissingException::new);
 +
 +
 +        FastNoise beach = new FastNoise((int) getWorld().getBukkitWorld().getSeed());
@@ -423,7 +430,7 @@ index 0000000000000000000000000000000000000000..253f42478eda99e2823df0c8b6f8c28f
 +            }
 +
 +            if (holder == null) {
-+                holder = getBiome(getWorld().getLandscape().getDefaultBeach()).orElseThrow();
++                holder = fallbackBeach;
 +            }
 +        }
 +        return holder;
@@ -433,20 +440,13 @@ index 0000000000000000000000000000000000000000..253f42478eda99e2823df0c8b6f8c28f
 +        return getBiome(heightIndependentBiomeCache.getUnchecked(exactLocation2D)).orElseThrow();
 +    }
 +
-+    public @NotNull @Unmodifiable Set<BiomeHolder> getBiomes() {
-+        return Collections.unmodifiableSet(biomes);
-+    }
-+
 +    public @NotNull Optional<BiomeHolder> getBiome(@NotNull CustomBiome customBiome) {
 +        return getBiomes().stream().filter(handler -> Objects.equals(customBiome, handler.getCustomBiome())).findFirst();
 +    }
 +
 +    public @NotNull @Unmodifiable Set<BiomeClimate> getClimates() {
-+        return getBiomes().stream().map(holder -> holder.getCustomBiome().getBiomeClimate()).filter(climate -> !(climate instanceof TransitionClimate)).collect(Collectors.toUnmodifiableSet());
-+    }
-+
-+    public @NotNull CustomWorld getWorld() {
-+        return world;
++        Stream<BiomeClimate> climates = getBiomes().stream().map(holder -> holder.getCustomBiome().getBiomeClimate());
++        return climates.filter(climate -> !(climate instanceof TransitionClimate)).collect(Collectors.toUnmodifiableSet());
 +    }
 +
 +    public @NotNull BiomeSection getBiomeSection(@NotNull ExactLocation2D exactLocation2D, boolean useSectionCoords) {
@@ -462,14 +462,19 @@ index 0000000000000000000000000000000000000000..253f42478eda99e2823df0c8b6f8c28f
 +        return biomeSectionCache;
 +    }
 +
-+    public @NotNull LoadingCache<ExactLocation2D, CustomBiome> getHeightIndependentBiomeCache() {
-+        return heightIndependentBiomeCache;
++    public @NotNull @Unmodifiable Set<BiomeHolder> getBiomes() {
++        return Collections.unmodifiableSet(this.biomes);
++    }
++
++    public @NotNull CustomWorld getWorld() {
++        return world;
 +    }
 +
 +    private @NotNull BiomeSection getMostDominantSection(@NotNull ExactLocation2D exactLocation2D) {
 +
 +        double dither = 0.04d; //TODO add configuration
-+        Random locationBasedRandom = new Random(Objects.hash(getWorld().getBukkitWorld().getSeed(), exactLocation2D.x(), exactLocation2D.z()));
++        long seed = getWorld().getBukkitWorld().getSeed();
++        Random locationBasedRandom = new Random(Objects.hash(seed, exactLocation2D.x(), exactLocation2D.z()));
 +        BiomeSection homeSection = getBiomeSectionFromBlockCoords(exactLocation2D);
 +        if (exactLocation2D.distance(homeSection.getCenter()) <= dominanceThreshold) {
 +            return homeSection;
@@ -595,13 +600,14 @@ index 0000000000000000000000000000000000000000..7fb1893a80c746418f55fda4a7ed6a30
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..9f5ea8c056c56118310c0a72d3a504f123763775
+index 0000000000000000000000000000000000000000..91b51f45e28a077df0ff121595a29d5bc3a519ba
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java
-@@ -0,0 +1,386 @@
+@@ -0,0 +1,388 @@
 +package net.kissenpvp.pulvinar.world.biome;
 +
 +import net.kissenpvp.pulvinar.api.world.CustomWorld;
++import net.kissenpvp.pulvinar.api.world.DefaultBiomes;
 +import net.kissenpvp.pulvinar.api.world.Environment;
 +import net.kissenpvp.pulvinar.api.world.biome.BiomeSection;
 +import net.kissenpvp.pulvinar.api.world.biome.BiomeSubSection;
@@ -874,12 +880,12 @@ index 0000000000000000000000000000000000000000..9f5ea8c056c56118310c0a72d3a504f1
 +
 +    private @NotNull CustomBiome pickBiome() {
 +        BiomeClimate biomeClimate = pickClimate();
-+        Optional<BiomeType> biomeType = getOceanBiomeType(getOceanLevel()).or(() -> getMountainBiomeType(getMountainLevel()));
++        BiomeType biomeType = getOceanBiomeType(getOceanLevel()).or(() -> getMountainBiomeType(getMountainLevel())).orElseThrow();
 +
 +        List<CustomBiome> contenderBiomes = new ArrayList<>(getManager().getBiomes().stream().flatMap(biomeHolder -> {
 +
 +            BiomeType contenderType = biomeHolder.getCustomBiome().getBiomeType();
-+            boolean typeMismatch = biomeType.isPresent() && !Objects.equals(contenderType, biomeType.get());
++            boolean typeMismatch =!Objects.equals(contenderType, biomeType);
 +
 +            int weight = biomeHolder.getCustomBiome().getBiomeWeight();
 +            if (typeMismatch || weight == 0 || !switch (contenderType) {
@@ -892,16 +898,17 @@ index 0000000000000000000000000000000000000000..9f5ea8c056c56118310c0a72d3a504f1
 +            return Collections.nCopies(weight, biomeHolder.getCustomBiome()).stream();
 +        }).toList());
 +
++        DefaultBiomes biomes = getManager().getWorld().getLandscape().getDefaultBiomes();
 +        if (contenderBiomes.isEmpty()) {
-+            return (CustomBiome) biomeType.map(type -> switch (type) {
-+                case FLAT -> null;
-+                case BEACH -> null;
-+                case RIVER -> null;
-+                case OCEANIC -> null;
-+                case DEEP_OCEANIC -> null;
-+                case HIGH_MOUNTAINOUS -> null;
-+                case MOUNTAINOUS -> null;
-+            }).orElse(null); //TODO
++            return switch (biomeType) {
++                case FLAT -> biomes.flat();
++                case BEACH -> biomes.beach();
++                case RIVER -> biomes.river();
++                case OCEANIC -> biomes.oceanic();
++                case DEEP_OCEANIC -> biomes.deepOceanic();
++                case HIGH_MOUNTAINOUS -> biomes.highMountainous();
++                case MOUNTAINOUS -> biomes.mountainous();
++            };
 +        }
 +
 +        Collections.shuffle(contenderBiomes, getSectionRandom());
