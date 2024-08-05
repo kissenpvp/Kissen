@@ -305,10 +305,10 @@ index 0000000000000000000000000000000000000000..8797adb3d79169763dfbdf968c10b0a3
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..263ebc3ea3d5e6591c2c58671af064291198e84e
+index 0000000000000000000000000000000000000000..253f42478eda99e2823df0c8b6f8c28f9910512f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java
-@@ -0,0 +1,239 @@
+@@ -0,0 +1,259 @@
 +package net.kissenpvp.pulvinar.world.biome;
 +
 +import com.google.common.cache.CacheBuilder;
@@ -319,7 +319,6 @@ index 0000000000000000000000000000000000000000..263ebc3ea3d5e6591c2c58671af06429
 +import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
 +import net.kissenpvp.pulvinar.api.world.biome.properties.BiomeClimate;
 +import net.kissenpvp.pulvinar.api.world.biome.properties.TransitionClimate;
-+import net.kissenpvp.pulvinar.api.world.noise.NoiseFactory;
 +import net.kissenpvp.pulvinar.api.world.noise.fastnoise.FastNoise;
 +import net.kissenpvp.pulvinar.api.world.noise.fastnoise.NoiseType;
 +import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
@@ -364,10 +363,107 @@ index 0000000000000000000000000000000000000000..263ebc3ea3d5e6591c2c58671af06429
 +        this.registry = new MappedRegistry<>(ResourceKey.createRegistryKey(resourceLocation), Lifecycle.stable());
 +
 +        heightIndependentBiomeCache = CacheBuilder.newBuilder().maximumSize(500).build(new HeightIndependentBiomeCacheLoader());
++
++        // register fallback biomes for certain cases
++        registerBiome(getWorld().getLandscape().getDefaultBeach());
++        registerBiome(getWorld().getLandscape().getDefaultRiver());
 +    }
 +
 +    private static double randDouble(@NotNull Random rand, double min, double max) {
 +        return rand.nextDouble() * (max - min) + min;
++    }
++
++    public void registerBiome(@NotNull CustomBiome biome) {
++        if (getBiomes().stream().anyMatch(biomeHolder -> biomeHolder.getCustomBiome().getName().equals(biome.getName()))) {
++            String errorMessage = "The name %s is already registered.";
++            throw new IllegalArgumentException(String.format(errorMessage, biome.getName()));
++        }
++        biomes.add(new BiomeHolder(biome) {
++            @Override
++            protected @NotNull WritableRegistry<Biome> biomeRegistry() {
++                return BiomeManager.this.registry;
++            }
++        });
++    }
++
++    public @NotNull BiomeHolder calculateBiome(@NotNull ExactLocation3D exactLocation3D) {
++        BiomeHolder holder = calculateHeightIndependentBiome(exactLocation3D.exactLocation2D());
++
++        BiomeHolder fallbackRiver = getBiome(getWorld().getLandscape().getDefaultRiver()).orElseThrow(FallbackBiomeMissingException::new);
++        BiomeHolder fallbackBeach = getBiome(getWorld().getLandscape().getDefaultBeach()).orElseThrow(FallbackBiomeMissingException::new);
++
++
++        FastNoise beach = new FastNoise((int) getWorld().getBukkitWorld().getSeed());
++        beach.setNoiseType(NoiseType.PERLIN_FRACTAL);
++        beach.setFrequency(0.01f);
++        beach.setFractalOctaves(4);
++
++        boolean isDry = holder.getCustomBiome().getBiomeType().isDry();
++        double rawRiverDepth = rawRiverDepth(exactLocation3D.exactLocation2D());
++        float noise = Math.abs(beach.getNoise(exactLocation3D.exactLocation2D()));
++        int seaLevel = getWorld().getSeaLevel();
++
++        if (exactLocation3D.y() < seaLevel && (rawRiverDepth >= seaLevel || isDry)) {
++            holder = fallbackRiver;
++        } else if (exactLocation3D.y() >= seaLevel && exactLocation3D.y() <= seaLevel + 4 * 2 * noise) {
++            holder = fallbackBeach;
++        }
++
++        if (!holder.getCustomBiome().getBiomeType().isDry() && exactLocation3D.y() >= seaLevel) {
++            holder = null;
++            int dominance = Integer.MIN_VALUE;
++            for (BiomeSection section : getSurroundingSections(exactLocation3D.exactLocation2D())) {
++                if (section.getBiome().getBiomeType().isDry()) {
++                    int currentDominance = (int) section.getDominance(exactLocation3D);
++                    if (currentDominance > dominance) {
++                        dominance = currentDominance;
++                        holder = getBiome(section.getBiome()).orElseThrow();
++                    }
++                }
++            }
++
++            if (holder == null) {
++                holder = getBiome(getWorld().getLandscape().getDefaultBeach()).orElseThrow();
++            }
++        }
++        return holder;
++    }
++
++    public @NotNull BiomeHolder calculateHeightIndependentBiome(@NotNull ExactLocation2D exactLocation2D) {
++        return getBiome(heightIndependentBiomeCache.getUnchecked(exactLocation2D)).orElseThrow();
++    }
++
++    public @NotNull @Unmodifiable Set<BiomeHolder> getBiomes() {
++        return Collections.unmodifiableSet(biomes);
++    }
++
++    public @NotNull Optional<BiomeHolder> getBiome(@NotNull CustomBiome customBiome) {
++        return getBiomes().stream().filter(handler -> Objects.equals(customBiome, handler.getCustomBiome())).findFirst();
++    }
++
++    public @NotNull @Unmodifiable Set<BiomeClimate> getClimates() {
++        return getBiomes().stream().map(holder -> holder.getCustomBiome().getBiomeClimate()).filter(climate -> !(climate instanceof TransitionClimate)).collect(Collectors.toUnmodifiableSet());
++    }
++
++    public @NotNull CustomWorld getWorld() {
++        return world;
++    }
++
++    public @NotNull BiomeSection getBiomeSection(@NotNull ExactLocation2D exactLocation2D, boolean useSectionCoords) {
++        int x = exactLocation2D.x(), z = exactLocation2D.z();
++
++        ExactLocation2D modified = new ExactLocation2D(useSectionCoords ? x : x << 4, useSectionCoords ? z : z << 4); //16 blocks (bitshift 4)
++        InternalBiomeSection biomeSection = new InternalBiomeSection(this, modified, useSectionCoords);
++        biomeSection.calculate();
++        return biomeSection;
++    }
++
++    public @NotNull LoadingCache<BiomeSection, BiomeSection> getBiomeSectionCache() {
++        return biomeSectionCache;
++    }
++
++    public @NotNull LoadingCache<ExactLocation2D, CustomBiome> getHeightIndependentBiomeCache() {
++        return heightIndependentBiomeCache;
 +    }
 +
 +    private @NotNull BiomeSection getMostDominantSection(@NotNull ExactLocation2D exactLocation2D) {
@@ -463,21 +559,6 @@ index 0000000000000000000000000000000000000000..263ebc3ea3d5e6591c2c58671af06429
 +        return sections;
 +    }
 +
-+    public void calculateBiome(@NotNull ExactLocation3D exactLocation3D) {
-+        BiomeHolder holder = calculateHeightIndependentBiome(exactLocation3D.exactLocation2D());
-+
-+        FastNoise beach = new FastNoise((int) getWorld().getBukkitWorld().getSeed());
-+        beach.setNoiseType(NoiseType.PERLIN_FRACTAL);
-+        beach.setFrequency(0.01f);
-+        beach.setFractalOctaves(4);
-+
-+
-+        double rawRiverDepth = rawRiverDepth(exactLocation3D.exactLocation2D());
-+        if (exactLocation3D.y() < getWorld().getSeaLevel() && rawRiverDepth >= getWorld().getSeaLevel()) {
-+
-+        }
-+    }
-+
 +    private double rawRiverDepth(@NotNull ExactLocation2D exactLocation2D) {
 +        if (Math.pow(exactLocation2D.x(), 2) + Math.pow(exactLocation2D.z(), 2) < spawnFlatRadiusSquared) {
 +            return 0;
@@ -486,74 +567,38 @@ index 0000000000000000000000000000000000000000..263ebc3ea3d5e6591c2c58671af06429
 +        depth = depth < 0 ? 0 : depth;
 +        return depth;
 +    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/FallbackBiomeMissingException.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/FallbackBiomeMissingException.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..7fb1893a80c746418f55fda4a7ed6a302461e998
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/FallbackBiomeMissingException.java
+@@ -0,0 +1,19 @@
++package net.kissenpvp.pulvinar.world.biome;
 +
-+    public @NotNull BiomeHolder calculateHeightIndependentBiome(@NotNull ExactLocation2D exactLocation2D) {
-+        return getBiome(heightIndependentBiomeCache.getUnchecked(exactLocation2D)).orElseThrow();
++public class FallbackBiomeMissingException extends IllegalStateException {
++
++    public FallbackBiomeMissingException() {
 +    }
 +
-+    public @NotNull @Unmodifiable Set<BiomeHolder> getBiomes() {
-+        return Collections.unmodifiableSet(biomes);
++    public FallbackBiomeMissingException(String s) {
++        super(s);
 +    }
 +
-+    public @NotNull Optional<BiomeHolder> getBiome(@NotNull CustomBiome customBiome) {
-+        return getBiomes().stream().filter(handler -> Objects.equals(customBiome, handler.getCustomBiome())).findFirst();
++    public FallbackBiomeMissingException(String message, Throwable cause) {
++        super(message, cause);
 +    }
 +
-+    public @NotNull @Unmodifiable Set<BiomeClimate> getClimates() {
-+        return getBiomes().stream().map(holder -> holder.getCustomBiome().getBiomeClimate()).filter(climate -> !(climate instanceof TransitionClimate)).collect(Collectors.toUnmodifiableSet());
-+    }
-+
-+    public @NotNull CustomWorld getWorld() {
-+        return world;
-+    }
-+
-+    public void registerBiome(@NotNull CustomBiome biome) {
-+        if (getBiomes().stream().anyMatch(biomeHolder -> biomeHolder.getCustomBiome().getName().equals(biome.getName()))) {
-+            String errorMessage = "The name %s is already registered.";
-+            throw new IllegalArgumentException(String.format(errorMessage, biome.getName()));
-+        }
-+        biomes.add(new BiomeHolder(biome) {
-+            @Override
-+            protected @NotNull WritableRegistry<Biome> biomeRegistry() {
-+                return BiomeManager.this.registry;
-+            }
-+        });
-+    }
-+
-+    public @NotNull BiomeSection getBiomeSection(@NotNull ExactLocation2D exactLocation2D, boolean useSectionCoords) {
-+
-+        int x = exactLocation2D.x();
-+        int z = exactLocation2D.x();
-+        ExactLocation2D modified = new ExactLocation2D(useSectionCoords ? x : x << 4, useSectionCoords ? z : z << 4); //16 blocks (bitshift 4)
-+        BiomeSection biomeSection = new InternalBiomeSection(this, modified, useSectionCoords);
-+        biomeSection.calculate(new NoiseFactory() {
-+            @Override
-+            public @NotNull FastNoise assemble(@NotNull CustomWorld kissenWorld) {
-+                long seed = kissenWorld.getBukkitWorld().getSeed();
-+                FastNoise fastNoise = new FastNoise(Objects.hash(seed, biomeSection.getLocation().x(), biomeSection.getLocation().z()));
-+                fastNoise.setNoiseType(NoiseType.SIMPLEX_FRACTAL);
-+                fastNoise.setFractalOctaves(3);
-+                fastNoise.setFrequency(0.01F);
-+                return fastNoise;
-+            }
-+        });
-+        return biomeSection;
-+    }
-+
-+    public @NotNull LoadingCache<BiomeSection, BiomeSection> getBiomeSectionCache() {
-+        return biomeSectionCache;
-+    }
-+
-+    public @NotNull LoadingCache<ExactLocation2D, CustomBiome> getHeightIndependentBiomeCache() {
-+        return heightIndependentBiomeCache;
++    public FallbackBiomeMissingException(Throwable cause) {
++        super(cause);
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..5c5b03d98085670858b36b49b99cd5a16ce870fe
+index 0000000000000000000000000000000000000000..9f5ea8c056c56118310c0a72d3a504f123763775
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java
-@@ -0,0 +1,388 @@
+@@ -0,0 +1,386 @@
 +package net.kissenpvp.pulvinar.world.biome;
 +
 +import net.kissenpvp.pulvinar.api.world.CustomWorld;
@@ -572,8 +617,6 @@ index 0000000000000000000000000000000000000000..5c5b03d98085670858b36b49b99cd5a1
 +import net.kissenpvp.pulvinar.api.world.util.ExactLocation3D;
 +import org.jetbrains.annotations.NotNull;
 +import org.jetbrains.annotations.Unmodifiable;
-+import org.slf4j.Logger;
-+import org.slf4j.LoggerFactory;
 +
 +import java.util.*;
 +import java.util.stream.Stream;
