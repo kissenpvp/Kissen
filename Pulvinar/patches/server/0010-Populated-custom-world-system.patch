@@ -6,10 +6,10 @@ Subject: [PATCH] Populated custom world system
 
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java b/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..1a69c18a6cdd90fc741e72f86b48b2dad240db07
+index 0000000000000000000000000000000000000000..7622f4d13e2f935a044d0b2861bcfe8ec457e419
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java
-@@ -0,0 +1,178 @@
+@@ -0,0 +1,182 @@
 +package net.kissenpvp.pulvinar.world;
 +
 +import com.google.common.cache.LoadingCache;
@@ -79,9 +79,13 @@ index 0000000000000000000000000000000000000000..1a69c18a6cdd90fc741e72f86b48b2da
 +
 +    @Override
 +    public @NotNull CustomBiome getBiome(@NotNull ExactLocation2D exactLocation2D) {
-+        int y = (int) getRiderlessHeight(exactLocation2D);
-+
-+        return null;
++        InternalChunkCache cache = getCache(exactLocation2D);
++        return cache.getBiome(exactLocation2D).orElseGet(() ->
++        {
++            int y = (int) getRiderlessHeight(exactLocation2D);
++            ExactLocation3D exactLocation3D = new ExactLocation3D(exactLocation2D, y);
++            return cache.cacheBiome(exactLocation2D, biomeManager.calculateBiome(exactLocation3D).getCustomBiome());
++        });
 +    }
 +
 +    @Override
@@ -1038,26 +1042,26 @@ index 0000000000000000000000000000000000000000..3720a1b09be46410e75347e7cca3ffe9
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkCache.java b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkCache.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7f344b7aa834d5a74d83e307dfc8732a1eac30cc
+index 0000000000000000000000000000000000000000..2c5e697f5172b91a90cc517fcc29cf324293e06d
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkCache.java
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,97 @@
 +package net.kissenpvp.pulvinar.world.generator;
 +
 +import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
 +import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
 +import org.jetbrains.annotations.NotNull;
 +
++import java.util.Arrays;
 +import java.util.Optional;
 +
 +public class InternalChunkCache {
 +
 +    private final ExactLocation2D exactLocation2D;
 +
-+    private final float[][] priorityBiomeHeightCache, blurredHeightCache, intermediateBlurCache;
-+    private final double[][] heightMapCache;
-+    private final short[][] highestGroundCache;
-+    private final CustomBiome[][] biomes;
++    float[] arrayCache; //These 6 arrays are now one big array. No more nested pointers
++    @NotNull
++    CustomBiome[] biomeCache;
 +
 +    public InternalChunkCache(@NotNull ExactLocation2D exactLocation2D) {
 +        this(exactLocation2D, false);
@@ -1065,83 +1069,77 @@ index 0000000000000000000000000000000000000000..7f344b7aa834d5a74d83e307dfc8732a
 +
 +    public InternalChunkCache(@NotNull ExactLocation2D exactLocation2D, boolean useRaw) {
 +        this.exactLocation2D = new ExactLocation2D(useRaw ? exactLocation2D.x() : exactLocation2D.x() >> 4, useRaw ? exactLocation2D.z() : exactLocation2D.z() >> 4);
-+        final short CACHE_SIZE = 16;
-+        final short HEIGHT_MAP_CACHE_COL_SIZE = 15;
-+        final short BIOME_SIZE = 16;
 +
-+        this.highestGroundCache = new short[CACHE_SIZE][CACHE_SIZE];
-+        this.heightMapCache = new double[CACHE_SIZE][HEIGHT_MAP_CACHE_COL_SIZE];
-+        this.priorityBiomeHeightCache = new float[CACHE_SIZE][CACHE_SIZE];
-+        this.intermediateBlurCache = new float[CACHE_SIZE][CACHE_SIZE];
-+        this.blurredHeightCache = new float[CACHE_SIZE][CACHE_SIZE];
++        this.arrayCache = new float[1536];
++        Arrays.fill(arrayCache, -65);
 +
-+        for (short i = 0; i < 16; i++) {
-+            for (short j = 0; j < 16; j++) {
-+                this.highestGroundCache[i][j] = Short.MIN_VALUE;
-+                this.blurredHeightCache[i][j] = Float.MIN_VALUE;
-+                this.intermediateBlurCache[i][j] = Float.MIN_VALUE;
-+                this.priorityBiomeHeightCache[i][j] = Float.MIN_VALUE;
-+            }
-+        }
-+        this.biomes = new CustomBiome[BIOME_SIZE][BIOME_SIZE];
++        this.biomeCache = new CustomBiome[256];
 +    }
 +
 +
-+    public int getLocalX(int x) {
-+        return x - this.exactLocation2D.x() * 16;
++    public float getDominantBiomeHeight(@NotNull ExactLocation2D rawLocation) {
++        /*
++          A general explanation of this shitty inlining:
++          rawX & 0xF will return internal chunk coordinates [0-15]. This
++          happens because the chunk coordinates are the LSB, so ANDing by
++          0xF will return the bits needed to give 0-15.
++         */
++        return arrayCache[(rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)];
 +    }
 +
-+    public int getLocalZ(int z) {
-+        return z - this.exactLocation2D.z() * 16;
++    public void cacheDominantBiomeHeight(@NotNull ExactLocation2D rawLocation, float value) {
++        arrayCache[(rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = value;
 +    }
 +
-+    public float getPriorityBiomeHeight(@NotNull ExactLocation2D exactLocation2D) {
-+        return this.priorityBiomeHeightCache[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())];
++    public double getHeightMapHeight(@NotNull ExactLocation2D rawLocation) {
++        return arrayCache[768 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)];
 +    }
 +
-+    public float getBlurredHeight(@NotNull ExactLocation2D exactLocation2D) {
-+        return this.blurredHeightCache[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())];
++    public short getHighestGround(@NotNull ExactLocation2D rawLocation) {
++        return (short) arrayCache[1024 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)];
 +    }
 +
-+    public float getIntermediateBlurHeight(@NotNull ExactLocation2D exactLocation2D) {
-+        return this.intermediateBlurCache[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())];
++    public short getTransformedHeight(@NotNull ExactLocation2D chunkSubLocation) {
++        return (short) arrayCache[1280 + chunkSubLocation.x() + 16 * chunkSubLocation.z()];
 +    }
 +
-+    public double getHeightMapHeight(@NotNull ExactLocation2D exactLocation2D) {
-+        return this.heightMapCache[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())];
++    public void writeTransformedHeight(@NotNull ExactLocation2D chunkSubLocation, short val) {
++        arrayCache[1280 + chunkSubLocation.x() + 16 * chunkSubLocation.z()] = val;
 +    }
 +
-+    public short getHighestGround(@NotNull ExactLocation2D exactLocation2D) {
-+        return this.highestGroundCache[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())];
++    public void cacheHeightMap(@NotNull ExactLocation2D rawLocation, double value) {
++        arrayCache[768 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = (float) value;
 +    }
 +
-+    public @NotNull Optional<CustomBiome> getBiome(@NotNull ExactLocation2D exactLocation2D) {
-+        return Optional.ofNullable(biomes[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())]);
++    public void cacheHighestGround(@NotNull ExactLocation2D rawLocation, short value) {
++        arrayCache[1024 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = value;
 +    }
 +
-+    public void cacheHeightMap(@NotNull ExactLocation2D exactLocation2D, double value) {
-+        this.heightMapCache[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())] = value;
++    public float getBlurredHeight(@NotNull ExactLocation2D rawLocation) {
++        return arrayCache[256 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)];
 +    }
 +
-+    public void cacheBlurredHeight(@NotNull ExactLocation2D exactLocation2D, float value) {
-+        this.blurredHeightCache[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())] = value;
++    public double getIntermediateBlurHeight(@NotNull ExactLocation2D rawLocation) {
++        return arrayCache[512 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)];
 +    }
 +
-+    public void cacheIntermediateBlurredHeight(@NotNull ExactLocation2D exactLocation2D, float value) {
-+        this.intermediateBlurCache[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())] = value;
++    public void cacheBlurredHeight(@NotNull ExactLocation2D rawLocation, float value) {
++        arrayCache[256 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = value;
 +    }
 +
-+    public void cachePriorityBiomeHeight(@NotNull ExactLocation2D exactLocation2D, float value) {
-+        this.priorityBiomeHeightCache[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())] = value;
++    public void cacheIntermediateBlurredHeight(@NotNull ExactLocation2D rawLocation, float value) {
++        arrayCache[512 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = value;
 +    }
 +
-+    public void cacheHighestGround(@NotNull ExactLocation2D exactLocation2D, short value) {
-+        this.highestGroundCache[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())] = value;
++    public @NotNull Optional<CustomBiome> getBiome(@NotNull ExactLocation2D rawLocation) {
++        return Optional.ofNullable(biomeCache[(rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)]);
 +    }
 +
-+    public void cacheBiome(@NotNull ExactLocation2D exactLocation2D, @NotNull CustomBiome kissenBiome) {
-+        this.biomes[getLocalX(exactLocation2D.x())][getLocalZ(exactLocation2D.z())] = kissenBiome;
++    public CustomBiome cacheBiome(@NotNull ExactLocation2D rawLocation, CustomBiome value) {
++        biomeCache[(rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = value;
++        return value;
 +    }
 +
 +
++    //TODO hashcode and equals
 +}
