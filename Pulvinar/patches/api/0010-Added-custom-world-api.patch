@@ -46,22 +46,22 @@ index 0000000000000000000000000000000000000000..eef05741da231e58200de0e933395621
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/DefaultBiomes.java b/src/main/java/net/kissenpvp/pulvinar/api/world/DefaultBiomes.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8638ef6d8dc433fb467d8f93d24ab625f59d0fb8
+index 0000000000000000000000000000000000000000..304289fb33e26c83ffd5a7c9d2a2930e2a72df83
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/world/DefaultBiomes.java
 @@ -0,0 +1,13 @@
 +package net.kissenpvp.pulvinar.api.world;
 +
-+import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
++import org.bukkit.NamespacedKey;
 +import org.jetbrains.annotations.NotNull;
 +
-+public record DefaultBiomes(@NotNull CustomBiome flat,
-+                            @NotNull CustomBiome beach,
-+                            @NotNull CustomBiome river,
-+                            @NotNull CustomBiome oceanic,
-+                            @NotNull CustomBiome deepOceanic,
-+                            @NotNull CustomBiome highMountainous,
-+                            @NotNull CustomBiome mountainous) {
++public record DefaultBiomes(@NotNull NamespacedKey flat,
++                            @NotNull NamespacedKey beach,
++                            @NotNull NamespacedKey river,
++                            @NotNull NamespacedKey oceanic,
++                            @NotNull NamespacedKey deepOceanic,
++                            @NotNull NamespacedKey highMountainous,
++                            @NotNull NamespacedKey mountainous) {
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/Environment.java b/src/main/java/net/kissenpvp/pulvinar/api/world/Environment.java
 new file mode 100644
@@ -113,6 +113,23 @@ index 0000000000000000000000000000000000000000..096d5f5f695b969a345bc869150eea17
 +    @NotNull HeightMap getAttrition();
 +
 +    @NotNull DefaultBiomes getDefaultBiomes();
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/WorldImplementation.java b/src/main/java/net/kissenpvp/pulvinar/api/world/WorldImplementation.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..8f38391e4811b554a56d49a8f9df3a4180d63489
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/world/WorldImplementation.java
+@@ -0,0 +1,11 @@
++package net.kissenpvp.pulvinar.api.world;
++
++import net.kissenpvp.core.api.base.Implementation;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiomeHandler;
++import org.jetbrains.annotations.NotNull;
++
++public interface WorldImplementation extends Implementation {
++
++    @NotNull CustomBiomeHandler getBiomeHandler();
++
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/biome/BiomeSection.java b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/BiomeSection.java
 new file mode 100644
@@ -235,12 +252,64 @@ index 0000000000000000000000000000000000000000..cc8960c279fccf056152ca9c88b6ef1d
 +    int getBiomeWeight();
 +
 +}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/biome/CustomBiomeHandler.java b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/CustomBiomeHandler.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6a3e79f50c804442ae09e2fc6b428ed1f74b68fe
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/CustomBiomeHandler.java
+@@ -0,0 +1,22 @@
++package net.kissenpvp.pulvinar.api.world.biome;
++
++import org.bukkit.NamespacedKey;
++import org.bukkit.plugin.Plugin;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
++
++import java.util.Optional;
++import java.util.Set;
++
++public interface CustomBiomeHandler {
++
++    @NotNull RegisteredBiome registerBiome(@NotNull Plugin plugin, @NotNull CustomBiome customBiome); //TODO implement only for plugins
++
++    @NotNull
++    Optional<RegisteredBiome> getBiome(@NotNull NamespacedKey namespacedKey);
++
++    @NotNull
++    @Unmodifiable
++    Set<RegisteredBiome> getBiomes();
++
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/biome/RegisteredBiome.java b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/RegisteredBiome.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..8d7e73efc0f7e482f38e6d699f86c9c8f9474cbb
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/RegisteredBiome.java
+@@ -0,0 +1,18 @@
++package net.kissenpvp.pulvinar.api.world.biome;
++
++import org.bukkit.NamespacedKey;
++import org.bukkit.plugin.Plugin;
++import org.jetbrains.annotations.NotNull;
++
++public interface RegisteredBiome {
++
++    @NotNull
++    CustomBiome getBiome();
++
++    @NotNull
++    Plugin getPlugin();
++
++    default @NotNull NamespacedKey getKey() {
++        return new NamespacedKey(getPlugin(), getBiome().getName());
++    }
++}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/biome/properties/BiomeClimate.java b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/properties/BiomeClimate.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..bc0fa2612c391c0d39c14f9e483e4cdac2121ecb
+index 0000000000000000000000000000000000000000..1e45a84e3f1c525c17ae07b888da27fd26d28c05
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/properties/BiomeClimate.java
-@@ -0,0 +1,152 @@
+@@ -0,0 +1,153 @@
 +package net.kissenpvp.pulvinar.api.world.biome.properties;
 +
 +import net.kissenpvp.pulvinar.api.world.util.Range;
@@ -282,6 +351,7 @@ index 0000000000000000000000000000000000000000..bc0fa2612c391c0d39c14f9e483e4cda
 +            @Contract("_ -> this")
 +            public @NotNull Builder fogColor(int fogColor) {
 +                this.fogColor = fogColor;
++
 +                return this;
 +            }
 +
@@ -455,15 +525,16 @@ index 0000000000000000000000000000000000000000..b7fa5a35dca2b7e73cacb61a3b0ee9ad
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/biome/properties/TransitionClimate.java b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/properties/TransitionClimate.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..8a346147fbfb2cb087f521b04fe3e3521e23856f
+index 0000000000000000000000000000000000000000..6dad55f5cfc8383595b9819384940c562370d574
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/world/biome/properties/TransitionClimate.java
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,42 @@
 +package net.kissenpvp.pulvinar.api.world.biome.properties;
 +
 +
 +import net.kissenpvp.pulvinar.api.world.util.InfiniteRange;
 +import net.kissenpvp.pulvinar.api.world.util.Range;
++import org.bukkit.Color;
 +import org.jetbrains.annotations.NotNull;
 +
 +public class TransitionClimate implements BiomeClimate {
@@ -486,10 +557,10 @@ index 0000000000000000000000000000000000000000..8a346147fbfb2cb087f521b04fe3e352
 +    @Override
 +    public @NotNull EnvironmentSettings getEnvironmentSettings() {
 +        EnvironmentSettings.Builder builder = new EnvironmentSettings.Builder();
-+        builder.fogColor(0xffff00);
-+        builder.fogWaterColor(0xffff00);
-+        builder.waterColor(0xffff00);
-+        builder.skyColor(0xffff00);
++        builder.fogColor(Color.WHITE);
++        builder.fogWaterColor(Color.AQUA);
++        builder.waterColor(Color.AQUA);
++        builder.skyColor(Color.GRAY);
 +        builder.grassColorModifier(GrassColorModifier.NONE);
 +        //TODO
 +        return builder.build();
@@ -3608,3 +3679,31 @@ index 0000000000000000000000000000000000000000..833d25dae1da5f616414e01b110b6b18
 +    int elementCompareTo(@NotNull T element);
 +
 +}
+diff --git a/src/main/java/org/bukkit/plugin/PluginManager.java b/src/main/java/org/bukkit/plugin/PluginManager.java
+index e3d7fd8e3243114e47eda4d4fc10092e952c0d3c..9b6bd36db7ecd61730bc24a40be16212fdb811ad 100644
+--- a/src/main/java/org/bukkit/plugin/PluginManager.java
++++ b/src/main/java/org/bukkit/plugin/PluginManager.java
+@@ -375,5 +375,7 @@ public interface PluginManager extends io.papermc.paper.plugin.PermissionManager
+     void registerPlayerSetting(@NotNull net.kissenpvp.core.api.user.playersettting.AbstractPlayerSetting<?, ? extends org.bukkit.OfflinePlayer> playerSetting, @NotNull Plugin plugin);
+ 
+     void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin);
++
++    @NotNull net.kissenpvp.pulvinar.api.world.biome.RegisteredBiome registerBiome(@NotNull net.kissenpvp.pulvinar.api.world.biome.CustomBiome biome, @NotNull Plugin plugin);
+     // Pulvinar end
+ }
+diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+index 7f3388d485d8da625f61b46492f015c6461dc6c9..ca5a22d54d1582ad5927ccbf452962d248181612 100644
+--- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
++++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
+@@ -1022,5 +1022,11 @@ public final class SimplePluginManager implements PluginManager {
+     public void registerTranslation(@NotNull String key, @NotNull java.text.MessageFormat defaultMessage, @NotNull Plugin plugin) {
+         org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class).register(plugin, key, defaultMessage);
+     }
++
++    @Override
++    public @NotNull net.kissenpvp.pulvinar.api.world.biome.RegisteredBiome registerBiome(@NotNull net.kissenpvp.pulvinar.api.world.biome.CustomBiome biome, @NotNull Plugin plugin)
++    {
++        return org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.world.WorldImplementation.class).getBiomeHandler().registerBiome(plugin, biome);
++    }
+     // Pulvinar end
+ }
