@@ -5,7 +5,7 @@ Subject: [PATCH] Integrated command system from kissen into paper
 
 
 diff --git a/src/main/java/co/aikar/timings/TimingsManager.java b/src/main/java/co/aikar/timings/TimingsManager.java
-index 5e1558ca3ffeeaf2645fa003965474a442d650bf..4b352533ec89c848dcd058d575fcf4aa4bf7ebe6 100644
+index e72ad05abada04426e32a73d02b21cb69079d268..093f14d5a94d528fb4769b76f2f668e8edfe5ad3 100644
 --- a/src/main/java/co/aikar/timings/TimingsManager.java
 +++ b/src/main/java/co/aikar/timings/TimingsManager.java
 @@ -155,7 +155,7 @@ public final class TimingsManager {
@@ -364,10 +364,10 @@ index 7b44b0fefcde0ab0d96704a56556fece26d56973..52f205e5b4acc246d12dd590660217b9
      // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 0a9144f894dbd9d7c9a707dfd36f4e31c1ceb050..921e3dc788337ee2c1ea5dd15e05d3fc2bb503b4 100644
+index 08c7acaed64ca49f7e64de2f0d95338c049753ff..657efc7a91c8978d3ba13be7d6e288160413ca5d 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -992,12 +992,25 @@ public final class SimplePluginManager implements PluginManager {
+@@ -996,12 +996,25 @@ public final class SimplePluginManager implements PluginManager {
      // Paper end
  
      // Pulvinar start

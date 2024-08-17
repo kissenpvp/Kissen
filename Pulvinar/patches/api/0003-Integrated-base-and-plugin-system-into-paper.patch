@@ -101,10 +101,10 @@ index 47153dee66782a00b980ecf15e8774ab6f3d887d..7eda2d7931eb6f2ed542a1ff6b04d4b5
 +
  }
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index 003bece642b682985625db93cad93026352bfc66..e23acd9631468b01bdeac74322e38a938744a573 100644
+index e8ba4f1108f2548a487877027e37d81fc150e042..270cdfd069b6922831ba71866d0236971ed9904c 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -991,4 +991,14 @@ public final class SimplePluginManager implements PluginManager {
+@@ -995,4 +995,14 @@ public final class SimplePluginManager implements PluginManager {
          this.paperPluginManager.addPermissions(perm);
      }
      // Paper end
@@ -120,7 +120,7 @@ index 003bece642b682985625db93cad93026352bfc66..e23acd9631468b01bdeac74322e38a93
 +    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java b/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java
-index 7e4f7cb2afbc145e532285c793573ad107bc3033..5cdea21400ef131f6a290b37d5867bc7108636d1 100644
+index 12449e18180d604e9cbbc744da74a8b222a18e1f..7b6e06c927dbad72ce54dfff0cf44ded4bdef808 100644
 --- a/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java
 +++ b/src/main/java/org/bukkit/plugin/java/PluginClassLoader.java
 @@ -32,7 +32,7 @@ import org.jetbrains.annotations.Nullable;

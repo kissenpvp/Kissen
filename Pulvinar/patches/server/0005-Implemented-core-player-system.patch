@@ -3978,10 +3978,10 @@ index 22c4f8dea99f92a1eb3da2baf0a15bf9d2ca0462..91bc235e7a7fbde5bde4a60a8f623bbf
          }
      }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index e1fc3c20cae14d8cb0727fb8f99d00c7ee23a7fe..82298c4582c0ac9c34f0434d927cc5c9b94d2c41 100644
+index ceb9c794345922772a69a867a96531167e881d24..045a9ebb00da27b0f73b0e4ea40f3f3f626521a1 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2285,17 +2285,22 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
+@@ -2284,17 +2284,22 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
  
      public void sendSystemMessage(Component message, boolean overlay) {
          if (this.acceptsSystemMessages(overlay)) {
@@ -4121,7 +4121,7 @@ index 34b4166adfae8ff7d1eb73d56a72931b005330a7..5534457a2898ea447aaeab997adad93e
          private final GameProfile profile;
          final Date expirationDate;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 1b1008ffd544dcddc31238e10c06df0d7aa68793..313553ce48b46f287157ce7369e2c3f955f02801 100644
+index 1babe6756b904fd2e5b2d62f6adfa153e3b772f1..3520020cb1c27669eeeaeeded81f3d02e9dd468b 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -168,8 +168,8 @@ public abstract class PlayerList {
@@ -4687,7 +4687,7 @@ index 69304fa6eb65dd37e74db9ad62eac0bddfdea2c1..abbfe95c425ebe9a66cd60c4ef1c8ac2
      private GameMode mode;
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index e3100e65fea02374d4393bab48d63ddeaecef0ab..6221e79bc851a85cc7b389f95d72133020d1bce4 100644
+index 37fc08d04ff3514d27ad25c8d774a6e96b30c3b1..87140f4e291d996d1e5dac3277e519d7968d4199 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -193,6 +193,33 @@ import org.jetbrains.annotations.NotNull;

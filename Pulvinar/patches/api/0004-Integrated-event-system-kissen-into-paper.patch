@@ -348,10 +348,10 @@ index 3b3d9642a8d63798dc28f2f8df77f0466451cbff..1b6df2e7e18f14fc6e5b6c0dd1eb9686
              if (((Cancellable) event).isCancelled() && isIgnoringCancelled()) {
                  return;
 diff --git a/src/main/java/org/bukkit/plugin/SimplePluginManager.java b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-index e23acd9631468b01bdeac74322e38a938744a573..0a9144f894dbd9d7c9a707dfd36f4e31c1ceb050 100644
+index 270cdfd069b6922831ba71866d0236971ed9904c..08c7acaed64ca49f7e64de2f0d95338c049753ff 100644
 --- a/src/main/java/org/bukkit/plugin/SimplePluginManager.java
 +++ b/src/main/java/org/bukkit/plugin/SimplePluginManager.java
-@@ -624,7 +624,7 @@ public final class SimplePluginManager implements PluginManager {
+@@ -626,7 +626,7 @@ public final class SimplePluginManager implements PluginManager {
       * @param event Event details
       */
      @Override
@@ -360,7 +360,7 @@ index e23acd9631468b01bdeac74322e38a938744a573..0a9144f894dbd9d7c9a707dfd36f4e31
          if (true) {this.paperPluginManager.callEvent(event); return;} // Paper
          if (event.isAsynchronous()) {
              if (Thread.holdsLock(this)) {
-@@ -639,10 +639,10 @@ public final class SimplePluginManager implements PluginManager {
+@@ -641,10 +641,10 @@ public final class SimplePluginManager implements PluginManager {
              }
          }
  
@@ -373,7 +373,7 @@ index e23acd9631468b01bdeac74322e38a938744a573..0a9144f894dbd9d7c9a707dfd36f4e31
          HandlerList handlers = event.getHandlers();
          RegisteredListener[] listeners = handlers.getRegisteredListeners();
  
-@@ -676,23 +676,22 @@ public final class SimplePluginManager implements PluginManager {
+@@ -680,23 +680,22 @@ public final class SimplePluginManager implements PluginManager {
                  // Paper end
              }
          }
@@ -401,7 +401,7 @@ index e23acd9631468b01bdeac74322e38a938744a573..0a9144f894dbd9d7c9a707dfd36f4e31
          registerEvent(event, listener, priority, executor, plugin, false);
      }
  
-@@ -709,7 +708,7 @@ public final class SimplePluginManager implements PluginManager {
+@@ -713,7 +712,7 @@ public final class SimplePluginManager implements PluginManager {
       *     cancelled
       */
      @Override
@@ -410,7 +410,7 @@ index e23acd9631468b01bdeac74322e38a938744a573..0a9144f894dbd9d7c9a707dfd36f4e31
          Preconditions.checkArgument(listener != null, "Listener cannot be null");
          Preconditions.checkArgument(priority != null, "Priority cannot be null");
          Preconditions.checkArgument(executor != null, "Executor cannot be null");
-@@ -729,7 +728,7 @@ public final class SimplePluginManager implements PluginManager {
+@@ -733,7 +732,7 @@ public final class SimplePluginManager implements PluginManager {
      }
  
      @NotNull
@@ -419,7 +419,7 @@ index e23acd9631468b01bdeac74322e38a938744a573..0a9144f894dbd9d7c9a707dfd36f4e31
          try {
              Method method = getRegistrationClass(type).getDeclaredMethod("getHandlerList");
              method.setAccessible(true);
-@@ -745,7 +744,7 @@ public final class SimplePluginManager implements PluginManager {
+@@ -749,7 +748,7 @@ public final class SimplePluginManager implements PluginManager {
      }
  
      @NotNull
@@ -428,7 +428,7 @@ index e23acd9631468b01bdeac74322e38a938744a573..0a9144f894dbd9d7c9a707dfd36f4e31
          try {
              clazz.getDeclaredMethod("getHandlerList");
              return clazz;
-@@ -753,7 +752,7 @@ public final class SimplePluginManager implements PluginManager {
+@@ -757,7 +756,7 @@ public final class SimplePluginManager implements PluginManager {
              if (clazz.getSuperclass() != null
                      && !clazz.getSuperclass().equals(Event.class)
                      && Event.class.isAssignableFrom(clazz.getSuperclass())) {
@@ -477,7 +477,7 @@ index 1d76e30b82ca56bb4cf3b9a33f5a129ab829e3f0..cda89842869083b5594298ce7976ae91
      }
  
 diff --git a/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java b/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
-index f1e58639213be0c43cd2ff090b625e7d0a67e8be..e3880bb1c94ac725566cfdd5ded635a2d2f1c869 100644
+index 0c6ca7588fb3d6b6497ddf032fe75e5c6c9719e5..e60f331d15c84f02dba502424db5bc1a048e6084 100644
 --- a/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
 +++ b/src/main/java/org/bukkit/plugin/java/JavaPluginLoader.java
 @@ -229,12 +229,12 @@ public final class JavaPluginLoader implements PluginLoader {

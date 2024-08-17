@@ -66,10 +66,10 @@ index 0000000000000000000000000000000000000000..af5fbd3c197f257f532cc8fefd765749
 +
 +public class PulvinarLocalizationImplementation extends KissenLocalizationImplementation { }
 diff --git a/src/main/java/net/minecraft/server/level/ServerPlayer.java b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-index b3e4f10b29645e41025a3ddec8cdf45f6e35ff1c..652687bcdf2ef95d92a7da1a00fa1493f48b30e3 100644
+index 045a9ebb00da27b0f73b0e4ea40f3f3f626521a1..bbf34d35ba93b5b07eb1c25cba9a4eba19a8b934 100644
 --- a/src/main/java/net/minecraft/server/level/ServerPlayer.java
 +++ b/src/main/java/net/minecraft/server/level/ServerPlayer.java
-@@ -2351,6 +2351,7 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
+@@ -2350,6 +2350,7 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
          if (this.language == null || !this.language.equals(clientOptions.language())) { // Paper
              PlayerLocaleChangeEvent event = new PlayerLocaleChangeEvent(this.getBukkitEntity(), clientOptions.language());
              this.server.server.getPluginManager().callEvent(event);
@@ -77,7 +77,7 @@ index b3e4f10b29645e41025a3ddec8cdf45f6e35ff1c..652687bcdf2ef95d92a7da1a00fa1493
          }
          // CraftBukkit end
          // Paper start - don't call options events on login
-@@ -3118,4 +3119,11 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
+@@ -3117,4 +3118,11 @@ public class ServerPlayer extends net.minecraft.world.entity.player.Player imple
          this.ramBar = ramBar;
      }
      // Purpur end
@@ -90,7 +90,7 @@ index b3e4f10b29645e41025a3ddec8cdf45f6e35ff1c..652687bcdf2ef95d92a7da1a00fa1493
 +    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 9b7ffc579b892bdc2a7501e03b5d653b44505a39..c02380eebeab634674b315729920f05e717f9b2a 100644
+index 87140f4e291d996d1e5dac3277e519d7968d4199..4b2361f0646e5ef484c1cd0eae66a3d8d4e6a79d 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -3372,7 +3372,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {

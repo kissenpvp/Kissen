@@ -5,7 +5,7 @@ Subject: [PATCH] Implement kissen into pulvinar
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 03e5dcc715df9c4c9a23f7fcd23c02605f109852..a193910a0b42bcf6241607548f7aa3f7416c7adc 100644
+index 8e5ecf9c481c195a3de1f53d2ca15bbf50e7aeee..efbc751c99fcff116f0517aaba041f6ee075248f 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -47,6 +47,11 @@ dependencies {
@@ -17,10 +17,10 @@ index 03e5dcc715df9c4c9a23f7fcd23c02605f109852..a193910a0b42bcf6241607548f7aa3f7
 +    implementation(project(":kissen-source") )
 +    // Pulvinar end
 +
-     implementation("org.mozilla:rhino-runtime:1.7.14") // Purpur
-     implementation("org.mozilla:rhino-engine:1.7.14") // Purpur
-     implementation("dev.omega24:upnp4j:1.0") // Purpur
-@@ -164,8 +169,8 @@ fun TaskContainer.registerRunTask(
+     // Pufferfish start
+     implementation("org.yaml:snakeyaml:1.32")
+     implementation ("com.github.carleslc.Simple-YAML:Simple-Yaml:1.8.4") { // Purpur
+@@ -179,8 +184,8 @@ fun TaskContainer.registerRunTask(
      })
      jvmArgs("-XX:+AllowEnhancedClassRedefinition", "-XX:+AllowRedefinitionToAddDeleteMethods")
  
@@ -31,7 +31,7 @@ index 03e5dcc715df9c4c9a23f7fcd23c02605f109852..a193910a0b42bcf6241607548f7aa3f7
          inputs.file(testPluginJar)
          args("-add-plugin=${testPluginJar.get().asFile.absolutePath}")
      }
-@@ -211,23 +216,26 @@ tasks.registerRunTask("runDevServer") {
+@@ -226,23 +231,26 @@ tasks.registerRunTask("runDevServer") {
      jvmArgs("-DPaper.pushPaperAssetsRoot=true")
  }
  

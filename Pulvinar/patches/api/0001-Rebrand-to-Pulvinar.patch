@@ -18,10 +18,10 @@ index b831a23999c94cb1bdf7f5d2cd719d0b846242ad..35385bff036bec0e9d339ab8723587fb
              sender.sendMessage(mm.deserialize("<gold><click:open_url:'https://spark.lucko.me/docs/Command-Usage'>https://spark.lucko.me/docs/Command-Usage</click>"));
              return true;
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
-index 7107eabf02d9d9b69d97c978ba421ad52031ec3f..e6070182c46efa0548e80eca2001d265062ef58c 100644
+index 8c2c5ea14a839c8767bbf120ae5512f65475cbb0..7564cdac41d03cbb198a02c441e85f0e33c5d180 100644
 --- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
 +++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
-@@ -25,6 +25,13 @@ public interface ServerBuildInfo {
+@@ -32,6 +32,13 @@ public interface ServerBuildInfo {
      Key BRAND_PURPUR_ID = Key.key("purpurmc", "purpur");
      // Purpur end
  
