@@ -1,0 +1,1746 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ivo Quiring <falk.quiring@gmail.com>
+Date: Fri, 19 Jul 2024 10:32:23 +0200
+Subject: [PATCH] Populated custom world system
+
+
+diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
+index 40863f32b5227854eb6583482982f33d84a0c0fe..7823e42ab33000c52179d3d33d2d0abed61ccca4 100644
+--- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
++++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
+@@ -274,5 +274,11 @@ public class PaperPluginManagerImpl implements PluginManager, DependencyContext
+     public <T> void registerParser(@NotNull Class<T> type, @NotNull net.kissenpvp.pulvinar.api.command.ArgumentParser<T> parser, @NotNull Plugin plugin) {
+         org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.command.CommandImplementation.class).getPluginHandler(plugin).ifPresent(handler -> handler.registerParser(type, parser));
+     }
++
++    @Override
++    public @NotNull net.kissenpvp.pulvinar.api.world.biome.RegisteredBiome registerBiome(@NotNull net.kissenpvp.pulvinar.api.world.biome.CustomBiome biome, @NotNull Plugin plugin)
++    {
++        return org.bukkit.Bukkit.getPulvinar().getImplementation(net.kissenpvp.pulvinar.api.world.WorldImplementation.class).getBiomeHandler().registerBiome(plugin, biome);
++    }
+     // Pulvinar end
+ }
+diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
+index 1e637e15367271ce44250b8543c49d17015fd7e3..cd5b567732bd514016cf761f3b19eae7457521a0 100644
+--- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
++++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
+@@ -59,6 +59,7 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
+         loader.put(net.kissenpvp.core.command.InternalCommandImplementation.class, commandImplementation);
+         loader.put(net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation.class, new net.kissenpvp.pulvinar.command.confirmation.PulvinarConfirmationImplementation());
+         loader.put(net.kissenpvp.pulvinar.api.ban.BanImplementation.class, new net.kissenpvp.pulvinar.ban.PulvinarBanImplementation());
++        loader.put(net.kissenpvp.pulvinar.api.world.WorldImplementation.class, new net.kissenpvp.pulvinar.world.InternalWorldImplementation());
+         super.loadImplementations(loader);
+     }
+ 
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java b/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..896c859995fa286dc95eba3c25653795f970e91d
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java
+@@ -0,0 +1,278 @@
++package net.kissenpvp.pulvinar.world;
++
++import com.google.common.cache.CacheBuilder;
++import com.google.common.cache.LoadingCache;
++import net.kissenpvp.pulvinar.api.world.CustomWorld;
++import net.kissenpvp.pulvinar.api.world.DefaultBiomes;
++import net.kissenpvp.pulvinar.api.world.Environment;
++import net.kissenpvp.pulvinar.api.world.Landscape;
++import net.kissenpvp.pulvinar.api.world.biome.BiomeSection;
++import net.kissenpvp.pulvinar.api.world.biome.RegisteredBiome;
++import net.kissenpvp.pulvinar.api.world.generator.HeightMap;
++import net.kissenpvp.pulvinar.api.world.noise.Noise;
++import net.kissenpvp.pulvinar.api.world.noise.fastnoise.FastNoise;
++import net.kissenpvp.pulvinar.api.world.noise.fastnoise.NoiseType;
++import net.kissenpvp.pulvinar.api.world.populator.CustomBlockPopulator;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation3D;
++import net.kissenpvp.pulvinar.world.biome.BiomeManager;
++import net.kissenpvp.pulvinar.world.biome.test.TestBiome;
++import net.kissenpvp.pulvinar.world.generator.InternalChunkCache;
++import org.bukkit.NamespacedKey;
++import org.bukkit.World;
++import org.jetbrains.annotations.NotNull;
++import org.purpurmc.purpur.util.MinecraftInternalPlugin;
++
++import java.util.Objects;
++import java.util.Random;
++import java.util.Set;
++import java.util.concurrent.ExecutionException;
++
++public final class InternalCustomWorld implements CustomWorld {
++    private static final int upscaleSize = 3;
++    private static final int spawnFlatRadiusSquared = -324534;
++    private final @NotNull World world;
++    private final @NotNull Landscape landscape;
++    private final @NotNull Environment environment;
++    private final @NotNull CustomBlockPopulator blockPopulator;
++    private final BiomeManager biomeManager;
++    private final LoadingCache<InternalChunkCache, InternalChunkCache> loadingCache;
++
++    public InternalCustomWorld(@NotNull World world, @NotNull Landscape landscape, @NotNull Environment environment) {
++        this.world = world;
++        this.landscape = landscape;
++        this.environment = environment;
++        this.blockPopulator = new CustomBlockPopulator(this);
++        this.biomeManager = new BiomeManager(this);
++        this.loadingCache = CacheBuilder.newBuilder().maximumSize(6000).build(new TestCache());
++    }
++
++    public InternalCustomWorld(@NotNull World world) {
++        this(world, new Landscape() {
++            @Override
++            public int getMaxY() {
++                return 120;
++            }
++
++            @Override
++            public int getMinY() {
++                return -64;
++            }
++
++            @Override
++            public @NotNull HeightMap getGeneral() {
++                return (location) -> {
++                    FastNoise noise = new FastNoise((int) world.getSeed());
++                    noise.setNoiseType(NoiseType.SIMPLEX_FRACTAL);
++                    noise.setFractalOctaves(2); //Poor detail after blurs. Rely on Attrition for detail
++                    noise.setFrequency(0.003f); //TODO configuration
++
++                    //7 blocks elevated from the sea level
++                    double height = 10 * noise.getNoise(location) + 7 + world.getSeaLevel();
++
++                    //Plateau-out height to make it flat-ish
++                    if (height > world.getSeaLevel() + 10) {
++                        height = (height - world.getSeaLevel() - 10) * 0.1 + world.getSeaLevel() + 10;
++                    }
++
++                    return height;
++                };
++            }
++
++            @Override
++            public @NotNull HeightMap getRiver() {
++                return (location) -> {
++                    FastNoise noise = new FastNoise((int) world.getSeed());
++                    noise.setNoiseType(NoiseType.PERLIN_FRACTAL);
++                    noise.setFrequency(0.005f); //TODO configuration
++                    noise.setFractalOctaves(5);
++                    return 15 - 200 * Math.abs(noise.getNoise(location));
++                };
++            }
++
++            @Override
++            public @NotNull HeightMap getAttrition() {
++                return (location) -> {
++                    FastNoise noise = new FastNoise((int) world.getSeed() + 113);
++                    noise.setNoiseType(NoiseType.PERLIN_FRACTAL);
++                    noise.setFractalOctaves(4);
++                    noise.setFrequency(0.025f);
++
++                    double height = noise.getNoise(location) * 2 * 7;
++                    return height < 0 ? 0 : height;
++                };
++            }
++
++            @Override
++            public @NotNull DefaultBiomes getDefaultBiomes() {
++                TestBiome t = new TestBiome();
++                NamespacedKey key = new NamespacedKey(new MinecraftInternalPlugin(), t.getName());
++                return new DefaultBiomes(key, key, key, key, key, key, key);
++            }
++        }, new Environment() {
++            @Override
++            public @NotNull Noise getTemperatureNoise() {
++                FastNoise noise = new FastNoise((int) (world.getSeed() * 2));
++                noise.setNoiseType(NoiseType.SIMPLEX);
++                noise.setFrequency(0.03f); //TODO configuration
++                return noise;
++            }
++
++            @Override
++            public @NotNull Noise getMoistureNoise() {
++                FastNoise noise = new FastNoise((int) (world.getSeed() / 4));
++                noise.setNoiseType(NoiseType.SIMPLEX);
++                noise.setFrequency(0.03f); //TODO configuration
++                return noise;
++            }
++
++            @Override
++            public @NotNull Noise getOceanicNoise() {
++                FastNoise noise = new FastNoise((int) (world.getSeed() * 12));
++                noise.setNoiseType(NoiseType.SIMPLEX);
++                noise.setFrequency(0.11f); //TODO configuration
++                return noise;
++            }
++
++            @Override
++            public @NotNull Noise getMountainousNoise() {
++                FastNoise noise = new FastNoise((int) (world.getSeed() * 73));
++                noise.setNoiseType(NoiseType.SIMPLEX);
++                noise.setFrequency(0.30f); //TODO configuration
++                return noise;
++            }
++        });
++    }
++
++    @Override
++    public @NotNull World getBukkitWorld() {
++        return world;
++    }
++
++    @Override
++    public @NotNull Landscape getLandscape() {
++        return this.landscape;
++    }
++
++    @Override
++    public @NotNull Environment getEnvironment() {
++        return this.environment;
++    }
++
++    @Override
++    public @NotNull Random getRandom(long d) {
++        return new Random(getBukkitWorld().getSeed() / 4 + 25981 * d);
++    }
++
++    @Override
++    public @NotNull Random getHashedRandom(@NotNull ExactLocation3D exactLocation3D) {
++        return new Random(11L * exactLocation3D.x() + Objects.hash(getBukkitWorld().getSeed(), 127 * exactLocation3D.y(), 773 * exactLocation3D.z()));
++    }
++
++    @Override
++    public @NotNull Random getHashedRandom(@NotNull ExactLocation3D exactLocation3D, long multiplier) {
++        return new Random(Objects.hash(getBukkitWorld().getSeed(), 11 * exactLocation3D.x(), 127 * exactLocation3D.y(), 773 * exactLocation3D.z()) * multiplier);
++    }
++
++    @Override
++    public @NotNull RegisteredBiome getBiome(@NotNull ExactLocation2D exactLocation2D) {
++        InternalChunkCache cache = getCache(exactLocation2D);
++        return cache.getBiome(exactLocation2D).orElseGet(() -> {
++            int y = (int) getRiderlessHeight(exactLocation2D);
++            ExactLocation3D exactLocation3D = new ExactLocation3D(exactLocation2D, y);
++            return cache.cacheBiome(exactLocation2D, biomeManager.calculateBiome(exactLocation3D));
++        });
++    }
++
++    @Override
++    public @NotNull Set<RegisteredBiome> getBiomes() {
++        return biomeManager.getBiomes(); // call manager (might be ugly, but no one will see this anyway)
++    }
++
++    @Override
++    public @NotNull CustomBlockPopulator getBlockPopulator() {
++        return this.blockPopulator;
++    }
++
++    @Override
++    public int getSeaLevel() {
++        return world.getSeaLevel();
++    }
++
++    //copied
++    private double getRiderlessHeight(@NotNull ExactLocation2D exactLocation2D) //TODO better
++    {
++        int maskRadius = 5;
++        int maskDiameter = (maskRadius * 2) + 1;
++        double coreHeight;
++
++        InternalChunkCache mainCache = getCache(exactLocation2D);
++
++        if (mainCache.getBlurredHeight(exactLocation2D) == Float.MIN_VALUE) {
++
++            BiomeSection sect = biomeManager.getBiomeSection(exactLocation2D, false);
++
++            for (int relX = sect.getLowerBounds().x(); relX <= sect.getUpperBounds().x(); relX++) {
++                for (int relZ = sect.getLowerBounds().z() - maskRadius; relZ <= sect.getUpperBounds().z() + maskRadius; relZ++) {
++
++                    InternalChunkCache targetCache = getCache(new ExactLocation2D(relX, relZ));
++                    float lineTotalHeight = 0;
++                    for (int offsetX = -maskRadius; offsetX <= maskRadius; offsetX++) {
++                        lineTotalHeight += getDominantBiomeHeight(new ExactLocation2D(relX + offsetX, relZ));
++                    }
++
++                    if (targetCache.getIntermediateBlurHeight(new ExactLocation2D(relX, relZ)) == Float.MIN_VALUE) {
++                        targetCache.cacheIntermediateBlurredHeight(new ExactLocation2D(relX, relZ), lineTotalHeight / maskDiameter);
++                    }
++                }
++            }
++
++            for (int relX = sect.getLowerBounds().x(); relX <= sect.getUpperBounds().x(); relX++) {
++                for (int relZ = sect.getLowerBounds().z(); relZ <= sect.getUpperBounds().z(); relZ++) {
++
++                    InternalChunkCache targetCache = getCache(new ExactLocation2D(relX, relZ));
++                    float lineTotalHeight = 0;
++                    for (int offsetZ = -maskRadius; offsetZ <= maskRadius; offsetZ++) {
++                        InternalChunkCache queryCache = getCache(new ExactLocation2D(relX, relZ + offsetZ));
++
++                        lineTotalHeight += (float) queryCache.getIntermediateBlurHeight(new ExactLocation2D(relX, relZ + offsetZ));
++                    }
++                    targetCache.cacheBlurredHeight(new ExactLocation2D(relX, relZ), lineTotalHeight / maskDiameter);
++                }
++            }
++        }
++
++        coreHeight = mainCache.getBlurredHeight(exactLocation2D);
++        coreHeight += getLandscape().getAttrition().getHeight(exactLocation2D);
++
++        return coreHeight;
++    }
++
++    private float getDominantBiomeHeight(ExactLocation2D exactLocation2D) {
++        InternalChunkCache cache = getCache(exactLocation2D);
++        float h = cache.getDominantBiomeHeight(exactLocation2D);
++        if (h == Float.MIN_VALUE) {
++            //Upscale the biome
++            if (exactLocation2D.x() % upscaleSize != 0 && exactLocation2D.z() % upscaleSize != 0)
++                h = getDominantBiomeHeight(new ExactLocation2D(exactLocation2D.x() - (exactLocation2D.x() % upscaleSize), exactLocation2D.z() - (exactLocation2D.z() % upscaleSize)));
++            else {
++//                h = (float) BiomeBank.calculateHeightIndependentBiome(tw, x, z)
++//                        .getHandler().calculateHeight(tw, x, z);
++                if (Math.pow(exactLocation2D.x(), 2) + Math.pow(exactLocation2D.z(), 2) < spawnFlatRadiusSquared)
++                    h = (float) getLandscape().getGeneral().getHeight(exactLocation2D);
++            }
++        }
++        //cache.cacheDominantBiomeHeight(x, z, h);
++        return h;
++    }
++
++
++    private @NotNull InternalChunkCache getCache(@NotNull ExactLocation2D exactLocation2D) {
++        InternalChunkCache cache = new InternalChunkCache(exactLocation2D);
++        try {
++            return loadingCache.get(cache);
++        } catch (ExecutionException e) {
++            throw new RuntimeException(e);
++        }
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/InternalWorldImplementation.java b/src/main/java/net/kissenpvp/pulvinar/world/InternalWorldImplementation.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..e26fc234b98c9ef313f04599efc38f7cf6ba85a1
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/InternalWorldImplementation.java
+@@ -0,0 +1,29 @@
++package net.kissenpvp.pulvinar.world;
++
++import net.kissenpvp.pulvinar.api.world.WorldImplementation;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiomeHandler;
++import net.kissenpvp.pulvinar.world.biome.InternalCustomBiomeHandler;
++import net.kissenpvp.pulvinar.world.biome.test.TestBiome;
++import org.jetbrains.annotations.NotNull;
++import org.purpurmc.purpur.util.MinecraftInternalPlugin;
++
++public class InternalWorldImplementation implements WorldImplementation {
++
++    private final CustomBiomeHandler biomeHandler;
++
++    public InternalWorldImplementation() {
++        this.biomeHandler = new InternalCustomBiomeHandler();
++    }
++
++
++    @Override
++    public boolean preStart() {
++        biomeHandler.registerBiome(new MinecraftInternalPlugin(), new TestBiome());
++        return WorldImplementation.super.preStart();
++    }
++
++    @Override
++    public @NotNull CustomBiomeHandler getBiomeHandler() {
++        return biomeHandler;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/TestCache.java b/src/main/java/net/kissenpvp/pulvinar/world/TestCache.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ee6562c9dc02557e95e91fb30bc158bb5a5a0cc7
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/TestCache.java
+@@ -0,0 +1,13 @@
++package net.kissenpvp.pulvinar.world;
++
++import com.google.common.cache.CacheLoader;
++import net.kissenpvp.pulvinar.world.generator.InternalChunkCache;
++import org.jetbrains.annotations.NotNull;
++
++public class TestCache extends CacheLoader<InternalChunkCache, InternalChunkCache> {
++    @Override
++    public @NotNull InternalChunkCache load(@NotNull InternalChunkCache key) throws Exception {
++        key.initCache();
++        return key;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..5a60f3c99a846859c49c78b10f59cc2b48285d10
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/BiomeManager.java
+@@ -0,0 +1,232 @@
++package net.kissenpvp.pulvinar.world.biome;
++
++import com.google.common.cache.CacheBuilder;
++import com.google.common.cache.LoadingCache;
++import net.kissenpvp.pulvinar.api.world.CustomWorld;
++import net.kissenpvp.pulvinar.api.world.WorldImplementation;
++import net.kissenpvp.pulvinar.api.world.biome.BiomeSection;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiomeHandler;
++import net.kissenpvp.pulvinar.api.world.biome.RegisteredBiome;
++import net.kissenpvp.pulvinar.api.world.biome.properties.BiomeClimate;
++import net.kissenpvp.pulvinar.api.world.biome.properties.BiomeHandler;
++import net.kissenpvp.pulvinar.api.world.biome.properties.TransitionClimate;
++import net.kissenpvp.pulvinar.api.world.noise.fastnoise.FastNoise;
++import net.kissenpvp.pulvinar.api.world.noise.fastnoise.NoiseType;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation3D;
++import net.kissenpvp.pulvinar.world.biome.cache.BiomeSectionCacheLoader;
++import net.kissenpvp.pulvinar.world.biome.cache.HeightIndependentBiomeCacheLoader;
++import org.bukkit.Bukkit;
++import org.bukkit.NamespacedKey;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++
++import java.util.*;
++import java.util.stream.Collectors;
++import java.util.stream.Stream;
++
++public class BiomeManager {
++
++    private static final Logger log = LoggerFactory.getLogger(BiomeManager.class);
++    private static final int spawnFlatRadiusSquared = -324534;
++    private final static int bitshift = 7;
++    private final static int sectionWidth = 1 << bitshift;
++    private final static int dominanceThreshold = (int) (0.35 * sectionWidth);
++    private final LoadingCache<ExactLocation2D, CustomBiome> heightIndependentBiomeCache;
++    private final LoadingCache<BiomeSection, BiomeSection> biomeSectionCache = CacheBuilder.newBuilder().maximumSize(250).build(new BiomeSectionCacheLoader());
++    private final CustomWorld world;
++    private final Set<NamespacedKey> biomes;
++
++    public BiomeManager(@NotNull CustomWorld world) {
++        this.world = world;
++        this.biomes = new HashSet<>();
++
++        this.heightIndependentBiomeCache = CacheBuilder.newBuilder().maximumSize(500).build(new HeightIndependentBiomeCacheLoader(this));
++
++        biomes.addAll(getWorld().getLandscape().getDefaultBiomes().getNamespaces().toList());
++    }
++
++    private static double randDouble(@NotNull Random rand, double min, double max) {
++        return rand.nextDouble() * (max - min) + min;
++    }
++
++    public @NotNull RegisteredBiome calculateBiome(@NotNull ExactLocation3D exactLocation3D) {
++        RegisteredBiome holder = calculateHeightIndependentBiome(exactLocation3D.exactLocation2D());
++
++        FastNoise beach = new FastNoise((int) getWorld().getBukkitWorld().getSeed());
++        beach.setNoiseType(NoiseType.PERLIN_FRACTAL);
++        beach.setFrequency(0.01f);
++        beach.setFractalOctaves(4);
++
++        boolean isDry = holder.getBiome().getBiomeType().isDry();
++        double rawRiverDepth = rawRiverDepth(exactLocation3D.exactLocation2D());
++        float noise = Math.abs(beach.getNoise(exactLocation3D.exactLocation2D()));
++        int seaLevel = getWorld().getSeaLevel();
++
++        if (exactLocation3D.y() < seaLevel && (rawRiverDepth >= seaLevel || isDry)) {
++            holder = getWorld().getLandscape().getDefaultBiomes().getRiver();
++        } else if (exactLocation3D.y() >= seaLevel && exactLocation3D.y() <= seaLevel + 4 * 2 * noise) {
++            holder = getWorld().getLandscape().getDefaultBiomes().getBeach();
++        }
++
++        if (!holder.getBiome().getBiomeType().isDry() && exactLocation3D.y() >= seaLevel) {
++            holder = null;
++            int dominance = Integer.MIN_VALUE;
++            for (BiomeSection section : getSurroundingSections(exactLocation3D.exactLocation2D())) {
++                if (section.getBiome().getBiomeType().isDry()) {
++                    int currentDominance = (int) section.getDominance(exactLocation3D);
++                    if (currentDominance > dominance) {
++                        dominance = currentDominance;
++                        holder = getBiome(section.getBiome()).orElseThrow();
++                    }
++                }
++            }
++
++            if (holder == null) {
++                holder = getWorld().getLandscape().getDefaultBiomes().getBeach();
++            }
++        }
++        return holder;
++    }
++
++    public @NotNull RegisteredBiome calculateHeightIndependentBiome(@NotNull ExactLocation2D exactLocation2D) {
++        return getBiome(heightIndependentBiomeCache.getUnchecked(exactLocation2D)).orElseGet(() -> getWorld().getLandscape().getDefaultBiomes().getFlat());
++    }
++
++    public @NotNull Optional<RegisteredBiome> getBiome(@NotNull CustomBiome customBiome) {
++        return getBiomes().stream().filter(handler -> Objects.equals(customBiome, handler.getBiome())).findFirst();
++    }
++
++    public @NotNull @Unmodifiable Set<BiomeClimate> getClimates() {
++        Stream<BiomeClimate> climates = getBiomes().stream().map(holder -> holder.getBiome().getBiomeClimate());
++        return climates.filter(climate -> !(climate instanceof TransitionClimate)).collect(Collectors.toUnmodifiableSet());
++    }
++
++    public @NotNull BiomeSection getBiomeSection(@NotNull ExactLocation2D exactLocation2D, boolean useSectionCoords) {
++        int x = exactLocation2D.x(), z = exactLocation2D.z();
++
++        ExactLocation2D modified = new ExactLocation2D(useSectionCoords ? x : x << 4, useSectionCoords ? z : z << 4); //16 blocks (bitshift 4)
++        InternalBiomeSection biomeSection = new InternalBiomeSection(this, modified, useSectionCoords);
++        biomeSection.calculate();
++        return biomeSection;
++    }
++
++    public @NotNull LoadingCache<BiomeSection, BiomeSection> getBiomeSectionCache() {
++        return biomeSectionCache;
++    }
++
++    public @NotNull @Unmodifiable Set<RegisteredBiome> getBiomes() {
++        CustomBiomeHandler handler = Bukkit.getPulvinar().getImplementation(WorldImplementation.class).getBiomeHandler();
++        return biomes.stream().flatMap(key -> handler.getBiome(key).stream()).collect(Collectors.toUnmodifiableSet());
++    }
++
++    public @NotNull CustomWorld getWorld() {
++        return world;
++    }
++
++    public @NotNull BiomeSection getMostDominantSection(@NotNull ExactLocation2D exactLocation2D) {
++
++        double dither = 0.04d; //TODO add configuration
++        long seed = getWorld().getBukkitWorld().getSeed();
++        Random locationBasedRandom = new Random(Objects.hash(seed, exactLocation2D.x(), exactLocation2D.z()));
++        BiomeSection homeSection = getBiomeSectionFromBlockCoords(exactLocation2D);
++        if (exactLocation2D.distance(homeSection.getCenter()) <= dominanceThreshold) {
++            return homeSection;
++        }
++
++        Collection<BiomeSection> sections = getSurroundingSections(exactLocation2D);
++        BiomeSection mostDominant = homeSection;
++
++        ExactLocation3D absoluteLocation = new ExactLocation3D(exactLocation2D, 0);
++        for (BiomeSection section : sections) {
++
++            float dom = (float) (section.getDominance(absoluteLocation) + randDouble(locationBasedRandom, -dither, dither));
++            if (dom > mostDominant.getDominance(absoluteLocation) + randDouble(locationBasedRandom, -dither, dither)) {
++                mostDominant = section;
++            }
++        }
++
++        return mostDominant;
++    }
++
++    private @NotNull BiomeSection getBiomeSectionFromBlockCoords(@NotNull ExactLocation2D exactLocation2D) {
++        BiomeSection section = new InternalBiomeSection(this, exactLocation2D);
++        try {
++            section = getBiomeSectionCache().getUnchecked(section);
++        } catch (Throwable throwable) {
++            section.calculate();
++        }
++        return section;
++    }
++
++    private @NotNull @Unmodifiable Collection<BiomeSection> getSurroundingSections(int width, @NotNull ExactLocation2D exactLocation2D) {
++        BiomeSection homeSection = getBiomeSectionFromBlockCoords(exactLocation2D);
++        Collection<BiomeSection> sections = new ArrayList<>();
++
++        ExactLocation2D center = homeSection.getCenter();
++        int startX, startZ;
++        if (width % 2 == 1) {
++            startX = startZ = -width / 2;
++        } else {
++            startX = exactLocation2D.x() >= center.x() ? -width / 2 - 1 : -width / 2;
++            startZ = exactLocation2D.z() >= center.z() ? -width / 2 - 1 : -width / 2;
++        }
++
++        for (int rx = startX; rx < startX + width; rx++) {
++            for (int rz = startZ; rz < startZ + width; rz++) {
++                ExactLocation2D location2D = new ExactLocation2D(rx, rz);
++                sections.add(homeSection.getRelative(location2D));
++            }
++        }
++
++        if (sections.size() != width * width) {
++            log.error("The section size was inconsistent with the width/blockX/blockZ.");
++        }
++
++        return Collections.unmodifiableCollection(sections);
++    }
++
++    private @NotNull Collection<BiomeSection> getSurroundingSections(@NotNull ExactLocation2D exactLocation2D) {
++        Collection<BiomeSection> sections = new ArrayList<>();
++
++        BiomeSection homeBiome = getBiomeSectionFromBlockCoords(exactLocation2D);
++        sections.add(homeBiome);
++
++        ExactLocation2D center = homeBiome.getCenter();
++        if (exactLocation2D.x() >= center.x()) {
++            if (exactLocation2D.z() >= center.z()) {
++                sections.add(homeBiome.getRelative(new ExactLocation2D(1, 0)));
++                sections.add(homeBiome.getRelative(new ExactLocation2D(1, 1)));
++                sections.add(homeBiome.getRelative(new ExactLocation2D(0, 1)));
++            } else {
++                sections.add(homeBiome.getRelative(new ExactLocation2D(1, 0)));
++                sections.add(homeBiome.getRelative(new ExactLocation2D(1, -1)));
++                sections.add(homeBiome.getRelative(new ExactLocation2D(0, -1)));
++            }
++        } else {
++            if (exactLocation2D.z() >= center.z()) {
++                sections.add(homeBiome.getRelative(new ExactLocation2D(-1, 0)));
++                sections.add(homeBiome.getRelative(new ExactLocation2D(-1, 1)));
++                sections.add(homeBiome.getRelative(new ExactLocation2D(0, 1)));
++            } else {
++                sections.add(homeBiome.getRelative(new ExactLocation2D(-1, 0)));
++                sections.add(homeBiome.getRelative(new ExactLocation2D(-1, -1)));
++                sections.add(homeBiome.getRelative(new ExactLocation2D(0, -1)));
++            }
++
++        }
++        return sections;
++    }
++
++    private double rawRiverDepth(@NotNull ExactLocation2D exactLocation2D) {
++        if (Math.pow(exactLocation2D.x(), 2) + Math.pow(exactLocation2D.z(), 2) < spawnFlatRadiusSquared) {
++            return 0;
++        }
++        double depth = getWorld().getLandscape().getRiver().getHeight(exactLocation2D);
++        depth = depth < 0 ? 0 : depth;
++        return depth;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/FallbackBiomeMissingException.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/FallbackBiomeMissingException.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..7fb1893a80c746418f55fda4a7ed6a302461e998
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/FallbackBiomeMissingException.java
+@@ -0,0 +1,19 @@
++package net.kissenpvp.pulvinar.world.biome;
++
++public class FallbackBiomeMissingException extends IllegalStateException {
++
++    public FallbackBiomeMissingException() {
++    }
++
++    public FallbackBiomeMissingException(String s) {
++        super(s);
++    }
++
++    public FallbackBiomeMissingException(String message, Throwable cause) {
++        super(message, cause);
++    }
++
++    public FallbackBiomeMissingException(Throwable cause) {
++        super(cause);
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d69005050ac5c6c602f2e9249cb3eafe2c074074
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalBiomeSection.java
+@@ -0,0 +1,391 @@
++package net.kissenpvp.pulvinar.world.biome;
++
++import net.kissenpvp.pulvinar.api.world.CustomWorld;
++import net.kissenpvp.pulvinar.api.world.DefaultBiomes;
++import net.kissenpvp.pulvinar.api.world.Environment;
++import net.kissenpvp.pulvinar.api.world.biome.BiomeSection;
++import net.kissenpvp.pulvinar.api.world.biome.BiomeSubSection;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
++import net.kissenpvp.pulvinar.api.world.biome.properties.BiomeClimate;
++import net.kissenpvp.pulvinar.api.world.biome.properties.BiomeType;
++import net.kissenpvp.pulvinar.api.world.biome.properties.TransitionClimate;
++import net.kissenpvp.pulvinar.api.world.noise.Noise;
++import net.kissenpvp.pulvinar.api.world.noise.NoiseFactory;
++import net.kissenpvp.pulvinar.api.world.noise.fastnoise.FastNoise;
++import net.kissenpvp.pulvinar.api.world.noise.fastnoise.NoiseType;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation3D;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
++
++import java.util.*;
++import java.util.stream.Stream;
++
++public class InternalBiomeSection implements BiomeSection {
++    private final ExactLocation2D exactLocation2D;
++    private final BiomeManager manager;
++    private float temperature, moisture;
++    private int radius;
++    private CustomBiome biome;
++    private Noise shape;
++
++    /**
++     * Constructs an {@code InternalBiomeSection} with the specified {@link BiomeManager},
++     * {@link CustomWorld}, and {@link ExactLocation2D}.
++     * <p>
++     * This constructor defaults to not using section coordinates, instead transforming
++     * the provided {@code exactLocation2D} into world coordinates.
++     *
++     * @param manager         The {@link BiomeManager} responsible for managing biome data.
++     *                        Must not be null.
++     * @param exactLocation2D The exact 2D location within the custom world. This will be
++     *                        transformed to world coordinates. Must not be null.
++     */
++    public InternalBiomeSection(@NotNull BiomeManager manager, @NotNull ExactLocation2D exactLocation2D) {
++        this(manager, exactLocation2D, false);
++    }
++
++    /**
++     * Constructs an {@code InternalBiomeSection} with the specified {@link BiomeManager},
++     * {@link CustomWorld}, {@link ExactLocation2D}, and a flag to determine if section
++     * coordinates should be used.
++     * <p>
++     * If {@code useSectionCoords} is true, the provided {@code exactLocation2D} is used
++     * directly. Otherwise, it is transformed into world coordinates using the
++     * {@code transformToWorld} method.
++     *
++     * @param manager          The {@link BiomeManager} responsible for managing biome data.
++     *                         Must not be null.
++     * @param exactLocation2D  The exact 2D location within the custom world. Must not be null.
++     * @param useSectionCoords If true, the provided {@code exactLocation2D} is used as-is.
++     *                         If false, the location is transformed into world coordinates.
++     */
++    public InternalBiomeSection(@NotNull BiomeManager manager, @NotNull ExactLocation2D exactLocation2D, boolean useSectionCoords) {
++        this.manager = manager;
++        this.exactLocation2D = useSectionCoords ? exactLocation2D : transformToWorld(exactLocation2D);
++    }
++
++    //TODO maybe create util class
++    private static int randInt(Random rand, int d, int max) {
++
++        if (d == max) return d;
++
++        boolean isNegativeRange = d < 0 && max < 0;
++
++        if (isNegativeRange) {
++            d = -d;
++            max = -max;
++        }
++
++        int lower = Math.min(d, max);
++        int upper = Math.max(d, max);
++
++        int randomNum = rand.nextInt(upper - lower + 1) + lower;
++
++        return isNegativeRange ? -randomNum : randomNum;
++    }
++
++    @NotNull
++    private static ExactLocation2D transformToWorld(@NotNull ExactLocation2D exactLocation2D) {
++        return new ExactLocation2D(exactLocation2D.x() >> bitshift, exactLocation2D.z() >> bitshift);
++    }
++
++    @Override
++    public void calculate() {
++        int x = getLocation().x(), z = getLocation().z();
++        int hash = Objects.hash(getManager().getWorld().getBukkitWorld().getSeed(), x, z);
++        calculate(world -> {
++            FastNoise fastNoise = new FastNoise(hash);
++            fastNoise.setNoiseType(NoiseType.SIMPLEX_FRACTAL);
++            fastNoise.setFractalOctaves(3);
++            fastNoise.setFrequency(0.01f);
++            return fastNoise;
++        });
++    }
++
++    @Override
++    public void calculate(@NotNull NoiseFactory noiseFactory) {
++        this.radius = randInt(getSectionRandom(), minSize / 2, 5 * minSize / 4);
++        this.shape = noiseFactory.assemble(getManager().getWorld());
++        this.biome = selectBiome();
++    }
++
++
++    @Override
++    public float getDominance(@NotNull ExactLocation3D target) {
++        return getDominanceBasedOnRadius(target.exactLocation2D());
++    }
++
++    @Override
++    public @NotNull ExactLocation2D getLocation() {
++        return exactLocation2D;
++    }
++
++    @Override
++    public float getTemperature() {
++        return temperature;
++    }
++
++    @Override
++    public float getMoisture() {
++        return moisture;
++    }
++
++    @Override
++    public int getRadius() {
++        return radius;
++    }
++
++    @Override
++    public @NotNull CustomBiome getBiome() {
++        return biome;
++    }
++
++    public @NotNull BiomeManager getManager() {
++        return manager;
++    }
++
++    @Override
++    public @NotNull Noise getShape() {
++        return shape;
++    }
++
++    @Override
++    public @NotNull Random getSectionRandom(int multiplier) {
++        return new Random((long) multiplier * Objects.hash(getManager().getWorld().getBukkitWorld().getSeed(), getLocation().x(), getLocation().z()));
++    }
++
++    @Override
++    public @NotNull BiomeSection getRelative(@NotNull ExactLocation2D exactLocation2D) {
++        ExactLocation2D modifiedLocation = new ExactLocation2D(getLocation().x() + exactLocation2D.x(), getLocation().z() + exactLocation2D.z());
++        return getManager().getBiomeSection(modifiedLocation, true);
++    }
++
++    @Override
++    public float getRadiusPriority(@NotNull ExactLocation2D block) {
++        return (float) (1 - (1 * calculateDistanceWithNoise(block, this.getCenter(), 0.6f)));
++    }
++
++    @Override
++    public @NotNull ExactLocation2D getCenter() {
++        return getUpperBounds().divideBy(2);
++    }
++
++    @Override
++    public @NotNull ExactLocation2D getUpperBounds() {
++        return getLowerBounds().add(sectionWidth);
++    }
++
++    @Override
++    public @NotNull ExactLocation2D getLowerBounds() {
++        return new ExactLocation2D((getLocation().x() << bitshift), ((getLocation().z()) << bitshift));
++    }
++
++    @Override
++    public @Unmodifiable @NotNull List<BiomeSection> getRelativeSurroundingSections(int radius) {
++        if (radius == 0) {
++            return Collections.singletonList(this);
++        }
++
++        List<BiomeSection> candidates = new ArrayList<>();
++
++        for (int rx : new int[]{-radius, radius}) {
++            for (int rz = -radius; rz <= radius; rz++) {
++                candidates.add(getRelative(new ExactLocation2D(rx, rz)));
++            }
++        }
++
++        for (int rz : new int[]{-radius, radius}) {
++            for (int rx = 1 - radius; rx <= radius - 1; rx++) {
++                candidates.add(getRelative(new ExactLocation2D(rx, rz)));
++            }
++        }
++        return Collections.unmodifiableList(candidates);
++    }
++
++    @Override
++    public @NotNull BiomeSubSection getSubSection(@NotNull ExactLocation2D exactLocation2D) {
++        ExactLocation2D sectionCenter = this.getCenter();
++        int relXFromCenter = exactLocation2D.x() - sectionCenter.x();
++        int relZFromCenter = exactLocation2D.z() - sectionCenter.z();
++
++        return evaluateSubsection(new ExactLocation2D(relXFromCenter, relZFromCenter));
++    }
++
++    @Override
++    public double getOceanLevel() {
++        return getManager().getWorld().getEnvironment().getOceanicNoise().getNoise(getLocation()) * 50;
++    }
++
++    @Override
++    public double getMountainLevel() {
++        return getManager().getWorld().getEnvironment().getMountainousNoise().getNoise(getLocation()) * 50;
++    }
++
++    /**
++     * Calculates and returns the dominance factor of a given location based on its distance
++     * from a central point, modified by a specific noise factor. The dominance is determined
++     * by subtracting a scaled distance value (calculated with noise) from 1.
++     *
++     * @param location The {@link ExactLocation2D} for which the dominance is to be calculated.
++     * @return A float value representing the dominance based on the distance and noise,
++     * where higher values indicate closer proximity to the center.
++     */
++    private float getDominanceBasedOnRadius(@NotNull ExactLocation2D location) {
++        return (float) (1 - 1 * (calculateDistanceWithNoise(location, this.getCenter(), 0.7f)));
++    }
++
++    /**
++     * Selects and returns a {@link CustomBiome} based on the temperature and moisture values
++     * calculated from the current environment's noise at the given location. The temperature
++     * and moisture are computed by scaling the noise values retrieved from the environment.
++     *
++     * @return A non-null {@link CustomBiome} object selected based on the calculated
++     * temperature and moisture values.
++     */
++    private @NotNull CustomBiome selectBiome() {
++        Environment environment = getManager().getWorld().getEnvironment();
++        this.temperature = 3.0f * 2.5f * environment.getTemperatureNoise().getNoise(getLocation());
++        this.moisture = 3.0f * 2.5f * environment.getMoistureNoise().getNoise(getLocation());
++
++        return pickBiome();
++    }
++
++    /**
++     * Calculates a modified distance metric between a given block location and a center location,
++     * incorporating noise to the result. The distance is computed based on the squared offsets
++     * between the block and center in the x and z dimensions, scaled by a given radius.
++     * An additional noise factor is added to the result, which is influenced by the offset
++     * and a provided time or scale parameter.
++     *
++     * @param block  The location of the block for which the distance is calculated.
++     * @param center The central reference location used to calculate offsets.
++     * @param t      A time or scale parameter that influences the noise factor added to the distance.
++     * @return A double value representing the modified distance with added noise.
++     */
++    private double calculateDistanceWithNoise(@NotNull ExactLocation2D block, @NotNull ExactLocation2D center, float t) {
++        int xOffset = center.x() - block.x();
++        int zOffset = center.z() - block.z();
++
++        double x = Math.pow(xOffset, 2) / Math.pow(radius, 2);
++        double z = Math.pow(zOffset, 2) / Math.pow(radius, 2);
++        return (x + z) + t * getShape().getNoise(xOffset, zOffset);
++    }
++
++    private @NotNull CustomBiome pickBiome() {
++        //TODO rework kind of
++        BiomeClimate biomeClimate = pickClimate();
++        BiomeType biomeType = getOceanBiomeType(getOceanLevel()).or(() -> getMountainBiomeType(getMountainLevel())).orElse(null);
++        List<CustomBiome> contenderBiomes = new ArrayList<>(getManager().getBiomes().stream().flatMap(biomeHolder -> {
++
++            BiomeType contenderType = biomeHolder.getBiome().getBiomeType();
++            boolean typeMismatch = !Objects.equals(contenderType, biomeType);
++
++            int weight = biomeHolder.getBiome().getBiomeWeight();
++            if (typeMismatch || weight == 0 || !switch (contenderType) {
++                case DEEP_OCEANIC, OCEANIC, MOUNTAINOUS, HIGH_MOUNTAINOUS -> false;
++                default -> biomeClimate.equals(biomeHolder.getBiome().getBiomeClimate());
++            }) {
++                return Stream.empty();
++            }
++
++            return Collections.nCopies(weight, biomeHolder.getBiome()).stream();
++        }).toList());
++
++        if (contenderBiomes.isEmpty()) {
++            DefaultBiomes biomes = getManager().getWorld().getLandscape().getDefaultBiomes();
++            if (biomeType == null) {
++                return biomes.getFlat().getBiome(); // fallback
++            }
++            return switch (biomeType) {
++                case FLAT -> biomes.getFlat().getBiome();
++                case BEACH -> biomes.getBeach().getBiome();
++                case RIVER -> biomes.getRiver().getBiome();
++                case OCEANIC -> biomes.getOceanic().getBiome();
++                case DEEP_OCEANIC -> biomes.getDeepOceanic().getBiome();
++                case MOUNTAINOUS -> biomes.getMountainous().getBiome();
++                case HIGH_MOUNTAINOUS -> biomes.getHighMountainous().getBiome();
++            };
++        }
++
++        Collections.shuffle(contenderBiomes, getSectionRandom());
++        return contenderBiomes.getFirst();
++    }
++
++    /**
++     * Picks the climate based on the temperature and the moisture.
++     * <p>
++     * This method selects the climate based on {@link #getTemperature()} and {@link #getMoisture()}.
++     *
++     * @return the climate or if no climate was found a {@link TransitionClimate}
++     */
++    private @NotNull BiomeClimate pickClimate() {
++        return getManager().getClimates().stream().filter(climate -> {
++            boolean containsTemperature = climate.getTemperatureRange().contains(getTemperature());
++            boolean containsMoisture = climate.getMoistureRange().contains(getMoisture());
++            return containsMoisture && containsTemperature;
++        }).max(Comparator.comparing(BiomeClimate::getPriority)).orElseGet(TransitionClimate::new);
++    }
++
++    /**
++     * Checks if the given noise results in an ocean biome type.
++     * <p>
++     * This method check whether the given noise would be an ocean biome type.
++     *
++     * @param noise the noise to check.
++     * @return an optional with the ocean type, or an {@link Optional#empty()}
++     */
++    private @NotNull Optional<BiomeType> getOceanBiomeType(double noise) {
++        if (noise < 0) {
++            noise = Math.abs(noise);
++            if (noise >= 27) {
++                return Optional.of(BiomeType.DEEP_OCEANIC);
++            } else if (noise >= 22) {
++                return Optional.of(BiomeType.OCEANIC);
++            }
++        }
++        return Optional.empty();
++    }
++
++    /**
++     * Checks if the given noise results in a mountain biome type.
++     * <p>
++     * This method check whether the given noise would be a mountain biome type.
++     *
++     * @param noise the noise to check.
++     * @return an optional with the mountain type, or an {@link Optional#empty()}
++     */
++    private @NotNull Optional<BiomeType> getMountainBiomeType(double noise) {
++        if (noise > 0) {
++            if (noise >= 27.5) {
++                return Optional.of(BiomeType.HIGH_MOUNTAINOUS);
++            } else if (noise >= 18.5) {
++                return Optional.of(BiomeType.MOUNTAINOUS);
++            }
++        }
++        return Optional.empty();
++    }
++
++    /**
++     * Evaluates the {@link BiomeSubSection} for the given {@link ExactLocation2D}.
++     * The method determines which quadrant or axis-aligned section the given
++     * location falls into based on its x and z coordinates.
++     *
++     * @param location The exact 2D location being evaluated. Must not be null.
++     * @return The {@link BiomeSubSection} corresponding to the section or quadrant
++     * the location falls into. Never null.
++     */
++    private @NotNull BiomeSubSection evaluateSubsection(@NotNull ExactLocation2D location) {
++        int absX = Math.abs(location.x()), absZ = Math.abs(location.z());
++        if (location.x() > 0 && location.x() >= absZ) {
++            return BiomeSubSection.POSITIVE_X;
++        } else if (location.x() <= 0 && absX >= absZ) {
++            return BiomeSubSection.NEGATIVE_X;
++        } else if (location.z() > 0 && location.z() >= absX) {
++            return BiomeSubSection.POSITIVE_Z;
++        } else if (location.z() <= 0 && absZ >= absX) {
++            return BiomeSubSection.NEGATIVE_Z;
++        }
++        return BiomeSubSection.NONE;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalCustomBiomeHandler.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalCustomBiomeHandler.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..2111d44408ae987eeea618f2e0bdbdcb44d6fcb1
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalCustomBiomeHandler.java
+@@ -0,0 +1,84 @@
++package net.kissenpvp.pulvinar.world.biome;
++
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiomeHandler;
++import net.kissenpvp.pulvinar.api.world.biome.RegisteredBiome;
++import net.minecraft.core.MappedRegistry;
++import net.minecraft.core.WritableRegistry;
++import net.minecraft.core.registries.Registries;
++import net.minecraft.server.MinecraftServer;
++import net.minecraft.world.level.biome.Biome;
++import org.bukkit.NamespacedKey;
++import org.bukkit.plugin.Plugin;
++import org.jetbrains.annotations.Contract;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Unmodifiable;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++
++import java.lang.reflect.Field;
++import java.util.HashSet;
++import java.util.Objects;
++import java.util.Optional;
++import java.util.Set;
++import java.util.function.Predicate;
++import java.util.stream.Collectors;
++
++public class InternalCustomBiomeHandler implements CustomBiomeHandler {
++
++    private static final Logger log = LoggerFactory.getLogger(InternalCustomBiomeHandler.class);
++    private final Set<RegisteredBiome> customBiomes;
++    private final WritableRegistry<Biome> registry;
++
++    public InternalCustomBiomeHandler() {
++        this.customBiomes = new HashSet<>();
++        this.registry = (WritableRegistry<Biome>) MinecraftServer.getServer().registryAccess().registryOrThrow(Registries.BIOME);
++        try {
++            Field frozen = MappedRegistry.class.getDeclaredField("frozen");
++            frozen.setAccessible(true);
++            frozen.set(registry, false);
++        } catch (NoSuchFieldException | IllegalAccessException reflectiveOperationException) {
++            log.error("An exception was caught when unfreezing the biome registry.", reflectiveOperationException);
++        }
++    }
++
++    @Override
++    public @NotNull RegisteredBiome registerBiome(@NotNull Plugin plugin, @NotNull CustomBiome customBiome) {
++        try {
++            RegisteredBiome registeredBiome = createRegisteredBiome(plugin, customBiome);
++            if(customBiomes.add(registeredBiome))
++            {
++                return registeredBiome;
++            }
++            throw new IllegalStateException("Could not add the biome to the biome list.");
++        } catch (NoSuchFieldException | IllegalAccessException operationException) {
++            log.error("Could not generate biome from {} given by plugin {}.", customBiome.getName(), plugin, operationException);
++            throw new IllegalStateException(operationException);
++        }
++    }
++
++    @Override
++    public @NotNull Optional<RegisteredBiome> getBiome(@NotNull NamespacedKey namespacedKey) {
++        Predicate<RegisteredBiome> isHolder = holder -> Objects.equals(holder.getKey(), namespacedKey);
++        return getCustomBiomes().stream().filter(isHolder).findFirst();
++    }
++
++    @Override
++    public @NotNull Set<RegisteredBiome> getBiomes() {
++        return getCustomBiomes().stream().collect(Collectors.toUnmodifiableSet());
++    }
++
++    @Contract(pure = true, value = "_, _ -> new")
++    private @NotNull InternalRegisteredBiome createRegisteredBiome(@NotNull Plugin plugin, @NotNull CustomBiome customBiome) throws NoSuchFieldException, IllegalAccessException {
++        return new InternalRegisteredBiome(plugin, customBiome) {
++            @Override
++            protected @NotNull WritableRegistry<Biome> biomeRegistry() {
++                return registry;
++            }
++        };
++    }
++
++    protected @NotNull @Unmodifiable Set<RegisteredBiome> getCustomBiomes() {
++        return customBiomes;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalRegisteredBiome.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalRegisteredBiome.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..e97a2ab79fd2ebea2374e5c6fb9e22bd51be892f
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalRegisteredBiome.java
+@@ -0,0 +1,120 @@
++package net.kissenpvp.pulvinar.world.biome;
++
++import com.mojang.serialization.Lifecycle;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
++import net.kissenpvp.pulvinar.api.world.biome.RegisteredBiome;
++import net.kissenpvp.pulvinar.api.world.biome.properties.BiomeClimate;
++import net.minecraft.core.Holder;
++import net.minecraft.core.MappedRegistry;
++import net.minecraft.core.RegistrationInfo;
++import net.minecraft.core.WritableRegistry;
++import net.minecraft.core.registries.Registries;
++import net.minecraft.resources.ResourceKey;
++import net.minecraft.resources.ResourceLocation;
++import net.minecraft.world.level.biome.Biome;
++import net.minecraft.world.level.biome.BiomeGenerationSettings;
++import net.minecraft.world.level.biome.BiomeSpecialEffects;
++import net.minecraft.world.level.biome.MobSpawnSettings;
++import org.bukkit.plugin.Plugin;
++import org.jetbrains.annotations.NotNull;
++
++import java.lang.reflect.Field;
++import java.util.IdentityHashMap;
++import java.util.Objects;
++import java.util.Optional;
++
++public abstract class InternalRegisteredBiome implements RegisteredBiome {
++
++    private final ResourceLocation resourceLocation;
++    private final CustomBiome customBiome;
++    private final Plugin plugin;
++    private Holder<Biome> biomeHolder;
++
++    public InternalRegisteredBiome(@NotNull Plugin plugin, @NotNull CustomBiome customBiome) throws NoSuchFieldException, IllegalAccessException {
++        this.customBiome = customBiome;
++        this.plugin = plugin;
++        this.resourceLocation = generateResourceLocation();
++        toMinecraft();
++    }
++
++    public @NotNull ResourceLocation generateResourceLocation() {
++        String biomeName = getBiome().getName();
++        ResourceLocation resourceLocation = ResourceLocation.tryBuild(plugin.getName().toLowerCase(), biomeName);
++        if (Objects.isNull(resourceLocation)) {
++            String error = "Could not generate resource location for biome %s.";
++            throw new IllegalStateException(String.format(error, biomeName));
++        }
++        return resourceLocation;
++    }
++
++    public @NotNull ResourceLocation getResourceLocation() {
++        return resourceLocation;
++    }
++
++    public @NotNull Holder<Biome> getHolder() {
++        return this.biomeHolder;
++    }
++
++    private void toMinecraft() throws NoSuchFieldException, IllegalAccessException {
++        setBiome(translate());
++    }
++
++    private @NotNull Biome translate() {
++        Biome.BiomeBuilder builder = new Biome.BiomeBuilder();
++        MobSpawnSettings.Builder mobSpawnSettings = new MobSpawnSettings.Builder();
++        builder.mobSpawnSettings(mobSpawnSettings.build()); //TODO well, we might need some
++
++        builder.specialEffects(specialEffects());
++
++        builder.generationSettings(BiomeGenerationSettings.EMPTY);
++
++        boolean cold = getBiome().getBiomeClimate().getTemperatureRange().isBefore(1f);
++        builder.temperatureAdjustment(cold ? Biome.TemperatureModifier.FROZEN : Biome.TemperatureModifier.NONE);
++
++        builder.temperature(0.7F);
++        builder.downfall(getBiome().getBiomeClimate().getDownfall());
++
++        return builder.build();
++    }
++
++    private @NotNull BiomeSpecialEffects specialEffects() {
++        BiomeSpecialEffects.Builder specialEffectsBuilder = new BiomeSpecialEffects.Builder();
++        BiomeClimate.EnvironmentSettings environmentSettings = getBiome().getBiomeClimate().getEnvironmentSettings();
++        specialEffectsBuilder.fogColor(environmentSettings.fogColor());
++        specialEffectsBuilder.waterColor(environmentSettings.waterColor());
++        specialEffectsBuilder.waterFogColor(environmentSettings.waterFogColor());
++        specialEffectsBuilder.skyColor(environmentSettings.skyColor());
++        environmentSettings.foliageColor().ifPresent(specialEffectsBuilder::foliageColorOverride);
++        environmentSettings.grassColorOverride().ifPresent(specialEffectsBuilder::grassColorOverride);
++        specialEffectsBuilder.grassColorModifier(BiomeSpecialEffects.GrassColorModifier.valueOf(environmentSettings.modifier().name()));
++        //TODO music and stuff
++        return specialEffectsBuilder.build();
++    }
++
++    protected abstract @NotNull WritableRegistry<Biome> biomeRegistry();
++
++    @Override
++    public @NotNull CustomBiome getBiome() {
++        return customBiome;
++    }
++
++    private void setBiome(@NotNull Biome biome) throws NoSuchFieldException, IllegalAccessException {
++        ResourceKey<Biome> biomeResourceKey = ResourceKey.create(Registries.BIOME, generateResourceLocation());
++        WritableRegistry<Biome> biomeRegistry = biomeRegistry();
++
++        Field field = MappedRegistry.class.getDeclaredField("unregisteredIntrusiveHolders");
++        field.setAccessible(true);
++        field.set(biomeRegistry, new IdentityHashMap<>());
++        biomeRegistry.createIntrusiveHolder(biome);
++
++        RegistrationInfo info = new RegistrationInfo(Optional.empty(), Lifecycle.stable());
++        this.biomeHolder = biomeRegistry.register(biomeResourceKey, biome, info);
++        field.set(biomeRegistry, null);
++        field.setAccessible(false);
++    }
++
++    @Override
++    public @NotNull Plugin getPlugin() {
++        return plugin;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/cache/BiomeSectionCacheLoader.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/cache/BiomeSectionCacheLoader.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..119b7fd1004fe90dfaff0de5a4371537bd9e2f1d
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/cache/BiomeSectionCacheLoader.java
+@@ -0,0 +1,16 @@
++package net.kissenpvp.pulvinar.world.biome.cache;
++
++import com.google.common.cache.CacheLoader;
++import net.kissenpvp.pulvinar.api.world.biome.BiomeSection;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Objects;
++
++public class BiomeSectionCacheLoader extends CacheLoader<BiomeSection, BiomeSection> {
++
++    @Override
++    public @NotNull BiomeSection load(@NotNull BiomeSection key) throws Exception {
++        key.calculate();
++        return key;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/cache/HeightIndependentBiomeCacheLoader.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/cache/HeightIndependentBiomeCacheLoader.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..f70fdbd5182e895fe10531dd32486f5441b18a1a
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/cache/HeightIndependentBiomeCacheLoader.java
+@@ -0,0 +1,23 @@
++package net.kissenpvp.pulvinar.world.biome.cache;
++
++import com.google.common.cache.CacheLoader;
++import net.kissenpvp.pulvinar.api.world.biome.BiomeSection;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
++import net.kissenpvp.pulvinar.world.biome.BiomeManager;
++import org.jetbrains.annotations.NotNull;
++
++public class HeightIndependentBiomeCacheLoader extends CacheLoader<ExactLocation2D, CustomBiome> {
++
++    public final BiomeManager manager;
++
++    public HeightIndependentBiomeCacheLoader(@NotNull BiomeManager manager) {
++        this.manager = manager;
++    }
++
++    @Override
++    public @NotNull CustomBiome load(@NotNull ExactLocation2D key) throws Exception {
++        BiomeSection dominantSection = manager.getMostDominantSection(key);
++        return dominantSection.getBiome();
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/test/TestBiome.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/test/TestBiome.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ed60c4fc0e345b2d83d055bdcb3a636a5f3cde4e
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/test/TestBiome.java
+@@ -0,0 +1,36 @@
++package net.kissenpvp.pulvinar.world.biome.test;
++
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
++import net.kissenpvp.pulvinar.api.world.biome.properties.BiomeClimate;
++import net.kissenpvp.pulvinar.api.world.biome.properties.BiomeHandler;
++import net.kissenpvp.pulvinar.api.world.biome.properties.BiomeType;
++import net.kissenpvp.pulvinar.api.world.biome.properties.TransitionClimate;
++import org.jetbrains.annotations.NotNull;
++
++public class TestBiome implements CustomBiome {
++
++    @Override
++    public @NotNull String getName() {
++        return "test";
++    }
++
++    @Override
++    public @NotNull BiomeHandler getHandler() {
++        return new TestBiomeHandler();
++    }
++
++    @Override
++    public @NotNull BiomeType getBiomeType() {
++        return BiomeType.MOUNTAINOUS;
++    }
++
++    @Override
++    public @NotNull BiomeClimate getBiomeClimate() {
++        return new TransitionClimate();
++    }
++
++    @Override
++    public int getBiomeWeight() {
++        return 0;
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/test/TestBiomeHandler.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/test/TestBiomeHandler.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d97cd4fb062bde217430cd993331d0be24db5eea
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/test/TestBiomeHandler.java
+@@ -0,0 +1,49 @@
++package net.kissenpvp.pulvinar.world.biome.test;
++
++import net.kissenpvp.pulvinar.api.world.CustomWorld;
++import net.kissenpvp.pulvinar.api.world.biome.properties.BiomeHandler;
++import net.kissenpvp.pulvinar.api.world.populator.data.PopulatorData;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
++import org.bukkit.Material;
++import org.bukkit.generator.ChunkGenerator;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Optional;
++import java.util.Random;
++
++public class TestBiomeHandler implements BiomeHandler {
++    @Override
++    public boolean isOcean() {
++        return false;
++    }
++
++    @Override
++    public @NotNull Material[] getSurface(@NotNull Random random) {
++        return new Material[] {Material.GRASS_BLOCK};
++    }
++
++    @Override
++    public void populateSmall(@NotNull Random random, @NotNull PopulatorData populatorData) {
++
++    }
++
++    @Override
++    public void populateLarge(@NotNull Random random, @NotNull PopulatorData populatorData) {
++
++    }
++
++    @Override
++    public int getMaxCaveHeight(@NotNull ExactLocation2D exactLocation2D) {
++        return 0;
++    }
++
++    @Override
++    public @NotNull Optional<BiomeHandler> getParent() {
++        return Optional.empty();
++    }
++
++    @Override
++    public void transformTerrain(@NotNull Random random, ChunkGenerator.@NotNull ChunkData chunkData, @NotNull ExactLocation2D exactLocation2D) {
++
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkCache.java b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkCache.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..74d9be029d1f6c2eef2b23341a04e07b78750b7d
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkCache.java
+@@ -0,0 +1,104 @@
++package net.kissenpvp.pulvinar.world.generator;
++
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
++import net.kissenpvp.pulvinar.api.world.biome.RegisteredBiome;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.Arrays;
++import java.util.Optional;
++
++public class InternalChunkCache {
++
++
++    private final ExactLocation2D location2D;
++
++    private float[] arrayCache; //These 6 arrays are now one big array. No more nested pointers
++
++    private RegisteredBiome[] biomeCache;
++
++    public InternalChunkCache(@NotNull ExactLocation2D exactLocation2D) {
++        this(exactLocation2D, false);
++    }
++
++    public InternalChunkCache(@NotNull ExactLocation2D exactLocation2D, boolean useRaw) {
++        this.location2D = useRaw ? exactLocation2D : exactLocation2D.each(coordinate -> coordinate >> 4);
++        this.initCache();
++    }
++
++    public void initCache()
++    {
++        this.arrayCache = new float[1536];
++        Arrays.fill(arrayCache, -65);
++
++        this.biomeCache = new RegisteredBiome[256];
++    }
++
++
++    public float getDominantBiomeHeight(@NotNull ExactLocation2D rawLocation) {
++        /*
++          A general explanation of this shitty inlining:
++          rawX & 0xF will return internal chunk coordinates [0-15]. This
++          happens because the chunk coordinates are the LSB, so ANDing by
++          0xF will return the bits needed to give 0-15.
++         */
++        return arrayCache[(rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)];
++    }
++
++    public void cacheDominantBiomeHeight(@NotNull ExactLocation2D rawLocation, float value) {
++        arrayCache[(rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = value;
++    }
++
++    public double getHeightMapHeight(@NotNull ExactLocation2D rawLocation) {
++        return arrayCache[768 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)];
++    }
++
++    public short getHighestGround(@NotNull ExactLocation2D rawLocation) {
++        return (short) arrayCache[1024 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)];
++    }
++
++    public short getTransformedHeight(@NotNull ExactLocation2D chunkSubLocation) {
++        return (short) arrayCache[1280 + chunkSubLocation.x() + 16 * chunkSubLocation.z()];
++    }
++
++    public void writeTransformedHeight(@NotNull ExactLocation2D chunkSubLocation, short val) {
++        arrayCache[1280 + chunkSubLocation.x() + 16 * chunkSubLocation.z()] = val;
++    }
++
++    public void cacheHeightMap(@NotNull ExactLocation2D rawLocation, double value) {
++        arrayCache[768 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = (float) value;
++    }
++
++    public void cacheHighestGround(@NotNull ExactLocation2D rawLocation, short value) {
++        arrayCache[1024 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = value;
++    }
++
++    public float getBlurredHeight(@NotNull ExactLocation2D rawLocation) {
++        return arrayCache[256 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)];
++    }
++
++    public double getIntermediateBlurHeight(@NotNull ExactLocation2D rawLocation) {
++        return arrayCache[512 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)];
++    }
++
++    public void cacheBlurredHeight(@NotNull ExactLocation2D rawLocation, float value) {
++        arrayCache[256 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = value;
++    }
++
++    public void cacheIntermediateBlurredHeight(@NotNull ExactLocation2D rawLocation, float value) {
++        arrayCache[512 + (rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = value;
++    }
++
++    public @NotNull Optional<RegisteredBiome> getBiome(@NotNull ExactLocation2D rawLocation) {
++        return Optional.ofNullable(this.biomeCache[(rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)]);
++    }
++
++    public @NotNull RegisteredBiome cacheBiome(@NotNull ExactLocation2D rawLocation, RegisteredBiome value) {
++        biomeCache[(rawLocation.x() & 0xF) + 16 * (rawLocation.z() & 0xF)] = value;
++        return value;
++    }
++
++
++    //TODO hashcode and equals
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkGenerator.java b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkGenerator.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..3bb15330beb3f46a0a1444257113782c5f5eb509
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkGenerator.java
+@@ -0,0 +1,136 @@
++package net.kissenpvp.pulvinar.world.generator;
++
++import com.mojang.serialization.MapCodec;
++import net.kissenpvp.pulvinar.api.world.CustomWorld;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
++import net.kissenpvp.pulvinar.world.InternalCustomWorld;
++import net.minecraft.core.BlockPos;
++import net.minecraft.server.level.WorldGenRegion;
++import net.minecraft.world.level.LevelHeightAccessor;
++import net.minecraft.world.level.NoiseColumn;
++import net.minecraft.world.level.StructureManager;
++import net.minecraft.world.level.biome.BiomeManager;
++import net.minecraft.world.level.biome.Climate;
++import net.minecraft.world.level.block.Blocks;
++import net.minecraft.world.level.block.state.BlockState;
++import net.minecraft.world.level.chunk.ChunkAccess;
++import net.minecraft.world.level.chunk.ChunkGenerator;
++import net.minecraft.world.level.levelgen.GenerationStep;
++import net.minecraft.world.level.levelgen.Heightmap;
++import net.minecraft.world.level.levelgen.RandomState;
++import net.minecraft.world.level.levelgen.blending.Blender;
++import org.bukkit.craftbukkit.CraftWorld;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.List;
++import java.util.concurrent.CompletableFuture;
++
++public class InternalChunkGenerator extends ChunkGenerator {
++
++    private final MapRendererWorldProviderBiome b;
++    private final ChunkGenerator delegate;
++    private final CustomWorld customWorld;
++
++    public InternalChunkGenerator(@NotNull CustomWorld world, @NotNull ChunkGenerator delegate) {
++        super(delegate.getBiomeSource(), delegate.generationSettingsGetter);
++        this.b = new MapRendererWorldProviderBiome(((InternalCustomWorld) world), delegate.getBiomeSource());
++        this.delegate = delegate;
++        this.customWorld = world;
++    }
++
++    @Override
++    protected @NotNull MapCodec<? extends ChunkGenerator> codec() {
++        return MapCodec.unit(this);
++    }
++
++    @Override
++    public void applyCarvers(@NotNull WorldGenRegion chunkRegion, long seed, @NotNull RandomState noiseConfig, @NotNull BiomeManager biomeAccess, @NotNull StructureManager structureAccessor, @NotNull ChunkAccess chunk, GenerationStep.@NotNull Carving carverStep) {
++
++        chunk.fillBiomesFromNoise(b, ((CraftWorld) customWorld.getBukkitWorld()).getHandle().getChunkSource().randomState().sampler());
++
++        delegate.applyCarvers(chunkRegion, seed, noiseConfig, biomeAccess, structureAccessor, chunk, carverStep);
++    }
++
++    @Override
++    public void buildSurface(@NotNull WorldGenRegion region, @NotNull StructureManager structures, @NotNull RandomState noiseConfig, @NotNull ChunkAccess chunk) {
++        delegate.buildSurface(region, structures, noiseConfig, chunk); // Delegate
++    }
++
++    @Override
++    public void spawnOriginalMobs(@NotNull WorldGenRegion region) {
++        delegate.spawnOriginalMobs(region); // Delegate the call
++    }
++
++    @Override
++    public int getGenDepth() {
++        return delegate.getGenDepth(); // Delegate the call
++    }
++
++    @Override
++    public @NotNull CompletableFuture<ChunkAccess> fillFromNoise(@NotNull Blender blender, @NotNull RandomState noiseConfig, @NotNull StructureManager structureAccessor, @NotNull ChunkAccess chunk) {
++        //return delegate.fillFromNoise(blender, noiseConfig, structureAccessor, chunk);
++        BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
++        BlockState clay = Blocks.CLAY.defaultBlockState();
++        BlockState water = Blocks.WATER.defaultBlockState();
++
++        for (int x = 0; x < 16; x++) {
++            for (int z = 0; z < 16; z++) {
++                int rawX = chunk.getPos().x * 16 + x;
++                int rawZ = chunk.getPos().z * 16 + z;
++                double height = customWorld.getLandscape().getRiver().getHeight(new ExactLocation2D(rawX, rawZ));
++
++                int heightInt = (int) height;
++                blockPos.set(x, -heightInt, z);
++                chunk.setBlockState(blockPos, clay, false);
++                blockPos.set(x, -heightInt + 1, z);
++                chunk.setBlockState(blockPos, clay, false);
++                for (int y = 0; y <= heightInt + 2; y++) {
++                    blockPos.set(x, -y, z);
++                    chunk.setBlockState(blockPos, water, false);
++                }
++            }
++        }
++
++        return CompletableFuture.completedFuture(chunk);
++    }
++
++    @Override
++    public int getSeaLevel() {
++        return 10;
++        //return customWorld.getSeaLevel();
++    }
++
++    @Override
++    public int getMinY() {
++        return delegate.getMinY();
++        //return customWorld.getLandscape().getMinY();
++    }
++
++    @Override
++    public int getBaseHeight(int x, int z, Heightmap.@NotNull Types heightmap, @NotNull LevelHeightAccessor world, @NotNull RandomState noiseConfig) {
++        return (int) customWorld.getLandscape().getGeneral().getHeight(new ExactLocation2D(x, z));
++    }
++
++    @Override
++    public @NotNull NoiseColumn getBaseColumn(int x, int z, @NotNull LevelHeightAccessor world, @NotNull RandomState noiseConfig) {
++        BlockState[] states = new BlockState[world.getHeight()];
++        int minY = world.getMinBuildHeight();
++        int maxY = minY + world.getHeight();
++        int baseHeight = getBaseHeight(x, z, Heightmap.Types.WORLD_SURFACE_WG, world, noiseConfig);
++
++        for (int y = minY; y < maxY; y++) {
++            if (y < baseHeight) {
++                states[y - minY] = Blocks.STONE.defaultBlockState();
++            } else {
++                states[y - minY] = Blocks.AIR.defaultBlockState();
++            }
++        }
++
++        return new NoiseColumn(minY, states);
++    }
++
++    @Override
++    public void addDebugScreenInfo(@NotNull List<String> text, @NotNull RandomState noiseConfig, @NotNull BlockPos pos) {
++        text.add("Custom World: " + customWorld.getBukkitWorld().getName());
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/generator/MapRendererWorldProviderBiome.java b/src/main/java/net/kissenpvp/pulvinar/world/generator/MapRendererWorldProviderBiome.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..352f591ab9a03dcbe40a92fde57c755ff3372fd6
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/generator/MapRendererWorldProviderBiome.java
+@@ -0,0 +1,67 @@
++package net.kissenpvp.pulvinar.world.generator;
++
++import com.mojang.serialization.MapCodec;
++import net.kissenpvp.pulvinar.api.world.WorldImplementation;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiomeHandler;
++import net.kissenpvp.pulvinar.api.world.biome.RegisteredBiome;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
++import net.kissenpvp.pulvinar.world.InternalCustomWorld;
++import net.kissenpvp.pulvinar.world.biome.BiomeManager;
++import net.kissenpvp.pulvinar.world.biome.InternalRegisteredBiome;
++import net.minecraft.core.Holder;
++import net.minecraft.world.level.biome.Biome;
++import net.minecraft.world.level.biome.BiomeSource;
++import net.minecraft.world.level.biome.Climate;
++import org.bukkit.Bukkit;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Set;
++import java.util.stream.Collectors;
++import java.util.stream.Stream;
++
++public class MapRendererWorldProviderBiome extends BiomeSource {
++
++    private final InternalCustomWorld world;
++    private final BiomeSource delegate;
++    private final CustomBiomeHandler handler;
++
++    public MapRendererWorldProviderBiome(@NotNull InternalCustomWorld world, BiomeSource delegate) {
++        this.world = world;
++        this.delegate = delegate;
++        this.handler = Bukkit.getPulvinar().getImplementation(WorldImplementation.class).getBiomeHandler();
++    }
++
++    @Override
++    protected @NotNull MapCodec<? extends BiomeSource> codec() {
++        return MapCodec.unit(this);
++    }
++
++    @Override
++    protected @NotNull Stream<Holder<Biome>> collectPossibleBiomes() {
++        //TODO rework like very hard
++        return this.world.getBiomes().stream().map(biome ->
++        {
++            if(biome instanceof InternalRegisteredBiome registeredBiome) {
++                return registeredBiome.getHolder();
++            }
++            throw new UnsupportedOperationException("The biome must be inherited from InternalRegisteredBiome!");
++        });
++    }
++
++    @Override
++    public @NotNull Set<Holder<Biome>> possibleBiomes() {
++        return collectPossibleBiomes().collect(Collectors.toUnmodifiableSet());
++    }
++
++    @Override
++    public @NotNull Holder<Biome> getNoiseBiome(int x, int y, int z, Climate.@NotNull Sampler noise) {
++        RegisteredBiome customBiome = world.getBiome(new ExactLocation2D(x, z).each(value -> value << 2));
++        //TODO rework like very hard
++        if(customBiome instanceof InternalRegisteredBiome internalRegisteredBiome)
++        {
++            return internalRegisteredBiome.getHolder();
++        }
++        throw new UnsupportedOperationException("The biome must be inherited from InternalRegisteredBiome!");
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/level/ServerLevel.java b/src/main/java/net/minecraft/server/level/ServerLevel.java
+index 29e31ed2d09aee3b668816a683ab0f89026fdf4f..97e52ea688a975363f5006a6ae302dd08946bc22 100644
+--- a/src/main/java/net/minecraft/server/level/ServerLevel.java
++++ b/src/main/java/net/minecraft/server/level/ServerLevel.java
+@@ -38,6 +38,9 @@ import java.util.stream.Collectors;
+ import java.util.stream.Stream;
+ import javax.annotation.Nonnull;
+ import javax.annotation.Nullable;
++
++import net.kissenpvp.pulvinar.world.InternalCustomWorld;
++import net.kissenpvp.pulvinar.world.generator.InternalChunkGenerator;
+ import net.minecraft.CrashReport;
+ import net.minecraft.CrashReportCategory;
+ import net.minecraft.ReportType;
+@@ -541,9 +544,9 @@ public class ServerLevel extends Level implements WorldGenLevel, ca.spottedleaf.
+         }
+         // Purpur end
+         this.serverLevelData = iworlddataserver;
+-        ChunkGenerator chunkgenerator = worlddimension.generator();
+         // CraftBukkit start
+         this.serverLevelData.setWorld(this);
++        ChunkGenerator chunkgenerator = new InternalChunkGenerator(new InternalCustomWorld(this.getWorld()), worlddimension.generator());//worlddimension.generator(;
+ 
+         if (biomeProvider != null) {
+             BiomeSource worldChunkManager = new CustomWorldChunkManager(this.getWorld(), biomeProvider, this.server.registryAccess().registryOrThrow(Registries.BIOME));
