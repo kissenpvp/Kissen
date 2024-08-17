@@ -34,10 +34,10 @@ index 1e637e15367271ce44250b8543c49d17015fd7e3..cd5b567732bd514016cf761f3b19eae7
  
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java b/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..896c859995fa286dc95eba3c25653795f970e91d
+index 0000000000000000000000000000000000000000..3dd60feb3e62dc38d3e94d26fa26b82ecf9f0599
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/InternalCustomWorld.java
-@@ -0,0 +1,278 @@
+@@ -0,0 +1,323 @@
 +package net.kissenpvp.pulvinar.world;
 +
 +import com.google.common.cache.CacheBuilder;
@@ -71,6 +71,7 @@ index 0000000000000000000000000000000000000000..896c859995fa286dc95eba3c25653795
 +public final class InternalCustomWorld implements CustomWorld {
 +    private static final int upscaleSize = 3;
 +    private static final int spawnFlatRadiusSquared = -324534;
++    //copied
 +    private final @NotNull World world;
 +    private final @NotNull Landscape landscape;
 +    private final @NotNull Environment environment;
@@ -239,7 +240,51 @@ index 0000000000000000000000000000000000000000..896c859995fa286dc95eba3c25653795
 +        return world.getSeaLevel();
 +    }
 +
-+    //copied
++    private double getRawRiverDepth(@NotNull ExactLocation2D exactLocation2D) {
++        if (Math.pow(exactLocation2D.x(), 2) + Math.pow(exactLocation2D.z(), 2) < spawnFlatRadiusSquared) {
++            return 0;
++        }
++        double depth = getLandscape().getRiver().getHeight(exactLocation2D);
++        depth = depth < 0 ? 0 : depth;
++        return depth;
++    }
++
++    private double getPreciseHeight(@NotNull ExactLocation2D exactLocation2D) {
++        InternalChunkCache cache = getCache(exactLocation2D);
++
++        double cachedValue = cache.getHeightMapHeight(exactLocation2D);
++        if (cachedValue != getLandscape().getMinY() - 1) {
++            return cachedValue;
++        }
++
++        double height = getRiderlessHeight(exactLocation2D);
++
++        //River Depth
++        double depth = getRawRiverDepth(exactLocation2D);
++
++        //Normal scenario: Shallow area
++        if (height - depth >= getSeaLevel() - 15) {
++            height -= depth;
++
++            //Fix for underwater river carving: Don't carve deeply
++        } else if (height > getSeaLevel() - 15 && height - depth < getSeaLevel() - 15) {
++            height = getSeaLevel() - 15;
++        }
++
++        float heightThing = 1f; // TODO make configurable
++
++        if (heightThing != 1f && height > getSeaLevel()) {
++            height += heightThing * (height - getSeaLevel());
++        }
++
++        cache.cacheHeightMap(exactLocation2D, height);
++        return height;
++    }
++
++    public int getBlockHeight(@NotNull ExactLocation2D exactLocation2D) {
++        return (int) getPreciseHeight(exactLocation2D);
++    }
++
 +    private double getRiderlessHeight(@NotNull ExactLocation2D exactLocation2D) //TODO better
 +    {
 +        int maskRadius = 5;
@@ -1506,10 +1551,10 @@ index 0000000000000000000000000000000000000000..74d9be029d1f6c2eef2b23341a04e07b
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkGenerator.java b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkGenerator.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..3bb15330beb3f46a0a1444257113782c5f5eb509
+index 0000000000000000000000000000000000000000..f226a282bddcd713d98cb9a24a78b03d00cad3cf
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalChunkGenerator.java
-@@ -0,0 +1,136 @@
+@@ -0,0 +1,121 @@
 +package net.kissenpvp.pulvinar.world.generator;
 +
 +import com.mojang.serialization.MapCodec;
@@ -1522,6 +1567,7 @@ index 0000000000000000000000000000000000000000..3bb15330beb3f46a0a1444257113782c
 +import net.minecraft.world.level.NoiseColumn;
 +import net.minecraft.world.level.StructureManager;
 +import net.minecraft.world.level.biome.BiomeManager;
++import net.minecraft.world.level.biome.BiomeSource;
 +import net.minecraft.world.level.biome.Climate;
 +import net.minecraft.world.level.block.Blocks;
 +import net.minecraft.world.level.block.state.BlockState;
@@ -1539,13 +1585,15 @@ index 0000000000000000000000000000000000000000..3bb15330beb3f46a0a1444257113782c
 +
 +public class InternalChunkGenerator extends ChunkGenerator {
 +
-+    private final MapRendererWorldProviderBiome b;
++    private final MapRendererWorldProviderBiome worldProviderBiome;
++    private final InternalWorldProviderBiome internalWorldProviderBiome;
 +    private final ChunkGenerator delegate;
 +    private final CustomWorld customWorld;
 +
 +    public InternalChunkGenerator(@NotNull CustomWorld world, @NotNull ChunkGenerator delegate) {
 +        super(delegate.getBiomeSource(), delegate.generationSettingsGetter);
-+        this.b = new MapRendererWorldProviderBiome(((InternalCustomWorld) world), delegate.getBiomeSource());
++        this.worldProviderBiome = new MapRendererWorldProviderBiome(((InternalCustomWorld) world));
++        this.internalWorldProviderBiome = new InternalWorldProviderBiome(world);
 +        this.delegate = delegate;
 +        this.customWorld = world;
 +    }
@@ -1556,9 +1604,16 @@ index 0000000000000000000000000000000000000000..3bb15330beb3f46a0a1444257113782c
 +    }
 +
 +    @Override
++    public @NotNull BiomeSource getBiomeSource() {
++        return worldProviderBiome;
++    }
++
++    @Override
 +    public void applyCarvers(@NotNull WorldGenRegion chunkRegion, long seed, @NotNull RandomState noiseConfig, @NotNull BiomeManager biomeAccess, @NotNull StructureManager structureAccessor, @NotNull ChunkAccess chunk, GenerationStep.@NotNull Carving carverStep) {
 +
-+        chunk.fillBiomesFromNoise(b, ((CraftWorld) customWorld.getBukkitWorld()).getHandle().getChunkSource().randomState().sampler());
++        Climate.Sampler sampler = ((CraftWorld) customWorld.getBukkitWorld()).getHandle().getChunkSource().randomState().sampler();
++        //noinspection DataFlowIssue
++        chunk.fillBiomesFromNoise(internalWorldProviderBiome, null); // can be null
 +
 +        delegate.applyCarvers(chunkRegion, seed, noiseConfig, biomeAccess, structureAccessor, chunk, carverStep);
 +    }
@@ -1580,42 +1635,17 @@ index 0000000000000000000000000000000000000000..3bb15330beb3f46a0a1444257113782c
 +
 +    @Override
 +    public @NotNull CompletableFuture<ChunkAccess> fillFromNoise(@NotNull Blender blender, @NotNull RandomState noiseConfig, @NotNull StructureManager structureAccessor, @NotNull ChunkAccess chunk) {
-+        //return delegate.fillFromNoise(blender, noiseConfig, structureAccessor, chunk);
-+        BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
-+        BlockState clay = Blocks.CLAY.defaultBlockState();
-+        BlockState water = Blocks.WATER.defaultBlockState();
-+
-+        for (int x = 0; x < 16; x++) {
-+            for (int z = 0; z < 16; z++) {
-+                int rawX = chunk.getPos().x * 16 + x;
-+                int rawZ = chunk.getPos().z * 16 + z;
-+                double height = customWorld.getLandscape().getRiver().getHeight(new ExactLocation2D(rawX, rawZ));
-+
-+                int heightInt = (int) height;
-+                blockPos.set(x, -heightInt, z);
-+                chunk.setBlockState(blockPos, clay, false);
-+                blockPos.set(x, -heightInt + 1, z);
-+                chunk.setBlockState(blockPos, clay, false);
-+                for (int y = 0; y <= heightInt + 2; y++) {
-+                    blockPos.set(x, -y, z);
-+                    chunk.setBlockState(blockPos, water, false);
-+                }
-+            }
-+        }
-+
-+        return CompletableFuture.completedFuture(chunk);
++        return delegate.fillFromNoise(blender, noiseConfig, structureAccessor, chunk);
 +    }
 +
 +    @Override
 +    public int getSeaLevel() {
-+        return 10;
-+        //return customWorld.getSeaLevel();
++        return customWorld.getSeaLevel();
 +    }
 +
 +    @Override
 +    public int getMinY() {
-+        return delegate.getMinY();
-+        //return customWorld.getLandscape().getMinY();
++        return customWorld.getLandscape().getMinY();
 +    }
 +
 +    @Override
@@ -1646,44 +1676,51 @@ index 0000000000000000000000000000000000000000..3bb15330beb3f46a0a1444257113782c
 +        text.add("Custom World: " + customWorld.getBukkitWorld().getName());
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/pulvinar/world/generator/MapRendererWorldProviderBiome.java b/src/main/java/net/kissenpvp/pulvinar/world/generator/MapRendererWorldProviderBiome.java
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalWorldProviderBiome.java b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalWorldProviderBiome.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..352f591ab9a03dcbe40a92fde57c755ff3372fd6
+index 0000000000000000000000000000000000000000..ac1695909e7003f327a0b9dde8f56d220be0f697
 --- /dev/null
-+++ b/src/main/java/net/kissenpvp/pulvinar/world/generator/MapRendererWorldProviderBiome.java
-@@ -0,0 +1,67 @@
++++ b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalWorldProviderBiome.java
+@@ -0,0 +1,61 @@
 +package net.kissenpvp.pulvinar.world.generator;
 +
 +import com.mojang.serialization.MapCodec;
-+import net.kissenpvp.pulvinar.api.world.WorldImplementation;
-+import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
-+import net.kissenpvp.pulvinar.api.world.biome.CustomBiomeHandler;
++import net.kissenpvp.pulvinar.api.world.CustomWorld;
 +import net.kissenpvp.pulvinar.api.world.biome.RegisteredBiome;
 +import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
-+import net.kissenpvp.pulvinar.world.InternalCustomWorld;
-+import net.kissenpvp.pulvinar.world.biome.BiomeManager;
 +import net.kissenpvp.pulvinar.world.biome.InternalRegisteredBiome;
 +import net.minecraft.core.Holder;
 +import net.minecraft.world.level.biome.Biome;
 +import net.minecraft.world.level.biome.BiomeSource;
 +import net.minecraft.world.level.biome.Climate;
-+import org.bukkit.Bukkit;
++import org.jetbrains.annotations.Contract;
 +import org.jetbrains.annotations.NotNull;
 +
 +import java.util.Set;
++import java.util.function.Function;
 +import java.util.stream.Collectors;
 +import java.util.stream.Stream;
 +
-+public class MapRendererWorldProviderBiome extends BiomeSource {
++public class InternalWorldProviderBiome extends BiomeSource {
 +
-+    private final InternalCustomWorld world;
-+    private final BiomeSource delegate;
-+    private final CustomBiomeHandler handler;
++    private final CustomWorld world;
++    private final Set<Holder<Biome>> biomeHolder;
 +
-+    public MapRendererWorldProviderBiome(@NotNull InternalCustomWorld world, BiomeSource delegate) {
++    @Contract(pure = true, value = "-> new")
++    private static @NotNull Function<RegisteredBiome, Holder<Biome>> toHolder() {
++        return (biome) -> {
++            if (biome instanceof InternalRegisteredBiome registeredBiome) {
++                return registeredBiome.getHolder();
++            }
++            String message = String.format("The biome %s cannot be used by the pulvinar biome provider.", biome.getKey());
++            throw new UnsupportedOperationException(message);
++        };
++    }
++
++
++    public InternalWorldProviderBiome(@NotNull CustomWorld world) {
 +        this.world = world;
-+        this.delegate = delegate;
-+        this.handler = Bukkit.getPulvinar().getImplementation(WorldImplementation.class).getBiomeHandler();
++        this.biomeHolder = this.world.getBiomes().stream().map(toHolder()).collect(Collectors.toUnmodifiableSet());
 +    }
 +
 +    @Override
@@ -1693,14 +1730,82 @@ index 0000000000000000000000000000000000000000..352f591ab9a03dcbe40a92fde57c755f
 +
 +    @Override
 +    protected @NotNull Stream<Holder<Biome>> collectPossibleBiomes() {
-+        //TODO rework like very hard
-+        return this.world.getBiomes().stream().map(biome ->
++        return biomeHolder.stream();
++    }
++
++    @Override
++    public @NotNull Holder<Biome> getNoiseBiome(int x, int y, int z, Climate.@NotNull Sampler noise) {
++        RegisteredBiome bank = world.getBiome(new ExactLocation2D(x, z).each((value) -> value << 2));
++        if(bank instanceof InternalRegisteredBiome registeredBiome)
 +        {
-+            if(biome instanceof InternalRegisteredBiome registeredBiome) {
++            return registeredBiome.getHolder();
++        }
++        throw new UnsupportedOperationException("No capable biome has been found.");
++    }
++}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/generator/MapRendererWorldProviderBiome.java b/src/main/java/net/kissenpvp/pulvinar/world/generator/MapRendererWorldProviderBiome.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..dc108e76cc7f21759e7309d7fcbebc5ebb8f4189
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/generator/MapRendererWorldProviderBiome.java
+@@ -0,0 +1,73 @@
++package net.kissenpvp.pulvinar.world.generator;
++
++import com.mojang.serialization.MapCodec;
++import net.kissenpvp.pulvinar.api.world.DefaultBiomes;
++import net.kissenpvp.pulvinar.api.world.WorldImplementation;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiomeHandler;
++import net.kissenpvp.pulvinar.api.world.biome.RegisteredBiome;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
++import net.kissenpvp.pulvinar.world.InternalCustomWorld;
++import net.kissenpvp.pulvinar.world.biome.InternalRegisteredBiome;
++import net.minecraft.core.Holder;
++import net.minecraft.world.level.biome.Biome;
++import net.minecraft.world.level.biome.BiomeSource;
++import net.minecraft.world.level.biome.Climate;
++import org.bukkit.Bukkit;
++import org.jetbrains.annotations.Contract;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Set;
++import java.util.function.Function;
++import java.util.stream.Collectors;
++import java.util.stream.Stream;
++
++public class MapRendererWorldProviderBiome extends BiomeSource {
++
++    private final InternalCustomWorld world;
++    private final Holder<Biome> flat, river;
++
++    public MapRendererWorldProviderBiome(@NotNull InternalCustomWorld world) {
++        this.world = world;
++        CustomBiomeHandler handler = Bukkit.getPulvinar().getImplementation(WorldImplementation.class).getBiomeHandler();
++
++        DefaultBiomes defaultBiomes = world.getLandscape().getDefaultBiomes();
++
++        flat = toHolder().apply(defaultBiomes.getFlat());
++        river = toHolder().apply(defaultBiomes.getRiver());
++    }
++
++    @Contract(pure = true, value = "-> new")
++    private static @NotNull Function<RegisteredBiome, Holder<Biome>> toHolder() {
++        return (biome) -> {
++            if (biome instanceof InternalRegisteredBiome registeredBiome) {
 +                return registeredBiome.getHolder();
 +            }
-+            throw new UnsupportedOperationException("The biome must be inherited from InternalRegisteredBiome!");
-+        });
++            String message = String.format("The biome %s cannot be used by the pulvinar biome provider.", biome.getKey());
++            throw new UnsupportedOperationException(message);
++        };
++    }
++
++    @Override
++    protected @NotNull MapCodec<? extends BiomeSource> codec() {
++        return MapCodec.unit(this);
++    }
++
++    @Override
++    protected @NotNull Stream<Holder<Biome>> collectPossibleBiomes() {
++        return this.world.getBiomes().stream().map(toHolder());
 +    }
 +
 +    @Override
@@ -1710,13 +1815,11 @@ index 0000000000000000000000000000000000000000..352f591ab9a03dcbe40a92fde57c755f
 +
 +    @Override
 +    public @NotNull Holder<Biome> getNoiseBiome(int x, int y, int z, Climate.@NotNull Sampler noise) {
-+        RegisteredBiome customBiome = world.getBiome(new ExactLocation2D(x, z).each(value -> value << 2));
-+        //TODO rework like very hard
-+        if(customBiome instanceof InternalRegisteredBiome internalRegisteredBiome)
-+        {
-+            return internalRegisteredBiome.getHolder();
++        int seaLevel = world.getSeaLevel();
++        if (world.getBlockHeight(new ExactLocation2D(x, z)) <= seaLevel) {
++            return river;
 +        }
-+        throw new UnsupportedOperationException("The biome must be inherited from InternalRegisteredBiome!");
++        return flat;
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/level/ServerLevel.java b/src/main/java/net/minecraft/server/level/ServerLevel.java
