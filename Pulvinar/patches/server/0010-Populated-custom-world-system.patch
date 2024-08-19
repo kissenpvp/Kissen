@@ -1676,6 +1676,151 @@ index 0000000000000000000000000000000000000000..f226a282bddcd713d98cb9a24a78b03d
 +        text.add("Custom World: " + customWorld.getBukkitWorld().getName());
 +    }
 +}
+diff --git a/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalPopulatorData.java b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalPopulatorData.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..fb8d92cad8d82c2fda99f6faa94e801828091d92
+--- /dev/null
++++ b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalPopulatorData.java
+@@ -0,0 +1,139 @@
++package net.kissenpvp.pulvinar.world.generator;
++
++import net.kissenpvp.pulvinar.api.world.CustomWorld;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
++import net.kissenpvp.pulvinar.api.world.populator.data.PopulatorData;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
++import net.kissenpvp.pulvinar.api.world.util.ExactLocation3D;
++import net.minecraft.core.BlockPos;
++import net.minecraft.world.entity.EntityType;
++import net.minecraft.world.level.ServerLevelAccessor;
++import net.minecraft.world.level.chunk.ChunkAccess;
++import org.bukkit.Location;
++import org.bukkit.Material;
++import org.bukkit.block.data.BlockData;
++import org.bukkit.craftbukkit.block.data.CraftBlockData;
++import org.bukkit.craftbukkit.generator.CraftLimitedRegion;
++import org.bukkit.craftbukkit.util.CraftMagicNumbers;
++import org.jetbrains.annotations.Contract;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.HashMap;
++import java.util.Locale;
++import java.util.Optional;
++
++public class InternalPopulatorData implements PopulatorData {
++
++    private static final HashMap<org.bukkit.entity.EntityType, EntityType<?>> entityTypesDict = new HashMap<>();
++    final ServerLevelAccessor accessor;
++    final ChunkAccess chunkAccess;
++    private final ExactLocation2D chunk;
++    private final InternalChunkGenerator chunkGenerator;
++    private final int radius = 1;
++
++    @Contract(pure = true, value = "_ -> new")
++    private static @NotNull BlockPos toBlockPos(@NotNull ExactLocation3D exactLocation3D)
++    {
++        return new BlockPos(exactLocation3D.x(), exactLocation3D.y(), exactLocation3D.z());
++    }
++
++    public InternalPopulatorData(ServerLevelAccessor accessor, @NotNull ChunkAccess chunkAccess, @NotNull InternalChunkGenerator chunkGenerator, @NotNull ExactLocation2D chunk) {
++        this.accessor = accessor;
++        this.chunk = chunk;
++        this.chunkGenerator = chunkGenerator;
++        this.chunkAccess = chunkAccess;
++
++        if (entityTypesDict.isEmpty()) {
++            for (org.bukkit.entity.EntityType type : org.bukkit.entity.EntityType.values()) {
++                if (type == org.bukkit.entity.EntityType.UNKNOWN) {
++                    continue;
++                }
++                try {
++                    // EntityTypes.byString
++                    Optional<EntityType<?>> et = EntityType.byString("minecraft:" + type.toString().toLowerCase(Locale.ENGLISH));
++                    et.ifPresent(entityTypes -> entityTypesDict.put(type, entityTypes));
++                } catch (IllegalArgumentException e) {
++                    //TODO logging and stuff
++                }
++            }
++        }
++    }
++
++    @Override
++    public @NotNull Material getType(@NotNull ExactLocation3D exactLocation3D) {
++        try {
++            return CraftMagicNumbers.getMaterial(accessor.getBlockState(toBlockPos(exactLocation3D)).getBlock());
++        }
++        catch (Exception e) {
++            //TODO logging and stuff
++        }
++        return null;
++    }
++
++
++    @Override
++    public @NotNull BlockData getBlockData(@NotNull ExactLocation3D exactLocation3D) {
++        return CraftBlockData.fromData(accessor.getBlockState(toBlockPos(exactLocation3D)));
++    }
++
++    @Override
++    public void setBlockData(@NotNull ExactLocation3D exactLocation3D, @NotNull BlockData data) {
++        //TODO
++    }
++
++    @Override
++    public void setType(@NotNull ExactLocation3D exactLocation3D, Material material) {
++
++    }
++
++    @Override
++    public @NotNull CustomBiome getBiome(@NotNull ExactLocation2D exactLocation2D) {
++       return getWorld().getBiome(exactLocation2D).getBiome();
++    }
++
++    @Override
++    public void addEntity(@NotNull ExactLocation3D exactLocation3D, org.bukkit.entity.@NotNull EntityType entityType) {
++        if (Math.abs((exactLocation3D.x() >> 4) - chunk.x()) > 1 || Math.abs((exactLocation3D.z() >> 4) - chunk.z()) > 1) {
++            //TerraformGeneratorPlugin.logger.info("Failed to spawn " + type + " as it was out of bounds.");
++            //TODO logging
++            return;
++        }
++
++        // Use this method for thread safety.
++        CraftLimitedRegion clr = new CraftLimitedRegion(accessor.getLevel(), chunkAccess.getPos());
++        net.minecraft.world.entity.Entity entity = clr.createEntity(new Location(getWorld().getBukkitWorld(),
++                exactLocation3D.x(),
++                exactLocation3D.y(),
++                exactLocation3D.z()), entityType.getEntityClass(), true);
++        // EntityInsentient.setPersistenceRequired()
++/*        if (entity instanceof EntityInsentient) { // TODO figure this sh!t out
++            ((EntityInsentient) entity).fF();
++        }*/
++        accessor.addFreshEntity(entity);
++    }
++
++    @Override
++    public void setSpawner(@NotNull ExactLocation3D exactLocation3D) {
++
++    }
++
++    @Override
++    public void lootTableChest(@NotNull ExactLocation3D exactLocation3D) {
++
++    }
++
++    @Override
++    public int getChunkX() {
++        return 0;
++    }
++
++    @Override
++    public int getChunkZ() {
++        return 0;
++    }
++
++    @Override
++    public @NotNull CustomWorld getWorld() {
++        return null;
++    }
++}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalWorldProviderBiome.java b/src/main/java/net/kissenpvp/pulvinar/world/generator/InternalWorldProviderBiome.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..ac1695909e7003f327a0b9dde8f56d220be0f697

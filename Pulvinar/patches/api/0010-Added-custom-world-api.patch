@@ -3258,13 +3258,14 @@ index 0000000000000000000000000000000000000000..440b424f99cc431acbdabd7582f58d75
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/world/populator/data/PopulatorData.java b/src/main/java/net/kissenpvp/pulvinar/api/world/populator/data/PopulatorData.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..1ce4fcbf721800160582b11abdd98fd5904fe348
+index 0000000000000000000000000000000000000000..71c00237302d2af8a1a5ad6661b627005901c7ee
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/world/populator/data/PopulatorData.java
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,52 @@
 +package net.kissenpvp.pulvinar.api.world.populator.data;
 +
 +import net.kissenpvp.pulvinar.api.world.CustomWorld;
++import net.kissenpvp.pulvinar.api.world.biome.CustomBiome;
 +import net.kissenpvp.pulvinar.api.world.util.ExactLocation2D;
 +import net.kissenpvp.pulvinar.api.world.util.ExactLocation3D;
 +import org.bukkit.Material;
@@ -3298,7 +3299,7 @@ index 0000000000000000000000000000000000000000..1ce4fcbf721800160582b11abdd98fd5
 +        }
 +    }
 + 
-+    @NotNull Biome getBiome(@NotNull ExactLocation2D exactLocation2D);
++    @NotNull CustomBiome getBiome(@NotNull ExactLocation2D exactLocation2D);
 +
 +    void addEntity(@NotNull ExactLocation3D exactLocation3D, @NotNull EntityType entityType); //TODO maybe use entity instead
 +    
