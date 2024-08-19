@@ -19,10 +19,10 @@ index aef19b44075a3b2e8696315baa89117dd8ebb513..1ab386e637fd566eea1bdaba686ef27d
      }
  
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java b/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
-index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..ac3846fa78382face51707553d4762d825327058 100644
+index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..f408eac04102dea4bda69050dea001fcd3ad59e4 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperEventManager.java
-@@ -35,15 +35,27 @@ class PaperEventManager {
+@@ -35,15 +35,33 @@ class PaperEventManager {
      }
  
      // SimplePluginManager
@@ -46,18 +46,24 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..ac3846fa78382face51707553d4762d8
 -        RegisteredListener[] listeners = handlers.getRegisteredListeners();
 +        HandlerList handlerList = net.kissenpvp.pulvinar.event.KissenEventImplementation.getHandlerList();
 +        RegisteredListener[] listeners = handlerList.getRegisteredListeners();
-+        if(event instanceof Event bukkitEvent)
-+        {
-+            handlerList = bukkitEvent.getHandlers();
-+            RegisteredListener[] bukkitListeners = handlerList.getRegisteredListeners();
-+            listeners = java.util.stream.Stream.concat(Arrays.stream(listeners),
-+                    Arrays.stream(bukkitListeners)).toArray(RegisteredListener[]::new);
++
++        if (event instanceof Event bukkitEvent) {
++            HandlerList bukkitHandlerList = bukkitEvent.getHandlers();
++            RegisteredListener[] bukkitListeners = bukkitHandlerList.getRegisteredListeners();
++
++            int totalLength = listeners.length + bukkitListeners.length;
++            RegisteredListener[] combinedListeners = new RegisteredListener[totalLength];
++
++            System.arraycopy(listeners, 0, combinedListeners, 0, listeners.length);
++            System.arraycopy(bukkitListeners, 0, combinedListeners, listeners.length, bukkitListeners.length);
++
++            listeners = combinedListeners;
 +        }
 +        // Pulvinar end - integrate unified event system
  
          for (RegisteredListener registration : listeners) {
              if (!registration.getPlugin().isEnabled()) {
-@@ -75,22 +87,22 @@ class PaperEventManager {
+@@ -75,22 +93,22 @@ class PaperEventManager {
          }
      }
  
@@ -84,7 +90,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..ac3846fa78382face51707553d4762d8
          if (!plugin.isEnabled()) {
              throw new IllegalPluginAccessException("Plugin attempted to register " + event + " while not enabled");
          }
-@@ -100,7 +112,7 @@ class PaperEventManager {
+@@ -100,7 +118,7 @@ class PaperEventManager {
      }
  
      @NotNull
@@ -93,7 +99,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..ac3846fa78382face51707553d4762d8
          try {
              Method method = this.getRegistrationClass(type).getDeclaredMethod("getHandlerList");
              method.setAccessible(true);
-@@ -111,11 +123,17 @@ class PaperEventManager {
+@@ -111,11 +129,17 @@ class PaperEventManager {
      }
  
      @NotNull
@@ -112,7 +118,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..ac3846fa78382face51707553d4762d8
              if (clazz.getSuperclass() != null
                  && !clazz.getSuperclass().equals(Event.class)
                  && Event.class.isAssignableFrom(clazz.getSuperclass())) {
-@@ -128,8 +146,8 @@ class PaperEventManager {
+@@ -128,8 +152,8 @@ class PaperEventManager {
  
      // JavaPluginLoader
      @NotNull
@@ -123,7 +129,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..ac3846fa78382face51707553d4762d8
  
          Set<Method> methods;
          try {
-@@ -143,6 +161,21 @@ class PaperEventManager {
+@@ -143,6 +167,21 @@ class PaperEventManager {
              return ret;
          }
  
@@ -145,7 +151,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..ac3846fa78382face51707553d4762d8
          for (final Method method : methods) {
              final EventHandler eh = method.getAnnotation(EventHandler.class);
              if (eh == null) continue;
-@@ -152,15 +185,15 @@ class PaperEventManager {
+@@ -152,15 +191,15 @@ class PaperEventManager {
                  continue;
              }
              final Class<?> checkClass;
@@ -164,7 +170,7 @@ index 7ce9ebba8ce304d1f3f21d4f15ee5f3560d7700b..ac3846fa78382face51707553d4762d8
                  // This loop checks for extending deprecated events
                  if (clazz.getAnnotation(Deprecated.class) != null) {
                      Warning warning = clazz.getAnnotation(Warning.class);
-@@ -191,4 +224,14 @@ class PaperEventManager {
+@@ -191,4 +230,14 @@ class PaperEventManager {
      public void clearEvents() {
          HandlerList.unregisterAll();
      }
