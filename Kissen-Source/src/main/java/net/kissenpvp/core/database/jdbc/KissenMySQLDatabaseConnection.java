@@ -29,7 +29,6 @@ public class KissenMySQLDatabaseConnection extends KissenJDBCDatabaseConnection 
 
     @Override
     public void connect() throws BackendException {
-        System.out.println("> " + getConnectionString());
         if (!getConnectionString().toLowerCase().startsWith("jdbc:mysql://")) {
             throw new BackendException(new IllegalStateException("Illegal connection string given to mysql connection"));
         }
