@@ -50,10 +50,10 @@ index 0000000000000000000000000000000000000000..099bcd659c017047deda6cf67aa31a4f
 +public interface Pulvinar extends Kissen {
 +}
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index 4a870c63cf240c4fa89534bf3ec1b06393efb967..2c85f91b0d51845a6fe2b1d9724023c449958999 100644
+index 4cd159133d6dc3a6ec1b822e8625920f3919931e..8fad89f373e8f62badb0f3d5eb504e167f03d23c 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
-@@ -3033,4 +3033,17 @@ public final class Bukkit {
+@@ -3044,4 +3044,17 @@ public final class Bukkit {
          server.clearBlockHighlights();
      }
      // Purpur end

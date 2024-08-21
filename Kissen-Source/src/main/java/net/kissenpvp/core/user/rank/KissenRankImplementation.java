@@ -58,7 +58,7 @@ public abstract class KissenRankImplementation<T extends AbstractRank> implement
     @Override
     public boolean preStart() {
         DatabaseImplementation database = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
-        table = (KissenTable) database.getPrimaryConnection().createTable("kissen_ban_table");
+        table = (KissenTable) database.getPrimaryConnection().createTable("kissen_rank_table");
         return AbstractRankImplementation.super.preStart();
     }
 
