@@ -18,6 +18,7 @@
 
 package net.kissenpvp.core.user.rank;
 
+import net.kissenpvp.core.api.database.meta.Table;
 import net.kissenpvp.core.api.event.EventCancelledException;
 import net.kissenpvp.core.api.networking.client.entitiy.PlayerClient;
 import net.kissenpvp.core.api.user.UserImplementation;
@@ -54,6 +55,11 @@ public abstract class KissenRank extends KissenSavable<String> implements Abstra
     @Override
     public void setPriority(int priority) {
         getRepository().set("priority", priority);
+    }
+
+    @Override
+    public @NotNull Table getTable() {
+        return KissenCore.getInstance().getImplementation(KissenRankImplementation.class).getTable();
     }
 
     @Override
