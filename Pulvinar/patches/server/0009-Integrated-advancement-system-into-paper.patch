@@ -55,33 +55,6 @@ index 0000000000000000000000000000000000000000..bd04997001648931fc9fb6d4c8888a04
 +        return (PulvinarPublicUser.PulvinarPrivateUser) getPlayer().getBukkitEntity().getUser(Context.LOCAL);
 +    }
 +}
-diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-index 1e637e15367271ce44250b8543c49d17015fd7e3..915ef41b8861be3f1c3e4cf64669b1fa2849bde7 100644
---- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-+++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-@@ -22,7 +22,10 @@ import net.kissenpvp.core.api.base.Implementation;
- import net.kissenpvp.core.api.base.plugin.KissenPlugin;
- import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
- import net.kissenpvp.core.base.KissenCore;
-+import net.kissenpvp.core.database.settings.DatabaseDns;
- import net.kissenpvp.pulvinar.api.base.Pulvinar;
-+import net.kissenpvp.pulvinar.database.PrivateDatabaseDns;
-+import net.kissenpvp.pulvinar.database.UsePrivate;
- import org.bukkit.Bukkit;
- import org.bukkit.plugin.Plugin;
- import org.jetbrains.annotations.NotNull;
-@@ -65,6 +68,11 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
-     @Override
-     protected void setupDatabase(@NotNull net.kissenpvp.core.api.config.ConfigurationImplementation config, @NotNull net.kissenpvp.core.api.database.connection.DatabaseImplementation database) {
-         super.setupDatabase(config, database);
-+        if(config.getSetting(UsePrivate.class))
-+        {
-+            String connectionString = config.getSetting(PrivateDatabaseDns.class);
-+            database.connectDatabase("private", connectionString);
-+        }
-     }
- 
-     @Override
 diff --git a/src/main/java/net/minecraft/server/PlayerAdvancements.java b/src/main/java/net/minecraft/server/PlayerAdvancements.java
 index fc87e3cfff1221a6cbaf3463ce972870f17c776a..71593d1b358859257282b739aeff637017cdb87a 100644
 --- a/src/main/java/net/minecraft/server/PlayerAdvancements.java

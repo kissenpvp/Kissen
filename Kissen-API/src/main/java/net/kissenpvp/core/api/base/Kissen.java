@@ -18,10 +18,10 @@
 
 package net.kissenpvp.core.api.base;
 
+import net.kissenpvp.core.api.database.connection.DatabaseConnection;
 import net.kissenpvp.core.api.networking.client.entitiy.ConsoleClient;
 import net.kissenpvp.core.api.networking.client.entitiy.ServerEntity;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
 
 import java.util.UUID;
 
@@ -185,4 +185,6 @@ public interface Kissen {
      * @throws IllegalStateException if the console is not available or cannot be retrieved
      */
     @NotNull ConsoleClient getConsole();
+
+    @NotNull DatabaseConnection getPublicDatabase();
 }

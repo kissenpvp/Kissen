@@ -152,10 +152,10 @@ index 0000000000000000000000000000000000000000..533aa48a0e3134278dd9b4330c44b62f
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..5c257c83143b9c62dc217d91126a4bc43ca8dc3f
+index 0000000000000000000000000000000000000000..92d363d2eada0ea47418b6fde64e6a21da5e512e
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/ban/PulvinarBanImplementation.java
-@@ -0,0 +1,468 @@
+@@ -0,0 +1,464 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -180,8 +180,6 @@ index 0000000000000000000000000000000000000000..5c257c83143b9c62dc217d91126a4bc4
 +import com.destroystokyo.paper.profile.PlayerProfile;
 +import com.mojang.authlib.GameProfile;
 +import net.kissenpvp.core.api.ban.BanType;
-+import net.kissenpvp.core.api.database.connection.DatabaseConnection;
-+import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 +import net.kissenpvp.core.api.database.meta.BackendException;
 +import net.kissenpvp.core.api.database.meta.Meta;
 +import net.kissenpvp.core.api.database.savable.Savable;
@@ -228,9 +226,7 @@ index 0000000000000000000000000000000000000000..5c257c83143b9c62dc217d91126a4bc4
 +
 +    @Override
 +    public boolean preStart() {
-+        DatabaseImplementation database = Bukkit.getPulvinar().getImplementation(DatabaseImplementation.class);
-+        DatabaseConnection connection = database.getConnection("private").orElseGet(database::getPrimaryConnection);
-+        privateTable = (KissenTable) connection.createTable("kissen_private_ban_meta");
++        privateTable = (KissenTable) Bukkit.getPulvinar().getPrivateDatabase().createTable("private_punishment_data");
 +        return super.preStart();
 +    }
 +
@@ -1536,10 +1532,10 @@ index 0000000000000000000000000000000000000000..a8442e2bb5f92bafab7616c4c70a4023
 +    }
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-index fb4dfde59e4b7f280987c953203cea18af0a5f79..1e637e15367271ce44250b8543c49d17015fd7e3 100644
+index f1d03d8f17dac2a5e2efc2252987029f52ae20f4..646855b4796b1368b98faf1f6286f3c6cc57158e 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-@@ -58,6 +58,7 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
+@@ -62,6 +62,7 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
          loader.put(net.kissenpvp.pulvinar.api.command.CommandImplementation.class, commandImplementation);
          loader.put(net.kissenpvp.core.command.InternalCommandImplementation.class, commandImplementation);
          loader.put(net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation.class, new net.kissenpvp.pulvinar.command.confirmation.PulvinarConfirmationImplementation());
@@ -1723,7 +1719,7 @@ index f063aadc2659ec6b706a48c693b08749338dfe59..bebb546dd538e4c9ea961b320a65ab43
              disconnect(Component.translatable("multiplayer.disconnect.unverified_username")); // maybe better message
              return false;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 313553ce48b46f287157ce7369e2c3f955f02801..5a7edebe6ea50c879c5409ed4bc5736677cd9e84 100644
+index 3520020cb1c27669eeeaeeded81f3d02e9dd468b..a71dd1f4c40279d187c53a35f621e382444d426d 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -111,7 +111,6 @@ import org.bukkit.Location;
@@ -1770,7 +1766,7 @@ index 313553ce48b46f287157ce7369e2c3f955f02801..5a7edebe6ea50c879c5409ed4bc57366
          this.cserver.getPluginManager().callEvent(event);
          if (event.getResult() != PlayerLoginEvent.Result.ALLOWED) {
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index d87ecd6e7552ab537c9d9e8a10a471814e61632d..d0f6894913fc8821ec862cef92d2dc4e1b1d3a74 100644
+index 7443279fd48bd1b9dc0135e996dbc6fa2d584b54..175015e6c475027fa12e38184508d6ae38423e44 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 @@ -2306,6 +2306,11 @@ public final class CraftServer implements Server {
