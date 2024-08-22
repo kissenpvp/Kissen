@@ -69,7 +69,6 @@ public class MethodEvaluator<S extends ServerEntity> {
 
     public @NotNull @Unmodifiable List<Argument<?, S>> evaluateMethod(@NotNull Method method) {
         List<Argument<?, S>> argumentList = new ArrayList<>();
-        InternalCommandImplementation<?> command = getCommandImplementation();
 
         for (Parameter parameter : method.getParameters()) {
             argumentList.addAll(processParameter(getArgumentSupplier().get(), method, parameter));
