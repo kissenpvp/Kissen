@@ -53,7 +53,7 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     @Override
     public boolean isConnected() {
         try {
-            return connection!=null && !connection.isClosed();
+            return connection !=null && !connection.isClosed() && connection.isValid(2000);
         } catch (SQLException sqlException) {
             return false;
         }
