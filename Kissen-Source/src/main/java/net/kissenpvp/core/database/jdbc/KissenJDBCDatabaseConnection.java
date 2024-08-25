@@ -19,6 +19,7 @@
 package net.kissenpvp.core.database.jdbc;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.database.connection.DatabaseDriver;
 import net.kissenpvp.core.api.database.connection.MYSQLDatabaseConnection;
@@ -37,6 +38,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+@Slf4j
 @Getter
 public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConnection {
 
@@ -115,9 +117,9 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     }
 
     private void executeStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
-        if (!isConnected()) {
-            disconnect(); // clean up broken connection
-            connect(); // reconnect if possible
+        if(!isConnected())
+        {
+            log.warn("Lost connection to the MySQL database. Verify server status, network access, or credentials.");
         }
 
         try {
