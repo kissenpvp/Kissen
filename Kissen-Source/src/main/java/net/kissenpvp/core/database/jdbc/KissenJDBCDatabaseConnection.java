@@ -37,6 +37,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Objects;
 
 @Slf4j
 @Getter
@@ -55,15 +56,17 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     @Override
     public boolean isConnected() {
         try {
-            return connection !=null && !connection.isClosed() && connection.isValid(2000);
+            if (Objects.isNull(connection)) {
+                return false;
+            }
+            return !connection.isClosed() && connection.isValid(50000);
         } catch (SQLException sqlException) {
             return false;
         }
     }
 
     @Override
-    public void connect() throws BackendException {
-
+    public void connect() {
         if (!isConnected()) {
             try {
                 Class.forName(getDriver().toString());
@@ -71,22 +74,19 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
             } catch (SQLException | ClassNotFoundException exception) {
                 throw new BackendException(exception);
             }
-            return;
         }
-        throw new BackendException(new IllegalStateException());
     }
 
     @Override
-    public void disconnect() throws BackendException {
+    public void disconnect() {
         if (isConnected()) {
             try {
                 connection.close();
                 connection = null;
             } catch (SQLException sqlException) {
-                throw new BackendException(sqlException);
+                log.error(sqlException.getMessage(), sqlException);
             }
         }
-        throw new BackendException(new IllegalStateException());
     }
 
     @Override
@@ -117,9 +117,8 @@ public abstract class KissenJDBCDatabaseConnection implements MYSQLDatabaseConne
     }
 
     private void executeStatement(@NotNull String query, @NotNull PreparedStatementExecutor preparedStatementExecutor) {
-        if(!isConnected())
-        {
-            log.warn("Lost connection to the MySQL database. Verify server status, network access, or credentials.");
+        if (!isConnected()) {
+            this.connect();
         }
 
         try {
