@@ -1167,7 +1167,7 @@ index 0000000000000000000000000000000000000000..2111d44408ae987eeea618f2e0bdbdcb
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalRegisteredBiome.java b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalRegisteredBiome.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..e97a2ab79fd2ebea2374e5c6fb9e22bd51be892f
+index 0000000000000000000000000000000000000000..e485086ff39a67f67156085230211b06ba0b7f20
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/world/biome/InternalRegisteredBiome.java
 @@ -0,0 +1,120 @@
@@ -1260,7 +1260,7 @@ index 0000000000000000000000000000000000000000..e97a2ab79fd2ebea2374e5c6fb9e22bd
 +        environmentSettings.foliageColor().ifPresent(specialEffectsBuilder::foliageColorOverride);
 +        environmentSettings.grassColorOverride().ifPresent(specialEffectsBuilder::grassColorOverride);
 +        specialEffectsBuilder.grassColorModifier(BiomeSpecialEffects.GrassColorModifier.valueOf(environmentSettings.modifier().name()));
-+        //TODO music and stuff
++        //TODO music and other implementations of NMS biomes
 +        return specialEffectsBuilder.build();
 +    }
 +
