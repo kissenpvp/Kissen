@@ -1967,28 +1967,3 @@ index 0000000000000000000000000000000000000000..dc108e76cc7f21759e7309d7fcbebc5e
 +        return flat;
 +    }
 +}
-diff --git a/src/main/java/net/minecraft/server/level/ServerLevel.java b/src/main/java/net/minecraft/server/level/ServerLevel.java
-index 29e31ed2d09aee3b668816a683ab0f89026fdf4f..97e52ea688a975363f5006a6ae302dd08946bc22 100644
---- a/src/main/java/net/minecraft/server/level/ServerLevel.java
-+++ b/src/main/java/net/minecraft/server/level/ServerLevel.java
-@@ -38,6 +38,9 @@ import java.util.stream.Collectors;
- import java.util.stream.Stream;
- import javax.annotation.Nonnull;
- import javax.annotation.Nullable;
-+
-+import net.kissenpvp.pulvinar.world.InternalCustomWorld;
-+import net.kissenpvp.pulvinar.world.generator.InternalChunkGenerator;
- import net.minecraft.CrashReport;
- import net.minecraft.CrashReportCategory;
- import net.minecraft.ReportType;
-@@ -541,9 +544,9 @@ public class ServerLevel extends Level implements WorldGenLevel, ca.spottedleaf.
-         }
-         // Purpur end
-         this.serverLevelData = iworlddataserver;
--        ChunkGenerator chunkgenerator = worlddimension.generator();
-         // CraftBukkit start
-         this.serverLevelData.setWorld(this);
-+        ChunkGenerator chunkgenerator = new InternalChunkGenerator(new InternalCustomWorld(this.getWorld()), worlddimension.generator());//worlddimension.generator(;
- 
-         if (biomeProvider != null) {
-             BiomeSource worldChunkManager = new CustomWorldChunkManager(this.getWorld(), biomeProvider, this.server.registryAccess().registryOrThrow(Registries.BIOME));
