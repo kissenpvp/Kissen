@@ -93,8 +93,7 @@ public abstract class KissenUserImplementation implements UserImplementation {
 
     @Override
     public boolean preStart() {
-        DatabaseImplementation database = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
-        Table = (KissenTable) database.getPrimaryConnection().createTable("kissen_user_data");
+        Table = (KissenTable) KissenCore.getInstance().getPublicDatabase().createTable("user_data");
         return UserImplementation.super.preStart();
     }
 

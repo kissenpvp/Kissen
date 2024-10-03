@@ -39,21 +39,35 @@ index 0000000000000000000000000000000000000000..13fae9d695e3a80835414d00b06475b2
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/api/base/Pulvinar.java b/src/main/java/net/kissenpvp/pulvinar/api/base/Pulvinar.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..099bcd659c017047deda6cf67aa31a4fc6ecc911
+index 0000000000000000000000000000000000000000..71cda3965f7e7e89800a7e317c77b998e3037a94
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/api/base/Pulvinar.java
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,20 @@
 +package net.kissenpvp.pulvinar.api.base;
 +
 +import net.kissenpvp.core.api.base.Kissen;
++import net.kissenpvp.core.api.database.connection.DatabaseConnection;
++import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
++import org.jetbrains.annotations.NotNull;
 +
 +public interface Pulvinar extends Kissen {
++
++    /**
++     * Returns the {@link DatabaseConnection} to the private database.
++     * <p>
++     * This private connection can be used to store server specific data. (Locations, worlds, etc...).
++     * If there was no private database set it will fall back to the {@link DatabaseImplementation#getPrimaryConnection()}  connection.
++     *
++     * @return the database connection for specific server data.
++     */
++    @NotNull DatabaseConnection getPrivateDatabase();
++
 +}
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index 4a870c63cf240c4fa89534bf3ec1b06393efb967..2c85f91b0d51845a6fe2b1d9724023c449958999 100644
+index 4cd159133d6dc3a6ec1b822e8625920f3919931e..8fad89f373e8f62badb0f3d5eb504e167f03d23c 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
-@@ -3033,4 +3033,17 @@ public final class Bukkit {
+@@ -3044,4 +3044,17 @@ public final class Bukkit {
          server.clearBlockHighlights();
      }
      // Purpur end

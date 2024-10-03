@@ -1069,10 +1069,10 @@ index 0000000000000000000000000000000000000000..4bd6d66ea7737798187653e2af2da9ca
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/permission/PulvinarPermissionImplementation.java b/src/main/java/net/kissenpvp/pulvinar/permission/PulvinarPermissionImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..cb0a8dfc81400c728f288a552e34c2ca279a0c87
+index 0000000000000000000000000000000000000000..b52f840aa30fccf759fff9be880f7697af4d554f
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/permission/PulvinarPermissionImplementation.java
-@@ -0,0 +1,319 @@
+@@ -0,0 +1,318 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -1131,8 +1131,7 @@ index 0000000000000000000000000000000000000000..cb0a8dfc81400c728f288a552e34c2ca
 +
 +    @Override
 +    public boolean preStart() {
-+        DatabaseImplementation implementation = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
-+        privateTable = (KissenTable) implementation.getConnection("private").map(table -> table.createTable("kissen_private_permission_group_table")).orElse(null);
++        privateTable = (KissenTable) Bukkit.getPulvinar().getPrivateDatabase().createTable("private_permission_data");
 +        return super.preStart();
 +    }
 +
@@ -2725,10 +2724,10 @@ index 0000000000000000000000000000000000000000..d652421988cb96606afa92da88694d89
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/user/PulvinarUserImplementation.java b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarUserImplementation.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..e185edd2aa8400910f823e08b6b3d7fbfcb4ab0c
+index 0000000000000000000000000000000000000000..5bfef0f5b611da435cc1346ee5e5ff3898e28864
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/user/PulvinarUserImplementation.java
-@@ -0,0 +1,169 @@
+@@ -0,0 +1,166 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -2815,10 +2814,7 @@ index 0000000000000000000000000000000000000000..e185edd2aa8400910f823e08b6b3d7fb
 +
 +    @Override
 +    public boolean preStart() {
-+        DatabaseImplementation database = Bukkit.getPulvinar().getImplementation(DatabaseImplementation.class);
-+
-+        DatabaseConnection connection = database.getConnection("private").orElseGet(database::getPrimaryConnection);
-+        privateTable = (KissenTable) connection.createTable("kissen_private_user_data");
++        privateTable = (KissenTable) Bukkit.getPulvinar().getPrivateDatabase().createTable("private_user_data");
 +        return super.preStart();
 +    }
 +

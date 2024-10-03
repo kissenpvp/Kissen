@@ -4,6 +4,9 @@ Date: Sun, 24 Sep 2023 13:30:00 +0200
 Subject: [PATCH] Implemented new command framework into pulvinar
 
 
+diff --git a/.attach_pid30223 b/.attach_pid30223
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
 index 4b011884c81b3056ffd509d37021aef584692b3f..40863f32b5227854eb6583482982f33d84a0c0fe 100644
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginManagerImpl.java
@@ -30,10 +33,10 @@ index 4b011884c81b3056ffd509d37021aef584692b3f..40863f32b5227854eb6583482982f33d
      // Pulvinar end
  }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-index 8988db1efa131be485a38492682c311171dcb678..fb4dfde59e4b7f280987c953203cea18af0a5f79 100644
+index f44f00f81f10fb5e853a5ca40055d28f1213f919..f1d03d8f17dac2a5e2efc2252987029f52ae20f4 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-@@ -54,6 +54,10 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
+@@ -58,6 +58,10 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
          loader.put(net.kissenpvp.pulvinar.api.permission.PermissionImplementation.class, permissionImplementation);
          loader.put(net.kissenpvp.core.permission.InternalPermissionImplementation.class, permissionImplementation);
          loader.put(net.kissenpvp.core.api.message.localization.LocalizationImplementation.class, new net.kissenpvp.pulvinar.message.localization.PulvinarLocalizationImplementation());
@@ -297,10 +300,10 @@ index 0000000000000000000000000000000000000000..c5bd35e458ca3a3b19ef74705fc70c2d
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..478e4c8cb8afe2e54530f8cba06214cefed5c18d
+index 0000000000000000000000000000000000000000..928e5139d61aaf1476cf70bd2406de1ef5c26fae
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java
-@@ -0,0 +1,440 @@
+@@ -0,0 +1,450 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -624,9 +627,13 @@ index 0000000000000000000000000000000000000000..478e4c8cb8afe2e54530f8cba06214ce
 +                return index;
 +            }
 +        }; iterator.index < arguments.length; iterator.index++) {
-+            Optional<C> commandHolder = getChildCommand(arguments[iterator.getIndex()]);
-+            if (commandHolder.isPresent()) {
-+                return commandHolder.map(child -> child.tabComplete(commandSender, alias, Arrays.copyOfRange(arguments, iterator.getIndex() + 1, arguments.length)));
++            Optional<List<String>> command = getChildCommand(arguments[iterator.getIndex()]).map(child -> {
++                String[] args = Arrays.copyOfRange(arguments, iterator.getIndex() + 1, arguments.length);
++                return child.tabComplete(commandSender, alias, args);
++            });
++
++            if (command.isPresent()) {
++                return command;
 +            }
 +        }
 +        return Optional.empty();
@@ -651,6 +658,12 @@ index 0000000000000000000000000000000000000000..478e4c8cb8afe2e54530f8cba06214ce
 +        };
 +
 +        Set<String> data = getChildCommandList().stream().filter(isCapable).flatMap(command -> {
++            if(Objects.equals(command.getName(), "{}"))
++            {
++                int argument = command.getFullName().split("^(.*?(\\b.\\{}.\\b)[^$]*)$").length - 1;
++                //dig through all children and search for all possibilies
++                return Stream.empty();
++            }
 +            Stream<String> alias = command.getAliases().stream();
 +            return Stream.concat(alias, Stream.of(command.getName()));
 +        }).collect(Collectors.toSet());

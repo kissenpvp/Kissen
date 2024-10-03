@@ -90,8 +90,7 @@ public class KissenDatabaseImplementation implements DatabaseImplementation {
                 String exceptionMessage = "Could not establish a connection to database backend {} using connection string {}.";
                 log.error(exceptionMessage, databaseConnection.getDriver(), connectionString);
 
-            } catch (BackendException ignored) {
-            }
+            } catch (BackendException ignored) {}
             databaseConnection = null;
         }
 

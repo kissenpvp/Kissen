@@ -75,8 +75,7 @@ public abstract class KissenBanImplementation<B extends AbstractBanTemplate, P e
 
     @Override
     public boolean preStart() {
-        DatabaseImplementation database = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
-        banTable = (KissenTable) database.getPrimaryConnection().createTable("kissen_ban_table");
+        banTable = (KissenTable) KissenCore.getInstance().getPublicDatabase().createTable("punishment_data");
         return AbstractBanImplementation.super.preStart();
     }
 

@@ -26,6 +26,7 @@ import net.kissenpvp.core.api.base.Kissen;
 import net.kissenpvp.core.api.base.plugin.KissenPlugin;
 import net.kissenpvp.core.api.config.ConfigurationImplementation;
 import net.kissenpvp.core.api.database.StorageImplementation;
+import net.kissenpvp.core.api.database.connection.DatabaseConnection;
 import net.kissenpvp.core.api.database.connection.DatabaseImplementation;
 import net.kissenpvp.core.api.database.meta.BackendException;
 import net.kissenpvp.core.api.message.ChatImplementation;
@@ -175,6 +176,11 @@ public abstract class KissenCore implements Kissen {
             }
         }
         throw new ImplementationAbsentException();
+    }
+
+    @Override
+    public @NotNull DatabaseConnection getPublicDatabase() {
+        return getImplementation(DatabaseImplementation.class).getPrimaryConnection();
     }
 
     private void runOperation(@NotNull OperationState operationState) {

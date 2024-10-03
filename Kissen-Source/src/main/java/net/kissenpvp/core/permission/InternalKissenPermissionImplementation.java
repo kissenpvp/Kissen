@@ -20,8 +20,7 @@ public abstract class InternalKissenPermissionImplementation<T extends AbstractP
 
     @Override
     public boolean preStart() {
-        DatabaseImplementation implementation = KissenCore.getInstance().getImplementation(DatabaseImplementation.class);
-        publicTable = (KissenTable) implementation.getPrimaryConnection().createTable("kissen_permission_group_table");
+        publicTable = (KissenTable) KissenCore.getInstance().getPublicDatabase().createTable("permission_data");
         return Implementation.super.preStart();
     }
 
