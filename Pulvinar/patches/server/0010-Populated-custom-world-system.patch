@@ -21,10 +21,10 @@ index 40863f32b5227854eb6583482982f33d84a0c0fe..7823e42ab33000c52179d3d33d2d0abe
      // Pulvinar end
  }
 diff --git a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-index 1e637e15367271ce44250b8543c49d17015fd7e3..cd5b567732bd514016cf761f3b19eae7457521a0 100644
+index 646855b4796b1368b98faf1f6286f3c6cc57158e..b372cb189d8276ee955b5f7ea6bc87189779c577 100644
 --- a/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
 +++ b/src/main/java/net/kissenpvp/pulvinar/base/PulvinarCore.java
-@@ -59,6 +59,7 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
+@@ -63,6 +63,7 @@ public class PulvinarCore extends KissenCore implements Pulvinar {
          loader.put(net.kissenpvp.core.command.InternalCommandImplementation.class, commandImplementation);
          loader.put(net.kissenpvp.core.command.confirmation.KissenConfirmationImplementation.class, new net.kissenpvp.pulvinar.command.confirmation.PulvinarConfirmationImplementation());
          loader.put(net.kissenpvp.pulvinar.api.ban.BanImplementation.class, new net.kissenpvp.pulvinar.ban.PulvinarBanImplementation());
@@ -1967,3 +1967,18 @@ index 0000000000000000000000000000000000000000..dc108e76cc7f21759e7309d7fcbebc5e
 +        return flat;
 +    }
 +}
+diff --git a/src/main/java/net/minecraft/server/level/ServerLevel.java b/src/main/java/net/minecraft/server/level/ServerLevel.java
+index 067b10134b087626e05596225744b905211e8b63..a147df52a256d4d728875cc260f6eca60e232471 100644
+--- a/src/main/java/net/minecraft/server/level/ServerLevel.java
++++ b/src/main/java/net/minecraft/server/level/ServerLevel.java
+@@ -541,7 +541,9 @@ public class ServerLevel extends Level implements WorldGenLevel, ca.spottedleaf.
+         }
+         // Purpur end
+         this.serverLevelData = iworlddataserver;
+-        ChunkGenerator chunkgenerator = worlddimension.generator();
++        // Pulvinar start - override default generator
++        ChunkGenerator chunkgenerator = new net.kissenpvp.pulvinar.world.generator.InternalChunkGenerator(new net.kissenpvp.pulvinar.world.InternalCustomWorld(this.getWorld()), worlddimension.generator()); // worlddimension.generator();
++        // Pulvinar end - override default generator
+         // CraftBukkit start
+         this.serverLevelData.setWorld(this);
+ 
