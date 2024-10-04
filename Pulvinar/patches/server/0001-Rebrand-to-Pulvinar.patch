@@ -5,7 +5,7 @@ Subject: [PATCH] Rebrand to Pulvinar
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 97a4a54dfa74df7aafd9df5a0f2fdac72471c2d5..8e5ecf9c481c195a3de1f53d2ca15bbf50e7aeee 100644
+index b053160ee0faa550569a8b2273e38f48567ddbc7..f650f3235d3942a0cc20466d9ee7ad4e7580a2d2 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -13,7 +13,7 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
@@ -98,10 +98,10 @@ index 6d36fc6d8e22d9b68dea3830f6ecc8763184c343..1e9ea86782f82926e9117ca72735a477
              }
          } catch (final IOException e) {
 diff --git a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
-index 3cb56595822799926a8141e60a42f5d1edfc6de5..165673d01d69ce363d352e7128930aa88810448a 100644
+index 90b3526479320064378f2cde6c2f2b8e48a59ba6..63f1a91422c5f4db7cf39f76c5aab489f620932b 100644
 --- a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
 +++ b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
-@@ -17,7 +17,7 @@ public final class PaperConsole extends SimpleTerminalConsole {
+@@ -20,7 +20,7 @@ public final class PaperConsole extends SimpleTerminalConsole {
      @Override
      protected LineReader buildReader(LineReaderBuilder builder) {
          builder

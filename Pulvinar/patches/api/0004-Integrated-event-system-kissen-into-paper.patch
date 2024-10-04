@@ -27,87 +27,79 @@ index 438a9c76381ea3f5b774e2232ff56c5dc6f82586..e8575533869bcc01762d909634e446a1
              executor.execute(listener, event);
              return;
 diff --git a/src/main/java/com/destroystokyo/paper/event/executor/MethodHandleEventExecutor.java b/src/main/java/com/destroystokyo/paper/event/executor/MethodHandleEventExecutor.java
-index fbebf649e893cf872be9b27091146a7c2f451aca..52a0076fd1404aa9066d29309b56b10e974e4749 100644
+index 2a169d2f6fdada6c361ee4291abb38446d45d654..52377327d52eb6732a192e4d09eeee25ea10a79e 100644
 --- a/src/main/java/com/destroystokyo/paper/event/executor/MethodHandleEventExecutor.java
 +++ b/src/main/java/com/destroystokyo/paper/event/executor/MethodHandleEventExecutor.java
-@@ -12,17 +12,17 @@ import org.bukkit.plugin.EventExecutor;
- import org.jetbrains.annotations.NotNull;
- 
+@@ -16,17 +16,17 @@ import org.jspecify.annotations.Nullable;
+ @NullMarked
  public class MethodHandleEventExecutor implements EventExecutor {
+ 
 -    private final Class<? extends Event> eventClass;
 +    private final Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass;
      private final MethodHandle handle;
-     private final Method method;
+     private final @Nullable Method method;
  
--    public MethodHandleEventExecutor(@NotNull Class<? extends Event> eventClass, @NotNull MethodHandle handle) {
-+    public MethodHandleEventExecutor(@NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass, @NotNull MethodHandle handle) { // Pulvinar start - integrate unified event system
+-    public MethodHandleEventExecutor(final Class<? extends Event> eventClass, final MethodHandle handle) {
++    public MethodHandleEventExecutor(final Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass, final MethodHandle handle) {
          this.eventClass = eventClass;
          this.handle = handle;
          this.method = null;
      }
  
--    public MethodHandleEventExecutor(@NotNull Class<? extends Event> eventClass, @NotNull Method m) {
-+    public MethodHandleEventExecutor(@NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass, @NotNull Method m) { // Pulvinar start - integrate unified event system
+-    public MethodHandleEventExecutor(final Class<? extends Event> eventClass, final Method m) {
++    public MethodHandleEventExecutor(final Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass, final Method m) {
          this.eventClass = eventClass;
          try {
              m.setAccessible(true);
-@@ -34,7 +34,7 @@ public class MethodHandleEventExecutor implements EventExecutor {
+@@ -38,7 +38,7 @@ public class MethodHandleEventExecutor implements EventExecutor {
      }
  
      @Override
--    public void execute(@NotNull Listener listener, @NotNull Event event) throws EventException {
-+    public void execute(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull net.kissenpvp.core.api.event.EventClass event) throws EventException { // Pulvinar - implement event system
-         if (!eventClass.isInstance(event)) return;
+-    public void execute(final Listener listener, final Event event) throws EventException {
++    public void execute(final net.kissenpvp.core.api.event.EventListener<?> listener, final net.kissenpvp.core.api.event.EventClass event) throws EventException {
+         if (!this.eventClass.isInstance(event)) return;
          try {
-             handle.invoke(listener, event);
+             this.handle.invoke(listener, event);
 diff --git a/src/main/java/com/destroystokyo/paper/event/executor/StaticMethodHandleEventExecutor.java b/src/main/java/com/destroystokyo/paper/event/executor/StaticMethodHandleEventExecutor.java
-index 52da2d040e3b335f9e47bc5dc26e17d9c06d9569..abacf257c361742e8b41b475bec67cce4c824343 100644
+index e98962b6c6651c580684d8580484de87b5ad65a5..5f21aa3365c2b765d71d20f429084a5e7335b6c8 100644
 --- a/src/main/java/com/destroystokyo/paper/event/executor/StaticMethodHandleEventExecutor.java
 +++ b/src/main/java/com/destroystokyo/paper/event/executor/StaticMethodHandleEventExecutor.java
-@@ -8,6 +8,7 @@ import java.lang.reflect.Modifier;
- import com.destroystokyo.paper.util.SneakyThrow;
- import com.google.common.base.Preconditions;
- 
-+import net.kissenpvp.core.api.event.EventListener;
- import org.bukkit.event.Event;
- import org.bukkit.event.EventException;
- import org.bukkit.event.Listener;
-@@ -15,11 +16,11 @@ import org.bukkit.plugin.EventExecutor;
- import org.jetbrains.annotations.NotNull;
- 
+@@ -17,11 +17,11 @@ import org.jspecify.annotations.NullMarked;
+ @NullMarked
  public class StaticMethodHandleEventExecutor implements EventExecutor {
+ 
 -    private final Class<? extends Event> eventClass;
 +    private final Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass;
      private final MethodHandle handle;
      private final Method method;
  
--    public StaticMethodHandleEventExecutor(@NotNull Class<? extends Event> eventClass, @NotNull Method m) {
-+    public StaticMethodHandleEventExecutor(@NotNull Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass, @NotNull Method m) { // Pulvinar start - integrate unified event system
+-    public StaticMethodHandleEventExecutor(final Class<? extends Event> eventClass, final Method m) {
++    public StaticMethodHandleEventExecutor(final Class<? extends net.kissenpvp.core.api.event.EventClass> eventClass, final Method m) {
          Preconditions.checkArgument(Modifier.isStatic(m.getModifiers()), "Not a static method: %s", m);
          Preconditions.checkArgument(eventClass != null, "eventClass is null");
          this.eventClass = eventClass;
-@@ -33,7 +34,7 @@ public class StaticMethodHandleEventExecutor implements EventExecutor {
+@@ -35,7 +35,7 @@ public class StaticMethodHandleEventExecutor implements EventExecutor {
      }
  
      @Override
--    public void execute(@NotNull Listener listener, @NotNull Event event) throws EventException {
-+    public void execute(@NotNull net.kissenpvp.core.api.event.EventListener<?> listener, @NotNull net.kissenpvp.core.api.event.EventClass event) throws EventException { // Pulvinar - implement event system
-         if (!eventClass.isInstance(event)) return;
+-    public void execute(final Listener listener, final Event event) throws EventException {
++    public void execute(final net.kissenpvp.core.api.event.EventListener<?> listener, final net.kissenpvp.core.api.event.EventClass event) throws EventException {
+         if (!this.eventClass.isInstance(event)) return;
          try {
-             handle.invoke(event);
+             this.handle.invoke(event);
 diff --git a/src/main/java/com/destroystokyo/paper/event/executor/asm/ASMEventExecutorGenerator.java b/src/main/java/com/destroystokyo/paper/event/executor/asm/ASMEventExecutorGenerator.java
-index 084c31af1a7ba32bb4c3dc8f16f67fd09ce0b6a4..2f0a23f887c6c276ec0727297f59448ca72a509c 100644
+index abfcb6e8383ff311940d82afe4ff990649a082dc..22124da473cc18ec24e8b93e132398260ae0c183 100644
 --- a/src/main/java/com/destroystokyo/paper/event/executor/asm/ASMEventExecutorGenerator.java
 +++ b/src/main/java/com/destroystokyo/paper/event/executor/asm/ASMEventExecutorGenerator.java
-@@ -13,7 +13,7 @@ import static org.objectweb.asm.Opcodes.*;
- 
- public class ASMEventExecutorGenerator {
+@@ -19,7 +19,7 @@ import static org.objectweb.asm.Opcodes.V1_8;
+ @NullMarked
+ public final class ASMEventExecutorGenerator {
  
 -    private static final String EXECUTE_DESCRIPTOR = "(Lorg/bukkit/event/Listener;Lorg/bukkit/event/Event;)V";
 +    private static final String EXECUTE_DESCRIPTOR = "(Lorg/bukkit/event/Listener;Lorg/bukkit/event/Event;)V";//"(Lnet/kissenpvp/core/api/event/EventListener;Lnet/kissenpvp/core/api/event/EventClass;)V"; //"(Lorg/bukkit/event/Listener;Lorg/bukkit/event/Event;)V"; // Pulvinar - implement event system
  
-     @NotNull
-     public static byte[] generateEventExecutor(@NotNull Method m, @NotNull String name) {
+     public static byte[] generateEventExecutor(final Method m, final String name) {
+         final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 diff --git a/src/main/java/com/destroystokyo/paper/exception/ServerEventException.java b/src/main/java/com/destroystokyo/paper/exception/ServerEventException.java
 index 410b24139535cd5d8439ad581c43c61b5757fbf6..e472a85949f036b1d8d13e53d7ba4405496b62f3 100644
 --- a/src/main/java/com/destroystokyo/paper/exception/ServerEventException.java
