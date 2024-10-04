@@ -5,7 +5,7 @@ Subject: [PATCH] Adjusted gradle script to integrate into kissen
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index b7d584c8b96eb7699e5df90ed04bf22ee256d571..ab8b7bce37f6b4fc710268ee44f94f303493c837 100644
+index f68a447f309bc9d45c275bbfee1c237f6fb0d680..25d13aee10350c32391e77cdd9f84c17a81109eb 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -58,6 +58,10 @@ dependencies {
@@ -19,7 +19,7 @@ index b7d584c8b96eb7699e5df90ed04bf22ee256d571..ab8b7bce37f6b4fc710268ee44f94f30
      api("org.apache.maven:maven-resolver-provider:3.9.6") // Paper - make API dependency for Paper Plugins
      compileOnly("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.18")
      compileOnly("org.apache.maven.resolver:maven-resolver-transport-http:1.9.18")
-@@ -79,8 +83,8 @@ dependencies {
+@@ -80,8 +84,8 @@ dependencies {
      testImplementation("org.ow2.asm:asm-tree:9.7")
  }
  
