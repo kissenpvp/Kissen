@@ -87,7 +87,7 @@ public abstract class KissenCommandExecutor<S extends ServerEntity> implements C
                 throw new ArgumentMissingException();
             }
             method.setAccessible(true);
-            if (evaluator.arguments().isEmpty())
+            if (evaluator.rawArguments().isEmpty())
             {
                 if (useMethodValue)
                 {

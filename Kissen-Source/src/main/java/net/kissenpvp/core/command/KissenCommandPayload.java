@@ -42,7 +42,7 @@ import java.util.function.Consumer;
 
 /**
  * The {@code KissenPaperCommandPayload} class represents the payload associated with a command execution in the KissenPvP plugin for the Paper platform.
- * It implements the {@link net.kissenpvp.core.api.command.CommandPayload} interface, providing information about the command label, sender, target, arguments, and the associated command holder.
+ * It implements the {@link net.kissenpvp.core.api.command.CommandPayload} interface, providing information about the command label, sender, target, rawArguments, and the associated command holder.
  * Additionally, it includes methods for validation, confirmation requests, and default behaviors related to command confirmation cancellations.
  *
  * <p>This class is part of the KissenPvP command framework and is designed to handle command-related information and operations specific to the Paper platform.</p>

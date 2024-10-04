@@ -42,7 +42,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @see Argument
  * @see CommandPayload
  */
-public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable List<Argument<?, S>> arguments) {
+public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable List<Argument<?, S>> rawArguments) {
+
+    public @NotNull List<Argument<?, S>> arguments()
+    {
+        return rawArguments().stream().filter(argument -> !CommandPayload.class.isAssignableFrom(argument.type())).toList();
+    }
 
     /**
      * This method is used to parse command arguments.
@@ -59,7 +64,7 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
         AtomicInteger currentArgumentIndex = new AtomicInteger(0);
         InternalCommandImplementation<?> commandImplementation = KissenCore.getInstance().getImplementation(InternalCommandImplementation.class);
 
-        for (Argument<?, S> argument : arguments) {
+        for (Argument<?, S> argument : rawArguments()) {
             if (CommandPayload.class.isAssignableFrom(argument.type())) {
                 parameters = commandImplementation.add(parameters, commandPayload);
                 continue;
@@ -205,7 +210,7 @@ public record ArgumentEvaluator<S extends ServerEntity>(@NotNull @Unmodifiable L
      */
     public @NotNull String buildUsage(@NotNull String name) {
         final StringBuilder builder = new StringBuilder(name);
-        for (Argument<?, S> argument : arguments) {
+        for (Argument<?, S> argument : rawArguments) {
             if (CommandPayload.class.isAssignableFrom(argument.type())) continue;
 
             builder.append(" ").append(argument.isNullable() ? "[" : "").append("<");

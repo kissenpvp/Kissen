@@ -300,10 +300,10 @@ index 0000000000000000000000000000000000000000..c5bd35e458ca3a3b19ef74705fc70c2d
 +}
 diff --git a/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java b/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..928e5139d61aaf1476cf70bd2406de1ef5c26fae
+index 0000000000000000000000000000000000000000..3ee431286c65dedc53b83623fa99163d8648e759
 --- /dev/null
 +++ b/src/main/java/net/kissenpvp/pulvinar/command/command/PulvinarAbstractCommand.java
-@@ -0,0 +1,450 @@
+@@ -0,0 +1,474 @@
 +/*
 + * Copyright (C) 2023 KissenPvP
 + *
@@ -359,6 +359,7 @@ index 0000000000000000000000000000000000000000..928e5139d61aaf1476cf70bd2406de1e
 + * It provides functionality for creating and managing sub-commands within the Kissen Paper command hierarchy.
 + */
 +public abstract class PulvinarAbstractCommand<C extends PulvinarAbstractCommand<C>> extends KissenCommand implements CommandHolder<CommandSender, C> {
++
 +    private final int position;
 +    private final List<C> children; //C can be plugin child or system child
 +    private final CommandHandler<CommandSender, ?> handler;
@@ -428,6 +429,7 @@ index 0000000000000000000000000000000000000000..928e5139d61aaf1476cf70bd2406de1e
 +            };
 +
 +            Boolean data = getChildCommand(args[0]).map(execute).orElse(null);
++            if(data == null) data = getChildCommand("{}").map(execute).orElse(null);
 +            if (data!=null) {
 +                return data;
 +            }
@@ -640,12 +642,7 @@ index 0000000000000000000000000000000000000000..928e5139d61aaf1476cf70bd2406de1e
 +    }
 +
 +    private @NotNull List<String> getTabCompletions(@NotNull CommandPayload<CommandSender> commandPayload) {
-+        List<String> suggestions = new ArrayList<>();
-+        if (Objects.isNull(tabExecutor)) {
-+            suggestions.addAll(getAutoTabCompletion(commandPayload));
-+        } else {
-+            suggestions.addAll(tabExecutor.execute(commandPayload));
-+        }
++        List<String> suggestions = new ArrayList<>(Objects.isNull(tabExecutor) ? getAutoTabCompletion(commandPayload) : tabExecutor.execute(commandPayload));
 +        suggestions.sort(String.CASE_INSENSITIVE_ORDER);
 +        return suggestions;
 +    }
@@ -661,22 +658,49 @@ index 0000000000000000000000000000000000000000..928e5139d61aaf1476cf70bd2406de1e
 +            if(Objects.equals(command.getName(), "{}"))
 +            {
 +                int argument = command.getFullName().split("^(.*?(\\b.\\{}.\\b)[^$]*)$").length - 1;
-+                //dig through all children and search for all possibilies
++
++                getRegisteredChildren().forEach(child ->
++                {
++                    if(child.getExecutor() instanceof KissenCommandExecutor<CommandSender> commandExecutor)
++                    {
++                        commandExecutor.getEvaluator().arguments().get(argument);
++                    }
++                });
++                //dig through all children and search for all possibles
 +                return Stream.empty();
 +            }
 +            Stream<String> alias = command.getAliases().stream();
 +            return Stream.concat(alias, Stream.of(command.getName()));
 +        }).collect(Collectors.toSet());
 +
-+        if (hasOwnExecutor() && getExecutor() instanceof KissenCommandExecutor<CommandSender> executor) {
-+            if (executor.getEvaluator().arguments().size() > index) {
-+                Argument<?, CommandSender> argument = executor.getEvaluator().arguments().get(index);
-+                if (argument.argumentParser()!=null) {
-+                    data.addAll(argument.argumentParser().tabCompletion(commandPayload));
++        data.addAll(getTabCompletion(index, commandPayload));
++        return data;
++    }
++
++    private @NotNull @Unmodifiable Set<C> getRegisteredChildren()
++    {
++        return getChildCommandList().stream().flatMap(rawChild -> {
++            PulvinarAbstractCommand<C> child = rawChild;
++            Stream<C> children = child.getRegisteredChildren().stream();
++            if(child.hasOwnExecutor())
++            {
++                return Stream.concat(Stream.of(rawChild), children);
++            }
++            return children;
++        }).collect(Collectors.toUnmodifiableSet());
++    }
++
++    private @NotNull Collection<String> getTabCompletion(int index, @NotNull CommandPayload<CommandSender> payload)
++    {
++        if (getExecutor() instanceof KissenCommandExecutor<CommandSender> executor) {
++            if (executor.getEvaluator().rawArguments().size() > index) {
++                Argument<?, CommandSender> argument = executor.getEvaluator().rawArguments().get(index);
++                if (Objects.nonNull(argument.argumentParser())) {
++                    return argument.argumentParser().tabCompletion(payload);
 +                }
 +            }
 +        }
-+        return data;
++        return Collections.emptyList();
 +    }
 +
 +    /**
