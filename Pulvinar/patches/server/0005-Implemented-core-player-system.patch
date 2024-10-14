@@ -5,10 +5,10 @@ Subject: [PATCH] Implemented core player system
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
-index 9a7add1a7b137a0c9ca9c69fec674a7720d954eb..0b97b925a5063cdf9fceac2372723c3358a60efc 100644
+index 8849862b45ccbbc635a1c316e9870bca81e55c04..582bb6d4813aa69003a3d2fd24d3e99d23df49cb 100644
 --- a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 +++ b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
-@@ -446,4 +446,12 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
+@@ -448,4 +448,12 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
              }
          }
      }
@@ -4117,7 +4117,7 @@ index 34b4166adfae8ff7d1eb73d56a72931b005330a7..5534457a2898ea447aaeab997adad93e
          private final GameProfile profile;
          final Date expirationDate;
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index 6f4e471c45195996a1cdd93c7dfb64e68156212f..a71f3037ca7871f0196e755b37d5a565c7750158 100644
+index 0ea07da1b4bd420cd6765577b4719a2368b5740c..806d4f15709d4dd52ec177aa268a3702921fa946 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
 @@ -168,8 +168,8 @@ public abstract class PlayerList {
