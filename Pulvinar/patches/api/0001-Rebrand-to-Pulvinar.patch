@@ -5,15 +5,15 @@ Subject: [PATCH] Rebrand to Pulvinar
 
 
 diff --git a/src/main/java/co/aikar/timings/TimingsCommand.java b/src/main/java/co/aikar/timings/TimingsCommand.java
-index b831a23999c94cb1bdf7f5d2cd719d0b846242ad..35385bff036bec0e9d339ab8723587fbd87fe556 100644
+index 9e165525c4c4c07c783ae2899e07c37ae49ec2de..9e66ba636180649901a80e224e917d116c18547f 100644
 --- a/src/main/java/co/aikar/timings/TimingsCommand.java
 +++ b/src/main/java/co/aikar/timings/TimingsCommand.java
-@@ -58,7 +58,7 @@ public class TimingsCommand extends BukkitCommand {
-         }
+@@ -59,7 +59,7 @@ public class TimingsCommand extends BukkitCommand {
+         // Purpur start
          if (true) {
              net.kyori.adventure.text.minimessage.MiniMessage mm = net.kyori.adventure.text.minimessage.MiniMessage.miniMessage();
 -            sender.sendMessage(mm.deserialize("<gold>Purpur has removed timings to save your performance. Please use <click:suggest_command:'/spark'><grey>/spark</grey></click> instead"));
-+            sender.sendMessage(mm.deserialize("<gold>Pulvinar has removed timings to save your performance. Please use <click:suggest_command:'/spark'><grey>/spark</grey></click> instead"));
++            sender.sendMessage(mm.deserialize("<gold>Pulvinar has removed timings to save your performance. Please use <click:suggest_command:'/spark'><grey>/spark</grey></click> instead")); // Pulvinar
              sender.sendMessage(mm.deserialize("<gold>For more information, view its documentation at"));
              sender.sendMessage(mm.deserialize("<gold><click:open_url:'https://spark.lucko.me/docs/Command-Usage'>https://spark.lucko.me/docs/Command-Usage</click>"));
              return true;

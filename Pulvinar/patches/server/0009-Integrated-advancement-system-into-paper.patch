@@ -137,10 +137,10 @@ index 8cd8a173ac262ef974c32faf23bffa5072e99ab8..baa162177daf46aaaa7fea676a6040fb
 +    // Pulvinar end - make player accessible from class children
  }
 diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
-index d601520434e46114cdf6fa7190a8691df8155ee9..1d6043a8bbddc0b36f196afa1cc45a4d68c92615 100644
+index 59d3c6895f0c6cc0a520b37160d06367d42aaaca..bec5f34a96dfbc82da33d02c03bc88d0024aa030 100644
 --- a/src/main/java/net/minecraft/server/players/PlayerList.java
 +++ b/src/main/java/net/minecraft/server/players/PlayerList.java
-@@ -1516,7 +1516,11 @@ public abstract class PlayerList {
+@@ -1517,7 +1517,11 @@ public abstract class PlayerList {
          if (advancementdataplayer == null) {
              Path path = this.server.getWorldPath(LevelResource.PLAYER_ADVANCEMENTS_DIR).resolve(String.valueOf(uuid) + ".json");
  

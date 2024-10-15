@@ -315,7 +315,7 @@ index 0000000000000000000000000000000000000000..2992f55cb77bc26243d42991822c5ce7
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 6fb35c36d964c96a42911b8a9e11590aaa5cca59..865e12b2c7f8d90f746f824bcbe52083a3916e85 100644
+index d78cb68c3a53b277aa26186062efc716c8f80f36..6eb9f5a864caef6831832ae79a58bb95a1525db7 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -198,7 +198,7 @@ import org.bukkit.event.server.ServerLoadEvent;
@@ -328,7 +328,7 @@ index 6fb35c36d964c96a42911b8a9e11590aaa5cca59..865e12b2c7f8d90f746f824bcbe52083
      private static MinecraftServer SERVER; // Paper
      public static final Logger LOGGER = LogUtils.getLogger();
 diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
-index 2762f54515b352271feb4b26f506b06cd0fb1909..5b41f72873182c6ad4b9137dde79500ead75694c 100644
+index 6e6f4dffceb0032153c5be119303c5809629cfcc..729ddaed6b922a82da74af16d7b294a757d07c3d 100644
 --- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
 @@ -197,6 +197,13 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
@@ -345,7 +345,7 @@ index 2762f54515b352271feb4b26f506b06cd0fb1909..5b41f72873182c6ad4b9137dde79500e
          // Paper start - detect running as root
          if (io.papermc.paper.util.ServerEnvironment.userIsRootOrAdmin()) {
              DedicatedServer.LOGGER.warn("****************************");
-@@ -232,6 +239,11 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+@@ -241,6 +248,11 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
          if (this.convertOldUsers()) {
              this.getProfileCache().save(false); // Paper
          }
