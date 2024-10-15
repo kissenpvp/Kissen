@@ -1,6 +1,6 @@
 # Kissen
 
-<img alt="KissenPaper Logo" height="300" src="kissenpaper-logo.png" width="300"/>
+<img alt="KissenPaper Logo" height="300" src="Pulvinar/kissenpaper-logo.png" width="300"/>
 
 ## Minecraft Server API - An API for Minecraft Server Software Forks
 
