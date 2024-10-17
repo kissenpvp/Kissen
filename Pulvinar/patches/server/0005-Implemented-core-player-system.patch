@@ -4167,7 +4167,7 @@ index 0ea07da1b4bd420cd6765577b4719a2368b5740c..806d4f15709d4dd52ec177aa268a3702
      }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
-index 95cf30c1ded4a46791e1739fbae2d06c50f3be5f..6f627e82051f8da99caec44f39f307dbdd4e248c 100644
+index a138e1b6b66d99f2035de054137a607aa6b7f0b9..6fbdbf0108bda844cf42a25cde421744d8e68479 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftOfflinePlayer.java
 @@ -42,6 +42,11 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
@@ -4182,7 +4182,7 @@ index 95cf30c1ded4a46791e1739fbae2d06c50f3be5f..6f627e82051f8da99caec44f39f307db
      protected CraftOfflinePlayer(CraftServer server, GameProfile profile) {
          this.server = server;
          this.profile = profile;
-@@ -797,4 +802,387 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
+@@ -825,4 +830,387 @@ public class CraftOfflinePlayer implements OfflinePlayer, ConfigurationSerializa
          }
      }
      // Purpur end - OfflinePlayer API

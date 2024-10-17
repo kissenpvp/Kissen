@@ -935,15 +935,15 @@ index 0000000000000000000000000000000000000000..0ab2894763f536b84ff98a382abecb34
 +public interface RankPriorityChangeEvent extends AbstractRankPriorityChangeEvent<Rank>, RankEvent {
 +}
 diff --git a/src/main/java/org/bukkit/OfflinePlayer.java b/src/main/java/org/bukkit/OfflinePlayer.java
-index d0206c9c2f423a9b77237d9a005b9ee139dae70f..bff5cba98080427cae76e0cbe30f538a519397e8 100644
+index fc64902368a068481f16d5db99c94386caf6b60b..f8cdee85adadbce83e083f8721fedb17a1423510 100644
 --- a/src/main/java/org/bukkit/OfflinePlayer.java
 +++ b/src/main/java/org/bukkit/OfflinePlayer.java
 @@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
   * player that is stored on the disk and can, thus, be retrieved without the
   * player needing to be online.
   */
--public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable {
-+public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, net.kissenpvp.pulvinar.api.networking.client.entity.PulvinarPlayerClient, net.kissenpvp.pulvinar.api.permission.GroupablePermissionEntry { // Pulvinar
+-public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, io.papermc.paper.persistence.PersistentDataViewHolder { // Paper - Add Offline PDC API
++public interface OfflinePlayer extends ServerOperator, AnimalTamer, ConfigurationSerializable, io.papermc.paper.persistence.PersistentDataViewHolder, net.kissenpvp.pulvinar.api.networking.client.entity.PulvinarPlayerClient, net.kissenpvp.pulvinar.api.permission.GroupablePermissionEntry { // Paper - Add Offline PDC API // Pulvinar
  
      /**
       * Checks if this player is currently online
@@ -1022,7 +1022,7 @@ index 946d2f0ef37c6cf895caf8d3c6963c7889e0567b..5d2e8ef1461b0d0f894f011f41a890be
 +    // Pulvinar end
  }
 diff --git a/src/main/java/org/bukkit/entity/Player.java b/src/main/java/org/bukkit/entity/Player.java
-index eb79e62e753524d6782842c662b0a50ab5ac0811..eba109dfafb9076b320c21209278028292b04423 100644
+index 65260b33a13858309356d573dfa2989b92e7437c..29d67ae7a4d39ccc7bfb716fd38a82495cbe188b 100644
 --- a/src/main/java/org/bukkit/entity/Player.java
 +++ b/src/main/java/org/bukkit/entity/Player.java
 @@ -57,7 +57,7 @@ import org.jetbrains.annotations.Nullable;
