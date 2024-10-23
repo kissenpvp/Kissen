@@ -5,7 +5,7 @@ Subject: [PATCH] Implement kissen into pulvinar
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 8e5ecf9c481c195a3de1f53d2ca15bbf50e7aeee..efbc751c99fcff116f0517aaba041f6ee075248f 100644
+index 0954d58cf28527aa057324cb7890f7b9b1214ed7..dee59f1e8eac9c0ea0a141db2b0586a0adc27df2 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -47,6 +47,11 @@ dependencies {
@@ -20,7 +20,7 @@ index 8e5ecf9c481c195a3de1f53d2ca15bbf50e7aeee..efbc751c99fcff116f0517aaba041f6e
      // Pufferfish start
      implementation("org.yaml:snakeyaml:1.32")
      implementation ("com.github.carleslc.Simple-YAML:Simple-Yaml:1.8.4") { // Purpur
-@@ -179,8 +184,8 @@ fun TaskContainer.registerRunTask(
+@@ -184,8 +189,8 @@ fun TaskContainer.registerRunTask(
      })
      jvmArgs("-XX:+AllowEnhancedClassRedefinition", "-XX:+AllowRedefinitionToAddDeleteMethods")
  
@@ -31,7 +31,7 @@ index 8e5ecf9c481c195a3de1f53d2ca15bbf50e7aeee..efbc751c99fcff116f0517aaba041f6e
          inputs.file(testPluginJar)
          args("-add-plugin=${testPluginJar.get().asFile.absolutePath}")
      }
-@@ -226,23 +231,26 @@ tasks.registerRunTask("runDevServer") {
+@@ -231,23 +236,26 @@ tasks.registerRunTask("runDevServer") {
      jvmArgs("-DPaper.pushPaperAssetsRoot=true")
  }
  

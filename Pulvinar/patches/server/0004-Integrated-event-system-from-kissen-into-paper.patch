@@ -267,7 +267,7 @@ index 0000000000000000000000000000000000000000..ceadb02954b49836c6195bc30d92b6c3
 +    }
 +}
 diff --git a/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java b/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java
-index 2a7408ed5d9a415333212cadd7fefcd03785afbf..0041f86634155ea5e4934cd00ddd23176f34c3dd 100644
+index 0b7f1521f8bf4b18dfdf9403862b5dc6b394a4d9..c6a759722011b1d0a02904a38d5b02203494bc00 100644
 --- a/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java
 +++ b/src/test/java/io/papermc/paper/plugin/SyntheticEventTest.java
 @@ -1,7 +1,6 @@
@@ -278,7 +278,7 @@ index 2a7408ed5d9a415333212cadd7fefcd03785afbf..0041f86634155ea5e4934cd00ddd2317
  import org.bukkit.event.Event;
  import org.bukkit.event.EventHandler;
  import org.bukkit.event.Listener;
-@@ -12,8 +11,13 @@ public class SyntheticEventTest {
+@@ -14,8 +13,13 @@ public class SyntheticEventTest {
  
      @Test
      public void test() {
