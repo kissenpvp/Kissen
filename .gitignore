@@ -50,6 +50,7 @@ manifest.mf
 
 # other stuff
 ../run/
+.directory
 
 build-data/
 *.jar
