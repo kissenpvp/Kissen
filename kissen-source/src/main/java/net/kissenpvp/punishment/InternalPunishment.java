@@ -3,19 +3,38 @@ package net.kissenpvp.punishment;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentType;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
+import net.kissenpvp.database.InternalPersistableEntity;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class InternalPunishment implements Punishment
+import java.util.Objects;
+import java.util.Optional;
+
+public class InternalPunishment extends InternalPersistableEntity<Integer> implements Punishment
 {
     private final Integer id;
-    private final PunishmentType punishmentType;
-    private final TimeSpan timeSpan;
+    private PunishmentType punishmentType;
+    private TimeSpan timeSpan;
+    private @Nullable Component defaultMessage;
 
-    public InternalPunishment(Integer id, PunishmentType punishmentType, TimeSpan timeSpan)
+    public InternalPunishment(int id, @NotNull PunishmentType punishmentType, @Nullable TimeSpan timeSpan)
     {
         this.id = id;
         this.punishmentType = punishmentType;
         this.timeSpan = timeSpan;
+
+        overrideSignature();
+    }
+
+    @Override public @NotNull Integer id()
+    {
+        return id;
+    }
+
+    @Override public int signature()
+    {
+        return Objects.hash(punishmentType, timeSpan, defaultMessage);
     }
 
     @Override public @NotNull TimeSpan timeSpan()
@@ -23,13 +42,47 @@ public class InternalPunishment implements Punishment
         return timeSpan;
     }
 
+    @Override public void timeSpan(@NotNull TimeSpan timeSpan)
+    {
+        Objects.requireNonNull(timeSpan);
+        this.timeSpan = timeSpan;
+    }
+
     @Override public @NotNull PunishmentType punishmentType()
     {
         return punishmentType;
     }
 
-    @Override public @NotNull Integer id()
+    @Override public void punishmentType(@NotNull PunishmentType punishmentType)
     {
-        return id;
+        Objects.requireNonNull(punishmentType);
+        this.punishmentType = punishmentType;
+    }
+
+    @Override public @NotNull Optional<Component> defaultMessage()
+    {
+        return Optional.ofNullable(this.defaultMessage);
+    }
+
+    @Override public void defaultMessage(@Nullable Component defaultMessage)
+    {
+        this.defaultMessage = defaultMessage;
+    }
+
+    @Override public void unsetMessage()
+    {
+        defaultMessage(null);
+    }
+
+    @Override public boolean equals(Object o)
+    {
+        if (o == null || getClass() != o.getClass()) {return false;}
+        InternalPunishment that = (InternalPunishment) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override public int hashCode()
+    {
+        return Objects.hashCode(id);
     }
 }

@@ -3,6 +3,7 @@ package net.kissenpvp.punishment;
 import net.kissenpvp.api.punishment.PunishmentType;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import net.kissenpvp.database.InternalCachedRepository;
+import net.kissenpvp.database.InternalPersistableEntity;
 import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
@@ -77,7 +78,7 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Inte
                     statement.setLong(3, millis);
                     statement.setLong(5, millis);
                 }
-
+                punishment.overrideSignature();
                 statement.addBatch();
             }
 

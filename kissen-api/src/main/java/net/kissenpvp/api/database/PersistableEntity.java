@@ -5,4 +5,8 @@ import org.jetbrains.annotations.NotNull;
 public interface PersistableEntity<P>
 {
     @NotNull P id();
+
+    int signature();
+
+    boolean unsavedChanges();
 }
