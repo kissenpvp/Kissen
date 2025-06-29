@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 public class PunishmentRepository extends InternalCachedRepository<Integer, InternalPunishment>
@@ -30,6 +31,13 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Inte
     protected @NotNull @UnmodifiableView InternalPunishment toEntity(@NotNull Integer id, @NotNull ResultSet resultSet) throws SQLException
     {
         PunishmentType type = PunishmentType.fromOrdinal(resultSet.getInt("punishment_type"));
+
+        if(Objects.isNull(type))
+        {
+            String message = String.format("The punishment type of the punishment %s is null. This should not happen.", id);
+            throw new SQLException(new NullPointerException(message));
+        }
+
         InternalDefinedTimeSpan timeSpan = new InternalDefinedTimeSpan(resultSet.getLong("time_span"));
         return new InternalPunishment(id, type, timeSpan);
     }
