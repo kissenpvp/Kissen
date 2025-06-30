@@ -17,7 +17,7 @@ public abstract class InternalPersistableEntity<P> implements PersistableEntity<
         storedSignature = signature();
     }
 
-    @Override public boolean unsavedChanges()
+    @Override public boolean unsaved()
     {
         return storedSignature != signature();
     }

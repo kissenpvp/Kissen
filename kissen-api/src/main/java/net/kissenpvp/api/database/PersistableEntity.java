@@ -8,5 +8,5 @@ public interface PersistableEntity<P>
 
     int signature();
 
-    boolean unsavedChanges();
+    boolean unsaved();
 }
