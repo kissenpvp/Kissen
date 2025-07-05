@@ -1,9 +1,8 @@
-package net.kissenpvp.punishment;
+package net.kissenpvp.punishment.repository;
 
 import net.kissenpvp.api.punishment.PunishmentType;
-import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import net.kissenpvp.database.InternalCachedRepository;
-import net.kissenpvp.database.InternalPersistableEntity;
+import net.kissenpvp.punishment.InternalPunishment;
 import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
@@ -31,6 +30,9 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Inte
     @Override
     protected @NotNull @UnmodifiableView InternalPunishment toEntity(@NotNull Integer id, @NotNull ResultSet resultSet) throws SQLException
     {
+        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+        Objects.requireNonNull(id, "The id cannot be null.");
+
         PunishmentType type = PunishmentType.fromOrdinal(resultSet.getInt("punishment_type"));
 
         if(Objects.isNull(type))
@@ -72,7 +74,7 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Inte
                 statement.setInt(2, punishmentOrdinal);
                 statement.setInt(4, punishmentOrdinal);
 
-                if (punishment.timeSpan() instanceof DefinedTimeSpan definedTimeSpan)
+                if (punishment.timeSpan() instanceof net.kissenpvp.api.temporal.timespan.DefinedTimeSpan definedTimeSpan)
                 {
                     long millis = definedTimeSpan.get(ChronoUnit.MILLIS);
                     statement.setLong(3, millis);

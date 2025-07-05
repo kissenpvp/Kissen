@@ -1,7 +1,24 @@
 package net.kissenpvp.api.punishment;
 
-public interface PunishmentSubscription
-{
+import net.kissenpvp.api.database.SubscriptionEntity;
+import net.kissenpvp.api.temporal.timespan.TimeSpan;
+import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
+import java.util.UUID;
+
+public interface PunishmentSubscription extends SubscriptionEntity<UUID, Integer, Punishment>
+{
+    @NotNull TimeSpan timeSpan();
+
+    void timeSpan(@NotNull TimeSpan timeSpan);
+
+    @NotNull Optional<Component> message();
+
+    void message(@Nullable Component component);
+
+    void unsetMessage();
 
 }
