@@ -1,5 +1,6 @@
 package net.kissenpvp.temporal.timespan;
 
+import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -8,7 +9,7 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
 import java.util.List;
 
-public class InternalDefinedTimeSpan implements net.kissenpvp.api.temporal.timespan.DefinedTimeSpan
+public class InternalDefinedTimeSpan implements DefinedTimeSpan
 {
     private final long duration;
 
