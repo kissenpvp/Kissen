@@ -115,7 +115,13 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         return saveAll(Collections.singleton(id));
     }
 
-    protected abstract @NotNull String createTableQuery();
+    protected void overrideSignature(@NotNull T entity)
+    {
+        if (entity instanceof InternalPersistableEntity<?> persistable)
+        {
+            persistable.overrideSignature();
+        }
+    }
 
     public @NotNull String table()
     {
@@ -124,17 +130,15 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
 
     protected abstract @NotNull String findQuery();
 
-
-
     /**
      * Converts a single row of the provided {@code ResultSet} into an entity.
      * This method is expected to be implemented by subclasses to define the mapping logic from the {@code ResultSet}
      * data and the specified {@code id} to the entity type {@code T}.
      *
-     * @param id the identifier associated with the entity being constructed, must not be null
+     * @param id        the identifier associated with the entity being constructed, must not be null
      * @param resultSet the {@code ResultSet} containing the row to be converted into an entity, must not be null
      * @return the entity created from the specified {@code id} and the current row in the {@code ResultSet}, never null
-     * @throws SQLException if an error occurs while accessing the {@code ResultSet}
+     * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
      * @throws NullPointerException if either {@code id} or {@code resultSet} is null
      */
     protected abstract @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException;
@@ -146,9 +150,8 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
      *
      * @param resultSet the {@code ResultSet} containing the row to be converted into an entity, must not be null
      * @return an unmodifiable view of the entity created from the current row in the {@code ResultSet}, never null
-     * @throws SQLException if an error occurs while accessing the {@code ResultSet}
+     * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
      * @throws NullPointerException if the {@code ResultSet} is null
-     *
      * @see #toEntities(ResultSet)
      * @see #toEntity(Object, ResultSet)
      */
@@ -161,9 +164,8 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
      *
      * @param resultSet the {@code ResultSet} containing rows of data to be converted into entities, must not be null
      * @return an unmodifiable collection of entities created from the rows in the {@code ResultSet}, never null
-     * @throws SQLException if an error occurs while accessing the {@code ResultSet}
+     * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
      * @throws NullPointerException if the {@code ResultSet} is null
-     *
      * @see #toEntity(ResultSet)
      */
     private @NotNull @UnmodifiableView Collection<T> toEntities(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
@@ -182,7 +184,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
      *
      * @param resultSet the {@code ResultSet} containing data to be converted into entities, cannot be null
      * @return a collection of entities derived from the {@code ResultSet}, never null
-     * @throws SQLException if an SQL error occurs while processing the {@code ResultSet}
+     * @throws SQLException         if an SQL error occurs while processing the {@code ResultSet}
      * @throws NullPointerException if the {@code ResultSet} is null
      */
     private @NotNull Collection<T> loadAll(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
