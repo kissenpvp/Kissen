@@ -11,11 +11,9 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
 {
     private final Map<P, T> cachedEntries;
 
-    public InternalCachedRepository(@NotNull String table, @NotNull Connection connection)
+    public InternalCachedRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery) throws NullPointerException
     {
-        super(table, connection);
+        super(table, connection, findQuery);
         this.cachedEntries = new HashMap<>();
     }
-
-
 }

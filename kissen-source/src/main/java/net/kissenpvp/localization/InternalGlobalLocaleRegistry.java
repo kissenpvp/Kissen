@@ -19,13 +19,16 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
         repositories = new HashMap<>();
     }
 
-    public void register(@NotNull KissenPlugin plugin)
+    public void register(@NotNull KissenPlugin plugin) throws NullPointerException
     {
-        repositories.put(plugin, new InternalLocaleRepository() {
+        Objects.requireNonNull(plugin, "plugin cannot be null");
+
+        repositories.put(plugin, new InternalLocaleRepository()
+        {
             @Override protected @NotNull Optional<Locale> locale(@NotNull String localeName)
             {
                 Locale locale = Translator.parseLocale(localeName);
-                if(Objects.nonNull(locale))
+                if (Objects.nonNull(locale))
                 {
                     locales.add(locale);
                 }
@@ -39,8 +42,10 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
         });
     }
 
-    @Override public @NotNull LocaleRepository localeRepository(@NotNull KissenPlugin plugin)
+    @Override public @NotNull LocaleRepository localeRepository(@NotNull KissenPlugin plugin) throws NullPointerException
     {
+        Objects.requireNonNull(plugin, "plugin cannot be null");
+
         // if(!repositories.containsKey(plugin))
         // {
         //     register(plugin);

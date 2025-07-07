@@ -17,6 +17,7 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import java.sql.*;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -35,30 +36,35 @@ import java.util.concurrent.CompletableFuture;
  */
 public class PunishmentSubscriptionRepository extends InternalCachedRepository<UUID, PunishmentSubscription> implements SubscriptionRepository<UUID, Integer, Punishment, PunishmentSubscription>
 {
+
     /**
-     * Constructs a new instance of {@code PunishmentSubscriptionRepository} with the specified database connection.
+     * Constructs a new instance of PunishmentSubscriptionRepository.
+     * This initializes the repository with a predefined table name, connection,
+     * and query string to fetch punishment subscription data by ID.
      *
-     * @param connection The {@link Connection} to the database. Must not be {@code null}.
-     *                   This connection is used to interact with the underlying database table
-     *                   for managing punishment subscription entities.
+     * @param connection The database connection to be used by this repository. Must not be null.
+     * @throws NullPointerException If the provided connection is null.
      */
-    public PunishmentSubscriptionRepository(@NotNull Connection connection)
+    public PunishmentSubscriptionRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_punishment_subscription", connection);
+        super("ksvp_punishment_subscription", connection, "SELECT parent_id, parent_signature, time_span, message FROM %s WHERE id = ?;");
     }
 
     /**
-     * Sets the message values in the provided {@link PreparedStatement} based on the {@link PunishmentSubscription}
-     * instance. The method retrieves the serialized message component if available and sets it to the
-     * designated indices in the {@link PreparedStatement}. If no message is present, it sets NULL values
-     * for the respective columns.
+     * Updates the provided {@link PreparedStatement} with the message data from the given {@link PunishmentSubscription}.
+     * If the subscription contains a message, it serializes the message into a JSON string and sets it in the
+     * statement at specific indices. If no message is present, it sets the corresponding columns to {@code NULL}.
      *
-     * @param statement    The {@link PreparedStatement} where the message values are to be set.
-     * @param subscription The {@link PunishmentSubscription} containing the message information.
-     * @throws SQLException If an SQL error occurs while interacting with the {@link PreparedStatement}.
+     * @param statement    The {@link PreparedStatement} where the message data is to be set. Must not be {@code null}.
+     * @param subscription The {@link PunishmentSubscription} containing the message data. Must not be {@code null}.
+     * @throws SQLException         If an SQL error occurs while setting the data in the statement.
+     * @throws NullPointerException If the provided {@link PreparedStatement} or {@link PunishmentSubscription} is {@code null}.
      */
-    private static void message(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException
+    private static void message(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException, NullPointerException
     {
+        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
+        Objects.requireNonNull(subscription, "The subscription cannot be null.");
+
         Optional<String> message = subscription.message().map(JSONComponentSerializer.json()::serialize);
         if (message.isPresent())
         {
@@ -73,17 +79,20 @@ public class PunishmentSubscriptionRepository extends InternalCachedRepository<U
     }
 
     /**
-     * Sets the timespan values in the provided {@link PreparedStatement} based on the
-     * {@link PunishmentSubscription} instance. The method checks if the timespan is an instance of
-     * {@link DefinedTimeSpan} and retrieves its value in milliseconds. If no such instance exists,
-     * it sets NULL values for the respective columns.
+     * Updates the provided {@link PreparedStatement} with the time span data from the given {@link PunishmentSubscription}.
+     * If the subscription's time span is a defined time span, its duration in milliseconds is set in the statement
+     * at specific indices. If the subscription's time span is undefined, the corresponding columns in the statement are set to {@code NULL}.
      *
-     * @param statement    The {@link PreparedStatement} where the timespan values are to be set.
-     * @param subscription The {@link PunishmentSubscription} containing the timespan information.
-     * @throws SQLException If an SQL error occurs while interacting with the statement.
+     * @param statement    The {@link PreparedStatement} to be updated with the time span data. Must not be {@code null}.
+     * @param subscription The {@link PunishmentSubscription} containing the time span data. Must not be {@code null}.
+     * @throws SQLException         If an SQL error occurs while setting the data in the statement.
+     * @throws NullPointerException If the provided {@link PreparedStatement} or {@link PunishmentSubscription} is {@code null}.
      */
-    private static void timespan(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException
+    private static void timespan(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException, NullPointerException
     {
+        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
+        Objects.requireNonNull(subscription, "The subscription cannot be null.");
+
         if (subscription.timeSpan() instanceof DefinedTimeSpan definedTimeSpan)
         {
             long millis = definedTimeSpan.get(ChronoUnit.MILLIS);
@@ -98,8 +107,11 @@ public class PunishmentSubscriptionRepository extends InternalCachedRepository<U
     }
 
     @Override
-    protected @NotNull @UnmodifiableView InternalPunishmentSubscription toEntity(@NotNull UUID id, @NotNull ResultSet resultSet) throws SQLException
+    protected @NotNull @UnmodifiableView InternalPunishmentSubscription toEntity(@NotNull UUID id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
+        Objects.requireNonNull(id, "The id cannot be null.");
+        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+
         Component message = GsonComponentSerializer.gson().deserialize(resultSet.getString("message"));
         TimeSpan timeSpan = new PermanentTimeSpan();
 
@@ -114,18 +126,17 @@ public class PunishmentSubscriptionRepository extends InternalCachedRepository<U
     }
 
     @Override
-    protected @NotNull @UnmodifiableView InternalPunishmentSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException
+    protected @NotNull @UnmodifiableView InternalPunishmentSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
+        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+
         return toEntity(UUID.fromString(resultSet.getString("id")), resultSet);
     }
 
-    @Override protected @NotNull String findQuery()
+    @Override public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PunishmentSubscription> id) throws NullPointerException
     {
-        return "SELECT parent_id, parent_signature, time_span, message FROM %s WHERE id = ?;";
-    }
+        Objects.requireNonNull(id, "The iterable of subscriptions cannot be null.");
 
-    @Override public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PunishmentSubscription> id)
-    {
         String sql = "INSERT INTO %s (id, parent_id, parent_signature, time_span, message) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE parent_id = ?, parent_signature = ?, time_span = ?, message = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {

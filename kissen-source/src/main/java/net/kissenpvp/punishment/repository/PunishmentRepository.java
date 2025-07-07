@@ -35,15 +35,14 @@ import java.util.concurrent.CompletableFuture;
 public class PunishmentRepository extends InternalCachedRepository<Integer, Punishment>
 {
     /**
-     * Constructs a new instance of the {@code PunishmentRepository} to interact with the
-     * database for the "ksvp_punishment" table. It leverages the {@code Connection} instance
-     * provided for executing database operations.
+     * Constructs a new {@code PunishmentRepository} instance, initializing it with the specified database connection.
      *
-     * @param connection The {@link Connection} instance to be used for database interactions. Must not be {@code null}.
+     * @param connection The {@link Connection} to the database. Must not be {@code null}.
+     * @throws NullPointerException If the provided {@code connection} is {@code null}.
      */
-    public PunishmentRepository(@NotNull Connection connection)
+    public PunishmentRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_punishment", connection);
+        super("ksvp_punishment", connection, "SELECT punishment_type, time_span, message FROM %s WHERE id = ?;");
     }
 
     /**
@@ -128,11 +127,6 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Puni
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
         return toEntity(resultSet.getInt("id"), resultSet);
-    }
-
-    @Override protected @NotNull String findQuery()
-    {
-        return "SELECT punishment_type, time_span, message FROM %s WHERE id = ?;";
     }
 
     @Override public @NotNull CompletableFuture<Void> save(@NotNull Punishment id) throws NullPointerException

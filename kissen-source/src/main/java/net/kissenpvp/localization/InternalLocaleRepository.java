@@ -66,8 +66,11 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         return Collectors.toMap(Map.Entry::getKey, entry -> new MessageFormat(entry.getValue().getAsString()));
     }
 
-    @Override public @Nullable MessageFormat register(@NotNull String key, @NotNull MessageFormat format)
+    @Override public @Nullable MessageFormat register(@NotNull String key, @NotNull MessageFormat format) throws NullPointerException
     {
+        Objects.requireNonNull(key, "The key cannot be null.");
+        Objects.requireNonNull(format, "The message format cannot be null.");
+
         return defaultMessages.put(key, format);
     }
 
@@ -130,15 +133,17 @@ public abstract class InternalLocaleRepository implements LocaleRepository
     }
 
     /**
-     * Processes a file containing localization data by determining its associated locale,
-     * registering translations, and adding the locale to the set of known locales.
-     * This method expects the file name to determine the locale, and it should follow
-     * a recognized format to properly resolve the locale.
+     * Processes a given localization file, attempts to determine its locale based on its filename,
+     * and registers its contents into the translation store if the locale is valid.
+     * Files must follow a specific naming convention to properly identify the locale.
      *
-     * @param file the localization file to be processed must not be null and should follow the expected naming conventions
+     * @param file the file to process; must not be null
+     * @throws NullPointerException if the provided file is null
      */
-    private void loadFile(@NotNull File file)
+    private void loadFile(@NotNull File file) throws NullPointerException
     {
+        Objects.requireNonNull(file, "The file cannot be null.");
+
         String fileName = file.getName();
         String localeName = fileName.substring(0, fileName.length() - 5);
 
@@ -158,17 +163,20 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         locallyKnown.add(locale); // can't be duplicated because locallyKnown is a set
     }
 
+
     /**
-     * Reads data from a JSON file and merges it with a map of default messages.
-     * If the file contains certain keys missing in the default messages, they are excluded from the processed output.
-     * The resulting map links strings to {@link MessageFormat} objects.
+     * Reads a JSON file and integrates its content with default messages.
+     * If the JSON file lacks any keys present in the default messages, those keys are added with their default values.
      *
-     * @param file the JSON file to read and process; must not be null
-     * @return a map where each key is a string from the processed JSON, and each value
-     * is a {@link MessageFormat} derived from the data
+     * @param file the JSON file to be processed; must not be null
+     * @return a {@link Map} where the keys are strings and the values are {@link MessageFormat} objects
+     *         representing the fully populated message data
+     * @throws NullPointerException if the provided file is null
      */
-    private @NotNull Map<String, MessageFormat> readFile(@NotNull File file)
+    private @NotNull Map<String, MessageFormat> readFile(@NotNull File file) throws NullPointerException
     {
+        Objects.requireNonNull(file, "The file cannot be null.");
+
         JsonObject object = readJson(file).orElse(new JsonObject());
 
         for (Map.Entry<String, MessageFormat> entry : defaultMessages.entrySet())
@@ -185,36 +193,42 @@ public abstract class InternalLocaleRepository implements LocaleRepository
     }
 
     /**
-     * Reads and parses a JSON file into a {@link JsonObject}.
-     * If an error occurs during file reading or parsing, an empty {@code Optional} is returned.
+     * Reads a JSON file and parses its content into a {@link JsonObject}.
+     * If the file cannot be read or parsed or is not valid JSON, an empty {@code Optional} is returned.
      *
-     * @param file the JSON file to be read and parsed must not be null
-     * @return an {@code Optional} containing the parsed {@link JsonObject} if successful,
-     * or an empty {@code Optional} if an error occurs or the input is invalid
+     * @param file the JSON file to be read and parsed; must not be null
+     * @return an {@code Optional} containing the parsed {@link JsonObject}, or an empty {@code Optional} if parsing fails
+     * @throws NullPointerException if the provided file is null
      */
-    private @NotNull Optional<JsonObject> readJson(@NotNull File file)
+    private @NotNull Optional<JsonObject> readJson(@NotNull File file) throws NullPointerException
     {
+        Objects.requireNonNull(file, "The file cannot be null.");
+
         try (FileReader fileReader = new FileReader(file, StandardCharsets.UTF_8))
         {
             try (BufferedReader bufferedReader = new BufferedReader(fileReader))
             {
                 return Optional.ofNullable(JsonParser.parseReader(bufferedReader).getAsJsonObject());
             }
-        } catch (IOException | JsonIOException | JsonSyntaxException exception)
+        }
+        catch (IOException | JsonIOException | JsonSyntaxException exception)
         {
             log.warn("Failed to parse JSON file {}: {}", file.getName(), exception.getMessage());
         }
         return Optional.empty();
     }
 
+
     /**
-     * Attempts to resolve a {@link Locale} object based on the provided locale name using {@link net.kyori.adventure.translation.Translator#parseLocale}.
-     * If the parsing is successful, the locale is automatically registered in the global locale set.
+     * Attempts to retrieve a {@link Locale} object based on the provided locale name. This method
+     * takes a string representation of the locale name and tries to parse it into a {@link Locale}.
+     * If the parsing succeeds, the resulting {@link Locale} is wrapped in an {@link Optional}.
+     * If the parsing fails, an empty {@link Optional} is returned.
      *
-     * @param localeName the name of the locale to be parsed (e.g., "en", "en-US", "de-DE")
-     * @return an {@code Optional} containing the resolved {@link Locale} if successful, or an empty {@code Optional} if the locale name is invalid or null
+     * @param localeName the name of the locale to be retrieved; must not be null
+     * @return an {@link Optional} containing the {@link Locale} if the parsing succeeds, or an empty {@link Optional} if it fails
+     * @throws NullPointerException if the provided locale name is null
      * @see net.kyori.adventure.translation.Translator#parseLocale(String)
      */
-
-    protected abstract @NotNull Optional<Locale> locale(@NotNull String localeName);
+    protected abstract @NotNull Optional<Locale> locale(@NotNull String localeName) throws NullPointerException;
 }

@@ -28,10 +28,14 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
 {
     private static final Logger log = LoggerFactory.getLogger(InternalRepository.class);
     private final Connection connection;
-    private final String table;
+    private final String table, findQuery;
 
-    public InternalRepository(@NotNull String table, @NotNull Connection connection)
+    public InternalRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery) throws NullPointerException
     {
+        Objects.requireNonNull(table, "The table name cannot be null.");
+        Objects.requireNonNull(connection, "The database connection cannot be null.");
+        Objects.requireNonNull(findQuery, "The find query cannot be null.");
+
         if (table.isBlank() || table.length() > 64 || !table.matches("^[a-zA-Z_][a-zA-Z0-9_$]{0,63}$"))
         {
             String message = "The chosen table name %s, is not valid for a database table.";
@@ -40,11 +44,12 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
 
         this.table = table;
         this.connection = connection;
+        this.findQuery = findQuery;
     }
 
     @Override public @NotNull CompletableFuture<T> find(@NotNull P id)
     {
-        return CompletableFuture.supplyAsync(() -> query(findQuery(), (statement ->
+        return CompletableFuture.supplyAsync(() -> query(findQuery, (statement ->
         {
             statement.setObject(1, id);
 
@@ -127,8 +132,6 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
     {
         return table;
     }
-
-    protected abstract @NotNull String findQuery();
 
     /**
      * Converts a single row of the provided {@code ResultSet} into an entity.

@@ -11,7 +11,7 @@ public interface LocaleRepository
 {
     @NotNull KissenPlugin plugin();
 
-    @Nullable MessageFormat register(@NotNull String key, @NotNull MessageFormat format);
+    @Nullable MessageFormat register(@NotNull String key, @NotNull MessageFormat format) throws NullPointerException;
 
     @NotNull Key key();
 
