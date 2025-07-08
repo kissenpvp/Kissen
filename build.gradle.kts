@@ -3,6 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     `java-library`
+    `maven-publish`
 }
 
 group = "net.kissenpvp"
@@ -11,12 +12,13 @@ version = "1.0-SNAPSHOT"
 val annotationsVersion = "26.0.2"
 val adventureVersion = "4.20.0"
 
-
 subprojects {
     apply(plugin = "java")
+    apply(plugin = "maven-publish")
 
     repositories {
         mavenCentral()
+        maven("https://repo.kissenpvp.net/snapshots")
     }
 
     dependencies {
@@ -51,6 +53,7 @@ subprojects {
     tasks.withType<Javadoc> {
         options.encoding = Charsets.UTF_8.name()
     }
+
     tasks.withType<ProcessResources> {
         filteringCharset = Charsets.UTF_8.name()
     }
@@ -65,6 +68,19 @@ subprojects {
 
     tasks.test {
         useJUnitPlatform()
+    }
+
+    publishing {
+        repositories {
+            maven("https://repo.kissenpvp.net/snapshots") {
+                name = "kissen"
+                credentials(PasswordCredentials::class)
+            }
+        }
+
+        publications.create<MavenPublication>(project.name) {
+            from(components["java"])
+        }
     }
 }
 
