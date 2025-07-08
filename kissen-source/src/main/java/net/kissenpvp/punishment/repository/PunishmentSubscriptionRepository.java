@@ -70,11 +70,7 @@ public class PunishmentSubscriptionRepository extends InternalCachedRepository<U
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(subscription, "The subscription cannot be null.");
 
-        if (subscription.timeSpan() instanceof DefinedTimeSpan definedTimeSpan)
-        {
-            setDual(statement, pos1, pos2, Types.BIGINT, definedTimeSpan.get(ChronoUnit.MILLIS) );
-            return;
-        }
+
         setDual(statement, pos1, pos2, Types.BIGINT, null);
     }
 
@@ -122,8 +118,14 @@ public class PunishmentSubscriptionRepository extends InternalCachedRepository<U
                 setDual(statement, 2, 7, Types.INTEGER, subscription.parentId());
                 setDual(statement, 3, 8, Types.INTEGER, subscription.parentSignature());
                 setDual(statement, 4, 9, Types.DATE, date);
+
+                if (subscription.timeSpan() instanceof DefinedTimeSpan definedTimeSpan)
+                {
+                    setDual(statement, 5, 10, Types.BIGINT, definedTimeSpan.get(ChronoUnit.MILLIS) );
+                }
+
                 setDual(statement, 6, 11, Types.VARCHAR, message.orElse(null));
-                timespan(statement, subscription, 5, 10);
+
 
                 overrideSignature(subscription);
                 statement.addBatch();

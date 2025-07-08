@@ -45,35 +45,6 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Puni
         super("ksvp_punishment", connection, "SELECT punishment_type, time_span, message FROM %s WHERE id = ?;");
     }
 
-    /**
-     * Sets the timespan values in the provided {@link PreparedStatement} based on the {@link Punishment} instance.
-     * If the timespan is a {@link DefinedTimeSpan}, it retrieves the time in milliseconds and sets it
-     * to the designated indices in the {@link PreparedStatement}. If no defined timespan is present,
-     * the method sets {@code NULL} values for the respective columns.
-     *
-     * @param statement  The {@link PreparedStatement} where the timespan values are to be set. Must not be {@code null}.
-     * @param punishment The {@link Punishment} instance containing the timespan information. Must not be {@code null}.
-     * @throws SQLException         If an SQL error occurs while interacting with the {@link PreparedStatement}.
-     * @throws NullPointerException If either {@code statement} or {@code punishment} is {@code null}.
-     */
-    private static void timespan(@NotNull PreparedStatement statement, @NotNull Punishment punishment) throws SQLException, NullPointerException
-    {
-        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
-        Objects.requireNonNull(punishment, "The punishment cannot be null.");
-
-        if (punishment.timeSpan() instanceof DefinedTimeSpan definedTimeSpan)
-        {
-            long millis = definedTimeSpan.get(ChronoUnit.MILLIS);
-            statement.setLong(3, definedTimeSpan.get(ChronoUnit.MILLIS));
-            statement.setLong(6, definedTimeSpan.get(ChronoUnit.MILLIS));
-            return;
-        }
-
-        int type = Types.BIGINT;
-        statement.setNull(3, type);
-        statement.setNull(6, type);
-    }
-
     @Override
     protected @NotNull @UnmodifiableView InternalPunishment toEntity(@NotNull Integer id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
@@ -122,8 +93,13 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Puni
                 Optional<String> message = punishment.defaultMessage().map(JSONComponentSerializer.json()::serialize);
 
                 setDual(statement, 2, 5, Types.TINYINT, punishment.punishmentType().ordinal());
+
+                if (punishment.timeSpan() instanceof DefinedTimeSpan definedTimeSpan)
+                {
+                    setDual(statement, 3, 6, Types.BIGINT, definedTimeSpan.get(ChronoUnit.MILLIS));
+                }
+
                 setDual(statement, 4, 7, Types.VARCHAR, message.orElse(null));
-                timespan(statement, punishment);
 
                 overrideSignature(punishment);
                 statement.addBatch();
