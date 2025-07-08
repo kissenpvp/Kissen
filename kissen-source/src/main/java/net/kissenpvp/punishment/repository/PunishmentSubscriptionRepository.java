@@ -13,9 +13,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.sql.*;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
@@ -47,63 +49,33 @@ public class PunishmentSubscriptionRepository extends InternalCachedRepository<U
      */
     public PunishmentSubscriptionRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_punishment_subscription", connection, "SELECT parent_id, parent_signature, time_span, message FROM %s WHERE id = ?;");
+        super("ksvp_punishment_subscription", connection, "SELECT parent_id, parent_signature, start_time, time_span, message FROM %s WHERE id = ?;");
     }
 
     /**
-     * Updates the provided {@link PreparedStatement} with the message data from the given {@link PunishmentSubscription}.
-     * If the subscription contains a message, it serializes the message into a JSON string and sets it in the
-     * statement at specific indices. If no message is present, it sets the corresponding columns to {@code NULL}.
+     * Updates the provided {@link PreparedStatement} with timespan data from the given {@link PunishmentSubscription}.
+     * If the {@code timeSpan} in the subscription is an instance of {@link DefinedTimeSpan}, its duration in milliseconds
+     * is set at the specified positions in the statement. If not, the corresponding positions are set to {@code NULL}.
      *
-     * @param statement    The {@link PreparedStatement} where the message data is to be set. Must not be {@code null}.
-     * @param subscription The {@link PunishmentSubscription} containing the message data. Must not be {@code null}.
+     * @param statement    The {@link PreparedStatement} to be updated with timespan data. Must not be {@code null}.
+     * @param subscription The {@link PunishmentSubscription} containing the timespan data. Must not be {@code null}.
+     * @param pos1         The index in the statement where the first instance of the timespan or {@code NULL} is to be set.
+     * @param pos2         The index in the statement where the second instance of the timespan or {@code NULL} is to be set.
      * @throws SQLException         If an SQL error occurs while setting the data in the statement.
      * @throws NullPointerException If the provided {@link PreparedStatement} or {@link PunishmentSubscription} is {@code null}.
      */
-    private static void message(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException, NullPointerException
-    {
-        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
-        Objects.requireNonNull(subscription, "The subscription cannot be null.");
-
-        Optional<String> message = subscription.message().map(JSONComponentSerializer.json()::serialize);
-        if (message.isPresent())
-        {
-            statement.setString(5, message.get());
-            statement.setString(9, message.get());
-            return;
-        }
-
-        int type = Types.VARCHAR;
-        statement.setNull(4, type);
-        statement.setNull(7, type);
-    }
-
-    /**
-     * Updates the provided {@link PreparedStatement} with the time span data from the given {@link PunishmentSubscription}.
-     * If the subscription's time span is a defined time span, its duration in milliseconds is set in the statement
-     * at specific indices. If the subscription's time span is undefined, the corresponding columns in the statement are set to {@code NULL}.
-     *
-     * @param statement    The {@link PreparedStatement} to be updated with the time span data. Must not be {@code null}.
-     * @param subscription The {@link PunishmentSubscription} containing the time span data. Must not be {@code null}.
-     * @throws SQLException         If an SQL error occurs while setting the data in the statement.
-     * @throws NullPointerException If the provided {@link PreparedStatement} or {@link PunishmentSubscription} is {@code null}.
-     */
-    private static void timespan(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException, NullPointerException
+    @SuppressWarnings("SameParameterValue")
+    private static void timespan(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription, int pos1, int pos2) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(subscription, "The subscription cannot be null.");
 
         if (subscription.timeSpan() instanceof DefinedTimeSpan definedTimeSpan)
         {
-            long millis = definedTimeSpan.get(ChronoUnit.MILLIS);
-            statement.setLong(4, definedTimeSpan.get(ChronoUnit.MILLIS));
-            statement.setLong(8, definedTimeSpan.get(ChronoUnit.MILLIS));
+            setDual(statement, pos1, pos2, Types.BIGINT, definedTimeSpan.get(ChronoUnit.MILLIS) );
             return;
         }
-
-        int type = Types.BIGINT;
-        statement.setNull(3, type);
-        statement.setNull(6, type);
+        setDual(statement, pos1, pos2, Types.BIGINT, null);
     }
 
     @Override
@@ -137,24 +109,23 @@ public class PunishmentSubscriptionRepository extends InternalCachedRepository<U
     {
         Objects.requireNonNull(id, "The iterable of subscriptions cannot be null.");
 
-        String sql = "INSERT INTO %s (id, parent_id, parent_signature, time_span, message) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE parent_id = ?, parent_signature = ?, time_span = ?, message = ?;";
+        String sql = "INSERT INTO %s (id, parent_id, parent_signature, start_time, time_span, message) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE parent_id = ?, parent_signature = ?, start_time = ?, time_span = ?, message = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (PunishmentSubscription subscription : id)
             {
                 statement.setString(1, String.valueOf(subscription.id()));
 
-                statement.setInt(2, subscription.parentId());
-                statement.setInt(6, subscription.parentId());
+                Optional<String> message = subscription.message().map(JSONComponentSerializer.json()::serialize);
+                Date date = Date.valueOf(subscription.start().atZone(ZoneId.systemDefault()).toLocalDate());
 
-                statement.setInt(3, subscription.parentSignature());
-                statement.setInt(7, subscription.parentSignature());
-
-                timespan(statement, subscription);
-                message(statement, subscription);
+                setDual(statement, 2, 7, Types.INTEGER, subscription.parentId());
+                setDual(statement, 3, 8, Types.INTEGER, subscription.parentSignature());
+                setDual(statement, 4, 9, Types.DATE, date);
+                setDual(statement, 6, 11, Types.VARCHAR, message.orElse(null));
+                timespan(statement, subscription, 5, 10);
 
                 overrideSignature(subscription);
-
                 statement.addBatch();
             }
 

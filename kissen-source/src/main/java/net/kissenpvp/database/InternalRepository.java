@@ -3,6 +3,7 @@ package net.kissenpvp.database;
 import net.kissenpvp.api.database.PersistableEntity;
 import net.kissenpvp.api.database.Repository;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +46,34 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         this.table = table;
         this.connection = connection;
         this.findQuery = findQuery;
+    }
+
+    /**
+     * Sets a value or null at the specified indices of the given {@link PreparedStatement}.
+     * If the provided {@code value} is non-null, it sets the value at both the specified index and an additional offset index.
+     * If the {@code value} is null, it sets SQL null for the given SQL type at both indices.
+     *
+     * @param statement   the {@link PreparedStatement} where the value or null will be set, must not be null
+     * @param index       the index at which the first value is set, must align with the {@link PreparedStatement}'s parameters
+     * @param secondIndex the index offset that serves as the base for the second insertion
+     * @param sqlType     the SQL type, defined in {@link java.sql.Types}, used to set the value or null
+     * @param value       the value to be set; can be null in which case SQL null will be inserted
+     * @throws SQLException         if an error occurs while interacting with the {@link PreparedStatement}
+     * @throws NullPointerException if the {@link PreparedStatement} is null
+     */
+    protected static void setDual(@NotNull PreparedStatement statement, int index, int secondIndex, int sqlType, @Nullable Object value) throws SQLException, NullPointerException
+    {
+        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
+
+        if (Objects.nonNull(value))
+        {
+            statement.setObject(index, value, sqlType);
+            statement.setObject(index + 5, value, sqlType);
+            return;
+        }
+
+        statement.setNull(index, sqlType);
+        statement.setNull(index + 5, sqlType);
     }
 
     @Override public @NotNull CompletableFuture<T> find(@NotNull P id)

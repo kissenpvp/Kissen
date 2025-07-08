@@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,19 +18,27 @@ public class InternalPunishmentSubscription extends InternalPersistableEntity<UU
     private final UUID linkId;
     private final Integer parent;
     private final Integer parentSignature;
+    private final Instant start;
     private @NotNull TimeSpan timeSpan;
     private @Nullable Component message;
 
     public InternalPunishmentSubscription(@NotNull UUID linkId, @NotNull Integer parent, @NotNull Integer parentSignature, @NotNull TimeSpan timeSpan, @Nullable Component message) throws NullPointerException
     {
+        this(linkId, parent, parentSignature, Instant.now(), timeSpan, message);
+    }
+
+    public InternalPunishmentSubscription(@NotNull UUID linkId, @NotNull Integer parent, @NotNull Integer parentSignature, @NotNull Instant start, @NotNull TimeSpan timeSpan, @Nullable Component message) throws NullPointerException
+    {
         Objects.requireNonNull(linkId, "LinkId cannot be null!");
         Objects.requireNonNull(parent, "Parent cannot be null!");
         Objects.requireNonNull(parentSignature, "ParentSignature cannot be null!");
+        Objects.requireNonNull(start, "Start cannot be null!");
         Objects.requireNonNull(timeSpan, "TimeSpan cannot be null!");
 
         this.linkId = linkId;
         this.parent = parent;
         this.parentSignature = parentSignature;
+        this.start = start;
         this.timeSpan = timeSpan;
         this.message = message;
     }
@@ -58,6 +67,11 @@ public class InternalPunishmentSubscription extends InternalPersistableEntity<UU
     @Override public int parentSignature()
     {
         return parentSignature;
+    }
+
+    @Override public @NotNull Instant start()
+    {
+        return start;
     }
 
     @Override public @NotNull TimeSpan timeSpan()

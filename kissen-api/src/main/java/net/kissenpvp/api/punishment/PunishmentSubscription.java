@@ -6,11 +6,14 @@ import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface PunishmentSubscription extends SubscriptionEntity<UUID, Integer, Punishment>
 {
+    @NotNull Instant start();
+
     @NotNull TimeSpan timeSpan();
 
     void timeSpan(@NotNull TimeSpan timeSpan);

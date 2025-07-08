@@ -46,35 +46,6 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Puni
     }
 
     /**
-     * Sets the message values in the provided {@link PreparedStatement} based on the {@link Punishment}
-     * instance. The method retrieves the default message component if available and sets it
-     * to the designated indices in the {@link PreparedStatement}. If no default message is present, it
-     * sets {@code NULL} values for the respective columns.
-     *
-     * @param statement  The {@link PreparedStatement} where the message values are to be set. Must not be {@code null}.
-     * @param punishment The {@link Punishment} instance containing the message information. Must not be {@code null}.
-     * @throws SQLException         If an SQL error occurs while interacting with the {@link PreparedStatement}.
-     * @throws NullPointerException If either {@code statement} or {@code punishment} is {@code null}.
-     */
-    private static void message(@NotNull PreparedStatement statement, @NotNull Punishment punishment) throws SQLException, NullPointerException
-    {
-        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
-        Objects.requireNonNull(punishment, "The punishment cannot be null.");
-
-        Optional<String> message = punishment.defaultMessage().map(JSONComponentSerializer.json()::serialize);
-        if (message.isPresent())
-        {
-            statement.setString(4, message.get());
-            statement.setString(7, message.get());
-            return;
-        }
-
-        int type = Types.VARCHAR;
-        statement.setNull(4, type);
-        statement.setNull(7, type);
-    }
-
-    /**
      * Sets the timespan values in the provided {@link PreparedStatement} based on the {@link Punishment} instance.
      * If the timespan is a {@link DefinedTimeSpan}, it retrieves the time in milliseconds and sets it
      * to the designated indices in the {@link PreparedStatement}. If no defined timespan is present,
@@ -148,12 +119,11 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Puni
             {
                 statement.setInt(1, punishment.id());
 
-                int punishmentOrdinal = punishment.punishmentType().ordinal();
-                statement.setInt(2, punishmentOrdinal);
-                statement.setInt(5, punishmentOrdinal);
+                Optional<String> message = punishment.defaultMessage().map(JSONComponentSerializer.json()::serialize);
 
+                setDual(statement, 2, 5, Types.TINYINT, punishment.punishmentType().ordinal());
+                setDual(statement, 4, 7, Types.VARCHAR, message.orElse(null));
                 timespan(statement, punishment);
-                message(statement, punishment);
 
                 overrideSignature(punishment);
                 statement.addBatch();
