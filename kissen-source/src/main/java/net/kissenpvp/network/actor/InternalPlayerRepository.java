@@ -5,9 +5,10 @@ import net.kissenpvp.database.InternalRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -54,6 +55,8 @@ public abstract class InternalPlayerRepository extends InternalRepository<UUID, 
     @Override
     protected @NotNull @UnmodifiableView PlayerClient toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
+        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+
         return this.toEntity(UUID.fromString(resultSet.getString("id")), resultSet);
     }
 
@@ -62,25 +65,55 @@ public abstract class InternalPlayerRepository extends InternalRepository<UUID, 
     {
         Objects.requireNonNull(id, "id cannot be null");
 
-        String sql = "INSERT INTO %s (id, linkId, username) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE linkId = ?, username = ?;";
+        String sql = """
+                 INSERT INTO %s (id, linkId, username, first_login, last_login, operator, locale)\s
+                 VALUES (?, ?, ?, ?, ?, ?, ?)\s
+                 ON DUPLICATE KEY UPDATE linkId = ?, username = ?, last_login = ?, time_played = ?, operator = ?, locale = ?;\s
+                 """;
+
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (PlayerClient playerClient : id)
             {
-                statement.setString(1, String.valueOf(playerClient.id()));
-
-                statement.setString(2, String.valueOf(playerClient.linkId()));
-                statement.setString(4, String.valueOf(playerClient.linkId()));
-
-                statement.setString(3, playerClient.name());
-                statement.setString(5, playerClient.name());
-
-                overrideSignature(playerClient);
-                statement.addBatch();
+                addBatch(statement, playerClient);
             }
 
             statement.executeBatch();
             return null;
         })));
+    }
+
+    /**
+     * Adds a {@link PlayerClient} instance to the batch operation of the given {@link PreparedStatement}.
+     * This method prepares and populates the SQL parameters for inserting or updating a player's data
+     * and then calls {@link PreparedStatement#addBatch()} to include the operation in the batch.
+     *
+     * @param statement    the {@link PreparedStatement} to which the batch operation is added; must not be null
+     * @param playerClient the {@link PlayerClient} instance whose data will populate the SQL parameters; must not be null
+     * @throws SQLException         if an error occurs while interacting with the {@link PreparedStatement}
+     * @throws NullPointerException if the provided {@link PreparedStatement} or {@link PlayerClient} is null
+     */
+    private void addBatch(@NotNull PreparedStatement statement, @NotNull PlayerClient playerClient) throws SQLException, NullPointerException
+    {
+        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
+        Objects.requireNonNull(playerClient, "The player client cannot be null.");
+
+        statement.setString(1, String.valueOf(playerClient.id()));
+
+        Date now = Date.valueOf(Instant.now().atZone(ZoneId.systemDefault()).toLocalDate());
+        Date lastLogin = Date.valueOf(playerClient.lastLogin().atZone(ZoneId.systemDefault()).toLocalDate());
+
+        setDual(statement, 2, 8, Types.VARCHAR, String.valueOf(playerClient.linkId()));
+        setDual(statement, 3, 9, Types.VARCHAR, playerClient.name());
+
+        statement.setDate(4, now);
+        setDual(statement, 5, 10, Types.DATE, lastLogin);
+        statement.setLong(11, playerClient.timePlayed().get(ChronoUnit.SECONDS));
+
+        setDual(statement, 6, 12, Types.BOOLEAN, playerClient.isOp());
+        setDual(statement, 7, 13, Types.VARCHAR, playerClient.locale().toLanguageTag());
+
+        overrideSignature(playerClient);
+        statement.addBatch();
     }
 }

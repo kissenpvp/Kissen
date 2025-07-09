@@ -3,6 +3,7 @@ core.*
 hs_err_pid*
 
 # Intellij
+.idea/*
 .idea/
 *.iml
 *.ipr
