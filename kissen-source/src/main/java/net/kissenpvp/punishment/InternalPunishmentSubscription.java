@@ -13,8 +13,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public class InternalPunishmentSubscription extends InternalPersistableEntity<UUID> implements PunishmentSubscription
+public class InternalPunishmentSubscription extends InternalPersistableEntity<String> implements PunishmentSubscription
 {
+    private final String id;
     private final UUID linkId;
     private final Integer parent;
     private final Integer parentSignature;
@@ -24,17 +25,25 @@ public class InternalPunishmentSubscription extends InternalPersistableEntity<UU
 
     public InternalPunishmentSubscription(@NotNull UUID linkId, @NotNull Integer parent, @NotNull Integer parentSignature, @NotNull TimeSpan timeSpan, @Nullable Component message) throws NullPointerException
     {
-        this(linkId, parent, parentSignature, Instant.now(), timeSpan, message);
+        this(String.valueOf(UUID.randomUUID()).split("-")[0], // Generate random 8 id
+                linkId, parent, parentSignature, Instant.now(), timeSpan, message);
     }
 
-    public InternalPunishmentSubscription(@NotNull UUID linkId, @NotNull Integer parent, @NotNull Integer parentSignature, @NotNull Instant start, @NotNull TimeSpan timeSpan, @Nullable Component message) throws NullPointerException
+    public InternalPunishmentSubscription(@NotNull String id, @NotNull UUID linkId, @NotNull Integer parent, @NotNull Integer parentSignature, @NotNull Instant start, @NotNull TimeSpan timeSpan, @Nullable Component message) throws NullPointerException
     {
+        Objects.requireNonNull(id, "Id cannot be null!");
         Objects.requireNonNull(linkId, "LinkId cannot be null!");
         Objects.requireNonNull(parent, "Parent cannot be null!");
         Objects.requireNonNull(parentSignature, "ParentSignature cannot be null!");
         Objects.requireNonNull(start, "Start cannot be null!");
         Objects.requireNonNull(timeSpan, "TimeSpan cannot be null!");
 
+        if (id.length() > 8)
+        {
+            throw new IllegalArgumentException("Id cannot be longer than 4 characters!");
+        }
+
+        this.id = id;
         this.linkId = linkId;
         this.parent = parent;
         this.parentSignature = parentSignature;
@@ -43,7 +52,12 @@ public class InternalPunishmentSubscription extends InternalPersistableEntity<UU
         this.message = message;
     }
 
-    @Override public @NotNull UUID id()
+    @Override public @NotNull String id()
+    {
+        return id;
+    }
+
+    @Override public @NotNull UUID linkId()
     {
         return linkId;
     }

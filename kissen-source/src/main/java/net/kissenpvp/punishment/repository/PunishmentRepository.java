@@ -88,25 +88,44 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Puni
         {
             for (Punishment punishment : id)
             {
-                statement.setInt(1, punishment.id());
-
-                Optional<String> message = punishment.defaultMessage().map(JSONComponentSerializer.json()::serialize);
-
-                setDual(statement, 2, 5, Types.TINYINT, punishment.punishmentType().ordinal());
-
-                if (punishment.timeSpan() instanceof DefinedTimeSpan definedTimeSpan)
-                {
-                    setDual(statement, 3, 6, Types.BIGINT, definedTimeSpan.get(ChronoUnit.MILLIS));
-                }
-
-                setDual(statement, 4, 7, Types.VARCHAR, message.orElse(null));
-
-                overrideSignature(punishment);
-                statement.addBatch();
+                addBatch(statement, punishment);
             }
 
             statement.executeBatch();
             return null;
         })));
+    }
+
+    /**
+     * Adds a batch to a provided {@link PreparedStatement} for the given {@link Punishment}.
+     * This method prepares the {@link PreparedStatement} by setting the required parameters
+     * based on the properties defined in the {@link Punishment} instance and calls {@code addBatch()}
+     * to include it in the batch execution.
+     *
+     * @param statement The {@link PreparedStatement} to which the batch is added. Must not be null.
+     * @param punishment The {@link Punishment} instance containing the data to prepare the statement. Must not be null.
+     * @throws SQLException If an error occurs while interacting with the {@link PreparedStatement}.
+     * @throws NullPointerException If either {@code statement} or {@code punishment} is null.
+     */
+    private void addBatch(@NotNull PreparedStatement statement, @NotNull Punishment punishment) throws SQLException, NullPointerException
+    {
+        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
+        Objects.requireNonNull(punishment, "The punishment cannot be null.");
+
+        statement.setInt(1, punishment.id());
+
+        Optional<String> message = punishment.defaultMessage().map(JSONComponentSerializer.json()::serialize);
+
+        setDual(statement, 2, 5, Types.TINYINT, punishment.punishmentType().ordinal());
+
+        if (punishment.timeSpan() instanceof DefinedTimeSpan definedTimeSpan)
+        {
+            setDual(statement, 3, 6, Types.BIGINT, definedTimeSpan.get(ChronoUnit.MILLIS));
+        }
+
+        setDual(statement, 4, 7, Types.VARCHAR, message.orElse(null));
+
+        overrideSignature(punishment);
+        statement.addBatch();
     }
 }

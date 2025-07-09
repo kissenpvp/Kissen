@@ -10,8 +10,10 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface PunishmentSubscription extends SubscriptionEntity<UUID, Integer, Punishment>
+public interface PunishmentSubscription extends SubscriptionEntity<String, Integer, Punishment>
 {
+    @NotNull UUID linkId();
+
     @NotNull Instant start();
 
     @NotNull TimeSpan timeSpan();
