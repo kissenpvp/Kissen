@@ -68,12 +68,12 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         if (Objects.nonNull(value))
         {
             statement.setObject(index, value, sqlType);
-            statement.setObject(index + 5, value, sqlType);
+            statement.setObject(secondIndex, value, sqlType);
             return;
         }
 
         statement.setNull(index, sqlType);
-        statement.setNull(index + 5, sqlType);
+        statement.setNull(secondIndex, sqlType);
     }
 
     @Override public @NotNull CompletableFuture<T> find(@NotNull P id)
@@ -187,7 +187,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
      * @see #toEntities(ResultSet)
      * @see #toEntity(Object, ResultSet)
      */
-    protected abstract @NotNull @UnmodifiableView T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException;
+    protected abstract @NotNull T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException;
 
     /**
      * Converts all rows of the provided {@code ResultSet} into a collection of entities.

@@ -6,12 +6,10 @@ import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Instant;
 import java.util.Optional;
 
 public interface Punishment extends PersistableEntity<Integer>
 {
-
     @NotNull TimeSpan timeSpan();
 
     void timeSpan(@NotNull TimeSpan timeSpan);

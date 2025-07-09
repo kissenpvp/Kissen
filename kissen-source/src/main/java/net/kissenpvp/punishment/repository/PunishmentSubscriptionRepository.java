@@ -9,12 +9,14 @@ import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.punishment.InternalPunishmentSubscription;
 import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
 import net.kissenpvp.temporal.timespan.PermanentTimeSpan;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.sql.*;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
@@ -55,22 +57,26 @@ public class PunishmentSubscriptionRepository extends InternalCachedRepository<S
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
-        TimeSpan timeSpan = new PermanentTimeSpan();
 
+        Component message = null;
+        String messageString = resultSet.getString("message");
+        if(!resultSet.wasNull())
+        {
+            message = GsonComponentSerializer.gson().deserialize(messageString);
+        }
+
+        TimeSpan timeSpan = new PermanentTimeSpan();
         long timeSpanLength = resultSet.getLong("time_span");
         if (!resultSet.wasNull())
         {
             timeSpan = new InternalDefinedTimeSpan(timeSpanLength * 1000); // turn seconds into millis
         }
 
-        return new InternalPunishmentSubscription(id, //
-                UUID.fromString(resultSet.getString("link_id")),  //
-                resultSet.getInt("parent_id"), //
-                resultSet.getInt("parent_signature"), //
-                resultSet.getDate("start_time").toInstant(), //
-                timeSpan, //
-                GsonComponentSerializer.gson().deserialize(resultSet.getString("message")) //
-        );
+        int parentId = resultSet.getInt("parent_id");
+        UUID linkId = UUID.fromString(resultSet.getString("link_id"));
+        Instant startTime = resultSet.getDate("start_time").toInstant();
+
+        return new InternalPunishmentSubscription(id, parentId, linkId, startTime, timeSpan, message);
     }
 
     @Override
