@@ -8,7 +8,6 @@ import net.kissenpvp.punishment.InternalPunishment;
 import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.UnmodifiableView;
 
 import java.sql.*;
 import java.time.temporal.ChronoUnit;
