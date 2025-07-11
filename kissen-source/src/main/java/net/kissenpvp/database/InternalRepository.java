@@ -54,7 +54,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
      * If the {@code value} is null, it sets SQL null for the given SQL type at both indices.
      *
      * @param statement   the {@link PreparedStatement} where the value or null will be set, must not be null
-     * @param index       the index at which the first value is set, must align with the {@link PreparedStatement}'s parameters
+     * @param index       the index at which the first value is set must align with the {@link PreparedStatement}'s parameters
      * @param secondIndex the index offset that serves as the base for the second insertion
      * @param sqlType     the SQL type, defined in {@link java.sql.Types}, used to set the value or null
      * @param value       the value to be set; can be null in which case SQL null will be inserted
@@ -76,7 +76,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         statement.setNull(secondIndex, sqlType);
     }
 
-    @Override public @NotNull CompletableFuture<T> find(@NotNull P id)
+    @Override public @NotNull CompletableFuture<@Nullable T> find(@NotNull P id)
     {
         return CompletableFuture.supplyAsync(() -> query(findQuery, (statement ->
         {
@@ -167,7 +167,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
      * This method is expected to be implemented by subclasses to define the mapping logic from the {@code ResultSet}
      * data and the specified {@code id} to the entity type {@code T}.
      *
-     * @param id        the identifier associated with the entity being constructed, must not be null
+     * @param id        the identifier associated with the entity being constructed must not be null
      * @param resultSet the {@code ResultSet} containing the row to be converted into an entity, must not be null
      * @return the entity created from the specified {@code id} and the current row in the {@code ResultSet}, never null
      * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
@@ -236,7 +236,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
      * encountered during execution and rethrows them as {@link IllegalStateException}.
      *
      * @param sql           the SQL query to be executed, cannot be null
-     * @param queryExecutor the executor handling the prepared statement execution, cannot be null
+     * @param queryExecutor the executor handling the prepared statement execution cannot be null
      * @param <X>           the type of result expected from the query execution
      * @return the result of the query execution as provided by the {@code QueryExecutor}
      * @throws IllegalStateException if an exception occurs while executing the query

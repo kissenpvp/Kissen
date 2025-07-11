@@ -2,15 +2,13 @@ package net.kissenpvp.network.actor.rank.repository;
 
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.network.actor.rank.RankRepository;
+import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRank;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.*;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -25,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Bebdor augustus irilieres cesarius, Ivo Quiring
  */
-public class InternalRankRepository extends InternalRepository<String, Rank> implements RankRepository
+public class InternalRankRepository extends InternalCachedRepository<String, Rank> implements RankRepository
 {
     /**
      * Constructs an {@code InternalRankRepository} instance with the specified database connection.
@@ -38,40 +36,30 @@ public class InternalRankRepository extends InternalRepository<String, Rank> imp
      */
     public InternalRankRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_rank_data", connection, "SELECT priority, prefix, suffix FROM %s WHERE id = ?;");
+        super("ksvp_rank", connection, "SELECT priority, prefix, suffix FROM %s WHERE id = ?;");
     }
 
     @Override
-    protected @NotNull Rank toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    protected @NotNull Rank toCachedEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
+        Objects.requireNonNull(resultSet, "The result set cannot be null.");
         return toEntity(resultSet.getString("id"), resultSet);
     }
 
     @Override
-    protected @NotNull Rank toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    protected @NotNull Rank toCachedEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
-        JSONComponentSerializer serializer = JSONComponentSerializer.json();
+        Objects.requireNonNull(id, "The id cannot be null.");
+        Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
-        Component prefix = null;
-        String prefixString = resultSet.getString("prefix");
-        if(!resultSet.wasNull())
-        {
-            prefix = serializer.deserialize(prefixString);
-        }
-
-        Component suffix = null;
-        String suffixString = resultSet.getString("suffix");
-        if(!resultSet.wasNull())
-        {
-            suffix = serializer.deserialize(suffixString);
-        }
-
-        return new InternalRank(id, resultSet.getInt("priority"), prefix, suffix);
+        return new InternalRank(id, resultSet.getInt("priority"));
     }
 
     @Override public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<Rank> id) throws NullPointerException
     {
-        String sql = "INSERT INTO %s (id, priority, prefix, suffix) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE priority = ?, prefix = ?, suffix = ?";
+        Objects.requireNonNull(id, "The iterable of ranks cannot be null.");
+
+        String sql = "INSERT INTO %s (id, priority) VALUES (?, ?) ON DUPLICATE KEY UPDATE priority = ?;";
 
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
@@ -98,13 +86,8 @@ public class InternalRankRepository extends InternalRepository<String, Rank> imp
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(rank, "The rank cannot be null.");
 
-        Optional<String> prefix = rank.prefix().map(JSONComponentSerializer.json()::serialize);
-        Optional<String> suffix = rank.suffix().map(JSONComponentSerializer.json()::serialize);
-
         statement.setString(1, rank.id());
-        setDual(statement, 2, 5, Types.INTEGER, rank.priority());
-        setDual(statement, 3, 6, Types.VARCHAR, prefix.orElse(null));
-        setDual(statement, 4, 7, Types.VARCHAR, suffix.orElse(null));
+        setDual(statement, 2, 3, Types.INTEGER, rank.priority());
 
         overrideSignature(rank);
         statement.addBatch();

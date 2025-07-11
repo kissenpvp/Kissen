@@ -49,7 +49,7 @@ public abstract class InternalPlayerRepository extends InternalRepository<UUID, 
      */
     public InternalPlayerRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_player_data", connection, "SELECT linkId, username FROM %s WHERE id = ?;");
+        super("ksvp_player", connection, "SELECT linkId, username FROM %s WHERE id = ?;");
     }
 
     @Override

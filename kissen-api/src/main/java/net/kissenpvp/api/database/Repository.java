@@ -1,6 +1,7 @@
 package net.kissenpvp.api.database;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Collection;
@@ -14,17 +15,21 @@ import java.util.concurrent.CompletableFuture;
  *
  * @param <P> the type representing the identifier of the entities
  * @param <T> the type of the entities being managed, which must extend {@link PersistableEntity}
+ *
+ * @author Ivo Quiring
  */
 public interface Repository<P, T extends PersistableEntity<P>>
 {
     /**
-     * Asynchronously retrieves an entity from the repository based on the specified identifier.
+     * Finds and retrieves an entity asynchronously from the repository using the specified identifier.
+     * If no entity is associated with the provided identifier, the result will be {@code null}.
      *
-     * @param id the identifier of the entity to be retrieved; must not be null
-     * @return a {@link CompletableFuture} that completes with the entity corresponding to the provided identifier; never null
+     * @param id the identifier of the entity to find; must not be null
+     * @return a {@link CompletableFuture} that completes with the entity of type {@code T},
+     *         or {@code null} if no entity is found; never null
      * @throws NullPointerException if the provided identifier is null
      */
-    @NotNull CompletableFuture<T> find(@NotNull P id) throws NullPointerException;
+    @NotNull CompletableFuture<@Nullable T> find(@NotNull P id) throws NullPointerException;
 
     /**
      * Retrieves a collection of entities corresponding to the specified identifiers asynchronously.

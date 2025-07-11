@@ -6,5 +6,5 @@ import org.jetbrains.annotations.NotNull;
 
 public interface RankSubscription extends SubscriptionEntity<String, String, Rank>
 {
-    @NotNull PlayerClient player();
+    @NotNull PlayerClient player() throws IllegalStateException;
 }

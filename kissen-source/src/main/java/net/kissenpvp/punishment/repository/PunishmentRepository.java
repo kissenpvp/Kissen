@@ -46,7 +46,7 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Puni
     }
 
     @Override
-    protected @NotNull @UnmodifiableView InternalPunishment toEntity(@NotNull Integer id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    protected @NotNull InternalPunishment toCachedEntity(@NotNull Integer id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -64,11 +64,11 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Puni
     }
 
     @Override
-    protected @NotNull @UnmodifiableView InternalPunishment toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    protected @NotNull InternalPunishment toCachedEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
-        return toEntity(resultSet.getInt("id"), resultSet);
+        return toCachedEntity(resultSet.getInt("id"), resultSet);
     }
 
     @Override public @NotNull CompletableFuture<Void> save(@NotNull Punishment id) throws NullPointerException

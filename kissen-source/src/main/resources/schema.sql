@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS ksvp_player_data (
+CREATE TABLE IF NOT EXISTS ksvp_player (
     id VARCHAR(36) NOT NULL PRIMARY KEY,
     linkId VARCHAR(36) NOT NULL,
     username VARCHAR(16) NOT NULL UNIQUE,
@@ -8,6 +8,14 @@ CREATE TABLE IF NOT EXISTS ksvp_player_data (
     operator BOOLEAN NOT NULL DEFAULT FALSE,
     locale VARCHAR(5) NOT NULL DEFAULT 'en_US',
     PRIMARY KEY (id, linkId),
+);
+
+CREATE TABLE IF NOT EXISTS ksvp_player_data (
+    id VARCHAR(36) NOT NULL,
+    plugin VARCHAR(255) NOT NULL,
+    content JSON NOT NULL,
+    PRIMARY KEY (id, plugin),
+    FOREIGN KEY (id) REFERENCES ksvp_player(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS ksvp_punishment (
@@ -30,11 +38,9 @@ CREATE TABLE IF NOT EXISTS ksvp_punishment_subscription (
     FOREIGN KEY (parent_id) REFERENCES ksvp_punishment(id) ON DELETE SET NULL
 );
 
-CREATE TABLE IF NOT EXISTS ksvp_rank_data (
+CREATE TABLE IF NOT EXISTS ksvp_rank (
     id VARCHAR(20) NOT NULL PRIMARY KEY,
     priority INT NOT NULL DEFAULT 99999,
-    prefix JSON NULL DEFAULT NULL,
-    suffix JSON NULL DEFAULT NULL,
 );
 
 CREATE TABLE IF NOT EXISTS ksvp_rank_subscription (

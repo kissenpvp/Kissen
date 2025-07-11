@@ -3,6 +3,7 @@ package net.kissenpvp.punishment;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
+import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalSubscriptionEntity;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -12,6 +13,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class InternalPunishmentSubscription extends InternalSubscriptionEntity<String, Integer, Punishment> implements PunishmentSubscription
 {
@@ -63,8 +65,7 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
 
     @Override public @NotNull Optional<Punishment> parent()
     {
-        //TODO: Implement function to retrieve punishments by their id
-        return null;
+        return Optional.ofNullable(KissenCore.getInstance().punishmentRepository().find(parentId()).join());
     }
 
     @Override public @NotNull Instant start()

@@ -1,7 +1,6 @@
 package net.kissenpvp.network.actor.rank.repository;
 
-import net.kissenpvp.api.database.SubscriptionRepository;
-import net.kissenpvp.api.network.actor.rank.Rank;
+import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRankSubscription;
@@ -11,6 +10,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -27,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Bebdor augustus irilieres cesarius, Ivo Quiring
  */
-public class InternalRankSubscriptionRepository extends InternalRepository<String, RankSubscription> implements SubscriptionRepository<String, String, Rank, RankSubscription>
+public class InternalRankSubscriptionRepository extends InternalRepository<String, RankSubscription> implements Repository<String, RankSubscription>
 {
     /**
      * Constructs an {@code InternalRankSubscriptionRepository} instance with the specified database connection.
@@ -46,6 +46,9 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     @Override
     protected @NotNull RankSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
+        Objects.requireNonNull(id, "The rank subscription ID cannot be null.");
+        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+
         UUID playerId = UUID.fromString(resultSet.getString("player_id"));
         return new InternalRankSubscription(id, resultSet.getString("rank_id"), playerId);
     }
@@ -53,12 +56,15 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     @Override
     protected @NotNull RankSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
+        Objects.requireNonNull(resultSet, "The result set cannot be null.");
         return toEntity(resultSet.getString("id"), resultSet);
     }
 
     @Override
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<RankSubscription> id) throws NullPointerException
     {
+        Objects.requireNonNull(id, "The rank subscriptions cannot be null.");
+
         String sql = "INSERT INTO %s (id, rank_id, player_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE rank_id = ?, player_id = ?;";
 
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->

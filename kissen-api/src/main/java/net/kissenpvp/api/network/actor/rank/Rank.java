@@ -1,27 +1,22 @@
 package net.kissenpvp.api.network.actor.rank;
 
 import net.kissenpvp.api.database.PersistableEntity;
-import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Optional;
 
 public interface Rank extends PersistableEntity<String>
 {
+    /**
+     * Retrieves the priority of the rank.
+     * The priority determines the ordering of ranks, where lower priority values indicate higher precedence.
+     *
+     * @return the priority value of the rank, determined as an integer
+     */
     int priority();
 
+    /**
+     * Sets the priority of the rank.
+     * The priority determines the ordering of ranks, where lower priority values indicate higher precedence.
+     *
+     * @param priority the priority value to be assigned to the rank; must be an integer
+     */
     void priority(int priority);
-
-    @NotNull Optional<Component> prefix();
-
-    void prefix(@Nullable Component prefix);
-
-    void unsetPrefix();
-
-    @NotNull Optional<Component> suffix();
-
-    void suffix(@Nullable Component suffix);
-
-    void unsetSuffix();
 }

@@ -1,11 +1,12 @@
 package net.kissenpvp.punishment.repository;
 
-import net.kissenpvp.api.database.SubscriptionRepository;
+import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
 import net.kissenpvp.database.InternalCachedRepository;
+import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.punishment.InternalPunishmentSubscription;
 import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
 import net.kissenpvp.temporal.timespan.PermanentTimeSpan;
@@ -35,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
  * @see PunishmentSubscription
  * @see Punishment
  */
-public class PunishmentSubscriptionRepository extends InternalCachedRepository<String, PunishmentSubscription> implements SubscriptionRepository<String, Integer, Punishment, PunishmentSubscription>
+public class PunishmentSubscriptionRepository extends InternalRepository<String, PunishmentSubscription> implements Repository<String, PunishmentSubscription>
 {
 
     /**
@@ -52,7 +53,7 @@ public class PunishmentSubscriptionRepository extends InternalCachedRepository<S
     }
 
     @Override
-    protected @NotNull @UnmodifiableView InternalPunishmentSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    protected @NotNull InternalPunishmentSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -80,7 +81,7 @@ public class PunishmentSubscriptionRepository extends InternalCachedRepository<S
     }
 
     @Override
-    protected @NotNull @UnmodifiableView InternalPunishmentSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    protected @NotNull InternalPunishmentSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
