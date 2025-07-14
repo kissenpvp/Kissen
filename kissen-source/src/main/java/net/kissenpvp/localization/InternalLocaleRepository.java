@@ -113,7 +113,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         if (!file.isDirectory())
         {
             log.warn(
-                    "Expected {} to be a directory but found a file. Please remove the file and try again.",
+                    "Expected {} to be a directory but found a file. This prevents translation files from being loaded.",
                     absolutePath
             );
             return;

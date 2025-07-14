@@ -11,12 +11,20 @@ import java.util.*;
 public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
 {
     private final Set<Locale> locales;
-    private final Map<KissenPlugin, LocaleRepository> repositories;
+    private final Map<KissenPlugin, InternalLocaleRepository> repositories;
+
+    private boolean initialized = false;
 
     public InternalGlobalLocaleRegistry()
     {
         locales = new HashSet<>();
         repositories = new HashMap<>();
+    }
+
+    public void initialize()
+    {
+        repositories.values().forEach(InternalLocaleRepository::load);
+        initialized = true;
     }
 
     public void register(@NotNull KissenPlugin plugin) throws NullPointerException
@@ -42,14 +50,20 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
         });
     }
 
-    @Override public @NotNull LocaleRepository localeRepository(@NotNull KissenPlugin plugin) throws NullPointerException
+    @Override
+    public @NotNull LocaleRepository localeRepository(@NotNull KissenPlugin plugin) throws NullPointerException, IllegalArgumentException
     {
         Objects.requireNonNull(plugin, "plugin cannot be null");
 
-        // if(!repositories.containsKey(plugin))
-        // {
-        //     register(plugin);
-        // }
+        if (!repositories.containsKey(plugin))
+        {
+            if (!initialized)
+            {
+                String message = "The plugin %s has not registered a locale repository.";
+                throw new IllegalArgumentException(String.format(message, plugin));
+            }
+            register(plugin);
+        }
 
         return repositories.get(plugin);
     }

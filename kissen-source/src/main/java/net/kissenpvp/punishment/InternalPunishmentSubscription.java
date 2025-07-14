@@ -1,6 +1,7 @@
 package net.kissenpvp.punishment;
 
 import net.kissenpvp.api.punishment.Punishment;
+import net.kissenpvp.api.punishment.PunishmentModule;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
 import net.kissenpvp.base.KissenCore;
@@ -64,7 +65,8 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
 
     @Override public @NotNull Optional<Punishment> parent()
     {
-        return Optional.ofNullable(KissenCore.getInstance().punishmentRepository().find(parentId()).join());
+        PunishmentModule module = KissenCore.getInstance().punishmentModule();
+        return Optional.ofNullable(module.punishmentRepository().find(parentId()).join());
     }
 
     @Override public @NotNull Instant start()

@@ -2,11 +2,11 @@ package net.kissenpvp.base;
 
 import net.kissenpvp.api.base.Kissen;
 import net.kissenpvp.api.database.Repository;
+import net.kissenpvp.api.localization.GlobalLocaleRegistry;
 import net.kissenpvp.api.network.actor.PlayerClient;
-import net.kissenpvp.api.network.actor.rank.Rank;
-import net.kissenpvp.api.network.actor.rank.RankSubscription;
-import net.kissenpvp.api.punishment.Punishment;
-import net.kissenpvp.api.punishment.PunishmentSubscription;
+import net.kissenpvp.api.network.actor.rank.RankModule;
+import net.kissenpvp.api.punishment.PunishmentModule;
+import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -15,6 +15,10 @@ import java.util.UUID;
 public class KissenCore implements Kissen
 {
     private static Kissen instance;
+    private boolean started;
+    private GlobalLocaleRegistry localeRegistry;
+    private PunishmentModule punishmentModule;
+    private RankModule rankModule;
 
     public static @NotNull Kissen getInstance()
     {
@@ -25,28 +29,38 @@ public class KissenCore implements Kissen
         });
     }
 
-    @Override public @NotNull Repository<Integer, Punishment> punishmentRepository()
+    public void start(@NotNull PunishmentModule punishmentModule, @NotNull RankModule rankModule)
+    {
+        localeRegistry = new InternalGlobalLocaleRegistry();
+
+        this.punishmentModule = punishmentModule;
+        this.rankModule = rankModule;
+
+        started = true;
+    }
+
+    @Override public @NotNull PunishmentModule punishmentModule()
     {
         return null;
     }
 
-    @Override public @NotNull Repository<String, PunishmentSubscription> punishmentSubscriptionRepository()
+    @Override public @NotNull RankModule rankModule()
     {
         return null;
     }
 
-    @Override public @NotNull Repository<String, Rank> rankRepository()
+    @Override public @NotNull GlobalLocaleRegistry localeRegistry()
     {
-        return null;
-    }
-
-    @Override public @NotNull Repository<String, RankSubscription> rankSubscriptionRepository()
-    {
-        return null;
+        return localeRegistry;
     }
 
     @Override public @NotNull Repository<UUID, PlayerClient> playerRepository()
     {
         return null;
+    }
+
+    @Override public boolean started()
+    {
+        return started;
     }
 }

@@ -2,6 +2,7 @@ package net.kissenpvp.network.actor.rank;
 
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.rank.Rank;
+import net.kissenpvp.api.network.actor.rank.RankModule;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalSubscriptionEntity;
@@ -39,7 +40,8 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
 
     @Override public @NotNull Optional<Rank> parent()
     {
-        return Optional.ofNullable(KissenCore.getInstance().rankRepository().find(parentId()).join());
+        RankModule module = KissenCore.getInstance().rankModule();
+        return Optional.ofNullable(module.rankRepository().find(parentId()).join());
     }
 
     @Override public int signature()
