@@ -4,6 +4,7 @@ import net.kissenpvp.api.base.Kissen;
 import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
 import net.kissenpvp.api.network.actor.PlayerClient;
+import net.kissenpvp.api.network.actor.PlayerModule;
 import net.kissenpvp.api.network.actor.rank.RankModule;
 import net.kissenpvp.api.punishment.PunishmentModule;
 import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
@@ -19,6 +20,7 @@ public class KissenCore implements Kissen
     private GlobalLocaleRegistry localeRegistry;
     private PunishmentModule punishmentModule;
     private RankModule rankModule;
+    private PlayerModule playerModule;
 
     public static @NotNull Kissen getInstance()
     {
@@ -29,34 +31,35 @@ public class KissenCore implements Kissen
         });
     }
 
-    public void start(@NotNull PunishmentModule punishmentModule, @NotNull RankModule rankModule)
+    public void start(@NotNull PunishmentModule punishmentModule, @NotNull RankModule rankModule, @NotNull PlayerModule playerModule)
     {
         localeRegistry = new InternalGlobalLocaleRegistry();
 
         this.punishmentModule = punishmentModule;
         this.rankModule = rankModule;
+        this.playerModule = playerModule;
 
         started = true;
     }
 
     @Override public @NotNull PunishmentModule punishmentModule()
     {
-        return null;
+        return punishmentModule;
     }
 
     @Override public @NotNull RankModule rankModule()
     {
-        return null;
+        return rankModule;
+    }
+
+    @Override public @NotNull PlayerModule playerModule()
+    {
+        return playerModule;
     }
 
     @Override public @NotNull GlobalLocaleRegistry localeRegistry()
     {
         return localeRegistry;
-    }
-
-    @Override public @NotNull Repository<UUID, PlayerClient> playerRepository()
-    {
-        return null;
     }
 
     @Override public boolean started()

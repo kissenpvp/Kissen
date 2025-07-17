@@ -1,6 +1,7 @@
 package net.kissenpvp.network.actor.rank;
 
 import net.kissenpvp.api.network.actor.PlayerClient;
+import net.kissenpvp.api.network.actor.PlayerModule;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.network.actor.rank.RankModule;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
@@ -51,7 +52,8 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
 
     @Override public @NotNull PlayerClient player() throws IllegalStateException
     {
-        PlayerClient player = KissenCore.getInstance().playerRepository().find(playerId).join();
+        PlayerModule module = KissenCore.getInstance().playerModule();
+        PlayerClient player = module.playerRepository().find(playerId).join();
         if (Objects.isNull(player))
         {
             String message = "The player with the id %s was not found in the database but is bound to a rank subscription.";

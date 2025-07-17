@@ -76,8 +76,10 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         statement.setNull(secondIndex, sqlType);
     }
 
-    @Override public @NotNull CompletableFuture<@Nullable T> find(@NotNull P id)
+    @Override public @NotNull CompletableFuture<@Nullable T> find(@NotNull P id) throws NullPointerException
     {
+        Objects.requireNonNull(id, "The identifier cannot be null.");
+
         return CompletableFuture.supplyAsync(() -> query(findQuery, (statement ->
         {
             statement.setObject(1, id);
@@ -94,8 +96,10 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         })));
     }
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id)
+    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id) throws NullPointerException
     {
+        Objects.requireNonNull(id, "The identifier cannot be null.");
+
         List<P> primaryKeys = StreamSupport.stream(id.spliterator(), false).toList();
 
         if (primaryKeys.isEmpty())
@@ -132,8 +136,10 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         })));
     }
 
-    @Override public @NotNull CompletableFuture<Boolean> has(@NotNull P id)
+    @Override public @NotNull CompletableFuture<Boolean> has(@NotNull P id) throws NullPointerException
     {
+        Objects.requireNonNull(id, "The identifier cannot be null.");
+
         return CompletableFuture.supplyAsync(() -> query("SELECT id FROM %s WHERE id = ?;", (statement ->
         {
             statement.setObject(1, id);
@@ -144,13 +150,15 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         })));
     }
 
-    @Override public @NotNull CompletableFuture<Void> save(@NotNull T id)
+    @Override public @NotNull CompletableFuture<Void> save(@NotNull T id) throws NullPointerException
     {
+        Objects.requireNonNull(id, "The entity cannot be null.");
         return saveAll(Collections.singleton(id));
     }
 
-    protected void overrideSignature(@NotNull T entity)
+    protected void overrideSignature(@NotNull T entity) throws NullPointerException
     {
+        Objects.requireNonNull(entity, "The entity cannot be null.");
         if (entity instanceof InternalPersistableEntity<?> persistable)
         {
             persistable.overrideSignature();

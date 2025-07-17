@@ -1,8 +1,12 @@
 package net.kissenpvp.network.actor;
 
 import net.kissenpvp.api.network.actor.PlayerClient;
+import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.database.InternalRepository;
+import net.kissenpvp.network.actor.rank.InternalRank;
+import net.kissenpvp.network.actor.rank.InternalRankSubscription;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.sql.*;
@@ -35,7 +39,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Ivo Quiring
  */
-public abstract class InternalPlayerRepository extends InternalRepository<UUID, PlayerClient>
+public abstract class InternalPlayerRepository extends InternalRepository<UUID, PlayerClient> implements PlayerRepository
 {
     /**
      * Constructs an instance of {@code InternalPlayerRepository}, providing a mechanism for
@@ -58,6 +62,19 @@ public abstract class InternalPlayerRepository extends InternalRepository<UUID, 
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
         return this.toEntity(UUID.fromString(resultSet.getString("id")), resultSet);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@Nullable PlayerClient> findLazily(@NotNull UUID id) throws NullPointerException
+    {
+        return super.find(id);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@Nullable PlayerClient> find(@NotNull UUID id) throws NullPointerException
+    {
+        // TODO
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
