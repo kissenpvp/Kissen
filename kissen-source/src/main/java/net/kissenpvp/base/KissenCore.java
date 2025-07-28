@@ -1,9 +1,7 @@
 package net.kissenpvp.base;
 
 import net.kissenpvp.api.base.Kissen;
-import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
-import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.PlayerModule;
 import net.kissenpvp.api.network.actor.rank.RankModule;
 import net.kissenpvp.api.punishment.PunishmentModule;
@@ -11,7 +9,6 @@ import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public class KissenCore implements Kissen
 {
@@ -31,7 +28,7 @@ public class KissenCore implements Kissen
         });
     }
 
-    public void start(@NotNull PunishmentModule punishmentModule, @NotNull RankModule rankModule, @NotNull PlayerModule playerModule)
+    protected void startCore(@NotNull PunishmentModule punishmentModule, @NotNull RankModule rankModule, @NotNull PlayerModule playerModule)
     {
         localeRegistry = new InternalGlobalLocaleRegistry();
 
