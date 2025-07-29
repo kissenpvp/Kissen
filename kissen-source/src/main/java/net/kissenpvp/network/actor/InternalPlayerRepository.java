@@ -121,7 +121,7 @@ public abstract class InternalPlayerRepository extends InternalRepository<UUID, 
         Date lastLogin = Date.valueOf(playerClient.lastLogin().atZone(ZoneId.systemDefault()).toLocalDate());
 
         setDual(statement, 2, 8, Types.VARCHAR, String.valueOf(playerClient.linkId()));
-        setDual(statement, 3, 9, Types.VARCHAR, playerClient.name());
+        setDual(statement, 3, 9, Types.VARCHAR, playerClient.username());
 
         statement.setDate(4, now);
         setDual(statement, 5, 10, Types.DATE, lastLogin);

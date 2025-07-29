@@ -7,7 +7,7 @@ import java.util.Locale;
 
 public interface AbstractActor extends NetworkEntity
 {
-    @NotNull String name();
+    @NotNull String username();
 
     @NotNull Locale locale();
 
