@@ -37,7 +37,7 @@ public class InternalConnectionProvider implements ConnectionProvider
         return Optional.ofNullable(connection);
     }
 
-    @Override public void connect(@NotNull String connectionString) throws IllegalStateException, SQLException, IOException, URISyntaxException
+    @Override public void connect(@NotNull String connectionString) throws IllegalStateException, SQLException, URISyntaxException, IOException
     {
         Objects.requireNonNull(connectionString, "Connection string must not be null");
 
