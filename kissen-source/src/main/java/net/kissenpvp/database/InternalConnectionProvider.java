@@ -3,6 +3,12 @@ package net.kissenpvp.database;
 import net.kissenpvp.api.database.ConnectionProvider;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -31,7 +37,7 @@ public class InternalConnectionProvider implements ConnectionProvider
         return Optional.ofNullable(connection);
     }
 
-    @Override public void connect(@NotNull String connectionString) throws IllegalStateException, SQLException
+    @Override public void connect(@NotNull String connectionString) throws IllegalStateException, SQLException, IOException, URISyntaxException
     {
         Objects.requireNonNull(connectionString, "Connection string must not be null");
 
@@ -41,6 +47,14 @@ public class InternalConnectionProvider implements ConnectionProvider
         }
 
         connection = DriverManager.getConnection(connectionString);
+
+        URL schema = getClass().getResource("schema.sql");
+        if(Objects.isNull(schema))
+        {
+            throw new IllegalStateException("There has been an issue when loading the schema.sql resource. It could not be found.");
+        }
+        String sql = String.join("", Files.readAllLines(Path.of(schema.toURI())));
+        connection.prepareStatement(sql).execute();
     }
 
     @Override public void disconnect() throws IllegalStateException
