@@ -4,7 +4,6 @@ import net.kissenpvp.api.database.ConnectionProvider;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
