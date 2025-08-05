@@ -47,12 +47,17 @@ public class InternalConnectionProvider implements ConnectionProvider
 
         connection = DriverManager.getConnection(connectionString);
 
-        URL schema = getClass().getResource("schema.sql");
-        if(Objects.isNull(schema))
+        ClassLoader classLoader = getClass().getClassLoader();
+        URL schemaURL = classLoader.getResource("schema.sql");
+
+        if(Objects.isNull(schemaURL))
         {
             throw new IllegalStateException("There has been an issue when loading the schema.sql resource. It could not be found.");
         }
-        String sql = String.join("", Files.readAllLines(Path.of(schema.toURI())));
+
+        Path schemaPath = Path.of(schemaURL.getPath());
+        String sql = String.join("", Files.readAllLines(schemaPath));
+
         connection.prepareStatement(sql).execute();
     }
 
