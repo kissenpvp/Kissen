@@ -5,9 +5,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -56,7 +53,7 @@ public class InternalConnectionProvider implements ConnectionProvider
         }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream))) {
-            String sql = String.join("", reader.lines().toList());
+            String sql = String.join(" ", reader.lines().toList());
             connection.prepareStatement(sql).execute();
         }
     }
