@@ -48,17 +48,17 @@ public class InternalConnectionProvider implements ConnectionProvider
         connection = DriverManager.getConnection(connectionString);
 
         ClassLoader classLoader = getClass().getClassLoader();
-        URL schemaURL = classLoader.getResource("schema.sql");
+        InputStream resourceAsStream = classLoader.getResourceAsStream("/schema.sql");
 
-        if(Objects.isNull(schemaURL))
+        if(Objects.isNull(resourceAsStream))
         {
             throw new IllegalStateException("There has been an issue when loading the schema.sql resource. It could not be found.");
         }
 
-        Path schemaPath = Path.of(schemaURL.getPath());
-        String sql = String.join("", Files.readAllLines(schemaPath));
-
-        connection.prepareStatement(sql).execute();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream))) {
+            String sql = String.join("", reader.lines().toList());
+            connection.prepareStatement(sql).execute();
+        }
     }
 
     @Override public void disconnect() throws IllegalStateException
