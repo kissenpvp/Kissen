@@ -48,7 +48,7 @@ public class InternalConnectionProvider implements ConnectionProvider
         connection = DriverManager.getConnection(connectionString);
 
         ClassLoader classLoader = getClass().getClassLoader();
-        InputStream resourceAsStream = classLoader.getResourceAsStream("/schema.sql");
+        InputStream resourceAsStream = classLoader.getResourceAsStream("schema.sql");
 
         if(Objects.isNull(resourceAsStream))
         {
