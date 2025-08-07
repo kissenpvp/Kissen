@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS ksvp_player (
     time_played BIGINT NOT NULL DEFAULT 0,
     operator BOOLEAN NOT NULL DEFAULT FALSE,
     locale VARCHAR(5) NOT NULL DEFAULT 'en_US',
-    PRIMARY KEY (id, linkId),
+    PRIMARY KEY (id, linkId)
 );
 
 CREATE TABLE IF NOT EXISTS ksvp_player_data (
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS ksvp_punishment_subscription (
 
 CREATE TABLE IF NOT EXISTS ksvp_rank (
     id VARCHAR(20) NOT NULL PRIMARY KEY,
-    priority INT NOT NULL DEFAULT 99999,
+    priority INT NOT NULL DEFAULT 99999
 );
 
 CREATE TABLE IF NOT EXISTS ksvp_rank_subscription (
