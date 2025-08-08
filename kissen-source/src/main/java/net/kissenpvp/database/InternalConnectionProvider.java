@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class InternalConnectionProvider implements ConnectionProvider
 {
@@ -33,7 +34,12 @@ public class InternalConnectionProvider implements ConnectionProvider
         return Optional.ofNullable(connection);
     }
 
-    @Override public void connect(@NotNull String connectionString) throws IllegalStateException, SQLException, URISyntaxException, IOException
+    @Override public void connect(@NotNull String connectionString) throws IllegalStateException, SQLException, IOException
+    {
+        connect(connectionString, true);
+    }
+
+    public void connect(@NotNull String connectionString, boolean executeSchema) throws IllegalStateException, SQLException, IOException
     {
         Objects.requireNonNull(connectionString, "Connection string must not be null");
 
@@ -44,6 +50,33 @@ public class InternalConnectionProvider implements ConnectionProvider
 
         connection = DriverManager.getConnection(connectionString);
 
+        if(executeSchema)
+        {
+            generateSchema();
+        }
+    }
+
+    @Override public void disconnect() throws IllegalStateException
+    {
+        if(Objects.isNull(connection))
+        {
+            throw new IllegalStateException("The connection has not been opened yet.");
+        }
+    }
+
+    public void generateSchema() throws IOException, SQLException
+    {
+        if(!isConnected())
+        {
+            throw new IllegalStateException("Cannot generate schema without a connection");
+        }
+        for(String sql : loadSchema())
+        {
+            connection.prepareStatement(sql).execute();
+        }
+    }
+
+    private @NotNull String[] loadSchema() throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
         InputStream resourceAsStream = classLoader.getResourceAsStream("schema.sql");
 
@@ -53,16 +86,7 @@ public class InternalConnectionProvider implements ConnectionProvider
         }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream))) {
-            String sql = String.join(" ", reader.lines().toList());
-            connection.prepareStatement(sql).execute();
-        }
-    }
-
-    @Override public void disconnect() throws IllegalStateException
-    {
-        if(Objects.isNull(connection))
-        {
-            throw new IllegalStateException("The connection has not been opened yet.");
+            return String.join("", reader.lines().toList()).split(";");
         }
     }
 
