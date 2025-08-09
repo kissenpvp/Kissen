@@ -57,7 +57,6 @@ public class PunishmentSubscriptionRepository extends InternalRepository<String,
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
-
         Component message = null;
         String messageString = resultSet.getString("message");
         if(!resultSet.wasNull())

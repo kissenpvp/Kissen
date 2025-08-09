@@ -3,7 +3,12 @@ package net.kissenpvp.api.network.actor.rank;
 import net.kissenpvp.api.database.PersistableEntity;
 
 /**
+ * Represents a rank entity.
+ * <p>
+ * A rank is an identifiable entity with a specific priority level determining its precedence
+ * over other ranks. Lower priority values indicate higher precedence within the rank's hierarchy.
  *
+ * @author Ivo Quiring
  */
 public interface Rank extends PersistableEntity<String>
 {

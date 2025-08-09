@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a component responsible for providing access to rank management functionalities.
+ * <p>
  * This module facilitates operations related to rank definitions and rank subscriptions
  * by exposing their respective repositories.
  *
@@ -18,7 +19,7 @@ public interface RankModule
      * within the system.
      *
      * @return a {@link Repository} instance responsible for managing {@link Rank} entities;
-     *         never null
+     * never null
      */
     @NotNull Repository<String, Rank> rankRepository();
 
