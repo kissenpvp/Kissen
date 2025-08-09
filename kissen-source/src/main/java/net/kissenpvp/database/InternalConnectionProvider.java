@@ -1,8 +1,10 @@
 package net.kissenpvp.database;
 
 import net.kissenpvp.api.database.ConnectionProvider;
+import org.flywaydb.core.Flyway;
 import org.jetbrains.annotations.NotNull;
 
+import javax.sql.DataSource;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -16,6 +18,7 @@ import java.util.stream.Stream;
 public class InternalConnectionProvider implements ConnectionProvider
 {
     private Connection connection;
+    private Flyway flyway;
 
     public InternalConnectionProvider() throws MissingResourceException
     {
@@ -49,6 +52,8 @@ public class InternalConnectionProvider implements ConnectionProvider
         }
 
         connection = DriverManager.getConnection(connectionString);
+        // User and Password are embedded into the connectionstring
+        flyway = Flyway.configure().dataSource(connectionString, null, null).load();
 
         if(executeSchema)
         {
@@ -64,30 +69,14 @@ public class InternalConnectionProvider implements ConnectionProvider
         }
     }
 
-    public void generateSchema() throws IOException, SQLException
+    public void generateSchema()
     {
         if(!isConnected())
         {
             throw new IllegalStateException("Cannot generate schema without a connection");
         }
-        for(String sql : loadSchema())
-        {
-            connection.prepareStatement(sql).execute();
-        }
-    }
 
-    private @NotNull String[] loadSchema() throws IOException {
-        ClassLoader classLoader = getClass().getClassLoader();
-        InputStream resourceAsStream = classLoader.getResourceAsStream("schema.sql");
-
-        if(Objects.isNull(resourceAsStream))
-        {
-            throw new IllegalStateException("There has been an issue when loading the schema.sql resource. It could not be found.");
-        }
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream))) {
-            return String.join("", reader.lines().toList()).split(";");
-        }
+        flyway.migrate();
     }
 
     private boolean isConnected()

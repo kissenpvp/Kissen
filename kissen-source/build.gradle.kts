@@ -4,6 +4,9 @@ version = "1.0.0-SNAPSHOT"
 dependencies {
     implementation(project(":kissen-api"))
 
+    implementation("org.flywaydb:flyway-core:11.11.0")
+    implementation("org.flywaydb:flyway-mysql:11.11.0")
+
     testImplementation("com.mysql:mysql-connector-j:9.2.0")
 }
 
