@@ -4,16 +4,13 @@ import net.kissenpvp.api.database.ConnectionProvider;
 import org.flywaydb.core.Flyway;
 import org.jetbrains.annotations.NotNull;
 
-import javax.sql.DataSource;
 import java.io.*;
-import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 public class InternalConnectionProvider implements ConnectionProvider
 {
