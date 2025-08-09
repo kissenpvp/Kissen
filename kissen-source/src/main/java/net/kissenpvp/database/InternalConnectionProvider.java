@@ -42,7 +42,7 @@ public class InternalConnectionProvider implements ConnectionProvider
         connect(connectionString, true);
     }
 
-    public void connect(@NotNull String connectionString, boolean executeSchema) throws IllegalStateException, SQLException, IOException
+    public void connect(@NotNull String connectionString, boolean generateSchema) throws IllegalStateException, SQLException, IOException
     {
         Objects.requireNonNull(connectionString, "Connection string must not be null");
 
@@ -52,10 +52,12 @@ public class InternalConnectionProvider implements ConnectionProvider
         }
 
         connection = DriverManager.getConnection(connectionString);
-        // User and Password are embedded into the connectionstring
-        flyway = Flyway.configure().dataSource(connectionString, null, null).load();
 
-        if(executeSchema)
+        String location = "classpath:migrations/mariadb";
+        // User and Password are embedded into the connection string
+        flyway = Flyway.configure().dataSource(connectionString, null, null).locations(location).load();
+
+        if(generateSchema)
         {
             generateSchema();
         }
