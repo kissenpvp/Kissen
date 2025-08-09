@@ -37,7 +37,7 @@ subprojects {
         compileOnly("net.kyori:adventure-text-serializer-gson:4.22.0")
 
         // GSON
-        compileOnly("com.google.code.gson:gson:2.12.1")
+        compileOnly("com.google.code.gson:gson:2.13.1")
 
         // Testing
         testImplementation(platform("org.junit:junit-bom:5.10.0"))
