@@ -1,8 +1,18 @@
 package net.kissenpvp.api.database;
 
-import javax.sql.DataSource;
+import org.jetbrains.annotations.NotNull;
 
-public interface ConnectionProvider extends DataSource
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Optional;
+
+public interface ConnectionProvider
 {
+    @NotNull Optional<Connection> connection();
+
+    void connect(@NotNull String url, @NotNull String username, @NotNull String password) throws IllegalStateException, SQLException;
+
+    void connect(@NotNull String url, @NotNull String username, @NotNull String password, boolean generateSchema) throws IllegalStateException, SQLException;
+
     void disconnect() throws IllegalStateException;
 }

@@ -5,6 +5,7 @@ import org.flywaydb.core.Flyway;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.sql.DataSource;
 import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,14 +13,16 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.MissingResourceException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.logging.Logger;
 
-public class InternalConnectionProvider implements ConnectionProvider
+public class InternalConnectionProvider implements ConnectionProvider, DataSource
 {
     private PrintWriter logWriter;
 
     private Connection connection;
     private Flyway flyway;
+    private String url;
 
     private int loginTimeout;
 
@@ -35,16 +38,29 @@ public class InternalConnectionProvider implements ConnectionProvider
         }
     }
 
-    public void connect(@NotNull String connectionString, boolean generateSchema) throws IllegalStateException, SQLException, IOException
+    @Override public @NotNull Optional<Connection> connection()
     {
-        Objects.requireNonNull(connectionString, "Connection string must not be null");
+        return Optional.ofNullable(connection);
+    }
+
+    @Override
+    public void connect(@NotNull String url, @NotNull String username, @NotNull String password) throws IllegalStateException, SQLException
+    {
+        connect(url, username, password, true);
+    }
+
+    @Override
+    public void connect(@NotNull String url, @NotNull String username, @NotNull String password, boolean generateSchema) throws IllegalStateException, SQLException
+    {
+        Objects.requireNonNull(url, "Connection string must not be null");
 
         if(Objects.nonNull(connection))
         {
             throw new IllegalStateException("The connection has already been opened.");
         }
 
-        connection = DriverManager.getConnection(connectionString);
+        this.url = url;
+        connection = DriverManager.getConnection(url, username, password);
 
         String location = "classpath:migrations/mariadb";
         flyway = Flyway.configure().dataSource(this).locations(location).load();
@@ -79,7 +95,7 @@ public class InternalConnectionProvider implements ConnectionProvider
         {
             if (Objects.nonNull(connection))
             {
-                return !connection.isClosed() && connection.isValid(10);
+                return !connection.isClosed() && connection.isValid(loginTimeout);
             }
         }
         catch (SQLException ignored) {}
@@ -94,7 +110,13 @@ public class InternalConnectionProvider implements ConnectionProvider
 
     @Override public @NotNull Connection getConnection(@NotNull String username, @NotNull String password) throws SQLException
     {
-        return null;
+        if(Objects.isNull(url))
+        {
+            throw new SQLException("The url has not yet been set.");
+        }
+
+        connect(url, username, password);
+        return connection;
     }
 
     @Override public @Nullable PrintWriter getLogWriter() throws SQLException
@@ -113,9 +135,8 @@ public class InternalConnectionProvider implements ConnectionProvider
         {
             throw new SQLException("Login timeout must be greater than or equal to 0.");
         }
-        this.loginTimeout = seconds;
+        loginTimeout = seconds;
         DriverManager.setLoginTimeout(seconds);
-
     }
 
     @Override public int getLoginTimeout()
