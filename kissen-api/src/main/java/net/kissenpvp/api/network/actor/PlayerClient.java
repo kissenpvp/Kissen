@@ -29,7 +29,6 @@ public interface PlayerClient extends AbstractActor, PersistableEntity<UUID>
      *
      * @return a non-null {@link UUID} representing the link identifier for this player client.
      */
-
     @NotNull UUID linkId();
 
     /**

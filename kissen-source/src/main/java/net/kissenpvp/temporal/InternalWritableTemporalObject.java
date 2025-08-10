@@ -43,7 +43,7 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
         this.expiry = Instant.now();
     }
 
-    @Override public @NotNull Optional<Instant> estimatedExpiry()
+    @Override public @NotNull Optional<Instant> expectedExpiry()
     {
         return Optional.ofNullable(originalExpiry);
     }

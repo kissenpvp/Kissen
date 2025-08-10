@@ -9,8 +9,9 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Represents a generic repository interface responsible for performing CRUD
- * operations and entity management in an asynchronous manner. This interface
- * supports retrieving, saving, and verifying entities within the repository
+ * operations and entity management in an asynchronous manner.
+ * <p>
+ * This interface supports retrieving, saving, and verifying entities within the repository
  * while ensuring thread safety and immutability for returned collections.
  *
  * @param <P> the type representing the identifier of the entities
