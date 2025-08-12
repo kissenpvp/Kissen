@@ -60,9 +60,4 @@ public class LoggingOutputStream extends OutputStream
         byteArrayOutputStream.reset();
         logger.atLevel(level).log(line);
     }
-
-    public enum LogLevel
-    {
-        TRACE, DEBUG, INFO, WARN, ERROR,
-    }
 }
