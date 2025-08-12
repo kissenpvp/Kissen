@@ -33,9 +33,16 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
 
     public InternalWritableTemporalObject(@Nullable Instant expiry)
     {
-        start = Instant.now();
+        this(Instant.now(), expiry, expiry);
+    }
+
+    public InternalWritableTemporalObject(@NotNull Instant start, @Nullable Instant expiry, @Nullable Instant expectedExpiry) throws NullPointerException
+    {
+        Objects.requireNonNull(start, "Start must be not null");
+
+        this.start = start;
         this.expiry = expiry;
-        originalExpiry = expiry;
+        originalExpiry = expectedExpiry;
     }
 
     @Override public void expire()

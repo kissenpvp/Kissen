@@ -3,22 +3,21 @@ package net.kissenpvp.punishment.repository;
 import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
-import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
-import net.kissenpvp.api.temporal.timespan.TimeSpan;
+import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.punishment.InternalPunishmentSubscription;
-import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
-import net.kissenpvp.temporal.timespan.PermanentTimeSpan;
+import net.kissenpvp.temporal.InternalWritableTemporalObject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.*;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,8 +34,25 @@ import java.util.concurrent.CompletableFuture;
  * @see PunishmentSubscription
  * @see Punishment
  */
-public class PunishmentSubscriptionRepository extends InternalRepository<String, PunishmentSubscription> implements Repository<String, PunishmentSubscription>
-{
+public class PunishmentSubscriptionRepository extends InternalRepository<String, PunishmentSubscription> implements Repository<String, PunishmentSubscription> {
+
+    /**
+     * Safely converts a {@link Date} into an {@link Instant}.
+     * <p>
+     * Returns {@code null} if the input is {@code null}. This utility provides a null-tolerant conversion
+     * from a SQL {@link Date} to an {@link Instant}.
+     *
+     * @param date the source {@link Date}; may be {@code null}
+     * @return the corresponding {@link Instant}, or {@code null} if {@code date} is {@code null}
+     */
+    @Contract(value = "null -> null; !null -> !null", pure = true)
+    private static @Nullable Instant toInstant(@Nullable Date date) {
+        if (Objects.isNull(date)) {
+            return null;
+        }
+
+        return date.toInstant();
+    }
 
     /**
      * Constructs a new instance of PunishmentSubscriptionRepository.
@@ -46,63 +62,49 @@ public class PunishmentSubscriptionRepository extends InternalRepository<String,
      * @param connection The database connection to be used by this repository. Must not be null.
      * @throws NullPointerException If the provided connection is null.
      */
-    public PunishmentSubscriptionRepository(@NotNull Connection connection) throws NullPointerException
-    {
-        super("ksvp_punishment_subscription", connection, "SELECT parent_id, parent_signature, start_time, time_span, message FROM %s WHERE id = ?;");
+    public PunishmentSubscriptionRepository(@NotNull Connection connection) throws NullPointerException {
+        super("ksvp_punishment_subscription", connection, "SELECT parent_id, parent_signature, start_time, expiry, expected_expiry, time_span, message FROM %s WHERE id = ?;");
     }
 
     @Override
-    protected @NotNull InternalPunishmentSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
-    {
+    protected @NotNull InternalPunishmentSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException {
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
         Component message = null;
         String messageString = resultSet.getString("message");
-        if(!resultSet.wasNull())
-        {
+        if (!resultSet.wasNull()) {
             message = GsonComponentSerializer.gson().deserialize(messageString);
-        }
-
-        TimeSpan timeSpan = new PermanentTimeSpan();
-        long timeSpanLength = resultSet.getLong("time_span");
-        if (!resultSet.wasNull())
-        {
-            timeSpan = new InternalDefinedTimeSpan(timeSpanLength * 1000); // turn seconds into millis
         }
 
         int parentId = resultSet.getInt("parent_id");
         UUID linkId = UUID.fromString(resultSet.getString("link_id"));
-        Instant startTime = resultSet.getDate("start_time").toInstant();
 
-        return new InternalPunishmentSubscription(id, parentId, linkId, startTime, timeSpan, message);
+        Instant start = resultSet.getDate("start_time").toInstant(); // expected to be not null
+
+        Instant expiry = toInstant(resultSet.getDate("expiry"));
+        Instant expectedExpiry = toInstant(resultSet.getDate("expected_expiry"));
+
+        WritableTemporalObject temporal = new InternalWritableTemporalObject(start, expiry, expectedExpiry);
+
+        return new InternalPunishmentSubscription(id, parentId, linkId, temporal, message);
     }
 
     @Override
-    protected @NotNull InternalPunishmentSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
-    {
+    protected @NotNull InternalPunishmentSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException {
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
         return toEntity(resultSet.getString("id"), resultSet);
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PunishmentSubscription> id) throws NullPointerException
-    {
+    public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PunishmentSubscription> id) throws NullPointerException {
         Objects.requireNonNull(id, "The iterable of subscriptions cannot be null.");
 
-        String sql = """
-                    INSERT INTO %s (id, link_id, parent_id, parent_signature, start_time, time_span, message)\s
-                    VALUES\s
-                        (?, ?, ?, ?, ?, ?, ?)\s
-                    ON DUPLICATE KEY UPDATE\s
-                        link_id = ?, parent_id = ?, parent_signature = ?, start_time = ?, time_span = ?, message = ?;
-                """;
-
+        String sql = "INSERT INTO %s (id, link_id, parent_id, parent_signature, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, parent_id = ?, parent_signature = ?, start_time = ?, expiry = ?, message = ?; ";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
-            for (PunishmentSubscription subscription : id)
-            {
+            for (PunishmentSubscription subscription : id) {
                 addBatch(statement, subscription);
             }
 
@@ -121,30 +123,51 @@ public class PunishmentSubscriptionRepository extends InternalRepository<String,
      * @throws SQLException         If an issue occurs while setting values in the {@link PreparedStatement}.
      * @throws NullPointerException If the {@link PreparedStatement} or {@link PunishmentSubscription} is null.
      */
-    private void addBatch(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException, NullPointerException
-    {
+    private void addBatch(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException, NullPointerException {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(subscription, "The subscription cannot be null.");
 
         statement.setString(1, subscription.id());
 
-        Date date = Date.valueOf(subscription.start().atZone(ZoneId.systemDefault()).toLocalDate());
+        Date date = Date.valueOf(subscription.temporal().start().atZone(ZoneId.systemDefault()).toLocalDate());
         Optional<String> message = subscription.message().map(JSONComponentSerializer.json()::serialize);
 
-        setDual(statement, 2, 8, Types.VARCHAR, String.valueOf(subscription.linkId()));
-        setDual(statement, 3, 9, Types.INTEGER, subscription.parentId());
-        setDual(statement, 4, 10, Types.INTEGER, subscription.parentSignature());
-        setDual(statement, 5, 11, Types.DATE, date);
+        setDual(statement, 2, 9, Types.VARCHAR, String.valueOf(subscription.linkId()));
+        setDual(statement, 3, 10, Types.INTEGER, subscription.parentId());
+        setDual(statement, 4, 11, Types.INTEGER, subscription.parentSignature());
+        setDual(statement, 5, 12, Types.DATE, date);
 
-        if (subscription.timeSpan() instanceof DefinedTimeSpan definedTimeSpan)
-        {
-            // We're storing the seconds instead of the millis
-            setDual(statement, 6, 12, Types.BIGINT, definedTimeSpan.get(ChronoUnit.SECONDS));
-        }
+        Long expiry = subscription.temporal().expiry().map(Instant::getEpochSecond).orElse(null);
+        setDual(statement, 6, 14, Types.BIGINT, expiry);
+        expectedExpiry(statement, expiry);
 
-        setDual(statement, 7, 13, Types.VARCHAR, message.orElse(null));
+        setDual(statement, 8, 14, Types.VARCHAR, message.orElse(null));
 
         overrideSignature(subscription);
         statement.addBatch();
+    }
+
+    /**
+     * Sets the expected expiry value in the given {@link PreparedStatement}.
+     * <p>
+     * If the expiry value is not null, it sets the value at index 7; otherwise,
+     * it sets the value at index 7 to {@code NULL} with the appropriate SQL type.
+     * <p>
+     * This just acts as a helper function for copying the value of the actual expiry when the object is being created.
+     *
+     * @param statement The {@link PreparedStatement} where the expiry value will be set. Must not be null.
+     * @param expiry    The expiry value to be set in the {@link PreparedStatement}. Can be null.
+     * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
+     * @throws NullPointerException If the provided {@link PreparedStatement} is null.
+     */
+    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable Long expiry) throws SQLException, NullPointerException {
+        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
+
+        if (Objects.nonNull(expiry)) {
+            statement.setLong(7, expiry);
+            return;
+        }
+
+        statement.setNull(7, Types.BIGINT);
     }
 }

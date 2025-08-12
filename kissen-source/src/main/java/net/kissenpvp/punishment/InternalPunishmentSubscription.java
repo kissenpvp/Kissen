@@ -3,6 +3,8 @@ package net.kissenpvp.punishment;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentModule;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
+import net.kissenpvp.api.temporal.TemporalObject;
+import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalSubscriptionEntity;
@@ -19,22 +21,20 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
 {
     private final String id;
     private final UUID linkId;
-    private final Instant start;
-    private @NotNull TimeSpan timeSpan;
+    private final @NotNull WritableTemporalObject temporalObject;
     private @Nullable Component message;
 
-    public InternalPunishmentSubscription(int parent, @NotNull UUID linkId, @NotNull TimeSpan timeSpan, @Nullable Component message) throws NullPointerException
+    public InternalPunishmentSubscription(int parent, @NotNull UUID linkId, @NotNull WritableTemporalObject temporalObject, @Nullable Component message) throws NullPointerException
     {
-        this(String.valueOf(UUID.randomUUID()).split("-")[0], parent, linkId, Instant.now(), timeSpan, message);
+        this(String.valueOf(UUID.randomUUID()).split("-")[0], parent, linkId, temporalObject, message);
     }
 
-    public InternalPunishmentSubscription(@NotNull String id, int parent, @NotNull UUID linkId, @NotNull Instant start, @NotNull TimeSpan timeSpan, @Nullable Component message) throws NullPointerException
+    public InternalPunishmentSubscription(@NotNull String id, int parent, @NotNull UUID linkId, @NotNull WritableTemporalObject temporalObject, @Nullable Component message) throws NullPointerException
     {
         super(id, parent);
         Objects.requireNonNull(id, "Id cannot be null!");
         Objects.requireNonNull(linkId, "LinkId cannot be null!");
-        Objects.requireNonNull(start, "Start cannot be null!");
-        Objects.requireNonNull(timeSpan, "TimeSpan cannot be null!");
+        Objects.requireNonNull(temporalObject, "TimeSpan cannot be null!");
 
         if (id.length() > 8)
         {
@@ -43,8 +43,7 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
 
         this.id = id;
         this.linkId = linkId;
-        this.start = start;
-        this.timeSpan = timeSpan;
+        this.temporalObject = temporalObject;
         this.message = message;
     }
 
@@ -60,28 +59,13 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
 
     @Override public int signature()
     {
-        return Objects.hash(linkId, timeSpan, message);
+        return Objects.hash(linkId, temporalObject, message);
     }
 
     @Override public @NotNull Optional<Punishment> parent()
     {
         PunishmentModule module = KissenCore.getInstance().punishmentModule();
         return Optional.ofNullable(module.punishmentRepository().find(parentId()).join());
-    }
-
-    @Override public @NotNull Instant start()
-    {
-        return start;
-    }
-
-    @Override public @NotNull TimeSpan timeSpan()
-    {
-        return timeSpan;
-    }
-
-    @Override public void timeSpan(@NotNull TimeSpan timeSpan)
-    {
-        this.timeSpan = timeSpan;
     }
 
     @Override public @NotNull Optional<Component> message()
@@ -97,5 +81,10 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     @Override public void unsetMessage()
     {
         message(null);
+    }
+
+    @Override
+    public @NotNull WritableTemporalObject temporal() {
+        return temporalObject;
     }
 }
