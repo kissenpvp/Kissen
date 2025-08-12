@@ -101,7 +101,8 @@ public class PunishmentSubscriptionRepository extends InternalRepository<String,
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PunishmentSubscription> id) throws NullPointerException {
         Objects.requireNonNull(id, "The iterable of subscriptions cannot be null.");
 
-        String sql = "INSERT INTO %s (id, link_id, parent_id, parent_signature, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, parent_id = ?, parent_signature = ?, start_time = ?, expiry = ?, message = ?; ";
+        // TODO do no update start time.
+        String sql = "INSERT INTO %s (id, link_id, parent_id, parent_signature, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, parent_id = ?, parent_signature = ?, start_time = ?, expiry = ?, message = ?; ";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (PunishmentSubscription subscription : id) {

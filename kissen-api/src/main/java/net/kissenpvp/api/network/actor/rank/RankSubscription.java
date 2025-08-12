@@ -2,6 +2,7 @@ package net.kissenpvp.api.network.actor.rank;
 
 import net.kissenpvp.api.database.SubscriptionEntity;
 import net.kissenpvp.api.network.actor.PlayerClient;
+import net.kissenpvp.api.temporal.WritableTemporalSubscriber;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Ivo Quiring
  */
-public interface RankSubscription extends SubscriptionEntity<String, String, Rank>
+public interface RankSubscription extends SubscriptionEntity<String, String, Rank>, WritableTemporalSubscriber
 {
     /**
      * Retrieves the player client associated with this rank subscription.

@@ -54,6 +54,9 @@ CREATE TABLE IF NOT EXISTS ksvp_rank_subscription (
     id VARCHAR(8) NOT NULL,
     rank_id VARCHAR(20) NOT NULL,
     player_id VARCHAR(36) NOT NULL,
+    start_time DATETIME NOT NULL,
+    expiry BIGINT NULL DEFAULT NULL,
+    expected_expiry BIGINT NULL DEFAULT NULL,
     PRIMARY KEY (id, rank_id, player_id),
     FOREIGN KEY (player_id) REFERENCES ksvp_player_data(id),
     FOREIGN KEY (rank_id) REFERENCES ksvp_rank(id)

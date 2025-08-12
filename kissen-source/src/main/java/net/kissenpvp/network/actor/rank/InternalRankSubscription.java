@@ -5,8 +5,10 @@ import net.kissenpvp.api.network.actor.PlayerModule;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.network.actor.rank.RankModule;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
+import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalSubscriptionEntity;
+import net.kissenpvp.temporal.InternalWritableTemporalObject;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -24,19 +26,20 @@ import java.util.UUID;
 public class InternalRankSubscription extends InternalSubscriptionEntity<String, String, Rank> implements RankSubscription
 {
     private final UUID playerId;
+    private final WritableTemporalObject temporalObject;
 
-    /**
-     * Constructs an {@code InternalRankSubscription} instance with the specified {@code id}, {@code parentId}, and {@code playerId}.
-     * This constructor initializes an object representing a rank subscription associated with a specific player.
-     *
-     * @param id       the unique identifier of the rank subscription, must not be null
-     * @param parentId the identifier of the parent rank associated with the subscription, must not be null
-     * @param playerId the unique identifier of the player associated with the subscription, must not be null
-     */
-    public InternalRankSubscription(@NotNull String id, @NotNull String parentId, @NotNull UUID playerId)
+    public InternalRankSubscription(@NotNull String id, @NotNull String parentId, @NotNull UUID playerId) throws NullPointerException {
+        this(id, parentId, playerId, new InternalWritableTemporalObject());
+    }
+
+    public InternalRankSubscription(@NotNull String id, @NotNull String parentId, @NotNull UUID playerId, @NotNull WritableTemporalObject temporalObject) throws NullPointerException
     {
         super(id, parentId);
+
+        Objects.requireNonNull(playerId, "The player id cannot be null.");
+
         this.playerId = playerId;
+        this.temporalObject = temporalObject;
     }
 
     @Override public @NotNull Optional<Rank> parent()
@@ -60,5 +63,10 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
             throw new IllegalStateException(String.format(message, playerId));
         }
         return player;
+    }
+
+    @Override
+    public @NotNull WritableTemporalObject temporal() {
+        return temporalObject;
     }
 }

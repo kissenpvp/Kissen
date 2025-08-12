@@ -40,7 +40,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
      */
     public InternalRankSubscriptionRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_rank_subscription", connection, "SELECT player_id, rank_id FROM %s WHERE id = ?");
+        super("ksvp_rank_subscription", connection, "SELECT player_id, rank_id, start_time, expiry, expected_expiry FROM %s WHERE id = ?;");
     }
 
     @Override
@@ -65,7 +65,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     {
         Objects.requireNonNull(id, "The rank subscriptions cannot be null.");
 
-        String sql = "INSERT INTO %s (id, rank_id, player_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE rank_id = ?, player_id = ?;";
+        String sql = "INSERT INTO %s (id, rank_id, player_id, start_time, expiry, expected_expiry) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE rank_id = ?, player_id = ?, expiry = ?;";
 
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
@@ -73,8 +73,11 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
             {
                 statement.setString(1, subscription.id());
 
-                setDual(statement, 2, 4, Types.VARCHAR, subscription.parentId());
-                setDual(statement, 3, 5, Types.VARCHAR, String.valueOf(subscription.player().id()));
+                setDual(statement, 2, 7, Types.VARCHAR, subscription.parentId());
+                setDual(statement, 3, 8, Types.VARCHAR, String.valueOf(subscription.player().id()));
+
+                setDual(statement, 5, 9, Types.BIGINT, subscription.temporal().start().getEpochSecond());
+                // TODO set data accordingly
 
                 overrideSignature(subscription);
                 statement.addBatch();
