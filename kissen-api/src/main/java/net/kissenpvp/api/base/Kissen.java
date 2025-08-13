@@ -17,7 +17,5 @@ public interface Kissen
 
     @NotNull GlobalLocaleRegistry localeRegistry();
 
-
-
     boolean started();
 }
