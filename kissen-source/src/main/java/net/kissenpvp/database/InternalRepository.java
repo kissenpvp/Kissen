@@ -2,6 +2,7 @@ package net.kissenpvp.database;
 
 import net.kissenpvp.api.database.PersistableEntity;
 import net.kissenpvp.api.database.Repository;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
@@ -14,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
 /**
@@ -31,6 +33,17 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
     private final Connection connection;
     private final String table, findQuery;
 
+    @Contract(value = "_, null -> null; _, !null -> !null", pure = true)
+    protected static <X, Y> @Nullable Y convertSafely(@NotNull Function<X, Y> function, @Nullable X value) {
+        Objects.requireNonNull(function, "The function cannot be null.");
+
+        if (Objects.isNull(value)) {
+            return null;
+        }
+
+        return function.apply(value);
+    }
+    
     public InternalRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery) throws NullPointerException
     {
         Objects.requireNonNull(table, "The table name cannot be null.");

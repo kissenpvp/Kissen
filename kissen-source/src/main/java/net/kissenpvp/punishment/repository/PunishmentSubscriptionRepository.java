@@ -11,7 +11,6 @@ import net.kissenpvp.temporal.InternalWritableTemporalObject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,24 +34,6 @@ import java.util.concurrent.CompletableFuture;
  * @see Punishment
  */
 public class PunishmentSubscriptionRepository extends InternalRepository<String, PunishmentSubscription> implements Repository<String, PunishmentSubscription> {
-
-    /**
-     * Safely converts a {@link Date} into an {@link Instant}.
-     * <p>
-     * Returns {@code null} if the input is {@code null}. This utility provides a null-tolerant conversion
-     * from a SQL {@link Date} to an {@link Instant}.
-     *
-     * @param date the source {@link Date}; may be {@code null}
-     * @return the corresponding {@link Instant}, or {@code null} if {@code date} is {@code null}
-     */
-    @Contract(value = "null -> null; !null -> !null", pure = true)
-    private static @Nullable Instant toInstant(@Nullable Date date) {
-        if (Objects.isNull(date)) {
-            return null;
-        }
-
-        return date.toInstant();
-    }
 
     /**
      * Constructs a new instance of PunishmentSubscriptionRepository.
@@ -82,8 +63,8 @@ public class PunishmentSubscriptionRepository extends InternalRepository<String,
 
         Instant start = resultSet.getDate("start_time").toInstant(); // expected to be not null
 
-        Instant expiry = toInstant(resultSet.getDate("expiry"));
-        Instant expectedExpiry = toInstant(resultSet.getDate("expected_expiry"));
+        Instant expiry = convertSafely(Date::toInstant, resultSet.getDate("expiry"));
+        Instant expectedExpiry = convertSafely(Date::toInstant, resultSet.getDate("expected_expiry"));
 
         WritableTemporalObject temporal = new InternalWritableTemporalObject(start, expiry, expectedExpiry);
 
@@ -101,8 +82,7 @@ public class PunishmentSubscriptionRepository extends InternalRepository<String,
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PunishmentSubscription> id) throws NullPointerException {
         Objects.requireNonNull(id, "The iterable of subscriptions cannot be null.");
 
-        // TODO do no update start time.
-        String sql = "INSERT INTO %s (id, link_id, parent_id, parent_signature, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, parent_id = ?, parent_signature = ?, start_time = ?, expiry = ?, message = ?; ";
+        String sql = "INSERT INTO %s (id, link_id, parent_id, parent_signature, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, parent_id = ?, parent_signature = ?, expiry = ?, message = ?; ";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (PunishmentSubscription subscription : id) {
@@ -131,18 +111,18 @@ public class PunishmentSubscriptionRepository extends InternalRepository<String,
         statement.setString(1, subscription.id());
 
         Date date = Date.valueOf(subscription.temporal().start().atZone(ZoneId.systemDefault()).toLocalDate());
+        Long expiry = subscription.temporal().expiry().map(Instant::getEpochSecond).orElse(null);
         Optional<String> message = subscription.message().map(JSONComponentSerializer.json()::serialize);
 
         setDual(statement, 2, 9, Types.VARCHAR, String.valueOf(subscription.linkId()));
         setDual(statement, 3, 10, Types.INTEGER, subscription.parentId());
         setDual(statement, 4, 11, Types.INTEGER, subscription.parentSignature());
-        setDual(statement, 5, 12, Types.DATE, date);
 
-        Long expiry = subscription.temporal().expiry().map(Instant::getEpochSecond).orElse(null);
-        setDual(statement, 6, 14, Types.BIGINT, expiry);
+        statement.setDate(5, date);
+
+        setDual(statement, 6, 12, Types.BIGINT, expiry);
         expectedExpiry(statement, expiry);
-
-        setDual(statement, 8, 14, Types.VARCHAR, message.orElse(null));
+        setDual(statement, 8, 13, Types.VARCHAR, message.orElse(null));
 
         overrideSignature(subscription);
         statement.addBatch();

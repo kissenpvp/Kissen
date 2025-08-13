@@ -4,12 +4,13 @@ import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRankSubscription;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -29,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class InternalRankSubscriptionRepository extends InternalRepository<String, RankSubscription> implements Repository<String, RankSubscription>
 {
+
     /**
      * Constructs an {@code InternalRankSubscriptionRepository} instance with the specified database connection.
      * This repository is responsible for managing the persistence and retrieval of rank subscription-related data
@@ -73,11 +75,14 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
             {
                 statement.setString(1, subscription.id());
 
+                Date date = Date.valueOf(subscription.temporal().start().atZone(ZoneId.systemDefault()).toLocalDate());
+                Long expiry = subscription.temporal().expiry().map(Instant::getEpochSecond).orElse(null);
+
                 setDual(statement, 2, 7, Types.VARCHAR, subscription.parentId());
                 setDual(statement, 3, 8, Types.VARCHAR, String.valueOf(subscription.player().id()));
-
-                setDual(statement, 5, 9, Types.BIGINT, subscription.temporal().start().getEpochSecond());
-                // TODO set data accordingly
+                statement.setDate(4, date);
+                setDual(statement, 5, 9, Types.BIGINT, expiry);
+                expectedExpiry(statement, expiry);
 
                 overrideSignature(subscription);
                 statement.addBatch();
@@ -85,5 +90,29 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
             statement.executeBatch();
             return null;
         })));
+    }
+
+    /**
+     * Sets the expected expiry value in the given {@link PreparedStatement}.
+     * <p>
+     * If the expiry value is not null, it sets the value at index 6; otherwise,
+     * it sets the value at index 6 to {@code NULL} with the appropriate SQL type.
+     * <p>
+     * This just acts as a helper function for copying the value of the actual expiry when the object is being created.
+     *
+     * @param statement The {@link PreparedStatement} where the expiry value will be set. Must not be null.
+     * @param expiry    The expiry value to be set in the {@link PreparedStatement}. Can be null.
+     * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
+     * @throws NullPointerException If the provided {@link PreparedStatement} is null.
+     */
+    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable Long expiry) throws SQLException, NullPointerException {
+        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
+
+        if (Objects.nonNull(expiry)) {
+            statement.setLong(6, expiry);
+            return;
+        }
+
+        statement.setNull(6, Types.BIGINT);
     }
 }
