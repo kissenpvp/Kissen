@@ -20,7 +20,7 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
 
     public InternalPunishment(int id, @NotNull PunishmentType punishmentType, @Nullable TimeSpan timeSpan)
     {
-        Objects.requireNonNull(punishmentType, "PunishmentType cannot be null!");
+        Objects.requireNonNull(punishmentType, "PunishmentType cannot be null.");
 
         this.id = id;
         this.punishmentType = punishmentType;
@@ -46,7 +46,7 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
 
     @Override public void timeSpan(@NotNull TimeSpan timeSpan)
     {
-        Objects.requireNonNull(timeSpan, "TimeSpan cannot be null!");
+        Objects.requireNonNull(timeSpan, "TimeSpan cannot be null.");
         this.timeSpan = timeSpan;
     }
 
@@ -57,7 +57,7 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
 
     @Override public void punishmentType(@NotNull PunishmentType punishmentType)
     {
-        Objects.requireNonNull(punishmentType, "PunishmentType cannot be null!");
+        Objects.requireNonNull(punishmentType, "PunishmentType cannot be null.");
         this.punishmentType = punishmentType;
     }
 

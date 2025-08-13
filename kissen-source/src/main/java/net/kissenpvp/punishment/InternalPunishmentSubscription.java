@@ -32,9 +32,9 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     public InternalPunishmentSubscription(@NotNull String id, int parent, @NotNull UUID linkId, @NotNull WritableTemporalObject temporalObject, @Nullable Component message) throws NullPointerException
     {
         super(id, parent);
-        Objects.requireNonNull(id, "Id cannot be null!");
-        Objects.requireNonNull(linkId, "LinkId cannot be null!");
-        Objects.requireNonNull(temporalObject, "TimeSpan cannot be null!");
+        Objects.requireNonNull(id, "Id cannot be null.");
+        Objects.requireNonNull(linkId, "LinkId cannot be null.");
+        Objects.requireNonNull(temporalObject, "TimeSpan cannot be null.");
 
         if (id.length() > 8)
         {
