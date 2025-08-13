@@ -34,7 +34,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
     private final String table, findQuery;
 
     @Contract(value = "_, null -> null; _, !null -> !null", pure = true)
-    protected static <X, Y> @Nullable Y convertSafely(@NotNull Function<X, Y> function, @Nullable X value) {
+    protected static <X, Y> @Nullable Y convertSafely(@NotNull Function<X, Y> function, @Nullable X value) throws NullPointerException {
         Objects.requireNonNull(function, "The function cannot be null.");
 
         if (Objects.isNull(value)) {

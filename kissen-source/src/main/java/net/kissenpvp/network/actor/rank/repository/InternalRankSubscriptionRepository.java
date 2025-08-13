@@ -2,9 +2,10 @@ package net.kissenpvp.network.actor.rank.repository;
 
 import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
+import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRankSubscription;
-import org.jetbrains.annotations.Contract;
+import net.kissenpvp.temporal.InternalWritableTemporalObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,7 +53,13 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
         UUID playerId = UUID.fromString(resultSet.getString("player_id"));
-        return new InternalRankSubscription(id, resultSet.getString("rank_id"), playerId);
+
+        Instant start = resultSet.getDate("start_time").toInstant(); // expected to be not null
+        Instant expiry = convertSafely(Date::toInstant, resultSet.getDate("expiry"));
+        Instant expectedExpiry = convertSafely(Date::toInstant, resultSet.getDate("expected_expiry"));
+        WritableTemporalObject temporal = new InternalWritableTemporalObject(start, expiry, expectedExpiry);
+
+        return new InternalRankSubscription(id, resultSet.getString("rank_id"), playerId, temporal);
     }
 
     @Override
