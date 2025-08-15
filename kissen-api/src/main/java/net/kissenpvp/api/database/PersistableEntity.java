@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a generic interface for entities that can be persisted and managed inside a database.
+ * <p>
  * It provides methods for identifying entities, managing their state, and determining if changes to
  * the entity have yet to be persisted.
  *
