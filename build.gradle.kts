@@ -59,15 +59,12 @@ subprojects {
     }
 
     tasks.withType<Test> {
+        useJUnitPlatform()
         testLogging {
             showStackTraces = true
             exceptionFormat = TestExceptionFormat.FULL
             events(TestLogEvent.STANDARD_OUT)
         }
-    }
-
-    tasks.test {
-        useJUnitPlatform()
     }
 
     publishing {
