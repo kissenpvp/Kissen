@@ -2,6 +2,7 @@ package net.kissenpvp.network.actor;
 
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.PlayerRepository;
+import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRank;
 import net.kissenpvp.network.actor.rank.InternalRankSubscription;
@@ -13,6 +14,7 @@ import java.sql.*;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -39,7 +41,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Ivo Quiring
  */
-public abstract class InternalPlayerRepository extends InternalRepository<UUID, PlayerClient> implements PlayerRepository
+public abstract class InternalPlayerRepository extends InternalCachedRepository<UUID, PlayerClient> implements PlayerRepository
 {
     /**
      * Constructs an instance of {@code InternalPlayerRepository}, providing a mechanism for
@@ -65,28 +67,25 @@ public abstract class InternalPlayerRepository extends InternalRepository<UUID, 
     }
 
     @Override
-    public @NotNull CompletableFuture<@Nullable PlayerClient> findLazily(@NotNull UUID id) throws NullPointerException
-    {
-        return super.find(id);
+    public boolean cached(@NotNull String name) throws NullPointerException {
+        Collection<PlayerClient> cachedPlayers = cachedEntries().values();
+        for(PlayerClient playerClient : cachedPlayers) {
+            if(Objects.equals(playerClient.username(), name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
-    public @NotNull CompletableFuture<@Nullable PlayerClient> find(@NotNull UUID id) throws NullPointerException
-    {
-        // TODO
-        return CompletableFuture.completedFuture(null);
-    }
+    public abstract @NotNull CompletableFuture<@Nullable PlayerClient> find(@NotNull UUID id) throws NullPointerException;
 
     @Override
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PlayerClient> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "id cannot be null");
 
-        String sql = """
-                 INSERT INTO %s (id, linkId, username, first_login, last_login, operator, locale)\s
-                 VALUES (?, ?, ?, ?, ?, ?, ?)\s
-                 ON DUPLICATE KEY UPDATE linkId = ?, username = ?, last_login = ?, time_played = ?, operator = ?, locale = ?;\s
-                 """;
+        String sql = "INSERT INTO %s (id, linkId, username, first_login, last_login, operator, locale) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE linkId = ?, username = ?, last_login = ?, time_played = ?, operator = ?, locale = ?;";
 
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {

@@ -125,6 +125,20 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
     }
 
     /**
+     * Retrieves an unmodifiable view of the current cached entries in the repository.
+     * The returned map consists of the primary keys and their associated entities.
+     *
+     * @return An unmodifiable view of the map containing the cached entries, where the keys are of type {@code P}
+     *         (representing primary keys) and the values are of type {@code T} (representing entities).
+     *         The returned map is not null and is a snapshot of the current caches state.
+     * @see #cached(Object)
+     * @see #cachedAll(Iterable)
+     */
+    protected @UnmodifiableView @NotNull Map<P, T> cachedEntries() {
+        return Map.copyOf(cachedEntries);
+    }
+
+    /**
      * Converts the given database {@link ResultSet} into an entity represented by type {@code T}.
      * The entity is associated with the specified identifier {@code id}.
      *
