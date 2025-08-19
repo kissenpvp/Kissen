@@ -1,5 +1,6 @@
 package net.kissenpvp.database;
 
+import net.kissenpvp.api.database.CachedRepository;
 import net.kissenpvp.api.database.PersistableEntity;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -24,8 +25,7 @@ import java.util.stream.Stream;
  * @param <T> The type of entity managed by the repository. Must extend {@link PersistableEntity}.
  * @author Ivo Quiring
  */
-public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>> extends InternalRepository<P, T>
-{
+public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>> extends InternalRepository<P, T> implements CachedRepository<P, T> {
     private final static Logger log = LoggerFactory.getLogger(InternalCachedRepository.class);
     private final Map<P, T> cachedEntries;
 
@@ -38,44 +38,45 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
      * @param findQuery  The SQL query string used to find records in the database. Must not be null.
      * @throws NullPointerException If any of the provided parameters are null.
      */
-    public InternalCachedRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery) throws NullPointerException
-    {
+    public InternalCachedRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery) throws NullPointerException {
         super(table, connection, findQuery);
         this.cachedEntries = new HashMap<>();
     }
 
     @Override
-    protected @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
-    {
+    protected @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException {
         return cache(toCachedEntity(id, resultSet));
     }
 
-    @Override protected @NotNull T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
-    {
+    @Override
+    protected @NotNull T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException {
         return cache(toCachedEntity(resultSet));
     }
 
-    @Override public @NotNull CompletableFuture<@Nullable T> find(@NotNull P id)
-    {
+    @Override
+    public @NotNull CompletableFuture<@Nullable T> find(@NotNull P id) {
         return find(id, true);
     }
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id)
-    {
+    @Override
+    public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id) {
         return findAll(id, true);
     }
 
-    public @NotNull CompletableFuture<T> find(@NotNull P id, boolean utilizeCache)
-    {
-        if(utilizeCache && cachedEntries.containsKey(id))
-        {
+    @Override
+    public @NotNull CompletableFuture<T> find(@NotNull P id, boolean utilizeCache) throws NullPointerException {
+        Objects.requireNonNull(id, "The identifier cannot be null.");
+
+        if (utilizeCache && cachedEntries.containsKey(id)) {
             return CompletableFuture.completedFuture(cachedEntries.get(id));
         }
         return super.find(id);
     }
 
-    public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id, boolean utilizeCache)
-    {
+    @Override
+    public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id, boolean utilizeCache) throws NullPointerException {
+        Objects.requireNonNull(id, "The identifier cannot be null.");
+
         if (!utilizeCache) {
             return super.findAll(id);
         }
@@ -83,18 +84,15 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
         Collection<T> cached = new ArrayList<>();
         Collection<P> uncached = new ArrayList<>();
 
-        for(P currentId : id)
-        {
-            if(!cachedEntries.containsKey(currentId))
-            {
+        for (P currentId : id) {
+            if (!cachedEntries.containsKey(currentId)) {
                 uncached.add(currentId);
                 continue;
             }
             cached.add(cachedEntries.get(currentId));
         }
 
-        if(!uncached.isEmpty())
-        {
+        if (!uncached.isEmpty()) {
             return super.findAll(uncached).thenApply(list ->
             {
                 Stream<T> currentlyCached = cached.stream();
@@ -103,6 +101,27 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
         }
 
         return CompletableFuture.completedFuture(Collections.unmodifiableCollection(cached));
+    }
+
+    @Override
+    public boolean cached(@NotNull P id) throws NullPointerException
+    {
+        Objects.requireNonNull(id, "The identifier cannot be null.");
+
+        return cachedEntries.containsKey(id);
+    }
+
+    @Override
+    public boolean cachedAll(@NotNull Iterable<P> id) throws NullPointerException
+    {
+        Objects.requireNonNull(id, "The identifier iterable cannot be null.");
+
+        for (P currentId : id) {
+            if (cached(currentId)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -136,8 +155,8 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
      * @return The cached entity. The same instance as the input parameter.
      * @throws NullPointerException If the provided entity is null.
      */
-    @Contract(pure = true, value = "_ -> _") private @NotNull T cache(@NotNull T entity) throws NullPointerException
-    {
+    @Contract(pure = true, value = "_ -> _")
+    private @NotNull T cache(@NotNull T entity) throws NullPointerException {
         Objects.requireNonNull(entity, "The entity cannot be null.");
 
         T overridden = cachedEntries.put(entity.id(), entity);
