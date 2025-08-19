@@ -78,7 +78,25 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     }
 
     @Override
-    public abstract @NotNull CompletableFuture<@Nullable PlayerClient> find(@NotNull UUID id) throws NullPointerException;
+    public @NotNull CompletableFuture<@Nullable PlayerClient> find(@NotNull UUID id) throws NullPointerException
+    {
+        return find(id, true);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@Nullable PlayerClient> findByName(@NotNull String name) throws NullPointerException {
+        return findByName(name, true);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAll(@NotNull Iterable<UUID> id) {
+        return super.findAll(id, true);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByName(@NotNull Iterable<String> name) throws NullPointerException {
+        return findAllByName(name, true);
+    }
 
     @Override
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PlayerClient> id) throws NullPointerException
