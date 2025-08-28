@@ -63,19 +63,11 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
         connection = DriverManager.getConnection(url, username, password);
 
         String location = "classpath:migrations/mariadb";
-        flyway = Flyway.configure().dataSource(this).locations(location).load();
+        flyway = Flyway.configure().dataSource(url, username, password).locations(location).load();
 
         if(generateSchema)
         {
             generateSchema();
-        }
-    }
-
-    @Override public void disconnect() throws IllegalStateException
-    {
-        if(Objects.isNull(connection))
-        {
-            throw new IllegalStateException("The connection has not been opened yet.");
         }
     }
 
@@ -87,6 +79,14 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
         }
 
         flyway.migrate();
+    }
+
+    @Override public void disconnect() throws IllegalStateException
+    {
+        if(Objects.isNull(connection))
+        {
+            throw new IllegalStateException("The connection has not been opened yet.");
+        }
     }
 
     private boolean isConnected()
