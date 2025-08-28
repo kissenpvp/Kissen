@@ -102,19 +102,38 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PlayerClient> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "id cannot be null");
-
         String sql = "INSERT INTO %s (id, linkId, username, first_login, last_login, operator, locale) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE linkId = ?, username = ?, last_login = ?, time_played = ?, operator = ?, locale = ?;";
 
-        return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
-        {
-            for (PlayerClient playerClient : id)
-            {
-                addBatch(statement, playerClient);
-            }
+        return CompletableFuture.supplyAsync(() -> {
 
-            statement.executeBatch();
-            return null;
-        })));
+            // we need to insert missing link ids before
+            // this is necessary because the ksvp_player's linkId column refers
+            // to the ksvp_identity's linkId column.
+
+            query("INSERT IGNORE INTO ksvp_identity (linkId) VALUES (?);", (statement ->
+            {
+                for(PlayerClient playerClient : id)
+                {
+                    String linkId = String.valueOf(playerClient.linkId());
+                    statement.setString(1, linkId);
+                    statement.addBatch();
+                }
+
+                statement.executeBatch();
+                return null;
+            }));
+
+            return query(sql, (statement ->
+            {
+                for (PlayerClient playerClient : id)
+                {
+                    addBatch(statement, playerClient);
+                }
+
+                statement.executeBatch();
+                return null;
+            }));
+        });
     }
 
     /**
