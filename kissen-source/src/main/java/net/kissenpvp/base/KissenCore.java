@@ -8,6 +8,8 @@ import net.kissenpvp.api.punishment.PunishmentModule;
 import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 public class KissenCore implements Kissen
 {
     private static Kissen instance;
@@ -17,8 +19,18 @@ public class KissenCore implements Kissen
     private RankModule rankModule;
     private PlayerModule playerModule;
 
+    public static @NotNull Kissen getInstance()
+    {
+        if(Objects.isNull(instance))
+        {
+            throw new IllegalStateException("KissenCore has not been started yet!");
+        }
+        return instance;
+    }
+
     protected void startCore(@NotNull PunishmentModule punishmentModule, @NotNull RankModule rankModule, @NotNull PlayerModule playerModule)
     {
+        instance = this;
         localeRegistry = new InternalGlobalLocaleRegistry();
 
         this.punishmentModule = punishmentModule;
