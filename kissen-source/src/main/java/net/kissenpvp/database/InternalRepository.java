@@ -263,7 +263,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
      * @throws IllegalStateException if an exception occurs while executing the query
      * @throws NullPointerException  if the SQL query or the {@code QueryExecutor} is null
      */
-    protected <X> @NotNull X query(@NotNull String sql, @NotNull QueryExecutor<X> queryExecutor) throws IllegalStateException, NullPointerException
+    protected <X> @Nullable X query(@NotNull String sql, @NotNull QueryExecutor<X> queryExecutor) throws IllegalStateException, NullPointerException
     {
         try
         {
@@ -286,14 +286,14 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
      * @throws SQLException         if an error occurs while executing the SQL query
      * @throws NullPointerException if the SQL query or the {@code QueryExecutor} is null
      */
-    protected <X> @NotNull X unsafeQuery(@NotNull String sql, @NotNull QueryExecutor<X> queryExecutor) throws SQLException, NullPointerException
+    protected <X> @Nullable X unsafeQuery(@NotNull String sql, @NotNull QueryExecutor<X> queryExecutor) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(sql, "The SQL string cannot be null.");
 
         //noinspection SqlSourceToSinkFlow
         try (PreparedStatement statement = this.connection.prepareStatement(String.format(sql, table())))
         {
-            return Objects.requireNonNull(queryExecutor.executeQuery(statement));
+            return queryExecutor.executeQuery(statement);
         }
     }
 }
