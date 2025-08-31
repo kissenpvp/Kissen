@@ -21,7 +21,7 @@ public record InternalTemporalObject(@NotNull Instant start, @Nullable Instant e
         return new InternalTemporalObject();
     }
 
-    public InternalTemporalObject()
+    InternalTemporalObject()
     {
         this(null);
     }

@@ -1,6 +1,7 @@
 package net.kissenpvp.api.network.actor.rank;
 
 import net.kissenpvp.api.database.PersistableEntity;
+import net.kissenpvp.api.temporal.TemporalSubscriber;
 
 /**
  * Represents a rank entity.
@@ -10,7 +11,7 @@ import net.kissenpvp.api.database.PersistableEntity;
  *
  * @author Ivo Quiring
  */
-public interface Rank extends PersistableEntity<String>
+public interface Rank extends PersistableEntity<String>, TemporalSubscriber
 {
     /**
      * Retrieves the priority of the rank.
