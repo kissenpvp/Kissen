@@ -31,12 +31,11 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
      * Constructs a new {@code InternalOperatorRepository} instance with the specified table name and database connection.
      * This class provides repository functionalities for managing operator information in a specified database table.
      *
-     * @param table      the name of the database table to use; must not be null, blank, or invalid.
      * @param connection the database connection to use; must not be null.
      * @throws NullPointerException     if the {@code table} or {@code connection} is {@code null}.
      * @throws IllegalArgumentException if the {@code table} name is blank, too long, or does not match the required pattern.
      */
-    public InternalOperatorRepository(@NotNull String table, @NotNull Connection connection) throws NullPointerException
+    public InternalOperatorRepository(@NotNull Connection connection) throws NullPointerException
     {
         super("ksvp_operators", connection, "SELECT o.id, p.username, o.op_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id = ?;");
     }

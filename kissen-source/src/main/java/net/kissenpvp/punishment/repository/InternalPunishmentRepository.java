@@ -31,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Ivo Quiring
  */
-public class PunishmentRepository extends InternalCachedRepository<Integer, Punishment>
+public class InternalPunishmentRepository extends InternalCachedRepository<Integer, Punishment>
 {
     /**
      * Constructs a new {@code PunishmentRepository} instance, initializing it with the specified database connection.
@@ -39,7 +39,7 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Puni
      * @param connection The {@link Connection} to the database. Must not be {@code null}.
      * @throws NullPointerException If the provided {@code connection} is {@code null}.
      */
-    public PunishmentRepository(@NotNull Connection connection) throws NullPointerException
+    public InternalPunishmentRepository(@NotNull Connection connection) throws NullPointerException
     {
         super("ksvp_punishment", connection, "SELECT punishment_type, time_span, message FROM ksvp_punishment WHERE id = ?;");
     }

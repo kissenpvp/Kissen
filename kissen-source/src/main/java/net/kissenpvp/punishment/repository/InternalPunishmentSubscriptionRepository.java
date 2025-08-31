@@ -33,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
  * @see PunishmentSubscription
  * @see Punishment
  */
-public class PunishmentSubscriptionRepository extends InternalRepository<String, PunishmentSubscription> implements Repository<String, PunishmentSubscription> {
+public class InternalPunishmentSubscriptionRepository extends InternalRepository<String, PunishmentSubscription> implements Repository<String, PunishmentSubscription> {
 
     /**
      * Constructs a new instance of PunishmentSubscriptionRepository.
@@ -43,7 +43,7 @@ public class PunishmentSubscriptionRepository extends InternalRepository<String,
      * @param connection The database connection to be used by this repository. Must not be null.
      * @throws NullPointerException If the provided connection is null.
      */
-    public PunishmentSubscriptionRepository(@NotNull Connection connection) throws NullPointerException {
+    public InternalPunishmentSubscriptionRepository(@NotNull Connection connection) throws NullPointerException {
         super("ksvp_punishment_subscription", connection, "SELECT parent_id, parent_signature, start_time, expiry, expected_expiry, time_span, message FROM ksvp_punishment_subscription WHERE id = ?;");
     }
 
