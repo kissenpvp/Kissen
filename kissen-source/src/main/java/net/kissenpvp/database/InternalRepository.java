@@ -123,9 +123,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         }
 
         String placeholders = String.join(",", Collections.nCopies(primaryKeys.size(), "?"));
-        String sql = "SELECT * FROM " + table() + " WHERE id IN (%s);";
-
-        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        return CompletableFuture.supplyAsync(() -> query(String.format(findAllByIdQuery, placeholders), statement ->
         {
             int index = 1;
             for (P current : primaryKeys)
@@ -142,7 +140,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
 
     @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll()
     {
-        return CompletableFuture.supplyAsync(() -> query("SELECT * FROM %s;", (statement ->
+        return CompletableFuture.supplyAsync(() -> query(findAllQuery, (statement ->
         {
             try (ResultSet resultSet = statement.executeQuery())
             {
@@ -155,7 +153,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
     {
         Objects.requireNonNull(id, "The identifier cannot be null.");
 
-        return CompletableFuture.supplyAsync(() -> query("SELECT id FROM %s WHERE id = ?;", (statement ->
+        return CompletableFuture.supplyAsync(() -> query("SELECT id FROM " + table() + " WHERE id = ?;", (statement ->
         {
             statement.setObject(1, id);
             try (ResultSet resultSet = statement.executeQuery())
@@ -293,7 +291,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         Objects.requireNonNull(sql, "The SQL string cannot be null.");
 
         //noinspection SqlSourceToSinkFlow
-        try (PreparedStatement statement = this.connection.prepareStatement(String.format(sql, table())))
+        try (PreparedStatement statement = this.connection.prepareStatement(sql))
         {
             return queryExecutor.executeQuery(statement);
         }
