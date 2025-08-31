@@ -1,5 +1,6 @@
-package net.kissenpvp.network.actor.operator;
+package net.kissenpvp.network.actor;
 
+import net.kissenpvp.api.network.actor.OperatorInfo;
 import net.kissenpvp.database.InternalRepository;
 import org.jetbrains.annotations.NotNull;
 

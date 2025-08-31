@@ -1,6 +1,9 @@
 package net.kissenpvp.api.network.actor;
 
+import net.kissenpvp.api.database.Repository;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.UUID;
 
 /**
  * Defines the base module for managing player-related operations.
@@ -18,4 +21,6 @@ public interface PlayerModule
      * {@link PlayerClient} entities
      */
     @NotNull PlayerRepository playerRepository();
+
+    @NotNull Repository<UUID, OperatorInfo> operatorRepository();
 }

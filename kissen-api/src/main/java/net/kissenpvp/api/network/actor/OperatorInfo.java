@@ -1,4 +1,4 @@
-package net.kissenpvp.network.actor.operator;
+package net.kissenpvp.api.network.actor;
 
 import net.kissenpvp.api.database.PersistableEntity;
 import org.jetbrains.annotations.NotNull;
