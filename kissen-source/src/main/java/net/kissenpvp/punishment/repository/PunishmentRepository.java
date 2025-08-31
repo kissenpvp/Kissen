@@ -41,7 +41,7 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Puni
      */
     public PunishmentRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_punishment", connection, "SELECT punishment_type, time_span, message FROM %s WHERE id = ?;");
+        super("ksvp_punishment", connection, "SELECT punishment_type, time_span, message FROM ksvp_punishment WHERE id = ?;");
     }
 
     @Override
@@ -82,7 +82,7 @@ public class PunishmentRepository extends InternalCachedRepository<Integer, Puni
     {
         Objects.requireNonNull(id, "The punishment iterable cannot be null.");
 
-        String sql = "INSERT INTO %s (id, punishment_type, time_span, message) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE punishment_type = ?, time_span = ?, message = ?;";
+        String sql = "INSERT INTO ksvp_punishment (id, punishment_type, time_span, message) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE punishment_type = ?, time_span = ?, message = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (Punishment punishment : id)

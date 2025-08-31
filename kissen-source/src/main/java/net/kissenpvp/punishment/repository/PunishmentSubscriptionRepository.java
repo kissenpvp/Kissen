@@ -44,7 +44,7 @@ public class PunishmentSubscriptionRepository extends InternalRepository<String,
      * @throws NullPointerException If the provided connection is null.
      */
     public PunishmentSubscriptionRepository(@NotNull Connection connection) throws NullPointerException {
-        super("ksvp_punishment_subscription", connection, "SELECT parent_id, parent_signature, start_time, expiry, expected_expiry, time_span, message FROM %s WHERE id = ?;");
+        super("ksvp_punishment_subscription", connection, "SELECT parent_id, parent_signature, start_time, expiry, expected_expiry, time_span, message FROM ksvp_punishment_subscription WHERE id = ?;");
     }
 
     @Override
@@ -82,7 +82,7 @@ public class PunishmentSubscriptionRepository extends InternalRepository<String,
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PunishmentSubscription> id) throws NullPointerException {
         Objects.requireNonNull(id, "The iterable of subscriptions cannot be null.");
 
-        String sql = "INSERT INTO %s (id, link_id, parent_id, parent_signature, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, parent_id = ?, parent_signature = ?, expiry = ?, message = ?; ";
+        String sql = "INSERT INTO ksvp_punishment_subscription (id, link_id, parent_id, parent_signature, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, parent_id = ?, parent_signature = ?, expiry = ?, message = ?; ";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (PunishmentSubscription subscription : id) {

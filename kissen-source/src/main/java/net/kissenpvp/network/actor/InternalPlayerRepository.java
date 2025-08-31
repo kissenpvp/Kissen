@@ -55,7 +55,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
      */
     public InternalPlayerRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_player", connection, "SELECT linkId, username FROM %s WHERE id = ?;");
+        super("ksvp_player", connection, "SELECT linkId, username FROM ksvp_player WHERE id = ?;");
     }
 
     @Override
@@ -102,7 +102,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PlayerClient> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "id cannot be null");
-        String sql = "INSERT INTO %s (id, linkId, username, first_login, last_login, operator, locale) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE linkId = ?, username = ?, last_login = ?, time_played = ?, operator = ?, locale = ?;";
+        String sql = "INSERT INTO ksvp_player (id, linkId, username, first_login, last_login, operator, locale) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE linkId = ?, username = ?, last_login = ?, time_played = ?, operator = ?, locale = ?;";
 
         return CompletableFuture.supplyAsync(() -> {
 

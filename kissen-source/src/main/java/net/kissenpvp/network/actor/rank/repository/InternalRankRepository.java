@@ -39,7 +39,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
      */
     public InternalRankRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_rank", connection, "SELECT priority, prefix, suffix FROM %s WHERE id = ?;");
+        super("ksvp_rank", connection, "SELECT priority FROM ksvp_rank WHERE id = ?;");
     }
 
     @Override
@@ -62,7 +62,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
     {
         Objects.requireNonNull(id, "The iterable of ranks cannot be null.");
 
-        String sql = "INSERT INTO %s (id, priority) VALUES (?, ?) ON DUPLICATE KEY UPDATE priority = ?;";
+        String sql = "INSERT INTO ksvp_rank (id, priority) VALUES (?, ?) ON DUPLICATE KEY UPDATE priority = ?;";
 
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {

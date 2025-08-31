@@ -43,7 +43,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
      */
     public InternalRankSubscriptionRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_rank_subscription", connection, "SELECT player_id, rank_id, start_time, expiry, expected_expiry FROM %s WHERE id = ?;");
+        super("ksvp_rank_subscription", connection, "SELECT player_id, rank_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id = ?;");
     }
 
     @Override
@@ -74,7 +74,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     {
         Objects.requireNonNull(id, "The rank subscriptions cannot be null.");
 
-        String sql = "INSERT INTO %s (id, rank_id, player_id, start_time, expiry, expected_expiry) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE rank_id = ?, player_id = ?, expiry = ?;";
+        String sql = "INSERT INTO ksvp_rank_subscription (id, rank_id, player_id, start_time, expiry, expected_expiry) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE rank_id = ?, player_id = ?, expiry = ?;";
 
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
