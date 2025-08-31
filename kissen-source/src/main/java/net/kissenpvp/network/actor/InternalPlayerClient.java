@@ -12,7 +12,6 @@ import java.util.UUID;
 public abstract class InternalPlayerClient extends InternalPersistableEntity<UUID> implements PlayerClient
 {
     private final UUID linkId;
-    private Locale locale;
 
     protected InternalPlayerClient(@NotNull UUID linkId)
     {
