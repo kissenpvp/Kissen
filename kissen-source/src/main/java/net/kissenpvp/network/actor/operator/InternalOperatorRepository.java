@@ -37,7 +37,7 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
      */
     public InternalOperatorRepository(@NotNull String table, @NotNull Connection connection) throws NullPointerException
     {
-        super(table, connection, "SELECT username, op_level, can_bypass_player_limit FROM %s WHERE id = ?;");
+        super("ksvp_operators", connection, "SELECT o.id, p.username, o.op_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id = ?;");
     }
 
     @Override
@@ -52,16 +52,15 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
     @Override
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<OperatorInfo> id) throws NullPointerException
     {
-        String sql = "INSERT INTO %s (id, username, op_level, can_bypass_player_limit) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE username = ?, op_level = ?, can_bypass_player_limit = ?;";
+        String sql = "INSERT INTO ksvp_operators (id, op_level, can_bypass_player_limit) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE op_level = ?, can_bypass_player_limit = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (OperatorInfo operatorInfo : id)
             {
                 statement.setString(1, String.valueOf(operatorInfo.id()));
 
-                setDual(statement, 2, 5, Types.VARCHAR, operatorInfo.name());
-                setDual(statement, 3, 6, Types.INTEGER, operatorInfo.getLevel());
-                setDual(statement, 4, 7, Types.BOOLEAN, operatorInfo.getBypassesPlayerLimit());
+                setDual(statement, 2, 4, Types.INTEGER, operatorInfo.getLevel());
+                setDual(statement, 3, 5, Types.BOOLEAN, operatorInfo.getBypassesPlayerLimit());
 
                 statement.addBatch();
             }

@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS ksvp_player (
 
 CREATE TABLE IF NOT EXISTS ksvp_operators (
     id VARCHAR(36) NOT NULL,
-    username VARCHAR(16) NOT NULL,
     op_level INT NOT NULL,
     can_bypass_player_limit BOOLEAN NOT NULL,
     PRIMARY KEY (id),
