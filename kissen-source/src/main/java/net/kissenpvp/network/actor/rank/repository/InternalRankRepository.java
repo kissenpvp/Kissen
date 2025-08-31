@@ -39,7 +39,13 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
      */
     public InternalRankRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_rank", connection, "SELECT priority FROM ksvp_rank WHERE id = ?;");
+        super(
+                "ksvp_rank",
+                connection,
+                "SELECT priority FROM ksvp_rank WHERE id = ?;",
+                "SELECT * FROM ksvp_rank;",
+                "SELECT * FROM ksvp_rank WHERE id IN (%s);"
+        );
     }
 
     @Override

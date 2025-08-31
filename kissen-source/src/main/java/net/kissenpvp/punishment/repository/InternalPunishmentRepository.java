@@ -41,7 +41,13 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
      */
     public InternalPunishmentRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_punishment", connection, "SELECT punishment_type, time_span, message FROM ksvp_punishment WHERE id = ?;");
+        super(
+                "ksvp_punishment",
+                connection,
+                "SELECT punishment_type, time_span, message FROM ksvp_punishment WHERE id = ?;",
+                "SELECT * FROM ksvp_punishment;",
+                "SELECT * FROM ksvp_punishment WHERE id IN (?);"
+        );
     }
 
     @Override

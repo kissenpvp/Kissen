@@ -55,7 +55,13 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
      */
     public InternalPlayerRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_player", connection, "SELECT linkId, username FROM ksvp_player WHERE id = ?;");
+        super(
+                "ksvp_player",
+                connection,
+                "SELECT link_id, username FROM ksvp_player WHERE id = ?;",
+                "SELECT * FROM ksvp_player",
+                "SELECT * FROM ksvp_player WHERE id IN (%s);"
+        );
     }
 
     @Override
@@ -102,7 +108,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PlayerClient> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "id cannot be null");
-        String sql = "INSERT INTO ksvp_player (id, linkId, username, first_login, last_login, locale) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE linkId = ?, username = ?, last_login = ?, time_played = ?, locale = ?;";
+        String sql = "INSERT INTO ksvp_player (id, link_id, username, first_login, last_login, locale) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, username = ?, last_login = ?, time_played = ?, locale = ?;";
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -110,7 +116,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
             // this is necessary because the ksvp_player's linkId column refers
             // to the ksvp_identity's linkId column.
 
-            query("INSERT IGNORE INTO ksvp_identity (linkId) VALUES (?);", (statement ->
+            query("INSERT IGNORE INTO ksvp_identity (link_id) VALUES (?);", (statement ->
             {
                 for(PlayerClient playerClient : id)
                 {

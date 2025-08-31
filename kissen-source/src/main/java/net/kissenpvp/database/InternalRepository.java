@@ -31,7 +31,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
 {
     private static final Logger log = LoggerFactory.getLogger(InternalRepository.class);
     private final Connection connection;
-    private final String table, findQuery;
+    private final String table, findQuery, findAllQuery, findAllByIdQuery;
 
     @Contract(value = "_, null -> null; _, !null -> !null", pure = true)
     protected static <X, Y> @Nullable Y convertSafely(@NotNull Function<X, Y> function, @Nullable X value) throws NullPointerException {
@@ -44,7 +44,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         return function.apply(value);
     }
     
-    public InternalRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery) throws NullPointerException
+    public InternalRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery, @NotNull String findAllQuery, @NotNull String findAllByIdQuery) throws NullPointerException
     {
         Objects.requireNonNull(table, "The table name cannot be null.");
         Objects.requireNonNull(connection, "The database connection cannot be null.");
@@ -59,6 +59,8 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         this.table = table;
         this.connection = connection;
         this.findQuery = findQuery;
+        this.findAllQuery = findAllQuery;
+        this.findAllByIdQuery = findAllByIdQuery;
     }
 
     /**
@@ -121,7 +123,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         }
 
         String placeholders = String.join(",", Collections.nCopies(primaryKeys.size(), "?"));
-        String sql = "SELECT * FROM %s WHERE id IN (" + placeholders + ");";
+        String sql = "SELECT * FROM " + table() + " WHERE id IN (%s);";
 
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
         {

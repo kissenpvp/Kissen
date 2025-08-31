@@ -44,7 +44,13 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
      * @throws NullPointerException If the provided connection is null.
      */
     public InternalPunishmentSubscriptionRepository(@NotNull Connection connection) throws NullPointerException {
-        super("ksvp_punishment_subscription", connection, "SELECT parent_id, parent_signature, start_time, expiry, expected_expiry, time_span, message FROM ksvp_punishment_subscription WHERE id = ?;");
+        super(
+                "ksvp_punishment_subscription",
+                connection,
+                "SELECT parent_id, parent_signature, start_time, expiry, expected_expiry, time_span, message FROM ksvp_punishment_subscription WHERE id = ?;",
+                "SELECT * FROM ksvp_punishment_subscription;",
+                "SELECT * FROM ksvp_punishment_subscription WHERE id IN (?);"
+        );
     }
 
     @Override

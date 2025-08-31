@@ -30,17 +30,9 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
     private final static Logger log = LoggerFactory.getLogger(InternalCachedRepository.class);
     private final Map<P, T> cachedEntries;
 
-    /**
-     * Constructs a new instance of {@code InternalCachedRepository}, initializing the repository with the specified
-     * table name, database connection, and find-query.
-     *
-     * @param table      The name of the database table associated with this repository. Must not be null.
-     * @param connection The database connection to be used by this repository. Must not be null.
-     * @param findQuery  The SQL query string used to find records in the database. Must not be null.
-     * @throws NullPointerException If any of the provided parameters are null.
-     */
-    public InternalCachedRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery) throws NullPointerException {
-        super(table, connection, findQuery);
+    public InternalCachedRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery, @NotNull String findAllQuery, @NotNull String findAllByIdQuery) throws NullPointerException
+    {
+        super(table, connection, findQuery, findAllQuery, findAllByIdQuery);
         this.cachedEntries = new HashMap<>();
     }
 

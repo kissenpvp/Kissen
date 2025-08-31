@@ -1,18 +1,18 @@
 CREATE TABLE IF NOT EXISTS ksvp_identity (
-    linkId VARCHAR(36) NOT NULL,
-    PRIMARY KEY (linkId)
+    link_id VARCHAR(36) NOT NULL,
+    PRIMARY KEY (link_id)
 );
 
 CREATE TABLE IF NOT EXISTS ksvp_player (
     id VARCHAR(36) NOT NULL,
-    linkId VARCHAR(36) NOT NULL,
+    link_id VARCHAR(36) NOT NULL,
     username VARCHAR(16) NOT NULL UNIQUE,
     first_login DATETIME NOT NULL,
     last_login DATETIME NOT NULL,
     time_played BIGINT NOT NULL DEFAULT 0,
     locale VARCHAR(5) NOT NULL DEFAULT 'en_US',
     PRIMARY KEY (id),
-    FOREIGN KEY (linkId) REFERENCES ksvp_identity(linkId)
+    FOREIGN KEY (link_id) REFERENCES ksvp_identity(link_id)
 );
 
 CREATE TABLE IF NOT EXISTS ksvp_operators (
@@ -40,15 +40,15 @@ CREATE TABLE IF NOT EXISTS ksvp_punishment (
 
 CREATE TABLE IF NOT EXISTS ksvp_punishment_subscription (
     id VARCHAR(8) NOT NULL,
-    linkId VARCHAR(36) NOT NULL,
+    link_id VARCHAR(36) NOT NULL,
     parent_id INT NULL,
     parent_signature INT NOT NULL,
     start_time DATETIME NOT NULL,
     expiry BIGINT NULL DEFAULT NULL,
     expected_expiry BIGINT NULL DEFAULT NULL,
     message JSON NULL DEFAULT NULL,
-    PRIMARY KEY (id, linkId),
-    FOREIGN KEY (linkId) REFERENCES ksvp_identity(linkId),
+    PRIMARY KEY (id, link_id),
+    FOREIGN KEY (link_id) REFERENCES ksvp_identity(link_id),
     FOREIGN KEY (parent_id) REFERENCES ksvp_punishment(id) ON DELETE SET NULL
 );
 

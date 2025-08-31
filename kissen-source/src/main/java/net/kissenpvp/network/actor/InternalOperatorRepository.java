@@ -37,7 +37,12 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
      */
     public InternalOperatorRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_operators", connection, "SELECT o.id, p.username AS username, o.op_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id = ?;");
+        super("ksvp_operators",
+                connection,
+                "SELECT o.id, p.username AS username, o.op_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id = ?;",
+                "SELECT o.id, p.username AS username, o.op_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id;",
+                "SELECT o.id, p.username AS username, o.op_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id IN (%s);"
+        );
     }
 
     @Override
