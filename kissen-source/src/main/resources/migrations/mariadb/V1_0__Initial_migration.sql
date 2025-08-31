@@ -10,10 +10,17 @@ CREATE TABLE IF NOT EXISTS ksvp_player (
     first_login DATETIME NOT NULL,
     last_login DATETIME NOT NULL,
     time_played BIGINT NOT NULL DEFAULT 0,
-    operator BOOLEAN NOT NULL DEFAULT FALSE,
     locale VARCHAR(5) NOT NULL DEFAULT 'en_US',
     PRIMARY KEY (id),
     FOREIGN KEY (linkId) REFERENCES ksvp_identity(linkId)
+);
+
+CREATE TABLE IF NOT EXISTS ksvp_operators (
+    id VARCHAR(36) NOT NULL,
+    op_level INT NOT NULL,
+    can_bypass_player_limit BOOLEAN NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES ksvp_player(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS ksvp_player_data (
