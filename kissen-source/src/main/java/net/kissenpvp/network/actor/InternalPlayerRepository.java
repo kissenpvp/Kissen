@@ -104,11 +104,53 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         return findAllByName(name, true);
     }
 
+    /**
+     * Handles the first join logic for a player.
+     * <p>
+     * If the player has never joined before,
+     * their first and last login times are updated in the database. If the player has already joined,
+     * an {@link IllegalStateException} is thrown. The logic is executed asynchronously.
+     *
+     * @param client the {@link PlayerClient} representing the player whose first join status is to be handled; must not be null
+     * @return a {@link CompletableFuture} that completes when the operation is finished, or exceptionally if an error occurs
+     * @throws NullPointerException if the provided {@link PlayerClient} is null
+     */
+    public @NotNull CompletableFuture<Void> firstJoin(@NotNull PlayerClient client) throws NullPointerException
+    {
+        return CompletableFuture.supplyAsync(() ->
+        {
+            boolean neverJoined = Objects.equals(Boolean.TRUE, query("SELECT first_login FROM ksvp_player WHERE id = ? AND first_login = ?;", (statement ->
+            {
+                statement.setString(1, String.valueOf(client.id()));
+                statement.setNull(2, Types.DATE);
+                try (ResultSet resultSet = statement.executeQuery())
+                {
+                    return resultSet.next();
+                }
+            })));
+
+            if(neverJoined)
+            {
+                Date now = Date.valueOf(Instant.now().atZone(ZoneId.systemDefault()).toLocalDate());
+                return query("UPDATE ksvp_player SET first_login = ?, last_login = ? WHERE id = ?;", (statement ->
+                {
+                    statement.setDate(1, now);
+                    statement.setDate(2, now);
+                    statement.setString(3, String.valueOf(client.id()));
+                    statement.executeUpdate();
+                    return null;
+                }));
+            }
+
+            throw new IllegalStateException("Player has already joined before.");
+        });
+    }
+
     @Override
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PlayerClient> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "id cannot be null");
-        String sql = "INSERT INTO ksvp_player (id, link_id, username, first_login, last_login, locale) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, username = ?, last_login = ?, time_played = ?, locale = ?;";
+        String sql = "INSERT INTO ksvp_player (id, link_id, username, locale) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, username = ?, last_login = ?, time_played = ?, locale = ?;";
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -159,18 +201,15 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
 
         statement.setString(1, String.valueOf(playerClient.id()));
 
-        Date now = Date.valueOf(Instant.now().atZone(ZoneId.systemDefault()).toLocalDate());
         Date lastLogin = Date.valueOf(playerClient.lastLogin().atZone(ZoneId.systemDefault()).toLocalDate());
 
-        setDual(statement, 2, 7, Types.VARCHAR, String.valueOf(playerClient.linkId()));
-        setDual(statement, 3, 8, Types.VARCHAR, playerClient.username());
+        setDual(statement, 2, 5, Types.VARCHAR, String.valueOf(playerClient.linkId()));
+        setDual(statement, 3, 6, Types.VARCHAR, playerClient.username());
 
-        statement.setDate(4, now);
+        statement.setDate(7, lastLogin);
+        statement.setLong(8, playerClient.timePlayed().get(ChronoUnit.SECONDS));
 
-        setDual(statement, 5, 9, Types.DATE, lastLogin);
-        statement.setLong(10, playerClient.timePlayed().get(ChronoUnit.SECONDS));
-
-        setDual(statement, 6, 11, Types.VARCHAR, playerClient.locale().toLanguageTag());
+        setDual(statement, 4, 9, Types.VARCHAR, playerClient.locale().toLanguageTag());
 
         overrideSignature(playerClient);
         statement.addBatch();
