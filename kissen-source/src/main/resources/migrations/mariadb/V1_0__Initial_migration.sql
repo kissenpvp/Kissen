@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS ksvp_player (
 
 CREATE TABLE IF NOT EXISTS ksvp_operators (
     id VARCHAR(36) NOT NULL,
-    op_level INT NOT NULL,
+    operator_level INT NOT NULL,
     can_bypass_player_limit BOOLEAN NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (id) REFERENCES ksvp_player(id) ON DELETE CASCADE
