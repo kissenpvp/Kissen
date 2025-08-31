@@ -156,7 +156,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
 
             // we need to insert missing link ids before
             // this is necessary because the ksvp_player's linkId column refers
-            // to the ksvp_identity's linkId column.
+            // to the ksvp_identity's link_id column.
 
             query("INSERT IGNORE INTO ksvp_identity (link_id) VALUES (?);", (statement ->
             {
