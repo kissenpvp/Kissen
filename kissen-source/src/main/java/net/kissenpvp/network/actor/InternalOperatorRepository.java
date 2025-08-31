@@ -39,9 +39,9 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
     {
         super("ksvp_operators",
                 connection,
-                "SELECT o.id, p.username AS username, o.op_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id = ?;",
-                "SELECT o.id, p.username AS username, o.op_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id;",
-                "SELECT o.id, p.username AS username, o.op_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id IN (%s);"
+                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id = ?;",
+                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id;",
+                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id IN (%s);"
         );
     }
 
@@ -57,7 +57,7 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
     @Override
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<OperatorInfo> id) throws NullPointerException
     {
-        String sql = "INSERT INTO ksvp_operators (id, op_level, can_bypass_player_limit) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE op_level = ?, can_bypass_player_limit = ?;";
+        String sql = "INSERT INTO ksvp_operators (id, operator_level, can_bypass_player_limit) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE operator_level = ?, can_bypass_player_limit = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (OperatorInfo operatorInfo : id)
