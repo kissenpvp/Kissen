@@ -26,6 +26,7 @@ import java.util.stream.Stream;
  * @author Ivo Quiring
  */
 public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>> extends InternalRepository<P, T> implements CachedRepository<P, T> {
+
     private final static Logger log = LoggerFactory.getLogger(InternalCachedRepository.class);
     private final Map<P, T> cachedEntries;
 
