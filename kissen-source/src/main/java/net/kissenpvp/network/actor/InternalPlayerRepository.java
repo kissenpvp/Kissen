@@ -102,7 +102,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PlayerClient> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "id cannot be null");
-        String sql = "INSERT INTO ksvp_player (id, linkId, username, first_login, last_login, operator, locale) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE linkId = ?, username = ?, last_login = ?, time_played = ?, operator = ?, locale = ?;";
+        String sql = "INSERT INTO ksvp_player (id, linkId, username, first_login, last_login, locale) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE linkId = ?, username = ?, last_login = ?, time_played = ?, locale = ?;";
 
         return CompletableFuture.supplyAsync(() -> {
 
@@ -156,15 +156,15 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         Date now = Date.valueOf(Instant.now().atZone(ZoneId.systemDefault()).toLocalDate());
         Date lastLogin = Date.valueOf(playerClient.lastLogin().atZone(ZoneId.systemDefault()).toLocalDate());
 
-        setDual(statement, 2, 8, Types.VARCHAR, String.valueOf(playerClient.linkId()));
-        setDual(statement, 3, 9, Types.VARCHAR, playerClient.username());
+        setDual(statement, 2, 7, Types.VARCHAR, String.valueOf(playerClient.linkId()));
+        setDual(statement, 3, 8, Types.VARCHAR, playerClient.username());
 
         statement.setDate(4, now);
-        setDual(statement, 5, 10, Types.DATE, lastLogin);
-        statement.setLong(11, playerClient.timePlayed().get(ChronoUnit.SECONDS));
 
-        setDual(statement, 6, 12, Types.BOOLEAN, playerClient.isOp());
-        setDual(statement, 7, 13, Types.VARCHAR, playerClient.locale().toLanguageTag());
+        setDual(statement, 5, 9, Types.DATE, lastLogin);
+        statement.setLong(10, playerClient.timePlayed().get(ChronoUnit.SECONDS));
+
+        setDual(statement, 6, 11, Types.VARCHAR, playerClient.locale().toLanguageTag());
 
         overrideSignature(playerClient);
         statement.addBatch();
