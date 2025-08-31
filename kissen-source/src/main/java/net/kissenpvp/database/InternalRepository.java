@@ -232,27 +232,6 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
     }
 
     /**
-     * Loads all rows from the given {@code ResultSet} and converts them into a collection of entities.
-     * Each row in the {@code ResultSet} is transformed into an entity using the {@link #toEntity(ResultSet)} method.
-     *
-     * @param resultSet the {@code ResultSet} containing data to be converted into entities, cannot be null
-     * @return a collection of entities derived from the {@code ResultSet}, never null
-     * @throws SQLException         if an SQL error occurs while processing the {@code ResultSet}
-     * @throws NullPointerException if the {@code ResultSet} is null
-     */
-    private @NotNull Collection<T> loadAll(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
-    {
-        Objects.requireNonNull(resultSet, "The ResultSet cannot be null.");
-
-        List<T> data = new ArrayList<>();
-        while (resultSet.next())
-        {
-            data.add(toEntity(resultSet));
-        }
-        return data;
-    }
-
-    /**
      * Executes the provided SQL query using the given {@code QueryExecutor}. This method logs any SQL exceptions
      * encountered during execution and rethrows them as {@link IllegalStateException}.
      *
