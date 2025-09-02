@@ -3,6 +3,7 @@ package net.kissenpvp.punishment.repository;
 import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
+import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
@@ -33,7 +34,8 @@ import java.util.concurrent.CompletableFuture;
  * @see PunishmentSubscription
  * @see Punishment
  */
-public class InternalPunishmentSubscriptionRepository extends InternalRepository<String, PunishmentSubscription> implements Repository<String, PunishmentSubscription> {
+public class InternalPunishmentSubscriptionRepository extends InternalRepository<String, PunishmentSubscription> implements PunishmentSubscriptionRepository
+{
 
     /**
      * Constructs a new instance of PunishmentSubscriptionRepository.

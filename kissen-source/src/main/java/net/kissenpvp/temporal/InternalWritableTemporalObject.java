@@ -16,14 +16,14 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
     private final @Nullable Instant originalExpiry;
     private @Nullable Instant expiry;
 
-    public static @NotNull InternalTemporalObject toTemporal(@NotNull TimeSpan span)
+    public static @NotNull InternalWritableTemporalObject toTemporal(@NotNull TimeSpan span)
     {
         if(span instanceof DefinedTimeSpan definedTimeSpan)
         {
-            return new InternalTemporalObject(Instant.now().plus(definedTimeSpan));
+            return new InternalWritableTemporalObject(Instant.now().plus(definedTimeSpan));
         }
 
-        return new InternalTemporalObject();
+        return new InternalWritableTemporalObject();
     }
 
     public InternalWritableTemporalObject()

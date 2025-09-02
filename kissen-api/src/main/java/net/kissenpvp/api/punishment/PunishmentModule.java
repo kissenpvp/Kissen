@@ -1,7 +1,10 @@
 package net.kissenpvp.api.punishment;
 
 import net.kissenpvp.api.database.Repository;
+import net.kissenpvp.api.network.actor.PlayerClient;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The {@code PunishmentModule} interface provides a contract for managing
@@ -31,4 +34,8 @@ public interface PunishmentModule
      *         where the keys are of type {@link String}.
      */
     @NotNull Repository<String, PunishmentSubscription> punishmentSubscriptionRepository();
+
+    void punishPlayer(@NotNull PlayerClient player, @NotNull Punishment punishment);
+
+    void punishPlayer(@NotNull PlayerClient player, @NotNull Punishment punishment, @Nullable Component message);
 }
