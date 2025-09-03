@@ -1,58 +1,51 @@
 package net.kissenpvp.base;
 
 import net.kissenpvp.api.base.Kissen;
+import net.kissenpvp.api.database.Repository;
+import net.kissenpvp.api.database.RepositoryHolder;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
-import net.kissenpvp.api.network.actor.PlayerModule;
-import net.kissenpvp.api.network.actor.rank.RankModule;
-import net.kissenpvp.api.punishment.PunishmentModule;
+import net.kissenpvp.api.network.actor.OperatorInfo;
+import net.kissenpvp.api.network.actor.PlayerRepository;
+import net.kissenpvp.api.network.actor.rank.Rank;
+import net.kissenpvp.api.network.actor.rank.RankSubscription;
+import net.kissenpvp.api.punishment.Punishment;
+import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
+import java.util.UUID;
 
-public class KissenCore implements Kissen
+public class KissenCore implements Kissen, RepositoryHolder
 {
-    private static Kissen instance;
-    private boolean started;
+    private static KissenCore instance;
     private GlobalLocaleRegistry localeRegistry;
-    private PunishmentModule punishmentModule;
-    private RankModule rankModule;
-    private PlayerModule playerModule;
+    private InternalRepositoryHolder databaseModule;
+    private boolean started;
 
-    public static @NotNull Kissen getInstance()
+    public static @NotNull KissenCore getInstance()
     {
-        if(Objects.isNull(instance))
+        if (Objects.isNull(instance))
         {
-            throw new IllegalStateException("KissenCore has not been started yet!");
-        }
-        return instance;
+            throw new IllegalStateException("Kissen has not been initiated yet!");
+        } return instance;
     }
 
-    protected void startCore(@NotNull PunishmentModule punishmentModule, @NotNull RankModule rankModule, @NotNull PlayerModule playerModule)
+    protected void databaseModule(@NotNull InternalRepositoryHolder databaseModule)
     {
-        instance = this;
-        localeRegistry = new InternalGlobalLocaleRegistry();
+        this.databaseModule = databaseModule;
+    }
 
-        this.punishmentModule = punishmentModule;
-        this.rankModule = rankModule;
-        this.playerModule = playerModule;
+    protected void init()
+    {
+        if (!Objects.nonNull(databaseModule))
+        {
+            throw new IllegalStateException("Cannot start Kissen without a database!");
+        }
+
+        instance = this; localeRegistry = new InternalGlobalLocaleRegistry();
 
         started = true;
-    }
-
-    @Override public @NotNull PunishmentModule punishmentModule()
-    {
-        return punishmentModule;
-    }
-
-    @Override public @NotNull RankModule rankModule()
-    {
-        return rankModule;
-    }
-
-    @Override public @NotNull PlayerModule playerModule()
-    {
-        return playerModule;
     }
 
     @Override public @NotNull GlobalLocaleRegistry localeRegistry()
@@ -63,5 +56,35 @@ public class KissenCore implements Kissen
     @Override public boolean started()
     {
         return started;
+    }
+
+    @Override public @NotNull PlayerRepository playerRepository()
+    {
+        return databaseModule.playerRepository();
+    }
+
+    @Override public @NotNull Repository<UUID, OperatorInfo> operatorRepository()
+    {
+        return databaseModule.operatorRepository();
+    }
+
+    @Override public @NotNull Repository<Integer, Punishment> punishmentRepository()
+    {
+        return databaseModule.punishmentRepository();
+    }
+
+    @Override public @NotNull Repository<String, PunishmentSubscription> punishmentSubscriptionRepository()
+    {
+        return databaseModule.punishmentSubscriptionRepository();
+    }
+
+    @Override public @NotNull Repository<String, Rank> rankRepository()
+    {
+        return databaseModule.rankRepository();
+    }
+
+    @Override public @NotNull Repository<String, RankSubscription> rankSubscriptionRepository()
+    {
+        return databaseModule.rankSubscriptionRepository();
     }
 }

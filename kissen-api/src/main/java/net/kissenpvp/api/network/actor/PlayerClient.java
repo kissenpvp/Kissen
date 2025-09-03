@@ -1,11 +1,16 @@
 package net.kissenpvp.api.network.actor;
 
 import net.kissenpvp.api.database.PersistableEntity;
+import net.kissenpvp.api.punishment.Punishment;
+import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Represents a player client.
@@ -47,4 +52,8 @@ public interface PlayerClient extends AbstractActor, PersistableEntity<UUID>
      * @return a non-null {@link DefinedTimeSpan} representing the player's total active time in the system.
      */
     @NotNull DefinedTimeSpan timePlayed();
+
+    @NotNull PunishmentSubscription punish(@NotNull Punishment punishment) throws NullPointerException;
+
+    @NotNull PunishmentSubscription punish(@NotNull Punishment punishment, @Nullable Component message) throws NullPointerException;
 }
