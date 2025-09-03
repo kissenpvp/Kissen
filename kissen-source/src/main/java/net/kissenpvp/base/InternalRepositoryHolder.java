@@ -17,17 +17,7 @@ import java.util.UUID;
 public record InternalRepositoryHolder(@NotNull PlayerRepository playerRepository, @NotNull Repository<UUID, OperatorInfo> operatorRepository,
                                        @NotNull Repository<Integer, Punishment> punishmentRepository, @NotNull Repository<String, PunishmentSubscription> punishmentSubscriptionRepository,
                                        @NotNull Repository<String, Rank> rankRepository, @NotNull Repository<String, RankSubscription> rankSubscriptionRepository
-) implements RepositoryHolder
-{
-    public InternalRepositoryHolder
-    {
-        Objects.requireNonNull(playerRepository(), "playerRepository cannot be null!");
-        Objects.requireNonNull(operatorRepository(), "operatorRepository cannot be null!");
-        Objects.requireNonNull(punishmentRepository(), "punishmentRepository cannot be null!");
-        Objects.requireNonNull(punishmentSubscriptionRepository(), "punishmentSubscriptionRepository cannot be null!");
-        Objects.requireNonNull(rankRepository(), "rankRepository cannot be null!");
-        Objects.requireNonNull(rankSubscriptionRepository(), "rankSubscriptionRepository cannot be null!");
-    }
+) implements RepositoryHolder {
 
     public static RepositoryHolderBuilder builder()
     {
