@@ -1,5 +1,6 @@
 package net.kissenpvp.punishment;
 
+import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
@@ -17,16 +18,28 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
 {
     private final String id;
     private final UUID linkId;
+    private final UUID operator;
     private final @NotNull WritableTemporalObject temporalObject;
     private @Nullable Component message;
 
-    public InternalPunishmentSubscription(int parent, @NotNull UUID linkId, @NotNull WritableTemporalObject temporalObject, @Nullable Component message) throws NullPointerException
-    {
-        this(String.valueOf(UUID.randomUUID()).split("-")[0], parent, linkId, temporalObject, message);
+    public InternalPunishmentSubscription(
+            int parent,
+            @NotNull UUID linkId,
+            @Nullable UUID operator,
+            @NotNull WritableTemporalObject temporalObject,
+            @Nullable Component message
+    ) throws NullPointerException {
+        this(String.valueOf(UUID.randomUUID()).split("-")[0], parent, linkId, operator, temporalObject, message);
     }
 
-    public InternalPunishmentSubscription(@NotNull String id, int parent, @NotNull UUID linkId, @NotNull WritableTemporalObject temporalObject, @Nullable Component message) throws NullPointerException
-    {
+    public InternalPunishmentSubscription(
+            @NotNull String id,
+            int parent,
+            @NotNull UUID linkId,
+            @Nullable UUID operator,
+            @NotNull WritableTemporalObject temporalObject,
+            @Nullable Component message
+    ) throws NullPointerException {
         super(id, parent);
         Objects.requireNonNull(id, "Id cannot be null.");
         Objects.requireNonNull(linkId, "LinkId cannot be null.");
@@ -39,6 +52,7 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
 
         this.id = id;
         this.linkId = linkId;
+        this.operator = operator;
         this.temporalObject = temporalObject;
         this.message = message;
     }
@@ -51,6 +65,11 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     @Override public @NotNull UUID linkId()
     {
         return linkId;
+    }
+
+    @Override public @NotNull Optional<PlayerClient> operator()
+    {
+        return Optional.ofNullable(KissenCore.getInstance().playerRepository().find(operator).join());
     }
 
     @Override public int signature()

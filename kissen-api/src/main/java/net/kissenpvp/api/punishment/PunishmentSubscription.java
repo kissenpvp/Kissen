@@ -1,6 +1,7 @@
 package net.kissenpvp.api.punishment;
 
 import net.kissenpvp.api.database.SubscriptionEntity;
+import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.temporal.WritableTemporalSubscriber;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -29,6 +30,8 @@ public interface PunishmentSubscription extends SubscriptionEntity<String, Integ
      * @see net.kissenpvp.api.network.actor.PlayerClient#linkId()
      */
     @NotNull UUID linkId();
+
+    @NotNull Optional<PlayerClient> operator();
 
     /**
      * Retrieves the custom message associated with this subscription, if present.

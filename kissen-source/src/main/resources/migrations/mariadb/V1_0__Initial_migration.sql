@@ -43,13 +43,15 @@ CREATE TABLE IF NOT EXISTS ksvp_punishment_subscription (
     link_id VARCHAR(36) NOT NULL,
     parent_id INT NULL,
     parent_signature INT NOT NULL,
+    operator_id VARCHAR(36) NULL,
     start_time DATETIME NOT NULL,
     expiry BIGINT NULL DEFAULT NULL,
     expected_expiry BIGINT NULL DEFAULT NULL,
     message JSON NULL DEFAULT NULL,
     PRIMARY KEY (id, link_id),
     FOREIGN KEY (link_id) REFERENCES ksvp_identity(link_id),
-    FOREIGN KEY (parent_id) REFERENCES ksvp_punishment(id) ON DELETE SET NULL
+    FOREIGN KEY (parent_id) REFERENCES ksvp_punishment(id) ON DELETE SET NULL,
+    FOREIGN KEY (operator_id) REFERENCES ksvp_operators(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS ksvp_rank (
