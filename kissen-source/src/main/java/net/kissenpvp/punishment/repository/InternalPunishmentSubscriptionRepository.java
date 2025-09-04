@@ -143,7 +143,8 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     {
         if (subscription.operator().isPresent())
         {
-            statement.setString(5, String.valueOf(subscription.operator().get().id())); return;
+            statement.setString(5, String.valueOf(subscription.operator().get().id()));
+            return;
         }
 
         statement.setNull(5, Types.VARCHAR);
