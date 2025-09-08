@@ -4,6 +4,7 @@ import net.kissenpvp.api.base.Kissen;
 import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.database.RepositoryHolder;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
+import net.kissenpvp.api.network.actor.ConsoleClient;
 import net.kissenpvp.api.network.actor.OperatorInfo;
 import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.api.network.actor.rank.Rank;
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.UUID;
 
-public class KissenCore implements Kissen, RepositoryHolder
+public abstract class KissenCore implements Kissen, RepositoryHolder
 {
     private static KissenCore instance;
     private GlobalLocaleRegistry localeRegistry;
@@ -30,6 +31,8 @@ public class KissenCore implements Kissen, RepositoryHolder
             throw new IllegalStateException("Kissen has not been initiated yet!");
         } return instance;
     }
+
+    public abstract ConsoleClient console();
 
     protected void databaseModule(@NotNull InternalRepositoryHolder databaseModule)
     {

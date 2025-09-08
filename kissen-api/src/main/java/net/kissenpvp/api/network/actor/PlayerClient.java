@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Represents a player client.
@@ -18,12 +17,12 @@ import java.util.concurrent.CompletableFuture;
  * It is uniquely identified by its {@code id}
  * as defined by {@link PersistableEntity} and includes additional details.
  * <p>
- * This interface extends {@link AbstractActor} to inherit common network actor properties
+ * This interface extends {@link Actor} to inherit common network actor properties
  * (e.g., username and locale) and {@link PersistableEntity} to support database persistence.
  *
  * @author Ivo Quiring
  */
-public interface PlayerClient extends AbstractActor, PersistableEntity<UUID>
+public interface PlayerClient extends Actor, PersistableEntity<UUID>
 {
     /**
      * Returns the stable identifier that associates this player client with an external identity

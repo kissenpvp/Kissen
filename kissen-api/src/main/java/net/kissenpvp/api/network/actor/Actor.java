@@ -19,7 +19,7 @@ import java.util.Locale;
  *
  * @author Ivo Quiring
  */
-public interface AbstractActor extends NetworkEntity
+public interface Actor extends NetworkEntity
 {
     /**
      * Retrieves the username of the actor. The username

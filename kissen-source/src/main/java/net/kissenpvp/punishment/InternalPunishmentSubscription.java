@@ -1,6 +1,6 @@
 package net.kissenpvp.punishment;
 
-import net.kissenpvp.api.network.actor.PlayerClient;
+import net.kissenpvp.api.network.actor.Actor;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
@@ -67,9 +67,21 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         return linkId;
     }
 
-    @Override public @NotNull Optional<PlayerClient> operator()
+    @Override public @NotNull Actor operator()
     {
-        return Optional.ofNullable(KissenCore.getInstance().playerRepository().find(operator).join());
+        if(Objects.isNull(operator))
+        {
+            return KissenCore.getInstance().console();
+        }
+
+        Actor actor = KissenCore.getInstance().playerRepository().find(operator).join();
+        if(Objects.isNull(actor))
+        {
+            String message = "The player with the id %s was not found in the database but is bound to a punishment subscription.";
+            throw new IllegalStateException(String.format(message, operator));
+        }
+
+        return actor;
     }
 
     @Override public int signature()
