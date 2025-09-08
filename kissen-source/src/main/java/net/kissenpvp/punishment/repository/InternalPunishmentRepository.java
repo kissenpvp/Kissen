@@ -57,13 +57,6 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
         PunishmentType type = PunishmentType.fromOrdinal(resultSet.getInt("punishment_type"));
-
-        if (Objects.isNull(type))
-        {
-            String message = String.format("The punishment type of the punishment %s is null. This should not happen.", id);
-            throw new SQLException(new NullPointerException(message));
-        }
-
         InternalDefinedTimeSpan timeSpan = new InternalDefinedTimeSpan(resultSet.getLong("time_span"));
         return new InternalPunishment(id, type, timeSpan);
     }
