@@ -194,7 +194,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
      * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
      * @throws NullPointerException if either {@code id} or {@code resultSet} is null
      */
-    protected abstract @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException;
+    public abstract @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException;
 
     /**
      * Converts a single row of the provided {@code ResultSet} into an entity.
@@ -208,7 +208,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
      * @see #toEntities(ResultSet)
      * @see #toEntity(Object, ResultSet)
      */
-    protected abstract @NotNull T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException;
+    public abstract @NotNull T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException;
 
     /**
      * Converts all rows of the provided {@code ResultSet} into a collection of entities.

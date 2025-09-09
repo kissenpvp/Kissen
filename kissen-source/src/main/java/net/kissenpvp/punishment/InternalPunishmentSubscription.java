@@ -1,6 +1,7 @@
 package net.kissenpvp.punishment;
 
 import net.kissenpvp.api.network.actor.Actor;
+import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
@@ -18,24 +19,26 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
 {
     private final String id;
     private final UUID linkId;
-    private final UUID operator;
+    private final UUID operator, player;
     private final @NotNull WritableTemporalObject temporalObject;
     private @Nullable Component message;
 
     public InternalPunishmentSubscription(
             int parent,
             @NotNull UUID linkId,
+            @NotNull UUID player,
             @Nullable UUID operator,
             @NotNull WritableTemporalObject temporalObject,
             @Nullable Component message
     ) throws NullPointerException {
-        this(String.valueOf(UUID.randomUUID()).split("-")[0], parent, linkId, operator, temporalObject, message);
+        this(String.valueOf(UUID.randomUUID()).split("-")[0], parent, linkId, player, operator, temporalObject, message);
     }
 
     public InternalPunishmentSubscription(
             @NotNull String id,
             int parent,
             @NotNull UUID linkId,
+            @NotNull UUID player,
             @Nullable UUID operator,
             @NotNull WritableTemporalObject temporalObject,
             @Nullable Component message
@@ -52,6 +55,7 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
 
         this.id = id;
         this.linkId = linkId;
+        this.player = player;
         this.operator = operator;
         this.temporalObject = temporalObject;
         this.message = message;
@@ -67,6 +71,17 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         return linkId;
     }
 
+    @Override public @NotNull PlayerClient target()
+    {
+        PlayerClient playerClient = KissenCore.getInstance().playerRepository().find(player).join();
+        if(Objects.isNull(playerClient))
+        {
+            String message = "The player %s who is associated with the punishment subscription %s has not been found in the database.";
+            throw new IllegalStateException(String.format(message, player, id()));
+        }
+        return playerClient;
+    }
+
     @Override public @NotNull Actor operator()
     {
         if(Objects.isNull(operator))
@@ -77,11 +92,16 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         Actor actor = KissenCore.getInstance().playerRepository().find(operator).join();
         if(Objects.isNull(actor))
         {
-            String message = "The player with the id %s was not found in the database but is bound to a punishment subscription.";
-            throw new IllegalStateException(String.format(message, operator));
+            String message = "The player with the id %s was not found in the database but is bound to the punishment subscription %s.";
+            throw new IllegalStateException(String.format(message, operator, id()));
         }
 
         return actor;
+    }
+
+    public @Nullable UUID rawOperator()
+    {
+        return operator;
     }
 
     @Override public int signature()

@@ -1,9 +1,11 @@
 package net.kissenpvp.punishment.repository;
 
+import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
+import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.punishment.InternalPunishmentSubscription;
@@ -13,13 +15,13 @@ import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnmodifiableView;
 
 import java.sql.*;
+import java.sql.Date;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -52,7 +54,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
 
     @Override
-    protected @NotNull InternalPunishmentSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    public @NotNull InternalPunishmentSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -61,7 +63,6 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     {
         message = GsonComponentSerializer.gson().deserialize(messageString);
     }
-
         int parentId = resultSet.getInt("parent_id");
         UUID linkId = UUID.fromString(resultSet.getString("link_id"));
         UUID operatorId = convertSafely(UUID::fromString, resultSet.getString("operator"));
@@ -73,11 +74,11 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
 
         WritableTemporalObject temporal = new InternalWritableTemporalObject(start, expiry, expectedExpiry);
 
-        return new InternalPunishmentSubscription(id, parentId, operatorId, linkId, temporal, message);
+        return new InternalPunishmentSubscription(id, parentId, null, operatorId, linkId, temporal, message);
     }
 
     @Override
-    protected @NotNull InternalPunishmentSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    public @NotNull InternalPunishmentSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
@@ -141,9 +142,10 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
 
     private static void operator(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException
     {
-        if (subscription.operator().isPresent())
+        UUID operator = ((InternalPunishmentSubscription) subscription).rawOperator();
+        if (Objects.nonNull(operator))
         {
-            statement.setString(5, String.valueOf(subscription.operator().get().id()));
+            statement.setString(5, String.valueOf(operator));
             return;
         }
 
@@ -174,5 +176,47 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         }
 
         statement.setNull(8, Types.BIGINT);
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PlayerClient>> findTargets(@NotNull UUID linkId)
+    {
+        String sql = "SELECT id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE link_id = ?;";
+        InternalRepository<UUID, PlayerClient> playerRepository = (InternalRepository<UUID, PlayerClient>) KissenCore.getInstance().playerRepository();
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        {
+            statement.setString(1, String.valueOf(linkId));
+
+            try (ResultSet resultSet = statement.executeQuery())
+            {
+                Set<PlayerClient> clients = new HashSet<>();
+                while(resultSet.next())
+                {
+                    clients.add(playerRepository.toEntity(UUID.fromString(resultSet.getString("id")), resultSet));
+                }
+                return Collections.unmodifiableSet(clients);
+            }
+        }))));
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<UUID>> findTargetIds(@NotNull UUID linkId)
+    {
+        String sql = "SELECT id FROM ksvp_player WHERE link_id = ?;";
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        {
+
+            statement.setString(1, String.valueOf(linkId));
+
+            try (ResultSet resultSet = statement.executeQuery())
+            {
+                Set<UUID> uuidSet = new HashSet<>();
+                while(resultSet.next())
+                {
+                    uuidSet.add(UUID.fromString(resultSet.getString("id")));
+                }
+                return Collections.unmodifiableSet(uuidSet);
+            }
+        }))));
     }
 }

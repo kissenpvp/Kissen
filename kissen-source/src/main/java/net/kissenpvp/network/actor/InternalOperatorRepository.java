@@ -46,10 +46,10 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
     }
 
     @Override
-    protected abstract @NotNull OperatorInfo toEntity(@NotNull UUID id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException;
+    public abstract @NotNull OperatorInfo toEntity(@NotNull UUID id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException;
 
     @Override
-    protected @NotNull OperatorInfo toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    public @NotNull OperatorInfo toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         return toEntity(UUID.fromString(resultSet.getString("id")), resultSet);
     }

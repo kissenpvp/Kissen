@@ -37,12 +37,12 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
     }
 
     @Override
-    protected @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException {
+    public @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException {
         return cache(toCachedEntity(id, resultSet));
     }
 
     @Override
-    protected @NotNull T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException {
+    public @NotNull T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException {
         return cache(toCachedEntity(resultSet));
     }
 

@@ -53,7 +53,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     }
 
     @Override
-    protected @NotNull RankSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    public @NotNull RankSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(id, "The rank subscription ID cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -69,7 +69,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     }
 
     @Override
-    protected @NotNull RankSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    public @NotNull RankSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
         return toEntity(resultSet.getString("id"), resultSet);

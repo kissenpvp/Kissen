@@ -62,7 +62,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     }
 
     @Override
-    protected @NotNull @UnmodifiableView PlayerClient toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    public @NotNull @UnmodifiableView PlayerClient toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
