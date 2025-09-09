@@ -10,7 +10,9 @@ import net.kissenpvp.database.InternalSubscriptionEntity;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnmodifiableView;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,7 +21,7 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
 {
     private final String id;
     private final UUID linkId;
-    private final UUID operator, player;
+    private final UUID operator;
     private final @NotNull WritableTemporalObject temporalObject;
     private @Nullable Component message;
 
@@ -31,14 +33,13 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
             @NotNull WritableTemporalObject temporalObject,
             @Nullable Component message
     ) throws NullPointerException {
-        this(String.valueOf(UUID.randomUUID()).split("-")[0], parent, linkId, player, operator, temporalObject, message);
+        this(String.valueOf(UUID.randomUUID()).split("-")[0], parent, linkId, operator, temporalObject, message);
     }
 
     public InternalPunishmentSubscription(
             @NotNull String id,
             int parent,
             @NotNull UUID linkId,
-            @NotNull UUID player,
             @Nullable UUID operator,
             @NotNull WritableTemporalObject temporalObject,
             @Nullable Component message
@@ -55,7 +56,6 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
 
         this.id = id;
         this.linkId = linkId;
-        this.player = player;
         this.operator = operator;
         this.temporalObject = temporalObject;
         this.message = message;
@@ -71,15 +71,9 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         return linkId;
     }
 
-    @Override public @NotNull PlayerClient target()
+    @Override public @NotNull @UnmodifiableView Collection<PlayerClient> target()
     {
-        PlayerClient playerClient = KissenCore.getInstance().playerRepository().find(player).join();
-        if(Objects.isNull(playerClient))
-        {
-            String message = "The player %s who is associated with the punishment subscription %s has not been found in the database.";
-            throw new IllegalStateException(String.format(message, player, id()));
-        }
-        return playerClient;
+        return KissenCore.getInstance().punishmentSubscriptionRepository().findTargets(linkId()).join();
     }
 
     @Override public @NotNull Actor operator()

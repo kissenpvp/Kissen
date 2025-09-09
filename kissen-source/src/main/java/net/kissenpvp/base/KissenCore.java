@@ -11,6 +11,7 @@ import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
+import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
 import org.jetbrains.annotations.NotNull;
 
@@ -83,7 +84,7 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
         return databaseModule.punishmentRepository();
     }
 
-    @Override public @NotNull Repository<String, PunishmentSubscription> punishmentSubscriptionRepository()
+    @Override public @NotNull PunishmentSubscriptionRepository punishmentSubscriptionRepository()
     {
         return databaseModule.punishmentSubscriptionRepository();
     }

@@ -7,7 +7,10 @@ import net.kissenpvp.api.temporal.WritableTemporalSubscriber;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnmodifiableView;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,7 +35,7 @@ public interface PunishmentSubscription extends SubscriptionEntity<String, Integ
      */
     @NotNull UUID linkId();
 
-    @NotNull PlayerClient target();
+    @NotNull @UnmodifiableView Collection<PlayerClient> target();
 
     @NotNull Actor operator();
 

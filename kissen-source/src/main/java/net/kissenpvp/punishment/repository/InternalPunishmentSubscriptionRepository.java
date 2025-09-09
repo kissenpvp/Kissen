@@ -74,7 +74,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
 
         WritableTemporalObject temporal = new InternalWritableTemporalObject(start, expiry, expectedExpiry);
 
-        return new InternalPunishmentSubscription(id, parentId, null, operatorId, linkId, temporal, message);
+        return new InternalPunishmentSubscription(id, parentId, operatorId, linkId, temporal, message);
     }
 
     @Override

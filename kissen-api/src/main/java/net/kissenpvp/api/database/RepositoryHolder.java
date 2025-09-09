@@ -6,6 +6,7 @@ import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
+import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -18,7 +19,7 @@ public interface RepositoryHolder
 
     @NotNull Repository<Integer, Punishment> punishmentRepository();
 
-    @NotNull Repository<String, PunishmentSubscription> punishmentSubscriptionRepository();
+    @NotNull PunishmentSubscriptionRepository punishmentSubscriptionRepository();
 
     @NotNull Repository<String, Rank> rankRepository();
 
