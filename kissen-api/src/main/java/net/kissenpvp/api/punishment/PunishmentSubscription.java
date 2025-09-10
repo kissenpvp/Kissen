@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,7 +34,9 @@ public interface PunishmentSubscription extends SubscriptionEntity<String, Integ
      */
     @NotNull UUID linkId();
 
-    @NotNull @UnmodifiableView Collection<PlayerClient> target();
+    @NotNull @UnmodifiableView Collection<PlayerClient> targets();
+
+    @NotNull PlayerClient target();
 
     @NotNull Actor operator();
 

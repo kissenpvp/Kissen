@@ -28,7 +28,6 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     public InternalPunishmentSubscription(
             int parent,
             @NotNull UUID linkId,
-            @NotNull UUID player,
             @Nullable UUID operator,
             @NotNull WritableTemporalObject temporalObject,
             @Nullable Component message
@@ -71,9 +70,27 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         return linkId;
     }
 
-    @Override public @NotNull @UnmodifiableView Collection<PlayerClient> target()
+    @Override public @NotNull @UnmodifiableView Collection<PlayerClient> targets()
     {
         return KissenCore.getInstance().punishmentSubscriptionRepository().findTargets(linkId()).join();
+    }
+
+    @Override public @NotNull PlayerClient target()
+    {
+        Collection<PlayerClient> targets = targets();
+        for(PlayerClient playerClient : targets())
+        {
+            if(Objects.equals(playerClient.id(), linkId()))
+            {
+                return playerClient;
+            }
+        }
+
+        return targets.stream().findFirst().orElseThrow(() ->
+        {
+            String message = "A punishment without any targets has been found with the link id %s.";
+            return new IllegalStateException(String.format(message, linkId()));
+        });
     }
 
     @Override public @NotNull Actor operator()
@@ -91,11 +108,6 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         }
 
         return actor;
-    }
-
-    public @Nullable UUID rawOperator()
-    {
-        return operator;
     }
 
     @Override public int signature()
@@ -126,5 +138,10 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     @Override
     public @NotNull WritableTemporalObject temporal() {
         return temporalObject;
+    }
+
+    public @Nullable UUID rawOperator()
+    {
+        return operator;
     }
 }
