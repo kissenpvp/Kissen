@@ -8,6 +8,7 @@ import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
+import net.kissenpvp.network.actor.InternalPlayerRepository;
 import net.kissenpvp.punishment.InternalPunishmentSubscription;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;
 import net.kyori.adventure.text.Component;
@@ -182,7 +183,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PlayerClient>> findTargets(@NotNull UUID linkId)
     {
         String sql = "SELECT id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE link_id = ?;";
-        InternalRepository<UUID, PlayerClient> playerRepository = (InternalRepository<UUID, PlayerClient>) KissenCore.getInstance().playerRepository();
+        InternalRepository<UUID, PlayerClient> playerRepository = (InternalPlayerRepository) KissenCore.getInstance().playerRepository();
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(linkId));
