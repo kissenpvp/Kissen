@@ -120,6 +120,10 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         {
             setDual(statement, 3, 6, Types.BIGINT, definedTimeSpan.get(ChronoUnit.MILLIS));
         }
+        else
+        {
+            setDual(statement, 3, 6, Types.BIGINT, null);
+        }
 
         setDual(statement, 4, 7, Types.VARCHAR, message.orElse(null));
 

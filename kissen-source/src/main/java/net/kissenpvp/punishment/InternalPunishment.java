@@ -20,11 +20,18 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
 
     public InternalPunishment(int id, @NotNull PunishmentType punishmentType, @NotNull TimeSpan timeSpan)
     {
+        this(id, punishmentType, timeSpan, null);
+    }
+
+    public InternalPunishment(int id, @NotNull PunishmentType punishmentType, @NotNull TimeSpan timeSpan, @Nullable Component defaultMessage)
+    {
         Objects.requireNonNull(punishmentType, "PunishmentType cannot be null.");
+        Objects.requireNonNull(timeSpan, "TimeSpan cannot be null.");
 
         this.id = id;
         this.punishmentType = punishmentType;
         this.timeSpan = timeSpan;
+        this.defaultMessage = defaultMessage;
 
         overrideSignature();
     }
