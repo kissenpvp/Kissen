@@ -67,7 +67,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         UUID linkId = UUID.fromString(resultSet.getString("link_id"));
         UUID operatorId = convertSafely(UUID::fromString, resultSet.getString("operator_id"));
 
-        Instant start = resultSet.getDate("start_time").toInstant(); // expected to be not null
+        Instant start = Instant.ofEpochMilli(resultSet.getDate("start_time").getTime()); // expected to be not null
 
         Instant expiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate("expiry"));
         Instant expectedExpiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate("expected_expiry"));
