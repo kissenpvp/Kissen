@@ -18,7 +18,7 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
     private TimeSpan timeSpan;
     private @Nullable Component defaultMessage;
 
-    public InternalPunishment(int id, @NotNull PunishmentType punishmentType, @Nullable TimeSpan timeSpan)
+    public InternalPunishment(int id, @NotNull PunishmentType punishmentType, @NotNull TimeSpan timeSpan)
     {
         Objects.requireNonNull(punishmentType, "PunishmentType cannot be null.");
 
