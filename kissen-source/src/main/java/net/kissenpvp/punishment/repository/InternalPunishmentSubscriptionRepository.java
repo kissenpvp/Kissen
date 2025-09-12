@@ -65,7 +65,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
         int parentId = resultSet.getInt("parent_id");
         UUID linkId = UUID.fromString(resultSet.getString("link_id"));
-        UUID operatorId = convertSafely(UUID::fromString, resultSet.getString("operator"));
+        UUID operatorId = convertSafely(UUID::fromString, resultSet.getString("operator_id"));
 
         Instant start = resultSet.getDate("start_time").toInstant(); // expected to be not null
 
