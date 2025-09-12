@@ -69,8 +69,8 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
 
         Instant start = resultSet.getDate("start_time").toInstant(); // expected to be not null
 
-        Instant expiry = convertSafely(Date::toInstant, resultSet.getDate("expiry"));
-        Instant expectedExpiry = convertSafely(Date::toInstant, resultSet.getDate("expected_expiry"));
+        Instant expiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate("expiry"));
+        Instant expectedExpiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate("expected_expiry"));
 
         WritableTemporalObject temporal = new InternalWritableTemporalObject(start, expiry, expectedExpiry);
 
