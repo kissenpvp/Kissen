@@ -220,4 +220,45 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
             }
         }))));
     }
+
+    @Override
+    public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PunishmentSubscription>> findSubscriptions(@NotNull UUID linkId)
+    {
+        String sql = "SELECT * FROM ksvp_punishment_subscription WHERE link_id = ?;";
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        {
+            statement.setString(1, String.valueOf(linkId));
+
+            Collection<PunishmentSubscription> subscriptions = new HashSet<>();
+
+            try (ResultSet resultSet = statement.executeQuery())
+            {
+                while(resultSet.next())
+                {
+                    subscriptions.add(toEntity(resultSet));
+                }
+                return Collections.unmodifiableCollection(subscriptions);
+            }
+        }))));
+    }
+
+    @Override
+    public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PunishmentSubscription>> findSubscriptionsByUserId(@NotNull UUID userId)
+    {
+        String sql = "SELECT ps.* FROM ksvp_punishment_subscription ps JOIN ksvp_player p ON ps.link_id = p.link_id WHERE p.id = %s;";
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        {
+            statement.setString(1, String.valueOf(userId));
+
+            Collection<PunishmentSubscription> subscriptions = new HashSet<>();
+            try (ResultSet resultSet = statement.executeQuery())
+            {
+                while(resultSet.next())
+                {
+                    subscriptions.add(toEntity(resultSet));
+                }
+                return Collections.unmodifiableCollection(subscriptions);
+            }
+        }))));
+    }
 }
