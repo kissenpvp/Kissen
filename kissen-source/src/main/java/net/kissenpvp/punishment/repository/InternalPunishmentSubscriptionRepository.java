@@ -8,6 +8,7 @@ import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
+import net.kissenpvp.database.QueryExecutor;
 import net.kissenpvp.network.actor.InternalPlayerRepository;
 import net.kissenpvp.punishment.InternalPunishmentSubscription;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;
@@ -225,30 +226,21 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PunishmentSubscription>> findSubscriptions(@NotNull UUID linkId)
     {
         String sql = "SELECT * FROM ksvp_punishment_subscription WHERE link_id = ?;";
-        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
-        {
-            statement.setString(1, String.valueOf(linkId));
-
-            Collection<PunishmentSubscription> subscriptions = new HashSet<>();
-
-            try (ResultSet resultSet = statement.executeQuery())
-            {
-                while(resultSet.next())
-                {
-                    subscriptions.add(toEntity(resultSet));
-                }
-                return Collections.unmodifiableCollection(subscriptions);
-            }
-        }))));
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, retrieveSubscriptions(linkId))));
     }
 
     @Override
     public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PunishmentSubscription>> findSubscriptionsByUserId(@NotNull UUID userId)
     {
-        String sql = "SELECT ps.* FROM ksvp_punishment_subscription ps JOIN ksvp_player p ON ps.link_id = p.link_id WHERE p.id = %s;";
-        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        String sql = "SELECT ps.* FROM ksvp_punishment_subscription ps JOIN ksvp_player p ON ps.link_id = p.link_id WHERE p.id = ?;";
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, retrieveSubscriptions(userId))));
+    }
+
+    private @NotNull QueryExecutor<Collection<PunishmentSubscription>> retrieveSubscriptions(UUID uuid)
+    {
+        return (statement ->
         {
-            statement.setString(1, String.valueOf(userId));
+            statement.setString(1, String.valueOf(uuid));
 
             Collection<PunishmentSubscription> subscriptions = new HashSet<>();
             try (ResultSet resultSet = statement.executeQuery())
@@ -259,6 +251,6 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
                 }
                 return Collections.unmodifiableCollection(subscriptions);
             }
-        }))));
+        });
     }
 }
