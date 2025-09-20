@@ -123,7 +123,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         statement.setString(1, subscription.id());
 
         Date date = Date.valueOf(subscription.temporal().start().atZone(ZoneId.systemDefault()).toLocalDate());
-        Long expiry = subscription.temporal().expiry().map(Instant::getEpochSecond).orElse(null);
+        Date expiry = subscription.temporal().expiry().map(InternalPunishmentSubscriptionRepository::toDate).orElse(null);
         Optional<String> message = subscription.message().map(JSONComponentSerializer.json()::serialize);
 
         setDual(statement, 2, 10, Types.VARCHAR, String.valueOf(subscription.linkId()));
@@ -134,12 +134,17 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
 
         statement.setDate(6, date);
 
-        setDual(statement, 7, 12, Types.BIGINT, expiry);
+        setDual(statement, 7, 12, Types.DATE, expiry);
         expectedExpiry(statement, expiry); // populates slot 8
         setDual(statement, 9, 13, Types.VARCHAR, message.orElse(null));
 
         overrideSignature(subscription);
         statement.addBatch();
+    }
+
+    private static @NotNull Date toDate(@NotNull Instant instant)
+    {
+        return Date.valueOf(instant.atZone(ZoneId.systemDefault()).toLocalDate());
     }
 
     private static void operator(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException
@@ -167,17 +172,17 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
      * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
      * @throws NullPointerException If the provided {@link PreparedStatement} is null.
      */
-    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable Long expiry) throws SQLException, NullPointerException
+    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable Date expiry) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
 
         if (Objects.nonNull(expiry))
         {
-            statement.setLong(8, expiry);
+            statement.setDate(8, expiry);
             return;
         }
 
-        statement.setNull(8, Types.BIGINT);
+        statement.setNull(8, Types.DATE);
     }
 
     @Override
