@@ -37,6 +37,11 @@ public record InternalTemporalObject(@NotNull Instant start, @Nullable Instant e
         return Optional.ofNullable(expiryTime());
     }
 
+    @Override public boolean hasExpiry()
+    {
+        return expiry().isPresent() && expiry().get().isAfter(Instant.now());
+    }
+
     @Override public @NotNull Instant start()
     {
         return start;

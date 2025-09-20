@@ -28,6 +28,8 @@ public interface TemporalObject
      */
     @NotNull Optional<Instant> expiry();
 
+    boolean hasExpiry();
+
     /**
      * Retrieves the start time of the temporal object.
      * <p>
