@@ -88,12 +88,12 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
             {
                 statement.setString(1, subscription.id());
 
-                Date date = Date.valueOf(subscription.temporal().start().atZone(ZoneId.systemDefault()).toLocalDate());
-                Long expiry = subscription.temporal().expiry().map(Instant::getEpochSecond).orElse(null);
+                Date start = toDate(subscription.temporal().start());
+                Date expiry = subscription.temporal().expiry().map(InternalRankSubscriptionRepository::toDate).orElse(null);
 
                 setDual(statement, 2, 7, Types.VARCHAR, subscription.parentId());
                 setDual(statement, 3, 8, Types.VARCHAR, String.valueOf(subscription.player().id()));
-                statement.setDate(4, date);
+                statement.setDate(4, start);
                 setDual(statement, 5, 9, Types.BIGINT, expiry);
                 expectedExpiry(statement, expiry);
 
@@ -103,6 +103,11 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
             statement.executeBatch();
             return null;
         })));
+    }
+
+    private static @NotNull Date toDate(@NotNull Instant instant)
+    {
+        return Date.valueOf(instant.atZone(ZoneId.systemDefault()).toLocalDate());
     }
 
     /**
@@ -118,14 +123,14 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
      * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
      * @throws NullPointerException If the provided {@link PreparedStatement} is null.
      */
-    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable Long expiry) throws SQLException, NullPointerException {
+    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable Date expiry) throws SQLException, NullPointerException {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
 
         if (Objects.nonNull(expiry)) {
-            statement.setLong(6, expiry);
+            statement.setDate(6, expiry);
             return;
         }
 
-        statement.setNull(6, Types.BIGINT);
+        statement.setNull(6, Types.DATE);
     }
 }
