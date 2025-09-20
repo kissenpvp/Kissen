@@ -65,7 +65,7 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
         return Optional.ofNullable(expiry);
     }
 
-    @Override public boolean hasExpiry()
+    @Override public boolean expired()
     {
         return expiry().isPresent() && expiry().get().isAfter(Instant.now());
     }
