@@ -20,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.sql.*;
-import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -123,8 +122,8 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
 
         statement.setString(1, subscription.id());
 
-        LocalDateTime date = toDate(subscription.temporal().start());
-        LocalDateTime expiry = subscription.temporal().expiry().map(InternalPunishmentSubscriptionRepository::toDate).orElse(null);
+        LocalDateTime date = toDateTime(subscription.temporal().start());
+        LocalDateTime expiry = subscription.temporal().expiry().map(InternalPunishmentSubscriptionRepository::toDateTime).orElse(null);
         Optional<String> message = subscription.message().map(JSONComponentSerializer.json()::serialize);
 
         setDual(statement, 2, 10, Types.VARCHAR, String.valueOf(subscription.linkId()));
@@ -137,7 +136,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         // https://stackoverflow.com/a/73967623
         statement.setObject(6, date, Types.TIMESTAMP);
 
-        setDual(statement, 7, 12, Types.DATE, expiry);
+        setDual(statement, 7, 12, Types.TIMESTAMP, expiry);
         expectedExpiry(statement, expiry); // populates slot 8
         setDual(statement, 9, 13, Types.VARCHAR, message.orElse(null));
 
@@ -145,7 +144,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         statement.addBatch();
     }
 
-    private static @NotNull LocalDateTime toDate(@NotNull Instant instant)
+    private static @NotNull LocalDateTime toDateTime(@NotNull Instant instant)
     {
         return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
     }

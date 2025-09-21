@@ -137,6 +137,6 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
             return;
         }
 
-        statement.setNull(6, Types.DATE);
+        statement.setNull(6, Types.TIMESTAMP);
     }
 }
