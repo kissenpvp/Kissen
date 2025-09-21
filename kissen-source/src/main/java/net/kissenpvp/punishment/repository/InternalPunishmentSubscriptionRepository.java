@@ -22,6 +22,7 @@ import org.jetbrains.annotations.UnmodifiableView;
 import java.sql.*;
 import java.sql.Date;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -122,8 +123,8 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
 
         statement.setString(1, subscription.id());
 
-        Date date = Date.valueOf(subscription.temporal().start().atZone(ZoneId.systemDefault()).toLocalDate());
-        Date expiry = subscription.temporal().expiry().map(InternalPunishmentSubscriptionRepository::toDate).orElse(null);
+        LocalDateTime date = toDate(subscription.temporal().start());
+        LocalDateTime expiry = subscription.temporal().expiry().map(InternalPunishmentSubscriptionRepository::toDate).orElse(null);
         Optional<String> message = subscription.message().map(JSONComponentSerializer.json()::serialize);
 
         setDual(statement, 2, 10, Types.VARCHAR, String.valueOf(subscription.linkId()));
@@ -132,7 +133,9 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
 
         operator(statement, subscription); // populates slot 5
 
-        statement.setDate(6, date);
+        // we cannot use setTimestamp because the java.sql.TimeStamp class is very old
+        // https://stackoverflow.com/a/73967623
+        statement.setObject(6, date, Types.TIMESTAMP);
 
         setDual(statement, 7, 12, Types.DATE, expiry);
         expectedExpiry(statement, expiry); // populates slot 8
@@ -142,9 +145,9 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         statement.addBatch();
     }
 
-    private static @NotNull Date toDate(@NotNull Instant instant)
+    private static @NotNull LocalDateTime toDate(@NotNull Instant instant)
     {
-        return Date.valueOf(instant.atZone(ZoneId.systemDefault()).toLocalDate());
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
     }
 
     private static void operator(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException
@@ -172,17 +175,19 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
      * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
      * @throws NullPointerException If the provided {@link PreparedStatement} is null.
      */
-    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable Date expiry) throws SQLException, NullPointerException
+    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable LocalDateTime expiry) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
 
         if (Objects.nonNull(expiry))
         {
-            statement.setDate(8, expiry);
+            // we cannot use setTimestamp because the java.sql.TimeStamp class is very old
+            // https://stackoverflow.com/a/73967623
+            statement.setObject(8, expiry, Types.TIMESTAMP);
             return;
         }
 
-        statement.setNull(8, Types.DATE);
+        statement.setNull(8, Types.TIMESTAMP);
     }
 
     @Override

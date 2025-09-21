@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.sql.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Objects;
 import java.util.UUID;
@@ -88,12 +89,15 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
             {
                 statement.setString(1, subscription.id());
 
-                Date start = toDate(subscription.temporal().start());
-                Date expiry = subscription.temporal().expiry().map(InternalRankSubscriptionRepository::toDate).orElse(null);
+                LocalDateTime start = toDateTime(subscription.temporal().start());
+                LocalDateTime expiry = subscription.temporal().expiry().map(InternalRankSubscriptionRepository::toDateTime).orElse(null);
 
                 setDual(statement, 2, 7, Types.VARCHAR, subscription.parentId());
                 setDual(statement, 3, 8, Types.VARCHAR, String.valueOf(subscription.player().id()));
-                statement.setDate(4, start);
+
+                // we cannot use setTimestamp because the java.sql.TimeStamp class is very old
+                // https://stackoverflow.com/a/73967623
+                statement.setObject(4, start, Types.TIMESTAMP);
                 setDual(statement, 5, 9, Types.BIGINT, expiry);
                 expectedExpiry(statement, expiry);
 
@@ -105,9 +109,9 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         })));
     }
 
-    private static @NotNull Date toDate(@NotNull Instant instant)
+    private static @NotNull LocalDateTime toDateTime(@NotNull Instant instant)
     {
-        return Date.valueOf(instant.atZone(ZoneId.systemDefault()).toLocalDate());
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
     }
 
     /**
@@ -123,11 +127,13 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
      * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
      * @throws NullPointerException If the provided {@link PreparedStatement} is null.
      */
-    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable Date expiry) throws SQLException, NullPointerException {
+    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable LocalDateTime expiry) throws SQLException, NullPointerException {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
 
         if (Objects.nonNull(expiry)) {
-            statement.setDate(6, expiry);
+            // we cannot use setTimestamp because the java.sql.TimeStamp class is very old
+            // https://stackoverflow.com/a/73967623
+            statement.setObject(6, expiry, Types.TIMESTAMP);
             return;
         }
 
