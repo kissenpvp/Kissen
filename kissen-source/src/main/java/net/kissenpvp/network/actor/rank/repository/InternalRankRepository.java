@@ -7,6 +7,7 @@ import net.kissenpvp.network.actor.rank.InternalRank;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -25,18 +26,9 @@ import java.util.concurrent.CompletableFuture;
  */
 public class InternalRankRepository extends InternalCachedRepository<String, Rank>
 {
-    /**
-     * Constructs an {@code InternalRankRepository} instance with the specified database connection.
-     * This repository is responsible for managing the persistence and retrieval of rank-related data
-     * from the underlying database. It initializes the repository with predefined configurations
-     * for table name and query.
-     *
-     * @param connection the database connection to be used for executing queries, must not be null
-     * @throws NullPointerException if the provided connection is null
-     */
-    public InternalRankRepository(@NotNull Connection connection) throws NullPointerException
+    public InternalRankRepository(@NotNull DataSource dataSource) throws NullPointerException
     {
-        super(connection);
+        super(dataSource);
     }
 
     @Override protected @NotNull CompletableFuture<Optional<Rank>> findUncached(@NotNull String id) throws NullPointerException

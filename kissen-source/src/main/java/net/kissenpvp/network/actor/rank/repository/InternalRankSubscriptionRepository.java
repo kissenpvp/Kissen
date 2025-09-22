@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -32,18 +33,9 @@ import java.util.concurrent.CompletableFuture;
  */
 public class InternalRankSubscriptionRepository extends InternalRepository<String, RankSubscription> implements Repository<String, RankSubscription>
 {
-    /**
-     * Constructs an {@code InternalRankSubscriptionRepository} instance with the specified database connection.
-     * This repository is responsible for managing the persistence and retrieval of rank subscription-related data
-     * from the underlying database. It initializes the repository with predefined configurations for table name
-     * and query.
-     *
-     * @param connection the database connection to be used for executing queries, must not be null
-     * @throws NullPointerException if the provided connection is null
-     */
-    public InternalRankSubscriptionRepository(@NotNull Connection connection) throws NullPointerException
+    public InternalRankSubscriptionRepository(@NotNull DataSource dataSource) throws NullPointerException
     {
-        super(connection);
+        super(dataSource);
     }
 
     private static @NotNull LocalDateTime toDateTime(@NotNull Instant instant)
