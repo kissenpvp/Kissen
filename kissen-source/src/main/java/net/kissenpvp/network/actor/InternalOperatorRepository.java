@@ -5,6 +5,7 @@ import net.kissenpvp.database.InternalRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,19 +29,9 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class InternalOperatorRepository extends InternalRepository<UUID, OperatorInfo>
 {
-    /**
-     * Constructs a new {@code InternalOperatorRepository} instance with the specified table name and database
-     * connection.
-     * This class provides repository functionalities for managing operator information in a specified database table.
-     *
-     * @param connection the database connection to use; must not be null.
-     * @throws NullPointerException     if the {@code table} or {@code connection} is {@code null}.
-     * @throws IllegalArgumentException if the {@code table} name is blank, too long, or does not match the required
-     *                                  pattern.
-     */
-    public InternalOperatorRepository(@NotNull Connection connection) throws NullPointerException
+    public InternalOperatorRepository(@NotNull DataSource dataSource) throws NullPointerException
     {
-        super(connection);
+        super(dataSource);
     }
 
     @Override public @NotNull CompletableFuture<@NotNull Optional<OperatorInfo>> find(@NotNull UUID id) throws NullPointerException

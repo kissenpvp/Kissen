@@ -9,6 +9,7 @@ import org.jetbrains.annotations.UnmodifiableView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,9 +33,9 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
     private final static Logger log = LoggerFactory.getLogger(InternalCachedRepository.class);
     private final Map<P, T> cachedEntries;
 
-    public InternalCachedRepository(@NotNull Connection connection) throws NullPointerException
+    public InternalCachedRepository(@NotNull DataSource dataSource) throws NullPointerException
     {
-        super(connection);
+        super(dataSource);
         this.cachedEntries = new HashMap<>();
     }
 

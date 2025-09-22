@@ -28,6 +28,9 @@ subprojects {
         annotationProcessor(annotations)
         testCompileOnly(annotations)
 
+        // database provider
+        implementation("com.zaxxer:HikariCP:7.0.2")
+
         // SLF4j
         compileOnly("org.slf4j:slf4j-api:2.0.17")
 

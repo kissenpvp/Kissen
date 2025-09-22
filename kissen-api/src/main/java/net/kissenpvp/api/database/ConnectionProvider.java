@@ -1,5 +1,6 @@
 package net.kissenpvp.api.database;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
@@ -23,7 +24,7 @@ public interface ConnectionProvider
      * @return a {@link Optional} containing the active {@link Connection} if available, or an empty optional if no
      * connection is present
      */
-    @NotNull Optional<Connection> connection();
+    @NotNull Optional<HikariDataSource> dataSource();
 
 
     /**

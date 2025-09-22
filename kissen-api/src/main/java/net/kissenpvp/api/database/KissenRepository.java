@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
+import javax.sql.DataSource;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -16,13 +16,13 @@ import java.util.concurrent.CompletableFuture;
 public abstract class KissenRepository<P, T extends PersistableEntity<P>> implements Repository<P, T>
 {
     private static final Logger log = LoggerFactory.getLogger(KissenRepository.class);
-    private final Connection connection;
+    private final DataSource dataSource;
 
-    public KissenRepository(@NotNull Connection connection) throws NullPointerException
+    public KissenRepository(@NotNull DataSource dataSource) throws NullPointerException
     {
-        Objects.requireNonNull(connection, "The database connection cannot be null.");
+        Objects.requireNonNull(dataSource, "The dataSource cannot be null.");
 
-        this.connection = connection;
+        this.dataSource = dataSource;
     }
 
     @Override public @NotNull CompletableFuture<Void> save(@NotNull T id) throws NullPointerException
@@ -92,9 +92,14 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> implem
         Objects.requireNonNull(sql, "The SQL string cannot be null.");
 
         //noinspection SqlSourceToSinkFlow
-        try (PreparedStatement statement = this.connection.prepareStatement(sql))
+        try (PreparedStatement statement = dataSource().getConnection().prepareStatement(sql))
         {
             return queryExecutor.executeQuery(statement);
         }
+    }
+
+    protected DataSource dataSource()
+    {
+        return dataSource;
     }
 }

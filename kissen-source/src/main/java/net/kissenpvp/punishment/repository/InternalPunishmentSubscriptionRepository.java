@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -39,17 +40,9 @@ import java.util.concurrent.CompletableFuture;
  */
 public class InternalPunishmentSubscriptionRepository extends InternalRepository<String, PunishmentSubscription> implements PunishmentSubscriptionRepository
 {
-    /**
-     * Constructs a new instance of PunishmentSubscriptionRepository.
-     * This initializes the repository with a predefined table name, connection,
-     * and query string to fetch punishment subscription data by ID.
-     *
-     * @param connection The database connection to be used by this repository. Must not be null.
-     * @throws NullPointerException If the provided connection is null.
-     */
-    public InternalPunishmentSubscriptionRepository(@NotNull Connection connection) throws NullPointerException
+    public InternalPunishmentSubscriptionRepository(@NotNull DataSource dataSource) throws NullPointerException
     {
-        super(connection);
+        super(dataSource);
     }
 
     @Override

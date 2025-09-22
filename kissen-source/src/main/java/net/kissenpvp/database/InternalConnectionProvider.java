@@ -1,30 +1,22 @@
 package net.kissenpvp.database;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import net.kissenpvp.api.database.ConnectionProvider;
 import org.flywaydb.core.Flyway;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import javax.sql.DataSource;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.logging.Logger;
 
-public class InternalConnectionProvider implements ConnectionProvider, DataSource
+public class InternalConnectionProvider implements ConnectionProvider
 {
-    private PrintWriter logWriter;
-
-    private Connection connection;
     private Flyway flyway;
-    private String url;
 
-    private int loginTimeout;
+    private HikariConfig config;
+    private HikariDataSource dataSource;
 
     public InternalConnectionProvider() throws MissingResourceException
     {
@@ -38,39 +30,36 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
         }
     }
 
-    @Override public @NotNull Optional<Connection> connection()
+    @Override public @NotNull Optional<HikariDataSource> dataSource()
     {
-        return Optional.ofNullable(connection);
+        return Optional.ofNullable(dataSource);
     }
 
     @Override
-    public void connect(
-            @NotNull String url,
-            @NotNull String username,
-            @NotNull String password
-    ) throws IllegalStateException, SQLException
+    public void connect(@NotNull String url, @NotNull String username, @NotNull String password) throws IllegalStateException, SQLException
     {
         connect(url, username, password, true);
     }
 
     @Override
-    public void connect(
-            @NotNull String url, @NotNull String username, @NotNull String password,
-            boolean generateSchema
-    ) throws IllegalStateException, SQLException
+    public void connect(@NotNull String url, @NotNull String username, @NotNull String password, boolean generateSchema) throws IllegalStateException, SQLException
     {
         Objects.requireNonNull(url, "Connection string must not be null");
 
-        if (Objects.nonNull(connection))
+        if (Objects.nonNull(dataSource))
         {
             throw new IllegalStateException("The connection has already been opened.");
         }
 
-        this.url = url;
-        connection = DriverManager.getConnection(url, username, password);
+        config = new HikariConfig();
+        config.setJdbcUrl(url);
+        config.setUsername(username);
+        config.setPassword(password);
+        config.setMaximumPoolSize(10);
+        dataSource = new HikariDataSource(config);
 
         String location = "classpath:migrations/mariadb";
-        flyway = Flyway.configure().dataSource(url, username, password).locations(location).load();
+        flyway = Flyway.configure().dataSource(dataSource).locations(location).load();
 
         if (generateSchema)
         {
@@ -90,90 +79,21 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
 
     @Override public void disconnect() throws IllegalStateException
     {
-        if (Objects.isNull(connection))
+        if (Objects.isNull(dataSource))
         {
             throw new IllegalStateException("The connection has not been opened yet.");
         }
+
+        dataSource.close();
     }
 
     private boolean isConnected()
     {
-        try
+        if (Objects.nonNull(dataSource))
         {
-            if (Objects.nonNull(connection))
-            {
-                return !connection.isClosed() && connection.isValid(loginTimeout);
-            }
+            return !dataSource.isClosed();
         }
-        catch (SQLException ignored) { }
 
         return false;
-    }
-
-    @Override public @NotNull Connection getConnection() throws SQLException
-    {
-        return connection;
-    }
-
-    @Override public @NotNull Connection getConnection(
-            @NotNull String username,
-            @NotNull String password
-    ) throws SQLException
-    {
-        if (Objects.isNull(url))
-        {
-            throw new SQLException("The url has not yet been set.");
-        }
-
-        connect(url, username, password);
-        return connection;
-    }
-
-    @Override public @Nullable PrintWriter getLogWriter() throws SQLException
-    {
-        return logWriter;
-    }
-
-    @Override public void setLogWriter(@Nullable PrintWriter out) throws SQLException
-    {
-        logWriter = out;
-    }
-
-    @Override public int getLoginTimeout()
-    {
-        return this.loginTimeout;
-    }
-
-    @Override public void setLoginTimeout(int seconds) throws SQLException
-    {
-        if (seconds < 0)
-        {
-            throw new SQLException("Login timeout must be greater than or equal to 0.");
-        }
-        loginTimeout = seconds;
-        DriverManager.setLoginTimeout(seconds);
-    }
-
-    @Override public Logger getParentLogger() throws SQLFeatureNotSupportedException
-    {
-        throw new SQLFeatureNotSupportedException("java.util.logging is not supported by this DataSource.");
-    }
-
-    @Override public <T> T unwrap(@NotNull Class<T> iface) throws SQLException, NullPointerException
-    {
-        Objects.requireNonNull(iface, "The interface cannot be null.");
-
-        if (iface.isInstance(this))
-        {
-            return iface.cast(this);
-        }
-        throw new SQLException("No wrapper for " + iface.getName());
-    }
-
-    @Override public boolean isWrapperFor(@NotNull Class<?> iface) throws NullPointerException
-    {
-        Objects.requireNonNull(iface, "The interface cannot be null.");
-
-        return iface.isInstance(this);
     }
 }

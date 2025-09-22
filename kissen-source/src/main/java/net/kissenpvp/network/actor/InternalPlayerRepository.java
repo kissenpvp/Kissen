@@ -6,6 +6,7 @@ import net.kissenpvp.database.InternalCachedRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.sql.Date;
 import java.time.ZoneId;
@@ -39,19 +40,10 @@ import java.util.stream.Stream;
  */
 public abstract class InternalPlayerRepository extends InternalCachedRepository<UUID, PlayerClient> implements PlayerRepository
 {
-    /**
-     * Constructs an instance of {@code InternalPlayerRepository}, providing a mechanism for
-     * managing and persisting {@link PlayerClient} instances in the `ksvp_player_data` table.
-     * The repository uses SQL queries to perform data operations on the associated database.
-     *
-     * @param connection A non-null {@link Connection} to the database. This connection must be
-     *                   valid and active to facilitate SQL operations. If {@code connection} is null,
-     *                   a {@link NullPointerException} is thrown.
-     * @throws NullPointerException Thrown if the provided {@code connection} is null.
-     */
-    public InternalPlayerRepository(@NotNull Connection connection) throws NullPointerException
+
+    public InternalPlayerRepository(@NotNull DataSource dataSource) throws NullPointerException
     {
-        super(connection);
+        super(dataSource);
 
     }
 

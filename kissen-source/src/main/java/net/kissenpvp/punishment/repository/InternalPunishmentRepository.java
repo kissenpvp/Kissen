@@ -10,6 +10,7 @@ import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
@@ -34,15 +35,10 @@ import java.util.concurrent.CompletableFuture;
  */
 public class InternalPunishmentRepository extends InternalCachedRepository<Integer, Punishment>
 {
-    /**
-     * Constructs a new {@code PunishmentRepository} instance, initializing it with the specified database connection.
-     *
-     * @param connection The {@link Connection} to the database. Must not be {@code null}.
-     * @throws NullPointerException If the provided {@code connection} is {@code null}.
-     */
-    public InternalPunishmentRepository(@NotNull Connection connection) throws NullPointerException
+
+    public InternalPunishmentRepository(@NotNull DataSource dataSource) throws NullPointerException
     {
-        super(connection);
+        super(dataSource);
     }
 
     @Override protected @NotNull CompletableFuture<Optional<Punishment>> findUncached(@NotNull Integer id) throws NullPointerException

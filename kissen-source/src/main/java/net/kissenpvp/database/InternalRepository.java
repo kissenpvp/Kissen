@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 import java.util.function.Function;
@@ -21,10 +22,9 @@ import java.util.function.Function;
  */
 public abstract class InternalRepository<P, T extends PersistableEntity<P>> extends KissenRepository<P, T>
 {
-
-    public InternalRepository(@NotNull Connection connection) throws NullPointerException
+    public InternalRepository(@NotNull DataSource dataSource) throws NullPointerException
     {
-        super(connection);
+        super(dataSource);
     }
 
     /**
