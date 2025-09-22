@@ -6,6 +6,7 @@ import net.kissenpvp.api.database.ConnectionProvider;
 import org.flywaydb.core.Flyway;
 import org.jspecify.annotations.NonNull;
 
+import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.MissingResourceException;
 import java.util.Objects;
@@ -30,7 +31,7 @@ public class InternalConnectionProvider implements ConnectionProvider
         }
     }
 
-    @Override public @NonNull Optional<HikariDataSource> dataSource()
+    @Override public @NonNull Optional<DataSource> dataSource()
     {
         return Optional.ofNullable(dataSource);
     }

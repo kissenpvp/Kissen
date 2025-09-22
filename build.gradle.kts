@@ -25,7 +25,6 @@ subprojects {
         annotationProcessor("org.jspecify:jspecify:1.0.0")
 
         // Database
-        implementation("com.zaxxer:HikariCP:7.0.2")
         implementation("org.flywaydb:flyway-core:11.11.0")
         implementation("org.flywaydb:flyway-mysql:11.11.0")
 
