@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -91,10 +92,12 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> implem
     {
         Objects.requireNonNull(sql, "The SQL string cannot be null.");
 
-        //noinspection SqlSourceToSinkFlow
-        try (PreparedStatement statement = dataSource().getConnection().prepareStatement(sql))
-        {
-            return queryExecutor.executeQuery(statement);
+        try (Connection connection = dataSource().getConnection()) {
+            //noinspection SqlSourceToSinkFlow
+            try (PreparedStatement statement = connection.prepareStatement(sql))
+            {
+                return queryExecutor.executeQuery(statement);
+            }
         }
     }
 
