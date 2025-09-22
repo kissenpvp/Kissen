@@ -1,13 +1,11 @@
 package net.kissenpvp.database;
 
+import net.kissenpvp.api.database.KissenRepository;
 import net.kissenpvp.api.database.PersistableEntity;
-import net.kissenpvp.api.database.Repository;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,11 +25,9 @@ import java.util.stream.StreamSupport;
  * @param <P> the type of the primary key
  * @param <T> the type of the entity to be persisted, which must extend {@link PersistableEntity}
  */
-public abstract class InternalRepository<P, T extends PersistableEntity<P>> implements Repository<P, T>
+public abstract class InternalRepository<P, T extends PersistableEntity<P>> extends KissenRepository<P, T>
 {
-    private static final Logger log = LoggerFactory.getLogger(InternalRepository.class);
-    private final Connection connection;
-    private final String table, findQuery, findAllQuery, findAllByIdQuery;
+    private final String findQuery, findAllQuery, findAllByIdQuery;
 
     @Contract(value = "_, null -> null; _, !null -> !null", pure = true)
     protected static <X, Y> @Nullable Y convertSafely(@NotNull Function<X, Y> function, @Nullable X value) throws NullPointerException {
@@ -46,8 +42,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
     
     public InternalRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery, @NotNull String findAllQuery, @NotNull String findAllByIdQuery) throws NullPointerException
     {
-        Objects.requireNonNull(table, "The table name cannot be null.");
-        Objects.requireNonNull(connection, "The database connection cannot be null.");
+        super(table, connection);
         Objects.requireNonNull(findQuery, "The find query cannot be null.");
 
         if (table.isBlank() || table.length() > 64 || !table.matches("^[a-zA-Z_][a-zA-Z0-9_$]{0,63}$"))
@@ -56,8 +51,6 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
             throw new IllegalArgumentException(String.format(message, table));
         }
 
-        this.table = table;
-        this.connection = connection;
         this.findQuery = findQuery;
         this.findAllQuery = findAllQuery;
         this.findAllByIdQuery = findAllByIdQuery;
@@ -178,11 +171,6 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
         }
     }
 
-    public @NotNull String table()
-    {
-        return table;
-    }
-
     /**
      * Converts a single row of the provided {@code ResultSet} into an entity.
      * This method is expected to be implemented by subclasses to define the mapping logic from the {@code ResultSet}
@@ -229,50 +217,5 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> impl
             data.add(toEntity(resultSet));
         }
         return Collections.unmodifiableList(data);
-    }
-
-    /**
-     * Executes the provided SQL query using the given {@code QueryExecutor}. This method logs any SQL exceptions
-     * encountered during execution and rethrows them as {@link IllegalStateException}.
-     *
-     * @param sql           the SQL query to be executed, cannot be null
-     * @param queryExecutor the executor handling the prepared statement execution cannot be null
-     * @param <X>           the type of result expected from the query execution
-     * @return the result of the query execution as provided by the {@code QueryExecutor}
-     * @throws IllegalStateException if an exception occurs while executing the query
-     * @throws NullPointerException  if the SQL query or the {@code QueryExecutor} is null
-     */
-    protected <X> @Nullable X query(@NotNull String sql, @NotNull QueryExecutor<X> queryExecutor) throws IllegalStateException, NullPointerException
-    {
-        try
-        {
-            return unsafeQuery(sql, queryExecutor);
-        }
-        catch (SQLException sqlException)
-        {
-            log.error("There has been an error while executing the query {}.", sql, sqlException);
-            throw new IllegalStateException(sqlException);
-        }
-    }
-
-    /**
-     * Executes the provided SQL query using the given {@code QueryExecutor}.
-     *
-     * @param sql           the SQL query to be executed, cannot be null
-     * @param queryExecutor the executor handling the prepared statement execution cannot be null
-     * @param <X>           the type of result expected from the query execution
-     * @return the result of the query execution as provided by the {@code QueryExecutor}
-     * @throws SQLException         if an error occurs while executing the SQL query
-     * @throws NullPointerException if the SQL query or the {@code QueryExecutor} is null
-     */
-    protected <X> @Nullable X unsafeQuery(@NotNull String sql, @NotNull QueryExecutor<X> queryExecutor) throws SQLException, NullPointerException
-    {
-        Objects.requireNonNull(sql, "The SQL string cannot be null.");
-
-        //noinspection SqlSourceToSinkFlow
-        try (PreparedStatement statement = this.connection.prepareStatement(sql))
-        {
-            return queryExecutor.executeQuery(statement);
-        }
     }
 }

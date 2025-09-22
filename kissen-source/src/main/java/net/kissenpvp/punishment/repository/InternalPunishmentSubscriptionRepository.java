@@ -8,7 +8,7 @@ import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
-import net.kissenpvp.database.QueryExecutor;
+import net.kissenpvp.api.database.QueryExecutor;
 import net.kissenpvp.network.actor.InternalPlayerRepository;
 import net.kissenpvp.punishment.InternalPunishmentSubscription;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;

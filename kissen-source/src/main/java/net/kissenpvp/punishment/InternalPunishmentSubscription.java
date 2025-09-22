@@ -17,8 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public class InternalPunishmentSubscription extends InternalSubscriptionEntity<String, Integer, Punishment> implements PunishmentSubscription
-{
+public class InternalPunishmentSubscription extends InternalSubscriptionEntity<String, Integer, Punishment> implements PunishmentSubscription {
     private final String id;
     private final UUID linkId;
     private final UUID operator;
@@ -48,8 +47,7 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         Objects.requireNonNull(linkId, "LinkId cannot be null.");
         Objects.requireNonNull(temporalObject, "TimeSpan cannot be null.");
 
-        if (id.length() > 8)
-        {
+        if (id.length() > 8) {
             throw new IllegalArgumentException("Id cannot be longer than 4 characters!");
         }
 
@@ -60,28 +58,26 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         this.message = message;
     }
 
-    @Override public @NotNull String id()
-    {
+    @Override
+    public @NotNull String id() {
         return id;
     }
 
-    @Override public @NotNull UUID linkId()
-    {
+    @Override
+    public @NotNull UUID linkId() {
         return linkId;
     }
 
-    @Override public @NotNull @UnmodifiableView Collection<PlayerClient> targets()
-    {
+    @Override
+    public @NotNull @UnmodifiableView Collection<PlayerClient> targets() {
         return KissenCore.getInstance().punishmentSubscriptionRepository().findTargets(linkId()).join();
     }
 
-    @Override public @NotNull PlayerClient target()
-    {
+    @Override
+    public @NotNull PlayerClient target() {
         Collection<PlayerClient> targets = targets();
-        for(PlayerClient playerClient : targets())
-        {
-            if(Objects.equals(playerClient.id(), linkId()))
-            {
+        for (PlayerClient playerClient : targets()) {
+            if (Objects.equals(playerClient.id(), linkId())) {
                 return playerClient;
             }
         }
@@ -93,16 +89,14 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         });
     }
 
-    @Override public @NotNull Actor operator()
-    {
-        if(Objects.isNull(operator))
-        {
+    @Override
+    public @NotNull Actor operator() {
+        if (Objects.isNull(operator)) {
             return KissenCore.getInstance().console();
         }
 
         Actor actor = KissenCore.getInstance().playerRepository().find(operator).join();
-        if(Objects.isNull(actor))
-        {
+        if (Objects.isNull(actor)) {
             String message = "The player with the id %s was not found in the database but is bound to the punishment subscription %s.";
             throw new IllegalStateException(String.format(message, operator, id()));
         }
@@ -110,28 +104,28 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         return actor;
     }
 
-    @Override public int signature()
-    {
+    @Override
+    public int signature() {
         return Objects.hash(linkId, temporalObject, message);
     }
 
-    @Override public @NotNull Optional<Punishment> parent()
-    {
+    @Override
+    public @NotNull Optional<Punishment> parent() {
         return Optional.ofNullable(KissenCore.getInstance().punishmentRepository().find(parentId()).join());
     }
 
-    @Override public @NotNull Optional<Component> message()
-    {
+    @Override
+    public @NotNull Optional<Component> message() {
         return Optional.ofNullable(message);
     }
 
-    @Override public void message(@Nullable Component component)
-    {
+    @Override
+    public void message(@Nullable Component component) {
         this.message = component;
     }
 
-    @Override public void unsetMessage()
-    {
+    @Override
+    public void unsetMessage() {
         message(null);
     }
 
@@ -140,8 +134,7 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         return temporalObject;
     }
 
-    public @Nullable UUID rawOperator()
-    {
+    public @Nullable UUID rawOperator() {
         return operator;
     }
 }

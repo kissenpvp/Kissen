@@ -1,4 +1,4 @@
-package net.kissenpvp.database;
+package net.kissenpvp.api.database;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
