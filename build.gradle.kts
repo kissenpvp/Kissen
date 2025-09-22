@@ -28,13 +28,15 @@ subprojects {
         annotationProcessor(annotations)
         testCompileOnly(annotations)
 
-        // database provider
+        // Database
         implementation("com.zaxxer:HikariCP:7.0.2")
+        implementation("org.flywaydb:flyway-core:11.11.0")
+        implementation("org.flywaydb:flyway-mysql:11.11.0")
 
         // SLF4j
         compileOnly("org.slf4j:slf4j-api:2.0.17")
 
-        // adventure api
+        // AdventureAPI
         compileOnly(platform("net.kyori:adventure-bom:$adventureVersion"))
         compileOnly("net.kyori:adventure-api")
         compileOnly("net.kyori:adventure-text-serializer-gson:4.22.0")
