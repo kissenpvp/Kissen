@@ -47,8 +47,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         super(
                 "ksvp_rank_subscription",
                 connection,
-                "SELECT player_id, rank_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id " +
-                        "= ?;",
+                "SELECT player_id, rank_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id = ?;",
                 "SELECT * FROM ksvp_rank_subscription;",
                 "SELECT * FROM ksvp_rank_subscription WHERE id IN (%s);"
         );
