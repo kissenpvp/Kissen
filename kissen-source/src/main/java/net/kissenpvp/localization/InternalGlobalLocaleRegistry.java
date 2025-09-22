@@ -51,7 +51,8 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
     }
 
     @Override
-    public @NotNull LocaleRepository localeRepository(@NotNull KissenPlugin plugin) throws NullPointerException, IllegalArgumentException
+    public @NotNull LocaleRepository localeRepository(@NotNull KissenPlugin plugin) throws NullPointerException,
+            IllegalArgumentException
     {
         Objects.requireNonNull(plugin, "plugin cannot be null");
 

@@ -18,4 +18,4 @@ package net.kissenpvp.api.network.actor;
  * @author Ivo Quiring
  */
 public interface ConsoleClient extends Actor, MessageReceiver
-{}
+{ }

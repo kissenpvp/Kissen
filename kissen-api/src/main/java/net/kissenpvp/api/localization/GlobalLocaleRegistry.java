@@ -11,5 +11,6 @@ public interface GlobalLocaleRegistry
      * @param plugin the plugin for which the locale repository is required; must not be null
      * @return a {@link LocaleRepository} instance associated with the provided plugin; never null
      */
-    @NotNull LocaleRepository localeRepository(@NotNull KissenPlugin plugin) throws NullPointerException, IllegalArgumentException;
+    @NotNull LocaleRepository localeRepository(@NotNull KissenPlugin plugin) throws NullPointerException,
+            IllegalArgumentException;
 }

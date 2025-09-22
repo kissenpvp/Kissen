@@ -16,7 +16,6 @@ import java.util.concurrent.CompletableFuture;
  *
  * @param <P> the type representing the identifier of the entities
  * @param <T> the type of the entities being managed, which must extend {@link PersistableEntity}
- *
  * @author Ivo Quiring
  */
 public interface Repository<P, T extends PersistableEntity<P>>
@@ -27,7 +26,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      *
      * @param id the identifier of the entity to find; must not be null
      * @return a {@link CompletableFuture} that completes with the entity of type {@code T},
-     *         or {@code null} if no entity is found; never null
+     * or {@code null} if no entity is found; never null
      * @throws NullPointerException if the provided identifier is null
      */
     @NotNull CompletableFuture<@Nullable T> find(@NotNull P id) throws NullPointerException;
@@ -38,10 +37,10 @@ public interface Repository<P, T extends PersistableEntity<P>>
      *
      * @param id an iterable containing the identifiers of the entities to retrieve; must not be null
      * @return a {@link CompletableFuture} that completes with an unmodifiable view of
-     *         the collection of entities corresponding to the provided identifiers; never null
+     * the collection of entities corresponding to the provided identifiers; never null
      * @throws NullPointerException if the given iterable or any of its elements are null
      */
-    @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id)  throws NullPointerException;
+    @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id) throws NullPointerException;
 
     /**
      * Retrieves all entities from the repository asynchronously.
@@ -49,7 +48,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * the collection cannot be altered after retrieval.
      *
      * @return a {@link CompletableFuture} that completes with an unmodifiable view of
-     *         the collection of all entities in the repository; never null
+     * the collection of all entities in the repository; never null
      */
     @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll();
 
@@ -60,10 +59,10 @@ public interface Repository<P, T extends PersistableEntity<P>>
      *
      * @param id the identifier of the entity to check; must not be null
      * @return a {@link CompletableFuture} that completes with {@code true} if the entity exists,
-     *         or {@code false} otherwise
+     * or {@code false} otherwise
      * @throws NullPointerException if the provided identifier is null
      */
-    @NotNull CompletableFuture<Boolean> has(@NotNull P id)  throws NullPointerException;
+    @NotNull CompletableFuture<Boolean> has(@NotNull P id) throws NullPointerException;
 
     /**
      * Persists the given entity to the underlying storage asynchronously.
@@ -73,7 +72,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * @return a {@link CompletableFuture} that completes with {@code null} when the entity is persisted successfully
      * @throws NullPointerException if the provided entity is null
      */
-    @NotNull CompletableFuture<Void> save(@NotNull T id)  throws NullPointerException;
+    @NotNull CompletableFuture<Void> save(@NotNull T id) throws NullPointerException;
 
     /**
      * Persists all the provided entities to the underlying storage asynchronously.

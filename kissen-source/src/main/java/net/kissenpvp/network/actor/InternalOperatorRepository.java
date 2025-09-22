@@ -28,25 +28,33 @@ import java.util.concurrent.CompletableFuture;
 public abstract class InternalOperatorRepository extends InternalRepository<UUID, OperatorInfo>
 {
     /**
-     * Constructs a new {@code InternalOperatorRepository} instance with the specified table name and database connection.
+     * Constructs a new {@code InternalOperatorRepository} instance with the specified table name and database
+     * connection.
      * This class provides repository functionalities for managing operator information in a specified database table.
      *
      * @param connection the database connection to use; must not be null.
      * @throws NullPointerException     if the {@code table} or {@code connection} is {@code null}.
-     * @throws IllegalArgumentException if the {@code table} name is blank, too long, or does not match the required pattern.
+     * @throws IllegalArgumentException if the {@code table} name is blank, too long, or does not match the required
+     *                                  pattern.
      */
     public InternalOperatorRepository(@NotNull Connection connection) throws NullPointerException
     {
         super("ksvp_operators",
                 connection,
-                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id = ?;",
-                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id;",
-                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id IN (%s);"
+                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators" +
+                        " o JOIN ksvp_player p ON o.id = p.id WHERE o.id = ?;",
+                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators" +
+                        " o JOIN ksvp_player p ON o.id = p.id;",
+                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators" +
+                        " o JOIN ksvp_player p ON o.id = p.id WHERE o.id IN (%s);"
         );
     }
 
     @Override
-    public abstract @NotNull OperatorInfo toEntity(@NotNull UUID id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException;
+    public abstract @NotNull OperatorInfo toEntity(
+            @NotNull UUID id,
+            @NotNull ResultSet resultSet
+    ) throws SQLException, NullPointerException;
 
     @Override
     public @NotNull OperatorInfo toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
@@ -57,7 +65,8 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
     @Override
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<OperatorInfo> id) throws NullPointerException
     {
-        String sql = "INSERT INTO ksvp_operators (id, operator_level, can_bypass_player_limit) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE operator_level = ?, can_bypass_player_limit = ?;";
+        String sql = "INSERT INTO ksvp_operators (id, operator_level, can_bypass_player_limit) VALUES (?, ?, ?) ON " +
+                "DUPLICATE KEY UPDATE operator_level = ?, can_bypass_player_limit = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (OperatorInfo operatorInfo : id)

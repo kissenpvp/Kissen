@@ -16,16 +16,6 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
     private final @Nullable Instant originalExpiry;
     private @Nullable Instant expiry;
 
-    public static @NotNull InternalWritableTemporalObject toTemporal(@NotNull TimeSpan span)
-    {
-        if(span instanceof DefinedTimeSpan definedTimeSpan)
-        {
-            return new InternalWritableTemporalObject(Instant.now().plus(definedTimeSpan));
-        }
-
-        return new InternalWritableTemporalObject();
-    }
-
     public InternalWritableTemporalObject()
     {
         this(null);
@@ -36,13 +26,26 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
         this(Instant.now(), expiry, expiry);
     }
 
-    public InternalWritableTemporalObject(@NotNull Instant start, @Nullable Instant expiry, @Nullable Instant expectedExpiry) throws NullPointerException
+    public InternalWritableTemporalObject(
+            @NotNull Instant start, @Nullable Instant expiry,
+            @Nullable Instant expectedExpiry
+    ) throws NullPointerException
     {
         Objects.requireNonNull(start, "Start must be not null");
 
         this.start = start;
         this.expiry = expiry;
         originalExpiry = expectedExpiry;
+    }
+
+    public static @NotNull InternalWritableTemporalObject toTemporal(@NotNull TimeSpan span)
+    {
+        if (span instanceof DefinedTimeSpan definedTimeSpan)
+        {
+            return new InternalWritableTemporalObject(Instant.now().plus(definedTimeSpan));
+        }
+
+        return new InternalWritableTemporalObject();
     }
 
     @Override public void expire()

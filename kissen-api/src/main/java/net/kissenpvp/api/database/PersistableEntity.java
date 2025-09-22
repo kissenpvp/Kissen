@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
  * the entity have yet to be persisted.
  *
  * @param <P> the type of the identifier used for unique identification of the entity
- *
  * @author Ivo Quiring
  */
 public interface PersistableEntity<P>

@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.sql.DataSource;
-import java.io.*;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -44,17 +44,24 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
     }
 
     @Override
-    public void connect(@NotNull String url, @NotNull String username, @NotNull String password) throws IllegalStateException, SQLException
+    public void connect(
+            @NotNull String url,
+            @NotNull String username,
+            @NotNull String password
+    ) throws IllegalStateException, SQLException
     {
         connect(url, username, password, true);
     }
 
     @Override
-    public void connect(@NotNull String url, @NotNull String username, @NotNull String password, boolean generateSchema) throws IllegalStateException, SQLException
+    public void connect(
+            @NotNull String url, @NotNull String username, @NotNull String password,
+            boolean generateSchema
+    ) throws IllegalStateException, SQLException
     {
         Objects.requireNonNull(url, "Connection string must not be null");
 
-        if(Objects.nonNull(connection))
+        if (Objects.nonNull(connection))
         {
             throw new IllegalStateException("The connection has already been opened.");
         }
@@ -65,7 +72,7 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
         String location = "classpath:migrations/mariadb";
         flyway = Flyway.configure().dataSource(url, username, password).locations(location).load();
 
-        if(generateSchema)
+        if (generateSchema)
         {
             generateSchema();
         }
@@ -73,7 +80,7 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
 
     public void generateSchema()
     {
-        if(!isConnected())
+        if (!isConnected())
         {
             throw new IllegalStateException("Cannot generate schema without a connection");
         }
@@ -83,7 +90,7 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
 
     @Override public void disconnect() throws IllegalStateException
     {
-        if(Objects.isNull(connection))
+        if (Objects.isNull(connection))
         {
             throw new IllegalStateException("The connection has not been opened yet.");
         }
@@ -98,7 +105,7 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
                 return !connection.isClosed() && connection.isValid(loginTimeout);
             }
         }
-        catch (SQLException ignored) {}
+        catch (SQLException ignored) { }
 
         return false;
     }
@@ -108,9 +115,12 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
         return connection;
     }
 
-    @Override public @NotNull Connection getConnection(@NotNull String username, @NotNull String password) throws SQLException
+    @Override public @NotNull Connection getConnection(
+            @NotNull String username,
+            @NotNull String password
+    ) throws SQLException
     {
-        if(Objects.isNull(url))
+        if (Objects.isNull(url))
         {
             throw new SQLException("The url has not yet been set.");
         }
@@ -129,6 +139,11 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
         logWriter = out;
     }
 
+    @Override public int getLoginTimeout()
+    {
+        return this.loginTimeout;
+    }
+
     @Override public void setLoginTimeout(int seconds) throws SQLException
     {
         if (seconds < 0)
@@ -137,11 +152,6 @@ public class InternalConnectionProvider implements ConnectionProvider, DataSourc
         }
         loginTimeout = seconds;
         DriverManager.setLoginTimeout(seconds);
-    }
-
-    @Override public int getLoginTimeout()
-    {
-        return this.loginTimeout;
     }
 
     @Override public Logger getParentLogger() throws SQLFeatureNotSupportedException

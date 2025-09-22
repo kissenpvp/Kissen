@@ -5,7 +5,6 @@ import net.kissenpvp.database.InternalPersistableEntity;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 

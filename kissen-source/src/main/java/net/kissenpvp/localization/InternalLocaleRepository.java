@@ -66,7 +66,10 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         return Collectors.toMap(Map.Entry::getKey, entry -> new MessageFormat(entry.getValue().getAsString()));
     }
 
-    @Override public @Nullable MessageFormat register(@NotNull String key, @NotNull MessageFormat format) throws NullPointerException
+    @Override public @Nullable MessageFormat register(
+            @NotNull String key,
+            @NotNull MessageFormat format
+    ) throws NullPointerException
     {
         Objects.requireNonNull(key, "The key cannot be null.");
         Objects.requireNonNull(format, "The message format cannot be null.");
@@ -113,7 +116,8 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         if (!file.isDirectory())
         {
             log.warn(
-                    "Expected {} to be a directory but found a file. This prevents translation files from being loaded.",
+                    "Expected {} to be a directory but found a file. This prevents translation files from being " +
+                            "loaded.",
                     absolutePath
             );
             return;
@@ -152,7 +156,8 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         if (optionalLocale.isEmpty())
         {
             log.warn(
-                    "Could not determine the locale for file {}. Please ensure the filename follows the correct format.",
+                    "Could not determine the locale for file {}. Please ensure the filename follows the correct " +
+                            "format.",
                     fileName
             );
             return;
@@ -170,7 +175,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      *
      * @param file the JSON file to be processed; must not be null
      * @return a {@link Map} where the keys are strings and the values are {@link MessageFormat} objects
-     *         representing the fully populated message data
+     * representing the fully populated message data
      * @throws NullPointerException if the provided file is null
      */
     private @NotNull Map<String, MessageFormat> readFile(@NotNull File file) throws NullPointerException
@@ -197,7 +202,8 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      * If the file cannot be read or parsed or is not valid JSON, an empty {@code Optional} is returned.
      *
      * @param file the JSON file to be read and parsed; must not be null
-     * @return an {@code Optional} containing the parsed {@link JsonObject}, or an empty {@code Optional} if parsing fails
+     * @return an {@code Optional} containing the parsed {@link JsonObject}, or an empty {@code Optional} if parsing
+     * fails
      * @throws NullPointerException if the provided file is null
      */
     private @NotNull Optional<JsonObject> readJson(@NotNull File file) throws NullPointerException
@@ -226,7 +232,8 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      * If the parsing fails, an empty {@link Optional} is returned.
      *
      * @param localeName the name of the locale to be retrieved; must not be null
-     * @return an {@link Optional} containing the {@link Locale} if the parsing succeeds, or an empty {@link Optional} if it fails
+     * @return an {@link Optional} containing the {@link Locale} if the parsing succeeds, or an empty
+     * {@link Optional} if it fails
      * @throws NullPointerException if the provided locale name is null
      * @see net.kyori.adventure.translation.Translator#parseLocale(String)
      */

@@ -5,7 +5,6 @@ import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.punishment.Punishment;
-import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import org.jetbrains.annotations.NotNull;
 

@@ -12,4 +12,4 @@ package net.kissenpvp.api.temporal.timespan;
  *
  * @author Ivo Quiring
  */
-public interface TimeSpan {}
+public interface TimeSpan { }

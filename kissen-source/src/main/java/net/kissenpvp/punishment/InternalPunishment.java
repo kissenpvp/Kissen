@@ -23,7 +23,10 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
         this(id, punishmentType, timeSpan, null);
     }
 
-    public InternalPunishment(int id, @NotNull PunishmentType punishmentType, @NotNull TimeSpan timeSpan, @Nullable Component defaultMessage)
+    public InternalPunishment(
+            int id, @NotNull PunishmentType punishmentType, @NotNull TimeSpan timeSpan,
+            @Nullable Component defaultMessage
+    )
     {
         Objects.requireNonNull(punishmentType, "PunishmentType cannot be null.");
         Objects.requireNonNull(timeSpan, "TimeSpan cannot be null.");
@@ -85,7 +88,7 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
 
     @Override public boolean equals(Object o)
     {
-        if (o == null || getClass() != o.getClass()) {return false;}
+        if (o == null || getClass() != o.getClass()) { return false; }
         InternalPunishment that = (InternalPunishment) o;
         return Objects.equals(id, that.id);
     }

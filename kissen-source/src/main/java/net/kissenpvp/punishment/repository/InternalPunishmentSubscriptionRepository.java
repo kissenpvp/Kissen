@@ -1,5 +1,6 @@
 package net.kissenpvp.punishment.repository;
 
+import net.kissenpvp.api.database.QueryExecutor;
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
@@ -8,7 +9,6 @@ import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
-import net.kissenpvp.api.database.QueryExecutor;
 import net.kissenpvp.network.actor.InternalPlayerRepository;
 import net.kissenpvp.punishment.InternalPunishmentSubscription;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;
@@ -50,21 +50,49 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     public InternalPunishmentSubscriptionRepository(@NotNull Connection connection) throws NullPointerException
     {
         super("ksvp_punishment_subscription", connection,
-                "SELECT link_id, parent_id, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription WHERE id = ?;",
-                "SELECT id, link_id, parent_id, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription;",
-                "SELECT id, link_id, parent_id, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription WHERE id IN (?);");
+                "SELECT link_id, parent_id, operator_id, start_time, expiry, expected_expiry, message FROM " +
+                        "ksvp_punishment_subscription WHERE id = ?;",
+                "SELECT id, link_id, parent_id, operator_id, start_time, expiry, expected_expiry, message FROM " +
+                        "ksvp_punishment_subscription;",
+                "SELECT id, link_id, parent_id, operator_id, start_time, expiry, expected_expiry, message FROM " +
+                        "ksvp_punishment_subscription WHERE id IN (?);");
+    }
+
+    private static @NotNull LocalDateTime toDateTime(@NotNull Instant instant)
+    {
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
+
+    private static void operator(
+            @NotNull PreparedStatement statement,
+            @NotNull PunishmentSubscription subscription
+    ) throws SQLException
+    {
+        UUID operator = ((InternalPunishmentSubscription) subscription).rawOperator();
+        if (Objects.nonNull(operator))
+        {
+            statement.setString(5, String.valueOf(operator));
+            return;
+        }
+
+        statement.setNull(5, Types.VARCHAR);
     }
 
     @Override
-    public @NotNull InternalPunishmentSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    public @NotNull InternalPunishmentSubscription toEntity(
+            @NotNull String id,
+            @NotNull ResultSet resultSet
+    ) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
-        Component message = null; String messageString = resultSet.getString("message"); if (!resultSet.wasNull())
-    {
-        message = GsonComponentSerializer.gson().deserialize(messageString);
-    }
+        Component message = null;
+        String messageString = resultSet.getString("message");
+        if (!resultSet.wasNull())
+        {
+            message = GsonComponentSerializer.gson().deserialize(messageString);
+        }
         int parentId = resultSet.getInt("parent_id");
         UUID linkId = UUID.fromString(resultSet.getString("link_id"));
         UUID operatorId = convertSafely(UUID::fromString, resultSet.getString("operator_id"));
@@ -72,7 +100,8 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         Instant start = Instant.ofEpochMilli(resultSet.getDate("start_time").getTime()); // expected to be not null
 
         Instant expiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate("expiry"));
-        Instant expectedExpiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate("expected_expiry"));
+        Instant expectedExpiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate(
+                "expected_expiry"));
 
         WritableTemporalObject temporal = new InternalWritableTemporalObject(start, expiry, expectedExpiry);
 
@@ -80,7 +109,8 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
 
     @Override
-    public @NotNull InternalPunishmentSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    public @NotNull InternalPunishmentSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException,
+            NullPointerException
     {
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
@@ -92,7 +122,9 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     {
         Objects.requireNonNull(id, "The iterable of subscriptions cannot be null.");
 
-        String sql = "INSERT INTO ksvp_punishment_subscription (id, link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, parent_signature = ?, expiry = ?, message = ?; ";
+        String sql = "INSERT INTO ksvp_punishment_subscription (id, link_id, parent_id, parent_signature, " +
+                "operator_id, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON " +
+                "DUPLICATE KEY UPDATE link_id = ?, parent_signature = ?, expiry = ?, message = ?; ";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (PunishmentSubscription subscription : id)
@@ -107,15 +139,21 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
 
     /**
      * Adds a {@link PunishmentSubscription} to the provided {@link PreparedStatement} as part of a batch operation.
-     * This method prepares the statement with the necessary values from the given subscription, including optional fields,
+     * This method prepares the statement with the necessary values from the given subscription, including optional
+     * fields,
      * and invokes helper methods to set both primary and duplicate indices.
      *
-     * @param statement    The {@link PreparedStatement} to which the subscription's data will be added. Must not be null.
-     * @param subscription The {@link PunishmentSubscription} containing the data to be added to the batch. Must not be null.
+     * @param statement    The {@link PreparedStatement} to which the subscription's data will be added. Must not be
+     *                     null.
+     * @param subscription The {@link PunishmentSubscription} containing the data to be added to the batch. Must not
+     *                     be null.
      * @throws SQLException         If an issue occurs while setting values in the {@link PreparedStatement}.
      * @throws NullPointerException If the {@link PreparedStatement} or {@link PunishmentSubscription} is null.
      */
-    private void addBatch(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException, NullPointerException
+    private void addBatch(
+            @NotNull PreparedStatement statement,
+            @NotNull PunishmentSubscription subscription
+    ) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(subscription, "The subscription cannot be null.");
@@ -123,7 +161,8 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         statement.setString(1, subscription.id());
 
         LocalDateTime date = toDateTime(subscription.temporal().start());
-        LocalDateTime expiry = subscription.temporal().expiry().map(InternalPunishmentSubscriptionRepository::toDateTime).orElse(null);
+        LocalDateTime expiry =
+                subscription.temporal().expiry().map(InternalPunishmentSubscriptionRepository::toDateTime).orElse(null);
         Optional<String> message = subscription.message().map(JSONComponentSerializer.json()::serialize);
 
         setDual(statement, 2, 10, Types.VARCHAR, String.valueOf(subscription.linkId()));
@@ -144,23 +183,6 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         statement.addBatch();
     }
 
-    private static @NotNull LocalDateTime toDateTime(@NotNull Instant instant)
-    {
-        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-    }
-
-    private static void operator(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription) throws SQLException
-    {
-        UUID operator = ((InternalPunishmentSubscription) subscription).rawOperator();
-        if (Objects.nonNull(operator))
-        {
-            statement.setString(5, String.valueOf(operator));
-            return;
-        }
-
-        statement.setNull(5, Types.VARCHAR);
-    }
-
     /**
      * Sets the expected expiry value in the given {@link PreparedStatement}.
      * <p>
@@ -174,7 +196,10 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
      * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
      * @throws NullPointerException If the provided {@link PreparedStatement} is null.
      */
-    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable LocalDateTime expiry) throws SQLException, NullPointerException
+    private void expectedExpiry(
+            @NotNull PreparedStatement statement,
+            @Nullable LocalDateTime expiry
+    ) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
 
@@ -192,8 +217,10 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     @Override
     public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PlayerClient>> findTargets(@NotNull UUID linkId)
     {
-        String sql = "SELECT id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE link_id = ?;";
-        InternalRepository<UUID, PlayerClient> playerRepository = (InternalPlayerRepository) KissenCore.getInstance().playerRepository();
+        String sql = "SELECT id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE " +
+                "link_id = ?;";
+        InternalRepository<UUID, PlayerClient> playerRepository =
+                (InternalPlayerRepository) KissenCore.getInstance().playerRepository();
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(linkId));
@@ -201,7 +228,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
             try (ResultSet resultSet = statement.executeQuery())
             {
                 Set<PlayerClient> clients = new HashSet<>();
-                while(resultSet.next())
+                while (resultSet.next())
                 {
                     clients.add(playerRepository.toEntity(UUID.fromString(resultSet.getString("id")), resultSet));
                 }
@@ -222,7 +249,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
             try (ResultSet resultSet = statement.executeQuery())
             {
                 Set<UUID> uuidSet = new HashSet<>();
-                while(resultSet.next())
+                while (resultSet.next())
                 {
                     uuidSet.add(UUID.fromString(resultSet.getString("id")));
                 }
@@ -239,9 +266,12 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PunishmentSubscription>> findSubscriptionsByUserId(@NotNull UUID userId)
+    public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PunishmentSubscription>> findSubscriptionsByUserId(
+            @NotNull UUID userId
+    )
     {
-        String sql = "SELECT ps.* FROM ksvp_punishment_subscription ps JOIN ksvp_player p ON ps.link_id = p.link_id WHERE p.id = ?;";
+        String sql = "SELECT ps.* FROM ksvp_punishment_subscription ps JOIN ksvp_player p ON ps.link_id = p.link_id " +
+                "WHERE p.id = ?;";
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, retrieveSubscriptions(userId))));
     }
 
@@ -254,7 +284,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
             Collection<PunishmentSubscription> subscriptions = new HashSet<>();
             try (ResultSet resultSet = statement.executeQuery())
             {
-                while(resultSet.next())
+                while (resultSet.next())
                 {
                     subscriptions.add(toEntity(resultSet));
                 }

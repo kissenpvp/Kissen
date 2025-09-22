@@ -49,7 +49,10 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> implem
      * @throws IllegalStateException if an exception occurs while executing the query
      * @throws NullPointerException  if the SQL query or the {@code QueryExecutor} is null
      */
-    protected <X> @Nullable X query(@NotNull String sql, @NotNull QueryExecutor<X> queryExecutor) throws IllegalStateException, NullPointerException
+    protected <X> @Nullable X query(
+            @NotNull String sql,
+            @NotNull QueryExecutor<X> queryExecutor
+    ) throws IllegalStateException, NullPointerException
     {
         try
         {
@@ -77,7 +80,10 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> implem
      * @throws SQLException         if an error occurs while executing the SQL query
      * @throws NullPointerException if the SQL query or the {@code QueryExecutor} is null
      */
-    protected <X> @Nullable X unsafeQuery(@NotNull String sql, @NotNull QueryExecutor<X> queryExecutor) throws SQLException, NullPointerException
+    protected <X> @Nullable X unsafeQuery(
+            @NotNull String sql,
+            @NotNull QueryExecutor<X> queryExecutor
+    ) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(sql, "The SQL string cannot be null.");
 

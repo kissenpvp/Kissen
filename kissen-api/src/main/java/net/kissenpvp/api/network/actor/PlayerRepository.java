@@ -23,7 +23,8 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Ivo Quiring
  */
-public interface PlayerRepository extends CachedRepository<UUID, PlayerClient> {
+public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
+{
 
     /**
      * Retrieves a {@link PlayerClient} by their unique name asynchronously.
@@ -56,7 +57,10 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient> {
      * or {@code null} if no such player exists.
      * @throws NullPointerException if the provided name is {@code null}.
      */
-    @NotNull CompletableFuture<@Nullable PlayerClient> findByName(@NotNull String name, boolean utilizeCache) throws NullPointerException;
+    @NotNull CompletableFuture<@Nullable PlayerClient> findByName(
+            @NotNull String name,
+            boolean utilizeCache
+    ) throws NullPointerException;
 
     /**
      * Retrieves a collection of {@link PlayerClient} entities based on the provided iterable of player names.
@@ -68,7 +72,8 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient> {
      * This is a convenience overload that defaults to calling
      * {@link #findAllByName(Iterable, boolean) findAllByName(name, true)}, and by default enables cache utilization.
      *
-     * @param name iterable of player names to search for; must not be {@code null} and must not contain {@code null} elements.
+     * @param name iterable of player names to search for; must not be {@code null} and must not contain {@code null}
+     *             elements.
      * @return a {@link CompletableFuture} containing an unmodifiable view of a collection of {@link PlayerClient}
      * instances matching the provided names; if no matches are found, the collection will be empty.
      * @throws NullPointerException if the provided iterable or any of its elements are {@code null}.
@@ -83,13 +88,18 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient> {
      * This method allows optional caching during the operation to improve performance.
      * The resulting collection is unmodifiable and may be empty if no matches are found.
      *
-     * @param name         an iterable collection of player names to search for; must not be {@code null} and must not contain {@code null} elements.
+     * @param name         an iterable collection of player names to search for; must not be {@code null} and must
+     *                     not contain {@code null} elements.
      * @param utilizeCache whether to use cache during the lookup operation.
-     * @return a {@link CompletableFuture} that resolves to an unmodifiable view of the collection of {@link PlayerClient} instances
+     * @return a {@link CompletableFuture} that resolves to an unmodifiable view of the collection of
+     * {@link PlayerClient} instances
      * matching the provided names; the collection will be empty if no matches are found.
      * @throws NullPointerException if the provided iterable is {@code null} or contains {@code null} elements.
      */
-    @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByName(@NotNull Iterable<String> name, boolean utilizeCache) throws NullPointerException;
+    @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByName(
+            @NotNull Iterable<String> name,
+            boolean utilizeCache
+    ) throws NullPointerException;
 
     /**
      * Determines if the data associated with the specified player's name is currently cached.

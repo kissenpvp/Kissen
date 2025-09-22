@@ -3,8 +3,7 @@ package net.kissenpvp.database;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.sql.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.sql.SQLException;
 
 class ConnectionProviderTest
 {

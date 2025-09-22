@@ -17,4 +17,4 @@ import net.kissenpvp.api.temporal.timespan.TimeSpan;
  * @author Ivo Quiring
  */
 public class PermanentTimeSpan implements TimeSpan
-{}
+{ }

@@ -52,7 +52,8 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
     }
 
     @Override
-    protected @NotNull Rank toCachedEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    protected @NotNull Rank toCachedEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException,
+            NullPointerException
     {
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -68,7 +69,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
 
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
-            for(Rank rank : id)
+            for (Rank rank : id)
             {
                 addBatch(statement, rank);
             }
@@ -79,14 +80,16 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
 
     /**
      * Adds a {@link Rank} entity as a batch operation to the given {@link PreparedStatement}.
-     * The method populates the prepared statement parameters with the rank's properties, such as ID, priority, prefix, and suffix.
+     * The method populates the prepared statement parameters with the rank's properties, such as ID, priority,
+     * prefix, and suffix.
      *
      * @param statement the prepared statement to which the rank data will be added as a batch must not be null
-     * @param rank the rank entity whose data will be added to the prepared statement, must not be null
-     * @throws SQLException if an error occurs while setting parameters or adding the batch
+     * @param rank      the rank entity whose data will be added to the prepared statement, must not be null
+     * @throws SQLException         if an error occurs while setting parameters or adding the batch
      * @throws NullPointerException if the provided statement or rank is null
      */
-    private void addBatch(@NotNull PreparedStatement statement, @NotNull Rank rank) throws SQLException, NullPointerException
+    private void addBatch(@NotNull PreparedStatement statement, @NotNull Rank rank) throws SQLException,
+            NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(rank, "The rank cannot be null.");

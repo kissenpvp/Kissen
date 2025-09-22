@@ -15,7 +15,9 @@ import org.jetbrains.annotations.NotNull;
  */
 public enum PunishmentType
 {
-    BAN, MUTE, KICK;
+    BAN,
+    MUTE,
+    KICK;
 
     /**
      * Retrieves the {@link PunishmentType} corresponding to the specified ordinal value.
@@ -24,7 +26,8 @@ public enum PunishmentType
      * @param ordinal The ordinal index of the {@link PunishmentType} to retrieve.
      *                This value must correspond to a valid enumeration constant's position.
      * @return The {@link PunishmentType} associated with the specified ordinal.
-     * @throws ArrayIndexOutOfBoundsException If the provided ordinal is out of range for the {@link PunishmentType} enumeration.
+     * @throws ArrayIndexOutOfBoundsException If the provided ordinal is out of range for the {@link PunishmentType}
+     *                                        enumeration.
      */
     public static @NotNull PunishmentType fromOrdinal(int ordinal) throws ArrayIndexOutOfBoundsException
     {

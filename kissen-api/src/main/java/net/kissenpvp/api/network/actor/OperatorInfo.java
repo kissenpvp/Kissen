@@ -25,7 +25,8 @@ public interface OperatorInfo extends PersistableEntity<UUID>
     /**
      * Retrieves the operational level of the operator.
      *
-     * @return an integer representing the operator's level, typically used to determine authority or privilege within the system.
+     * @return an integer representing the operator's level, typically used to determine authority or privilege
+     * within the system.
      */
     int getLevel();
 

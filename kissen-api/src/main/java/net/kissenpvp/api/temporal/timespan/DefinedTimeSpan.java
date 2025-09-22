@@ -14,4 +14,4 @@ import java.time.temporal.TemporalAmount;
  * @see TemporalAmount
  */
 public interface DefinedTimeSpan extends TimeSpan, TemporalAmount
-{}
+{ }

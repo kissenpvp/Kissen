@@ -20,7 +20,8 @@ public class LoggingOutputStream extends OutputStream
         Objects.requireNonNull(logger, "Logger cannot be null");
         Objects.requireNonNull(level, "LogLevel cannot be null");
 
-        this.logger = logger; this.level = level;
+        this.logger = logger;
+        this.level = level;
 
         this.byteArrayOutputStream = new ByteArrayOutputStream();
     }
@@ -53,7 +54,8 @@ public class LoggingOutputStream extends OutputStream
     {
         if (b != '\n')
         {
-            byteArrayOutputStream.write(b); return;
+            byteArrayOutputStream.write(b);
+            return;
         }
 
         String line = byteArrayOutputStream.toString();

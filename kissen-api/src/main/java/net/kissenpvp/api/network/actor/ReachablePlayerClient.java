@@ -17,4 +17,4 @@ package net.kissenpvp.api.network.actor;
  *
  * @author Ivo Quiring
  */
-public interface ReachablePlayerClient extends PlayerClient, MessageReceiver {}
+public interface ReachablePlayerClient extends PlayerClient, MessageReceiver { }

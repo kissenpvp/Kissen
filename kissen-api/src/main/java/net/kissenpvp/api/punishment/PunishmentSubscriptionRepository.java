@@ -17,6 +17,8 @@ public interface PunishmentSubscriptionRepository extends Repository<String, Pun
 
     @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PunishmentSubscription>> findSubscriptions(@NotNull UUID linkId);
 
-    @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PunishmentSubscription>> findSubscriptionsByUserId(@NotNull UUID userId);
+    @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PunishmentSubscription>> findSubscriptionsByUserId(
+            @NotNull UUID userId
+    );
 
 }

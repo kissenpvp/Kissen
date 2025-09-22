@@ -35,7 +35,7 @@ public abstract class InternalSubscriptionEntity<P, X, T extends PersistableEnti
 
     @Override public boolean equals(Object o)
     {
-        if (o == null || getClass() != o.getClass()) {return false;}
+        if (o == null || getClass() != o.getClass()) { return false; }
         InternalSubscriptionEntity<?, ?, ?> that = (InternalSubscriptionEntity<?, ?, ?>) o;
         return Objects.equals(id, that.id);
     }

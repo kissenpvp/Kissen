@@ -22,10 +22,12 @@ public interface RankSubscription extends SubscriptionEntity<String, String, Ran
     /**
      * Retrieves the player client associated with this rank subscription.
      * <p>
-     * This method establishes a link between the subscription and a specific player, enabling access to player-related data and attributes.
+     * This method establishes a link between the subscription and a specific player, enabling access to
+     * player-related data and attributes.
      *
      * @return a non-null {@link PlayerClient} instance representing the player associated with this subscription
-     * @throws IllegalStateException if the player client cannot be determined, or if the subscription is in an invalid state
+     * @throws IllegalStateException if the player client cannot be determined, or if the subscription is in an
+     *                               invalid state
      */
     @NotNull PlayerClient player() throws IllegalStateException;
 }

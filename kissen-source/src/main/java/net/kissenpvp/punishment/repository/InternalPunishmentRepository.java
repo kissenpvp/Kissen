@@ -25,11 +25,10 @@ import java.util.concurrent.CompletableFuture;
  * This class provides methods for saving {@link Punishment} instances to the database, converting database records
  * into {@link InternalPunishment} entities, and handling serialized data like timespans and default messages.
  *
+ * @author Ivo Quiring
  * @see InternalCachedRepository
  * @see Punishment
  * @see net.kissenpvp.api.punishment.PunishmentSubscription
- *
- * @author Ivo Quiring
  */
 public class InternalPunishmentRepository extends InternalCachedRepository<Integer, Punishment>
 {
@@ -41,17 +40,14 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
      */
     public InternalPunishmentRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super(
-                "ksvp_punishment",
-                connection,
-                "SELECT punishment_type, time_span, message FROM ksvp_punishment WHERE id = ?;",
-                "SELECT * FROM ksvp_punishment;",
-                "SELECT * FROM ksvp_punishment WHERE id IN (?);"
-        );
+        super("ksvp_punishment", connection, "SELECT punishment_type, time_span, message FROM ksvp_punishment WHERE " +
+                "id = ?;", "SELECT * FROM ksvp_punishment;", "SELECT * FROM ksvp_punishment WHERE id IN (?);");
     }
 
-    @Override
-    protected @NotNull InternalPunishment toCachedEntity(@NotNull Integer id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    @Override protected @NotNull InternalPunishment toCachedEntity(
+            @NotNull Integer id,
+            @NotNull ResultSet resultSet
+    ) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -61,8 +57,8 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         return new InternalPunishment(id, type, timeSpan);
     }
 
-    @Override
-    protected @NotNull InternalPunishment toCachedEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    @Override protected @NotNull InternalPunishment toCachedEntity(@NotNull ResultSet resultSet) throws SQLException,
+            NullPointerException
     {
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
 
@@ -76,12 +72,12 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         return saveAll(Collections.singleton(id));
     }
 
-    @Override
-    public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<Punishment> id) throws NullPointerException
+    @Override public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<Punishment> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "The punishment iterable cannot be null.");
 
-        String sql = "INSERT INTO ksvp_punishment (id, punishment_type, time_span, message) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE punishment_type = ?, time_span = ?, message = ?;";
+        String sql = "INSERT INTO ksvp_punishment (id, punishment_type, time_span, message) VALUES (?, ?, ?, ?) ON " +
+                "DUPLICATE KEY UPDATE punishment_type = ?, time_span = ?, message = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (Punishment punishment : id)
@@ -100,12 +96,13 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
      * based on the properties defined in the {@link Punishment} instance and calls {@code addBatch()}
      * to include it in the batch execution.
      *
-     * @param statement The {@link PreparedStatement} to which the batch is added. Must not be null.
+     * @param statement  The {@link PreparedStatement} to which the batch is added. Must not be null.
      * @param punishment The {@link Punishment} instance containing the data to prepare the statement. Must not be null.
-     * @throws SQLException If an error occurs while interacting with the {@link PreparedStatement}.
+     * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
      * @throws NullPointerException If either {@code statement} or {@code punishment} is null.
      */
-    private void addBatch(@NotNull PreparedStatement statement, @NotNull Punishment punishment) throws SQLException, NullPointerException
+    private void addBatch(@NotNull PreparedStatement statement, @NotNull Punishment punishment) throws SQLException,
+            NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(punishment, "The punishment cannot be null.");

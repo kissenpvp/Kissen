@@ -11,16 +11,6 @@ import java.util.Optional;
 
 public record InternalTemporalObject(@NotNull Instant start, @Nullable Instant expiryTime) implements TemporalObject
 {
-    public static @NotNull InternalTemporalObject toTemporal(@NotNull TimeSpan span)
-    {
-        if(span instanceof DefinedTimeSpan definedTimeSpan)
-        {
-            return new InternalTemporalObject(Instant.now().plus(definedTimeSpan));
-        }
-
-        return new InternalTemporalObject();
-    }
-
     InternalTemporalObject()
     {
         this(null);
@@ -31,6 +21,15 @@ public record InternalTemporalObject(@NotNull Instant start, @Nullable Instant e
         this(Instant.now(), expiry);
     }
 
+    public static @NotNull InternalTemporalObject toTemporal(@NotNull TimeSpan span)
+    {
+        if (span instanceof DefinedTimeSpan definedTimeSpan)
+        {
+            return new InternalTemporalObject(Instant.now().plus(definedTimeSpan));
+        }
+
+        return new InternalTemporalObject();
+    }
 
     @Override public @NotNull Optional<Instant> expiry()
     {

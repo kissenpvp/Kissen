@@ -6,7 +6,6 @@ import net.kissenpvp.database.InternalPersistableEntity;
 import net.kissenpvp.temporal.InternalTemporalObject;
 import net.kissenpvp.temporal.timespan.PermanentTimeSpan;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -52,7 +51,7 @@ public class InternalRank extends InternalPersistableEntity<String> implements R
 
     @Override public boolean equals(Object o)
     {
-        if (o == null || getClass() != o.getClass()) {return false;}
+        if (o == null || getClass() != o.getClass()) { return false; }
         InternalRank that = (InternalRank) o;
         return Objects.equals(id, that.id);
     }

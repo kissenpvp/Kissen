@@ -29,18 +29,10 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
 {
     private final String findQuery, findAllQuery, findAllByIdQuery;
 
-    @Contract(value = "_, null -> null; _, !null -> !null", pure = true)
-    protected static <X, Y> @Nullable Y convertSafely(@NotNull Function<X, Y> function, @Nullable X value) throws NullPointerException {
-        Objects.requireNonNull(function, "The function cannot be null.");
-
-        if (Objects.isNull(value)) {
-            return null;
-        }
-
-        return function.apply(value);
-    }
-    
-    public InternalRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery, @NotNull String findAllQuery, @NotNull String findAllByIdQuery) throws NullPointerException
+    public InternalRepository(
+            @NotNull String table, @NotNull Connection connection, @NotNull String findQuery,
+            @NotNull String findAllQuery, @NotNull String findAllByIdQuery
+    ) throws NullPointerException
     {
         super(table, connection);
         Objects.requireNonNull(findQuery, "The find query cannot be null.");
@@ -56,20 +48,41 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
         this.findAllByIdQuery = findAllByIdQuery;
     }
 
+    @Contract(value = "_, null -> null; _, !null -> !null", pure = true)
+    protected static <X, Y> @Nullable Y convertSafely(
+            @NotNull Function<X, Y> function,
+            @Nullable X value
+    ) throws NullPointerException
+    {
+        Objects.requireNonNull(function, "The function cannot be null.");
+
+        if (Objects.isNull(value))
+        {
+            return null;
+        }
+
+        return function.apply(value);
+    }
+
     /**
      * Sets a value or null at the specified indices of the given {@link PreparedStatement}.
-     * If the provided {@code value} is non-null, it sets the value at both the specified index and an additional offset index.
+     * If the provided {@code value} is non-null, it sets the value at both the specified index and an additional
+     * offset index.
      * If the {@code value} is null, it sets SQL null for the given SQL type at both indices.
      *
      * @param statement   the {@link PreparedStatement} where the value or null will be set, must not be null
-     * @param index       the index at which the first value is set must align with the {@link PreparedStatement}'s parameters
+     * @param index       the index at which the first value is set must align with the {@link PreparedStatement}'s
+     *                    parameters
      * @param secondIndex the index offset that serves as the base for the second insertion
      * @param sqlType     the SQL type, defined in {@link java.sql.Types}, used to set the value or null
      * @param value       the value to be set; can be null in which case SQL null will be inserted
      * @throws SQLException         if an error occurs while interacting with the {@link PreparedStatement}
      * @throws NullPointerException if the {@link PreparedStatement} is null
      */
-    protected static void setDual(@NotNull PreparedStatement statement, int index, int secondIndex, int sqlType, @Nullable Object value) throws SQLException, NullPointerException
+    protected static void setDual(
+            @NotNull PreparedStatement statement, int index, int secondIndex, int sqlType,
+            @Nullable Object value
+    ) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
 
@@ -182,7 +195,8 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
      * @throws NullPointerException if either {@code id} or {@code resultSet} is null
      */
-    public abstract @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException;
+    public abstract @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException,
+            NullPointerException;
 
     /**
      * Converts a single row of the provided {@code ResultSet} into an entity.
@@ -209,7 +223,8 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      * @throws NullPointerException if the {@code ResultSet} is null
      * @see #toEntity(ResultSet)
      */
-    private @NotNull @UnmodifiableView Collection<T> toEntities(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    private @NotNull @UnmodifiableView Collection<T> toEntities(@NotNull ResultSet resultSet) throws SQLException,
+            NullPointerException
     {
         List<T> data = new ArrayList<>();
         while (resultSet.next())

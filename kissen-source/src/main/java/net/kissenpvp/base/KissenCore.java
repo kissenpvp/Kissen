@@ -10,7 +10,6 @@ import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.punishment.Punishment;
-import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +29,8 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
         if (Objects.isNull(instance))
         {
             throw new IllegalStateException("Kissen has not been initiated yet!");
-        } return instance;
+        }
+        return instance;
     }
 
     public abstract ConsoleClient console();
@@ -40,9 +40,11 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
         Objects.requireNonNull(databaseModule.playerRepository(), "playerRepository cannot be null!");
         Objects.requireNonNull(databaseModule.operatorRepository(), "operatorRepository cannot be null!");
         Objects.requireNonNull(databaseModule.punishmentRepository(), "punishmentRepository cannot be null!");
-        Objects.requireNonNull(databaseModule.punishmentSubscriptionRepository(), "punishmentSubscriptionRepository cannot be null!");
+        Objects.requireNonNull(databaseModule.punishmentSubscriptionRepository(), "punishmentSubscriptionRepository " +
+                "cannot be null!");
         Objects.requireNonNull(databaseModule.rankRepository(), "rankRepository cannot be null!");
-        Objects.requireNonNull(databaseModule.rankSubscriptionRepository(), "rankSubscriptionRepository cannot be null!");
+        Objects.requireNonNull(databaseModule.rankSubscriptionRepository(), "rankSubscriptionRepository cannot be " +
+                "null!");
 
         this.databaseModule = databaseModule;
     }
@@ -54,7 +56,8 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
             throw new IllegalStateException("Cannot start Kissen without a database!");
         }
 
-        instance = this; localeRegistry = new InternalGlobalLocaleRegistry();
+        instance = this;
+        localeRegistry = new InternalGlobalLocaleRegistry();
 
         started = true;
     }

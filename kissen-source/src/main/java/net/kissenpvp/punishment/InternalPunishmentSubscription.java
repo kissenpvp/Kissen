@@ -17,7 +17,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-public class InternalPunishmentSubscription extends InternalSubscriptionEntity<String, Integer, Punishment> implements PunishmentSubscription {
+public class InternalPunishmentSubscription extends InternalSubscriptionEntity<String, Integer, Punishment> implements PunishmentSubscription
+{
     private final String id;
     private final UUID linkId;
     private final UUID operator;
@@ -30,7 +31,8 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
             @Nullable UUID operator,
             @NotNull WritableTemporalObject temporalObject,
             @Nullable Component message
-    ) throws NullPointerException {
+    ) throws NullPointerException
+    {
         this(String.valueOf(UUID.randomUUID()).split("-")[0], parent, linkId, operator, temporalObject, message);
     }
 
@@ -41,13 +43,15 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
             @Nullable UUID operator,
             @NotNull WritableTemporalObject temporalObject,
             @Nullable Component message
-    ) throws NullPointerException {
+    ) throws NullPointerException
+    {
         super(id, parent);
         Objects.requireNonNull(id, "Id cannot be null.");
         Objects.requireNonNull(linkId, "LinkId cannot be null.");
         Objects.requireNonNull(temporalObject, "TimeSpan cannot be null.");
 
-        if (id.length() > 8) {
+        if (id.length() > 8)
+        {
             throw new IllegalArgumentException("Id cannot be longer than 4 characters!");
         }
 
@@ -59,25 +63,31 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     }
 
     @Override
-    public @NotNull String id() {
+    public @NotNull String id()
+    {
         return id;
     }
 
     @Override
-    public @NotNull UUID linkId() {
+    public @NotNull UUID linkId()
+    {
         return linkId;
     }
 
     @Override
-    public @NotNull @UnmodifiableView Collection<PlayerClient> targets() {
+    public @NotNull @UnmodifiableView Collection<PlayerClient> targets()
+    {
         return KissenCore.getInstance().punishmentSubscriptionRepository().findTargets(linkId()).join();
     }
 
     @Override
-    public @NotNull PlayerClient target() {
+    public @NotNull PlayerClient target()
+    {
         Collection<PlayerClient> targets = targets();
-        for (PlayerClient playerClient : targets()) {
-            if (Objects.equals(playerClient.id(), linkId())) {
+        for (PlayerClient playerClient : targets())
+        {
+            if (Objects.equals(playerClient.id(), linkId()))
+            {
                 return playerClient;
             }
         }
@@ -90,14 +100,18 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     }
 
     @Override
-    public @NotNull Actor operator() {
-        if (Objects.isNull(operator)) {
+    public @NotNull Actor operator()
+    {
+        if (Objects.isNull(operator))
+        {
             return KissenCore.getInstance().console();
         }
 
         Actor actor = KissenCore.getInstance().playerRepository().find(operator).join();
-        if (Objects.isNull(actor)) {
-            String message = "The player with the id %s was not found in the database but is bound to the punishment subscription %s.";
+        if (Objects.isNull(actor))
+        {
+            String message = "The player with the id %s was not found in the database but is bound to the punishment " +
+                    "subscription %s.";
             throw new IllegalStateException(String.format(message, operator, id()));
         }
 
@@ -105,36 +119,43 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     }
 
     @Override
-    public int signature() {
+    public int signature()
+    {
         return Objects.hash(linkId, temporalObject, message);
     }
 
     @Override
-    public @NotNull Optional<Punishment> parent() {
+    public @NotNull Optional<Punishment> parent()
+    {
         return Optional.ofNullable(KissenCore.getInstance().punishmentRepository().find(parentId()).join());
     }
 
     @Override
-    public @NotNull Optional<Component> message() {
+    public @NotNull Optional<Component> message()
+    {
         return Optional.ofNullable(message);
     }
 
     @Override
-    public void message(@Nullable Component component) {
+    public void message(@Nullable Component component)
+    {
         this.message = component;
     }
 
     @Override
-    public void unsetMessage() {
+    public void unsetMessage()
+    {
         message(null);
     }
 
     @Override
-    public @NotNull WritableTemporalObject temporal() {
+    public @NotNull WritableTemporalObject temporal()
+    {
         return temporalObject;
     }
 
-    public @Nullable UUID rawOperator() {
+    public @Nullable UUID rawOperator()
+    {
         return operator;
     }
 }

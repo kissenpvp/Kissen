@@ -54,5 +54,8 @@ public interface PlayerClient extends Actor, PersistableEntity<UUID>
 
     @NotNull PunishmentSubscription punish(@NotNull Punishment punishment) throws NullPointerException;
 
-    @NotNull PunishmentSubscription punish(@NotNull Punishment punishment, @Nullable Component message) throws NullPointerException;
+    @NotNull PunishmentSubscription punish(
+            @NotNull Punishment punishment,
+            @Nullable Component message
+    ) throws NullPointerException;
 }

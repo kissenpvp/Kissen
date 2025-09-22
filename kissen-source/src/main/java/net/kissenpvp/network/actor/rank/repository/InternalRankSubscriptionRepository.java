@@ -47,14 +47,21 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         super(
                 "ksvp_rank_subscription",
                 connection,
-                "SELECT player_id, rank_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id = ?;",
+                "SELECT player_id, rank_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id " +
+                        "= ?;",
                 "SELECT * FROM ksvp_rank_subscription;",
                 "SELECT * FROM ksvp_rank_subscription WHERE id IN (%s);"
         );
     }
 
+    private static @NotNull LocalDateTime toDateTime(@NotNull Instant instant)
+    {
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
+
     @Override
-    public @NotNull RankSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    public @NotNull RankSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException,
+            NullPointerException
     {
         Objects.requireNonNull(id, "The rank subscription ID cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -63,7 +70,8 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
 
         Instant start = resultSet.getDate("start_time").toInstant(); // expected to be not null
         Instant expiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate("expiry"));
-        Instant expectedExpiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate("expected_expiry"));
+        Instant expectedExpiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate(
+                "expected_expiry"));
         WritableTemporalObject temporal = new InternalWritableTemporalObject(start, expiry, expectedExpiry);
 
         return new InternalRankSubscription(id, resultSet.getString("rank_id"), playerId, temporal);
@@ -81,7 +89,9 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     {
         Objects.requireNonNull(id, "The rank subscriptions cannot be null.");
 
-        String sql = "INSERT INTO ksvp_rank_subscription (id, rank_id, player_id, start_time, expiry, expected_expiry) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE rank_id = ?, player_id = ?, expiry = ?;";
+        String sql = "INSERT INTO ksvp_rank_subscription (id, rank_id, player_id, start_time, expiry, " +
+                "expected_expiry) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE rank_id = ?, player_id = ?, " +
+                "expiry = ?;";
 
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
@@ -90,7 +100,8 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
                 statement.setString(1, subscription.id());
 
                 LocalDateTime start = toDateTime(subscription.temporal().start());
-                LocalDateTime expiry = subscription.temporal().expiry().map(InternalRankSubscriptionRepository::toDateTime).orElse(null);
+                LocalDateTime expiry =
+                        subscription.temporal().expiry().map(InternalRankSubscriptionRepository::toDateTime).orElse(null);
 
                 setDual(statement, 2, 7, Types.VARCHAR, subscription.parentId());
                 setDual(statement, 3, 8, Types.VARCHAR, String.valueOf(subscription.player().id()));
@@ -109,11 +120,6 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         })));
     }
 
-    private static @NotNull LocalDateTime toDateTime(@NotNull Instant instant)
-    {
-        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-    }
-
     /**
      * Sets the expected expiry value in the given {@link PreparedStatement}.
      * <p>
@@ -127,10 +133,15 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
      * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
      * @throws NullPointerException If the provided {@link PreparedStatement} is null.
      */
-    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable LocalDateTime expiry) throws SQLException, NullPointerException {
+    private void expectedExpiry(
+            @NotNull PreparedStatement statement,
+            @Nullable LocalDateTime expiry
+    ) throws SQLException, NullPointerException
+    {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
 
-        if (Objects.nonNull(expiry)) {
+        if (Objects.nonNull(expiry))
+        {
             // we cannot use setTimestamp because the java.sql.TimeStamp class is very old
             // https://stackoverflow.com/a/73967623
             statement.setObject(6, expiry, Types.TIMESTAMP);

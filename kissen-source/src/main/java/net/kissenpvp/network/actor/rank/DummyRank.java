@@ -1,7 +1,5 @@
 package net.kissenpvp.network.actor.rank;
 
-import org.jetbrains.annotations.NotNull;
-
 public class DummyRank extends InternalRank
 {
     public DummyRank()

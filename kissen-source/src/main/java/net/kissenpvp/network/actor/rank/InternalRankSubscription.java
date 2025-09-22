@@ -26,11 +26,19 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
     private final UUID playerId;
     private final WritableTemporalObject temporalObject;
 
-    public InternalRankSubscription(@NotNull String id, @NotNull String parentId, @NotNull UUID playerId) throws NullPointerException {
+    public InternalRankSubscription(
+            @NotNull String id,
+            @NotNull String parentId,
+            @NotNull UUID playerId
+    ) throws NullPointerException
+    {
         this(id, parentId, playerId, new InternalWritableTemporalObject());
     }
 
-    public InternalRankSubscription(@NotNull String id, @NotNull String parentId, @NotNull UUID playerId, @NotNull WritableTemporalObject temporalObject) throws NullPointerException
+    public InternalRankSubscription(
+            @NotNull String id, @NotNull String parentId, @NotNull UUID playerId,
+            @NotNull WritableTemporalObject temporalObject
+    ) throws NullPointerException
     {
         super(id, parentId);
 
@@ -55,14 +63,16 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
         PlayerClient player = KissenCore.getInstance().playerRepository().find(playerId).join();
         if (Objects.isNull(player))
         {
-            String message = "The player with the id %s was not found in the database but is bound to a rank subscription.";
+            String message = "The player with the id %s was not found in the database but is bound to a rank " +
+                    "subscription.";
             throw new IllegalStateException(String.format(message, playerId));
         }
         return player;
     }
 
     @Override
-    public @NotNull WritableTemporalObject temporal() {
+    public @NotNull WritableTemporalObject temporal()
+    {
         return temporalObject;
     }
 }

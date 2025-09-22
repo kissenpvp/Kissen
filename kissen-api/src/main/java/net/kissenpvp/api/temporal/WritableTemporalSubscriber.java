@@ -14,7 +14,8 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Ivo Quiring
  */
-public interface WritableTemporalSubscriber extends TemporalSubscriber {
+public interface WritableTemporalSubscriber extends TemporalSubscriber
+{
 
     /**
      * Retrieves the writable temporal object associated with this subscriber.

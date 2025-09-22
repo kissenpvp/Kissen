@@ -65,7 +65,8 @@ public interface Punishment extends PersistableEntity<Integer>
      * The default message represents a general description or note that can be used,
      * for example, during the application of the punishment or for logging purposes.
      *
-     * @return an {@link Optional} containing the default {@link Component} message if present, or an empty {@link Optional} if no default message is set.
+     * @return an {@link Optional} containing the default {@link Component} message if present, or an empty
+     * {@link Optional} if no default message is set.
      */
     @NotNull Optional<Component> defaultMessage();
 
@@ -74,7 +75,8 @@ public interface Punishment extends PersistableEntity<Integer>
      * The default message represents a general description or note that can be used,
      * for example, during the application of the punishment or for logging purposes.
      *
-     * @param defaultMessage the {@link Component} representing the default message; can be null to unset the current default message.
+     * @param defaultMessage the {@link Component} representing the default message; can be null to unset the current
+     *                       default message.
      * @see #defaultMessage()
      */
     void defaultMessage(@Nullable Component defaultMessage);
