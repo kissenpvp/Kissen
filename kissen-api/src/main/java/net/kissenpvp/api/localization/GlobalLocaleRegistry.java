@@ -1,7 +1,7 @@
 package net.kissenpvp.api.localization;
 
 import net.kissenpvp.api.base.KissenPlugin;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public interface GlobalLocaleRegistry
 {
@@ -11,6 +11,6 @@ public interface GlobalLocaleRegistry
      * @param plugin the plugin for which the locale repository is required; must not be null
      * @return a {@link LocaleRepository} instance associated with the provided plugin; never null
      */
-    @NotNull LocaleRepository localeRepository(@NotNull KissenPlugin plugin) throws NullPointerException,
+    @NonNull LocaleRepository localeRepository(@NonNull KissenPlugin plugin) throws NullPointerException,
             IllegalArgumentException;
 }

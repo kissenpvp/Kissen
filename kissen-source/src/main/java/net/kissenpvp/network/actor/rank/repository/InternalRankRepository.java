@@ -4,8 +4,8 @@ import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRank;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
+
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -26,12 +26,12 @@ import java.util.concurrent.CompletableFuture;
  */
 public class InternalRankRepository extends InternalCachedRepository<String, Rank>
 {
-    public InternalRankRepository(@NotNull DataSource dataSource) throws NullPointerException
+    public InternalRankRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
     }
 
-    @Override protected @NotNull CompletableFuture<Optional<Rank>> findUncached(@NotNull String id) throws NullPointerException
+    @Override protected @NonNull CompletableFuture<Optional<Rank>> findUncached(@NonNull String id) throws NullPointerException
     {
         String sql = "SELECT priority FROM ksvp_rank WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
@@ -41,7 +41,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         })));
     }
 
-    @Override protected @NotNull CompletableFuture<@UnmodifiableView Collection<Rank>> findAllUncached(@NotNull Iterable<String> id) throws NullPointerException
+    @Override protected @NonNull CompletableFuture< Collection<Rank>> findAllUncached(@NonNull Iterable<String> id) throws NullPointerException
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, priority FROM ksvp_rank WHERE id IN (" + placeHolders + ");";
@@ -65,7 +65,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         })));
     }
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<Rank>> findAll()
+    @Override public @NonNull CompletableFuture< Collection<Rank>> findAll()
     {
         return CompletableFuture.supplyAsync(() -> query("SELECT id, priority FROM ksvp_rank;", (statement ->
         {
@@ -81,7 +81,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         })));
     }
 
-    @Override public @NotNull CompletableFuture<Boolean> has(@NotNull String id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id) throws NullPointerException
     {
         return CompletableFuture.supplyAsync(() -> query("SELECT id FROM ksvp_rank WHERE id = ?;", (statement ->
         {
@@ -90,7 +90,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         })));
     }
 
-    @Override public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<Rank> id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<Rank> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "The iterable of ranks cannot be null.");
 
@@ -108,13 +108,13 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
     }
 
     @Override
-    protected @NotNull Rank toCachedEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    protected @NonNull Rank toCachedEntity(@NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         return toEntity(resultSet.getString("id"), resultSet);
     }
 
     @Override
-    protected @NotNull Rank toCachedEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    protected @NonNull Rank toCachedEntity(@NonNull String id, @NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -132,7 +132,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
      * @throws SQLException         if an error occurs while setting parameters or adding the batch
      * @throws NullPointerException if the provided statement or rank is null
      */
-    private void batch(@NotNull PreparedStatement statement, @NotNull Rank rank) throws SQLException, NullPointerException
+    private void batch(@NonNull PreparedStatement statement, @NonNull Rank rank) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(rank, "The rank cannot be null.");

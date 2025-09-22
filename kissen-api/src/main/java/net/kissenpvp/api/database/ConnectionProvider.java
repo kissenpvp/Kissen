@@ -1,7 +1,7 @@
 package net.kissenpvp.api.database;
 
 import com.zaxxer.hikari.HikariDataSource;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -24,7 +24,7 @@ public interface ConnectionProvider
      * @return a {@link Optional} containing the active {@link Connection} if available, or an empty optional if no
      * connection is present
      */
-    @NotNull Optional<HikariDataSource> dataSource();
+    @NonNull Optional<HikariDataSource> dataSource();
 
 
     /**
@@ -44,9 +44,9 @@ public interface ConnectionProvider
      * @see #connect(String, String, String, boolean)
      */
     void connect(
-            @NotNull String url,
-            @NotNull String username,
-            @NotNull String password
+            @NonNull String url,
+            @NonNull String username,
+            @NonNull String password
     ) throws IllegalStateException, SQLException, NullPointerException;
 
 
@@ -65,9 +65,9 @@ public interface ConnectionProvider
      * @see #connect(String, String, String)
      */
     void connect(
-            @NotNull String url,
-            @NotNull String username,
-            @NotNull String password,
+            @NonNull String url,
+            @NonNull String username,
+            @NonNull String password,
             boolean generateSchema
     ) throws IllegalStateException, SQLException, NullPointerException;
 

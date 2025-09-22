@@ -1,7 +1,7 @@
 package net.kissenpvp.api.database;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,14 +19,14 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> implem
     private static final Logger log = LoggerFactory.getLogger(KissenRepository.class);
     private final DataSource dataSource;
 
-    public KissenRepository(@NotNull DataSource dataSource) throws NullPointerException
+    public KissenRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         Objects.requireNonNull(dataSource, "The dataSource cannot be null.");
 
         this.dataSource = dataSource;
     }
 
-    @Override public @NotNull CompletableFuture<Void> save(@NotNull T id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Void> save(@NonNull T id) throws NullPointerException
     {
         Objects.requireNonNull(id, "The entity cannot be null.");
 
@@ -44,7 +44,7 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> implem
      * @throws IllegalStateException if an exception occurs while executing the query
      * @throws NullPointerException  if the SQL query or the {@code QueryExecutor} is null
      */
-    protected <X> @Nullable X query(@NotNull String sql, @NotNull QueryExecutor<X> queryExecutor) throws IllegalStateException, NullPointerException
+    protected <X> @Nullable X query(@NonNull String sql, @NonNull QueryExecutor<X> queryExecutor) throws IllegalStateException, NullPointerException
     {
         try
         {
@@ -66,7 +66,7 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> implem
      * @return the size of the given {@code Iterable} as an integer
      * @throws NullPointerException if the provided {@code Iterable} is null
      */
-    protected int computeIterableSize(@NotNull Iterable<?> iterable)
+    protected int computeIterableSize(@NonNull Iterable<?> iterable)
     {
         if(iterable instanceof Collection<?> collection)
         {
@@ -88,7 +88,7 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> implem
      * @throws SQLException         if an error occurs while executing the SQL query
      * @throws NullPointerException if the SQL query or the {@code QueryExecutor} is null
      */
-    protected <X> @Nullable X unsafeQuery(@NotNull String sql, @NotNull QueryExecutor<X> queryExecutor) throws SQLException, NullPointerException
+    protected <X> @Nullable X unsafeQuery(@NonNull String sql, @NonNull QueryExecutor<X> queryExecutor) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(sql, "The SQL string cannot be null.");
 

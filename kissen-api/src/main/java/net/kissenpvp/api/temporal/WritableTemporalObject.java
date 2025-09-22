@@ -1,6 +1,6 @@
 package net.kissenpvp.api.temporal;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -36,7 +36,7 @@ public interface WritableTemporalObject extends TemporalObject
      * @return an {@link Optional} containing the expected expiry time as an {@link Instant},
      * or an empty {@link Optional} if the expected expiry time is not defined
      */
-    @NotNull Optional<Instant> expectedExpiry();
+    @NonNull Optional<Instant> expectedExpiry();
 
     /**
      * Checks if the expiry of the temporal object has been altered.

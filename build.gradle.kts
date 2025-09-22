@@ -9,7 +9,6 @@ plugins {
 group = "net.kissenpvp"
 version = "1.0-SNAPSHOT"
 
-val annotationsVersion = "26.0.2"
 val adventureVersion = "4.20.0"
 
 subprojects {
@@ -23,10 +22,7 @@ subprojects {
 
     dependencies {
         // Annotations
-        val annotations = "org.jetbrains:annotations:$annotationsVersion"
-        compileOnly(annotations)
-        annotationProcessor(annotations)
-        testCompileOnly(annotations)
+        annotationProcessor("org.jspecify:jspecify:1.0.0")
 
         // Database
         implementation("com.zaxxer:HikariCP:7.0.2")

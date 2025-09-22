@@ -1,6 +1,6 @@
 package net.kissenpvp.api.punishment;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 
 /**
@@ -29,7 +29,7 @@ public enum PunishmentType
      * @throws ArrayIndexOutOfBoundsException If the provided ordinal is out of range for the {@link PunishmentType}
      *                                        enumeration.
      */
-    public static @NotNull PunishmentType fromOrdinal(int ordinal) throws ArrayIndexOutOfBoundsException
+    public static @NonNull PunishmentType fromOrdinal(int ordinal) throws ArrayIndexOutOfBoundsException
     {
         return PunishmentType.values()[ordinal];
     }

@@ -4,7 +4,7 @@ import net.kissenpvp.api.base.KissenPlugin;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
 import net.kissenpvp.api.localization.LocaleRepository;
 import net.kyori.adventure.translation.Translator;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 
@@ -27,13 +27,13 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
         initialized = true;
     }
 
-    public void register(@NotNull KissenPlugin plugin) throws NullPointerException
+    public void register(@NonNull KissenPlugin plugin) throws NullPointerException
     {
         Objects.requireNonNull(plugin, "plugin cannot be null");
 
         repositories.put(plugin, new InternalLocaleRepository()
         {
-            @Override protected @NotNull Optional<Locale> locale(@NotNull String localeName)
+            @Override protected @NonNull Optional<Locale> locale(@NonNull String localeName)
             {
                 Locale locale = Translator.parseLocale(localeName);
                 if (Objects.nonNull(locale))
@@ -43,7 +43,7 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
                 return Optional.ofNullable(locale);
             }
 
-            @Override public @NotNull KissenPlugin plugin()
+            @Override public @NonNull KissenPlugin plugin()
             {
                 return plugin;
             }
@@ -51,7 +51,7 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
     }
 
     @Override
-    public @NotNull LocaleRepository localeRepository(@NotNull KissenPlugin plugin) throws NullPointerException,
+    public @NonNull LocaleRepository localeRepository(@NonNull KissenPlugin plugin) throws NullPointerException,
             IllegalArgumentException
     {
         Objects.requireNonNull(plugin, "plugin cannot be null");

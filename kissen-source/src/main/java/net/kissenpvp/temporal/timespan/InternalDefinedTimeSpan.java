@@ -1,8 +1,8 @@
 package net.kissenpvp.temporal.timespan;
 
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
+
 
 import java.time.Duration;
 import java.time.temporal.Temporal;
@@ -18,31 +18,31 @@ public class InternalDefinedTimeSpan implements DefinedTimeSpan
         this.duration = duration;
     }
 
-    private @NotNull Duration duration()
+    private @NonNull Duration duration()
     {
         return Duration.ofMillis(duration);
     }
 
     @Override
-    public long get(@NotNull TemporalUnit unit)
+    public long get(@NonNull TemporalUnit unit)
     {
         return duration().get(unit);
     }
 
     @Override
-    public @NotNull @UnmodifiableView List<TemporalUnit> getUnits()
+    public @NonNull  List<TemporalUnit> getUnits()
     {
         return duration().getUnits();
     }
 
     @Override
-    public @NotNull Temporal addTo(@NotNull Temporal temporal)
+    public @NonNull Temporal addTo(@NonNull Temporal temporal)
     {
         return duration().addTo(temporal);
     }
 
     @Override
-    public @NotNull Temporal subtractFrom(@NotNull Temporal temporal)
+    public @NonNull Temporal subtractFrom(@NonNull Temporal temporal)
     {
         return temporal.minus(duration());
     }

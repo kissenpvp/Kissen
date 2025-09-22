@@ -1,8 +1,6 @@
 package net.kissenpvp.api.database;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -30,7 +28,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * or {@code null} if no entity is found; never null
      * @throws NullPointerException if the provided identifier is null
      */
-    @NotNull CompletableFuture<@NotNull Optional<T>> find(@NotNull P id) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Optional<T>> find(@NonNull P id) throws NullPointerException;
 
     /**
      * Retrieves a collection of entities corresponding to the specified identifiers asynchronously.
@@ -41,7 +39,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * the collection of entities corresponding to the provided identifiers; never null
      * @throws NullPointerException if the given iterable or any of its elements are null
      */
-    @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Collection<T>> findAll(@NonNull Iterable<P> id) throws NullPointerException;
 
     /**
      * Retrieves all entities from the repository asynchronously.
@@ -51,7 +49,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * @return a {@link CompletableFuture} that completes with an unmodifiable view of
      * the collection of all entities in the repository; never null
      */
-    @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll();
+    @NonNull CompletableFuture<@NonNull Collection<T>> findAll();
 
     /**
      * Checks if an entity with the specified identifier exists in the repository.
@@ -63,7 +61,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * or {@code false} otherwise
      * @throws NullPointerException if the provided identifier is null
      */
-    @NotNull CompletableFuture<Boolean> has(@NotNull P id) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Boolean> has(@NonNull P id) throws NullPointerException;
 
     /**
      * Persists the given entity to the underlying storage asynchronously.
@@ -73,7 +71,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * @return a {@link CompletableFuture} that completes with {@code null} when the entity is persisted successfully
      * @throws NullPointerException if the provided entity is null
      */
-    @NotNull CompletableFuture<Void> save(@NotNull T id) throws NullPointerException;
+    @NonNull CompletableFuture<Void> save(@NonNull T id) throws NullPointerException;
 
     /**
      * Persists all the provided entities to the underlying storage asynchronously.
@@ -83,5 +81,5 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * @return a {@link CompletableFuture} that completes with {@code null} when all entities are persisted successfully
      * @throws NullPointerException if the provided iterable or any of its elements are null
      */
-    @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<T> id) throws NullPointerException;
+    @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<T> id) throws NullPointerException;
 }

@@ -2,9 +2,8 @@ package net.kissenpvp.database;
 
 import net.kissenpvp.api.database.KissenRepository;
 import net.kissenpvp.api.database.PersistableEntity;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -22,7 +21,7 @@ import java.util.function.Function;
  */
 public abstract class InternalRepository<P, T extends PersistableEntity<P>> extends KissenRepository<P, T>
 {
-    public InternalRepository(@NotNull DataSource dataSource) throws NullPointerException
+    public InternalRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
     }
@@ -39,7 +38,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      * @return an unmodifiable collection of entities of type {@code T}, never null
      * @throws SQLException if an error occurs while executing the query or accessing the {@link ResultSet}
      */
-    protected @NotNull Collection<T> collectResults(@NotNull PreparedStatement statement) throws SQLException
+    protected @NonNull Collection<T> collectResults(@NonNull PreparedStatement statement) throws SQLException
     {
         Collection<T> collection = new HashSet<>();
         try(ResultSet resultSet = statement.executeQuery())
@@ -52,7 +51,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
         return Collections.unmodifiableCollection(collection);
     }
 
-    protected @NotNull Collection<T> collectResults(@NotNull P id, @NotNull PreparedStatement statement) throws SQLException
+    protected @NonNull Collection<T> collectResults(@NonNull P id, @NonNull PreparedStatement statement) throws SQLException
     {
         Collection<T> collection = new HashSet<>();
         try(ResultSet resultSet = statement.executeQuery())
@@ -76,7 +75,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      *         {@code false} otherwise
      * @throws SQLException if an error occurs during the execution of the query or while processing the result set
      */
-    protected static boolean hasResult(@NotNull PreparedStatement statement) throws SQLException
+    protected static boolean hasResult(@NonNull PreparedStatement statement) throws SQLException
     {
         try(ResultSet resultSet = statement.executeQuery())
         {
@@ -99,7 +98,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      *         or null if the input value is null
      * @throws NullPointerException if the provided function is null
      */
-    @Contract(value = "_, null -> null; _, !null -> !null", pure = true) protected static <X, Y> @Nullable Y convertSafely(@NotNull Function<X, Y> function, @Nullable X value) throws NullPointerException
+    protected static <X, Y> @Nullable Y convertSafely(@NonNull Function<X, Y> function, @Nullable X value) throws NullPointerException
     {
         Objects.requireNonNull(function, "The function cannot be null.");
 
@@ -126,7 +125,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      * @throws SQLException         if an error occurs while interacting with the {@link PreparedStatement}
      * @throws NullPointerException if the {@link PreparedStatement} is null
      */
-    protected static void setDual(@NotNull PreparedStatement statement, int index, int secondIndex, int sqlType, @Nullable Object value) throws SQLException, NullPointerException
+    protected static void setDual(@NonNull PreparedStatement statement, int index, int secondIndex, int sqlType, @Nullable Object value) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
 
@@ -141,7 +140,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
         statement.setNull(secondIndex, sqlType);
     }
 
-    protected void overrideSignature(@NotNull T entity) throws NullPointerException
+    protected void overrideSignature(@NonNull T entity) throws NullPointerException
     {
         Objects.requireNonNull(entity, "The entity cannot be null.");
         if (entity instanceof InternalPersistableEntity<?> persistable)
@@ -161,7 +160,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
      * @throws NullPointerException if either {@code id} or {@code resultSet} is null
      */
-    public abstract @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException;
+    public abstract @NonNull T toEntity(@NonNull P id, @NonNull ResultSet resultSet) throws SQLException, NullPointerException;
 
     /**
      * Converts a single row of the provided {@code ResultSet} into an entity.
@@ -174,5 +173,5 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      * @throws NullPointerException if the {@code ResultSet} is null
      * @see #toEntity(Object, ResultSet)
      */
-    public abstract @NotNull T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException;
+    public abstract @NonNull T toEntity(@NonNull ResultSet resultSet) throws SQLException, NullPointerException;
 }

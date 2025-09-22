@@ -2,7 +2,7 @@ package net.kissenpvp.network.actor;
 
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.database.InternalPersistableEntity;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -12,7 +12,7 @@ public abstract class InternalPlayerClient extends InternalPersistableEntity<UUI
 {
     private final UUID linkId;
 
-    protected InternalPlayerClient(@NotNull UUID linkId)
+    protected InternalPlayerClient(@NonNull UUID linkId)
     {
         this.linkId = linkId;
     }
@@ -22,12 +22,12 @@ public abstract class InternalPlayerClient extends InternalPersistableEntity<UUI
         return true;
     }
 
-    @Override public @NotNull UUID id()
+    @Override public @NonNull UUID id()
     {
         return getUniqueId();
     }
 
-    @Override public @NotNull UUID linkId()
+    @Override public @NonNull UUID linkId()
     {
         return linkId;
     }
@@ -37,13 +37,13 @@ public abstract class InternalPlayerClient extends InternalPersistableEntity<UUI
         return Objects.hash(id(), linkId());
     }
 
-    @Override public @NotNull Instant lastLogin()
+    @Override public @NonNull Instant lastLogin()
     {
         return Instant.ofEpochMilli(getLastLogin());
     }
 
     // Minecraft links
-    public abstract @NotNull UUID getUniqueId();
+    public abstract @NonNull UUID getUniqueId();
 
     public abstract long getLastLogin();
 }

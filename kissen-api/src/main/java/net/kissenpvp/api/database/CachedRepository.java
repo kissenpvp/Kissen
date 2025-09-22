@@ -1,8 +1,6 @@
 package net.kissenpvp.api.database;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -35,7 +33,7 @@ public interface CachedRepository<P, T extends PersistableEntity<P>> extends Rep
      * @throws NullPointerException if the provided identifier is null
      * @see #findAll(Iterable, boolean)
      */
-    @NotNull CompletableFuture<@NotNull Optional<T>> find(@NotNull P id, boolean utilizeCache) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Optional<T>> find(@NonNull P id, boolean utilizeCache) throws NullPointerException;
 
     /**
      * Retrieves a collection of entities corresponding to the specified identifiers asynchronously.
@@ -51,7 +49,7 @@ public interface CachedRepository<P, T extends PersistableEntity<P>> extends Rep
      * @throws NullPointerException if the provided iterable or any of its elements are null
      * @see #find(Object, boolean)
      */
-    @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id, boolean utilizeCache) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Collection<T>> findAll(@NonNull Iterable<P> id, boolean utilizeCache) throws NullPointerException;
 
     /**
      * Checks whether the entity associated with the specified identifier is currently cached.
@@ -61,7 +59,7 @@ public interface CachedRepository<P, T extends PersistableEntity<P>> extends Rep
      * @throws NullPointerException if the provided identifier is null
      * @see #cachedAll(Iterable)
      */
-    boolean cached(@NotNull P id) throws NullPointerException;
+    boolean cached(@NonNull P id) throws NullPointerException;
 
     /**
      * Checks whether all entities associated with the specified identifiers are currently cached.
@@ -71,6 +69,6 @@ public interface CachedRepository<P, T extends PersistableEntity<P>> extends Rep
      * @throws NullPointerException if the provided iterable or any of its elements are null
      * @see #cached(Object)
      */
-    boolean cachedAll(@NotNull Iterable<P> id) throws NullPointerException;
+    boolean cachedAll(@NonNull Iterable<P> id) throws NullPointerException;
 
 }

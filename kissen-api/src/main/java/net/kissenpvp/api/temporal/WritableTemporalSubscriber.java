@@ -1,6 +1,6 @@
 package net.kissenpvp.api.temporal;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Represents an entity that subscribes to a {@link WritableTemporalObject}.
@@ -25,5 +25,5 @@ public interface WritableTemporalSubscriber extends TemporalSubscriber
      * @return the non-null {@link WritableTemporalObject} associated with the implementing entity
      */
     @Override
-    @NotNull WritableTemporalObject temporal();
+    @NonNull WritableTemporalObject temporal();
 }

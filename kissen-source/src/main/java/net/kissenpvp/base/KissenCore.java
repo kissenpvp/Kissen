@@ -12,7 +12,7 @@ import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -24,7 +24,7 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
     private InternalRepositoryHolder databaseModule;
     private boolean started;
 
-    public static @NotNull KissenCore getInstance()
+    public static @NonNull KissenCore getInstance()
     {
         if (Objects.isNull(instance))
         {
@@ -35,7 +35,7 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
 
     public abstract ConsoleClient console();
 
-    protected void databaseModule(@NotNull InternalRepositoryHolder databaseModule)
+    protected void databaseModule(@NonNull InternalRepositoryHolder databaseModule)
     {
         Objects.requireNonNull(databaseModule.playerRepository(), "playerRepository cannot be null!");
         Objects.requireNonNull(databaseModule.operatorRepository(), "operatorRepository cannot be null!");
@@ -62,7 +62,7 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
         started = true;
     }
 
-    @Override public @NotNull GlobalLocaleRegistry localeRegistry()
+    @Override public @NonNull GlobalLocaleRegistry localeRegistry()
     {
         return localeRegistry;
     }
@@ -72,32 +72,32 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
         return started;
     }
 
-    @Override public @NotNull PlayerRepository playerRepository()
+    @Override public @NonNull PlayerRepository playerRepository()
     {
         return databaseModule.playerRepository();
     }
 
-    @Override public @NotNull Repository<UUID, OperatorInfo> operatorRepository()
+    @Override public @NonNull Repository<UUID, OperatorInfo> operatorRepository()
     {
         return databaseModule.operatorRepository();
     }
 
-    @Override public @NotNull Repository<Integer, Punishment> punishmentRepository()
+    @Override public @NonNull Repository<Integer, Punishment> punishmentRepository()
     {
         return databaseModule.punishmentRepository();
     }
 
-    @Override public @NotNull PunishmentSubscriptionRepository punishmentSubscriptionRepository()
+    @Override public @NonNull PunishmentSubscriptionRepository punishmentSubscriptionRepository()
     {
         return databaseModule.punishmentSubscriptionRepository();
     }
 
-    @Override public @NotNull Repository<String, Rank> rankRepository()
+    @Override public @NonNull Repository<String, Rank> rankRepository()
     {
         return databaseModule.rankRepository();
     }
 
-    @Override public @NotNull Repository<String, RankSubscription> rankSubscriptionRepository()
+    @Override public @NonNull Repository<String, RankSubscription> rankSubscriptionRepository()
     {
         return databaseModule.rankSubscriptionRepository();
     }

@@ -5,9 +5,8 @@ import net.kissenpvp.api.network.actor.Actor;
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.temporal.WritableTemporalSubscriber;
 import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -22,8 +21,7 @@ import java.util.UUID;
  * @author Ivo Quiring
  * @see net.kissenpvp.api.network.actor.PlayerClient#linkId()
  */
-public interface PunishmentSubscription extends SubscriptionEntity<String, Integer, Punishment>,
-        WritableTemporalSubscriber
+public interface PunishmentSubscription extends SubscriptionEntity<String, Integer, Punishment>, WritableTemporalSubscriber
 {
 
     /**
@@ -35,13 +33,13 @@ public interface PunishmentSubscription extends SubscriptionEntity<String, Integ
      * @return a non-null {@link UUID} identifying the linked identity for this subscription
      * @see net.kissenpvp.api.network.actor.PlayerClient#linkId()
      */
-    @NotNull UUID linkId();
+    @NonNull UUID linkId();
 
-    @NotNull @UnmodifiableView Collection<PlayerClient> targets();
+    @NonNull Collection<PlayerClient> targets();
 
-    @NotNull PlayerClient target();
+    @NonNull PlayerClient target();
 
-    @NotNull Actor operator();
+    @NonNull Actor operator();
 
     /**
      * Retrieves the custom message associated with this subscription, if present.
@@ -51,7 +49,7 @@ public interface PunishmentSubscription extends SubscriptionEntity<String, Integ
      * @return a non-null {@link Optional} containing the {@link Component} message if one is set; otherwise an empty
      * {@link Optional}
      */
-    @NotNull Optional<Component> message();
+    @NonNull Optional<Component> message();
 
     /**
      * Sets or clears the custom message associated with this subscription.

@@ -1,6 +1,6 @@
 package net.kissenpvp.api.database;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Represents a generic interface for entities that can be persisted and managed inside a database.
@@ -18,7 +18,7 @@ public interface PersistableEntity<P>
      *
      * @return the unique identifier of this entity; never null
      */
-    @NotNull P id();
+    @NonNull P id();
 
     /**
      * Computes a deterministic fingerprint of the entity's current state.

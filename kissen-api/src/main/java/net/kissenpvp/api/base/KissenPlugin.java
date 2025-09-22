@@ -1,16 +1,16 @@
 package net.kissenpvp.api.base;
 
 import org.intellij.lang.annotations.Subst;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.File;
 
 public interface KissenPlugin
 {
 
-    @Subst("plugin_identifier") @NotNull String getName();
+    @Subst("plugin_identifier") @NonNull String getName();
 
-    @NotNull File getDataFolder();
+    @NonNull File getDataFolder();
 
     boolean isEnabled();
 

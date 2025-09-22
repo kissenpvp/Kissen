@@ -5,7 +5,7 @@ import net.kissenpvp.api.temporal.TemporalObject;
 import net.kissenpvp.database.InternalPersistableEntity;
 import net.kissenpvp.temporal.InternalTemporalObject;
 import net.kissenpvp.temporal.timespan.PermanentTimeSpan;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 
@@ -15,12 +15,12 @@ public class InternalRank extends InternalPersistableEntity<String> implements R
     private int priority;
     private TemporalObject temporal;
 
-    public InternalRank(@NotNull String id, int priority) throws NullPointerException
+    public InternalRank(@NonNull String id, int priority) throws NullPointerException
     {
         this(id, priority, InternalTemporalObject.toTemporal(new PermanentTimeSpan()));
     }
 
-    public InternalRank(@NotNull String id, int priority, @NotNull TemporalObject temporal) throws NullPointerException
+    public InternalRank(@NonNull String id, int priority, @NonNull TemporalObject temporal) throws NullPointerException
     {
         Objects.requireNonNull(id, "Id cannot be null");
 
@@ -29,7 +29,7 @@ public class InternalRank extends InternalPersistableEntity<String> implements R
         this.temporal = temporal;
     }
 
-    @Override public @NotNull String id()
+    @Override public @NonNull String id()
     {
         return id;
     }
@@ -61,7 +61,7 @@ public class InternalRank extends InternalPersistableEntity<String> implements R
         return Objects.hashCode(id);
     }
 
-    @Override public @NotNull TemporalObject temporal()
+    @Override public @NonNull TemporalObject temporal()
     {
         return temporal;
     }

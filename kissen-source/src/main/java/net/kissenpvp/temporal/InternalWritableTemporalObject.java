@@ -3,8 +3,8 @@ package net.kissenpvp.temporal;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public class InternalWritableTemporalObject implements WritableTemporalObject
 {
-    private final @NotNull Instant start;
+    private final @NonNull Instant start;
     private final @Nullable Instant originalExpiry;
     private @Nullable Instant expiry;
 
@@ -27,7 +27,7 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
     }
 
     public InternalWritableTemporalObject(
-            @NotNull Instant start, @Nullable Instant expiry,
+            @NonNull Instant start, @Nullable Instant expiry,
             @Nullable Instant expectedExpiry
     ) throws NullPointerException
     {
@@ -38,7 +38,7 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
         originalExpiry = expectedExpiry;
     }
 
-    public static @NotNull InternalWritableTemporalObject toTemporal(@NotNull TimeSpan span)
+    public static @NonNull InternalWritableTemporalObject toTemporal(@NonNull TimeSpan span)
     {
         if (span instanceof DefinedTimeSpan definedTimeSpan)
         {
@@ -53,7 +53,7 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
         this.expiry = Instant.now();
     }
 
-    @Override public @NotNull Optional<Instant> expectedExpiry()
+    @Override public @NonNull Optional<Instant> expectedExpiry()
     {
         return Optional.ofNullable(originalExpiry);
     }
@@ -63,7 +63,7 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
         return !Objects.equals(originalExpiry, expiry);
     }
 
-    @Override public @NotNull Optional<Instant> expiry()
+    @Override public @NonNull Optional<Instant> expiry()
     {
         return Optional.ofNullable(expiry);
     }
@@ -73,7 +73,7 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
         return expiry().isPresent() && expiry().get().isBefore(Instant.now());
     }
 
-    @Override public @NotNull Instant start()
+    @Override public @NonNull Instant start()
     {
         return start;
     }

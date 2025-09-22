@@ -1,6 +1,6 @@
 package net.kissenpvp.api.database;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Optional;
 
@@ -30,14 +30,14 @@ public interface SubscriptionEntity<P, X, T extends PersistableEntity<X>> extend
      * @return a {@link Optional} containing the parent entity of type {@code T} if it exists,
      * or an empty {@link Optional} if no parent entity is associated; never null
      */
-    @NotNull Optional<T> parent();
+    @NonNull Optional<T> parent();
 
     /**
      * Retrieves the unique identifier of the parent entity associated with this subscription entity.
      *
      * @return the identifier of the parent entity of type {@code X}; never null
      */
-    @NotNull X parentId();
+    @NonNull X parentId();
 
     /**
      * Computes a derived signature of the associated parent entity's state.

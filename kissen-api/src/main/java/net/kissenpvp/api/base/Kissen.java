@@ -2,11 +2,11 @@ package net.kissenpvp.api.base;
 
 
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public interface Kissen
 {
-    @NotNull GlobalLocaleRegistry localeRegistry();
+    @NonNull GlobalLocaleRegistry localeRegistry();
 
     boolean started();
 }

@@ -3,8 +3,8 @@ package net.kissenpvp.api.punishment;
 import net.kissenpvp.api.database.PersistableEntity;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
 import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
@@ -29,7 +29,7 @@ public interface Punishment extends PersistableEntity<Integer>
      *
      * @return a non-null {@link TimeSpan} instance representing the duration or span of the punishment.
      */
-    @NotNull TimeSpan timeSpan();
+    @NonNull TimeSpan timeSpan();
 
     /**
      * Sets the {@link TimeSpan} for this {@link Punishment}.
@@ -39,7 +39,7 @@ public interface Punishment extends PersistableEntity<Integer>
      * @param timeSpan the {@link TimeSpan} to be associated with this punishment; must not be null
      * @throws NullPointerException if the provided {@link TimeSpan} is null
      */
-    void timeSpan(@NotNull TimeSpan timeSpan) throws NullPointerException;
+    void timeSpan(@NonNull TimeSpan timeSpan) throws NullPointerException;
 
     /**
      * Retrieves the type of the punishment represented by this instance.
@@ -48,7 +48,7 @@ public interface Punishment extends PersistableEntity<Integer>
      *
      * @return a non-null {@link PunishmentType} indicating the kind of punishment.
      */
-    @NotNull PunishmentType punishmentType();
+    @NonNull PunishmentType punishmentType();
 
     /**
      * Sets the type of punishment for this {@link Punishment}.
@@ -58,7 +58,7 @@ public interface Punishment extends PersistableEntity<Integer>
      * @param punishmentType the {@link PunishmentType} to be associated with this punishment; must not be null
      * @throws NullPointerException if the provided {@link PunishmentType} is null
      */
-    void punishmentType(@NotNull PunishmentType punishmentType) throws NullPointerException;
+    void punishmentType(@NonNull PunishmentType punishmentType) throws NullPointerException;
 
     /**
      * Retrieves the default message associated with this {@link Punishment}.
@@ -68,7 +68,7 @@ public interface Punishment extends PersistableEntity<Integer>
      * @return an {@link Optional} containing the default {@link Component} message if present, or an empty
      * {@link Optional} if no default message is set.
      */
-    @NotNull Optional<Component> defaultMessage();
+    @NonNull Optional<Component> defaultMessage();
 
     /**
      * Sets the default message to be associated with this {@link Punishment}.

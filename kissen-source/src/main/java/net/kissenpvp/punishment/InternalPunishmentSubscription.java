@@ -8,9 +8,9 @@ import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalSubscriptionEntity;
 import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 
 import java.util.Collection;
 import java.util.Objects;
@@ -22,14 +22,14 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     private final String id;
     private final UUID linkId;
     private final UUID operator;
-    private final @NotNull WritableTemporalObject temporalObject;
+    private final @NonNull WritableTemporalObject temporalObject;
     private @Nullable Component message;
 
     public InternalPunishmentSubscription(
             int parent,
-            @NotNull UUID linkId,
+            @NonNull UUID linkId,
             @Nullable UUID operator,
-            @NotNull WritableTemporalObject temporalObject,
+            @NonNull WritableTemporalObject temporalObject,
             @Nullable Component message
     ) throws NullPointerException
     {
@@ -37,11 +37,11 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     }
 
     public InternalPunishmentSubscription(
-            @NotNull String id,
+            @NonNull String id,
             int parent,
-            @NotNull UUID linkId,
+            @NonNull UUID linkId,
             @Nullable UUID operator,
-            @NotNull WritableTemporalObject temporalObject,
+            @NonNull WritableTemporalObject temporalObject,
             @Nullable Component message
     ) throws NullPointerException
     {
@@ -63,25 +63,25 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     }
 
     @Override
-    public @NotNull String id()
+    public @NonNull String id()
     {
         return id;
     }
 
     @Override
-    public @NotNull UUID linkId()
+    public @NonNull UUID linkId()
     {
         return linkId;
     }
 
     @Override
-    public @NotNull @UnmodifiableView Collection<PlayerClient> targets()
+    public @NonNull  Collection<PlayerClient> targets()
     {
         return KissenCore.getInstance().punishmentSubscriptionRepository().findTargets(linkId()).join();
     }
 
     @Override
-    public @NotNull PlayerClient target()
+    public @NonNull PlayerClient target()
     {
         Collection<PlayerClient> targets = targets();
         for (PlayerClient playerClient : targets())
@@ -100,7 +100,7 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     }
 
     @Override
-    public @NotNull Actor operator()
+    public @NonNull Actor operator()
     {
         if (Objects.isNull(operator))
         {
@@ -124,13 +124,13 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     }
 
     @Override
-    public @NotNull Optional<Punishment> parent()
+    public @NonNull Optional<Punishment> parent()
     {
         return KissenCore.getInstance().punishmentRepository().find(parentId()).join();
     }
 
     @Override
-    public @NotNull Optional<Component> message()
+    public @NonNull Optional<Component> message()
     {
         return Optional.ofNullable(message);
     }
@@ -148,7 +148,7 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     }
 
     @Override
-    public @NotNull WritableTemporalObject temporal()
+    public @NonNull WritableTemporalObject temporal()
     {
         return temporalObject;
     }

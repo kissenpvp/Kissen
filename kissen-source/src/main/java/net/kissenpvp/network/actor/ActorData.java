@@ -4,8 +4,8 @@ import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import net.kissenpvp.network.actor.rank.DummyRank;
 import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
+
 
 import java.time.Duration;
 import java.time.Instant;
@@ -22,7 +22,7 @@ import java.util.Optional;
  *
  * @author Ivo Quiring
  */
-public record ActorData(@NotNull List<Rank> ranks, @NotNull DefinedTimeSpan definedTimeSpan)
+public record ActorData(@NonNull List<Rank> ranks, @NonNull DefinedTimeSpan definedTimeSpan)
 {
     /**
      * Calculates the total time played by a player from the given last join time to the current time,
@@ -31,7 +31,7 @@ public record ActorData(@NotNull List<Rank> ranks, @NotNull DefinedTimeSpan defi
      * @param lastJoin the {@link Instant} representing the last join time of the player, must not be null
      * @return a {@link DefinedTimeSpan} representing the total calculated time played
      */
-    public @NotNull DefinedTimeSpan calculateTimePlayed(@NotNull Instant lastJoin)
+    public @NonNull DefinedTimeSpan calculateTimePlayed(@NonNull Instant lastJoin)
     {
         Duration totalTimePlayed = Duration.between(lastJoin, Instant.now()).plus(Duration.from(definedTimeSpan));
         return new InternalDefinedTimeSpan(totalTimePlayed.get(ChronoUnit.MILLIS));
@@ -49,7 +49,7 @@ public record ActorData(@NotNull List<Rank> ranks, @NotNull DefinedTimeSpan defi
      *
      * @return the most suitable {@link Rank} for the actor, or a dummy rank if none are applicable
      */
-    public @NotNull Rank calculateRank()
+    public @NonNull Rank calculateRank()
     {
         for (Rank rank : ranks.reversed())
         {
@@ -72,7 +72,7 @@ public record ActorData(@NotNull List<Rank> ranks, @NotNull DefinedTimeSpan defi
      * @return a {@link List} containing {@link Rank} objects representing the ranks of the actor,
      * guaranteed to be unmodifiable and non-null
      */
-    @Override public @NotNull @UnmodifiableView List<Rank> ranks()
+    @Override public @NonNull  List<Rank> ranks()
     {
         return Collections.unmodifiableList(ranks);
     }

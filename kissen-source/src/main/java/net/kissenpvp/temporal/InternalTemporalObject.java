@@ -3,13 +3,13 @@ package net.kissenpvp.temporal;
 import net.kissenpvp.api.temporal.TemporalObject;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.Optional;
 
-public record InternalTemporalObject(@NotNull Instant start, @Nullable Instant expiryTime) implements TemporalObject
+public record InternalTemporalObject(@NonNull Instant start, @Nullable Instant expiryTime) implements TemporalObject
 {
     InternalTemporalObject()
     {
@@ -21,7 +21,7 @@ public record InternalTemporalObject(@NotNull Instant start, @Nullable Instant e
         this(Instant.now(), expiry);
     }
 
-    public static @NotNull InternalTemporalObject toTemporal(@NotNull TimeSpan span)
+    public static @NonNull InternalTemporalObject toTemporal(@NonNull TimeSpan span)
     {
         if (span instanceof DefinedTimeSpan definedTimeSpan)
         {
@@ -31,7 +31,7 @@ public record InternalTemporalObject(@NotNull Instant start, @Nullable Instant e
         return new InternalTemporalObject();
     }
 
-    @Override public @NotNull Optional<Instant> expiry()
+    @Override public @NonNull Optional<Instant> expiry()
     {
         return Optional.ofNullable(expiryTime());
     }
@@ -41,7 +41,7 @@ public record InternalTemporalObject(@NotNull Instant start, @Nullable Instant e
         return expiry().isPresent() && expiry().get().isBefore(Instant.now());
     }
 
-    @Override public @NotNull Instant start()
+    @Override public @NonNull Instant start()
     {
         return start;
     }

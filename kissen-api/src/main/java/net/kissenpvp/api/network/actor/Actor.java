@@ -1,7 +1,7 @@
 package net.kissenpvp.api.network.actor;
 
 import net.kissenpvp.api.network.NetworkEntity;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Locale;
 
@@ -28,7 +28,7 @@ public interface Actor extends NetworkEntity
      *
      * @return a non-null string representing the unique username of the actor.
      */
-    @NotNull String username();
+    @NonNull String username();
 
     /**
      * Retrieves the locale associated with the actor.
@@ -39,7 +39,7 @@ public interface Actor extends NetworkEntity
      *
      * @return a non-null {@link Locale} representing the actor's language and regional preferences.
      */
-    @NotNull Locale locale();
+    @NonNull Locale locale();
 
     /**
      * Determines if the actor has elevated permissions.

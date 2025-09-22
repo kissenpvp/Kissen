@@ -2,9 +2,9 @@ package net.kissenpvp.api.network.actor;
 
 import net.kissenpvp.api.database.CachedRepository;
 import net.kissenpvp.api.database.Repository;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 
 import java.util.Collection;
 import java.util.Optional;
@@ -43,9 +43,9 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
      * @throws NullPointerException if the provided name is {@code null}.
      * @see #findByName(String, boolean)
      */
-    @NotNull CompletableFuture<@NotNull Optional<PlayerClient>> findByName(@NotNull String name) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Optional<PlayerClient>> findByName(@NonNull String name) throws NullPointerException;
 
-    @NotNull CompletableFuture<@NotNull Optional<UUID>> findLinkId(@NotNull UUID uuid) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Optional<UUID>> findLinkId(@NonNull UUID uuid) throws NullPointerException;
 
     /**
      * Retrieves a {@link PlayerClient} by their unique name asynchronously.
@@ -60,7 +60,7 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
      * or {@code null} if no such player exists.
      * @throws NullPointerException if the provided name is {@code null}.
      */
-    @NotNull CompletableFuture<@NotNull Optional<PlayerClient>> findByName(@NotNull String name, boolean utilizeCache) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Optional<PlayerClient>> findByName(@NonNull String name, boolean utilizeCache) throws NullPointerException;
 
     /**
      * Retrieves a collection of {@link PlayerClient} entities based on the provided iterable of player names.
@@ -79,7 +79,7 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
      * @throws NullPointerException if the provided iterable or any of its elements are {@code null}.
      * @see #findAllByName(Iterable, boolean)
      */
-    @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByName(@NotNull Iterable<String> name) throws NullPointerException;
+    @NonNull CompletableFuture< Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name) throws NullPointerException;
 
     /**
      * Performs an asynchronous search for all {@link PlayerClient} instances
@@ -96,7 +96,7 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
      * matching the provided names; the collection will be empty if no matches are found.
      * @throws NullPointerException if the provided iterable is {@code null} or contains {@code null} elements.
      */
-    @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByName(@NotNull Iterable<String> name, boolean utilizeCache) throws NullPointerException;
+    @NonNull CompletableFuture< Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name, boolean utilizeCache) throws NullPointerException;
 
     /**
      * Determines if the data associated with the specified player's name is currently cached.
@@ -108,5 +108,5 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
      * @return {@code true} if the player's data is cached; {@code false} otherwise.
      * @throws NullPointerException if the provided name is {@code null}.
      */
-    boolean cached(@NotNull String name) throws NullPointerException;
+    boolean cached(@NonNull String name) throws NullPointerException;
 }

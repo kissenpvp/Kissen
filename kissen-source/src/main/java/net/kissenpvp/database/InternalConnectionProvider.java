@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import net.kissenpvp.api.database.ConnectionProvider;
 import org.flywaydb.core.Flyway;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.sql.SQLException;
 import java.util.MissingResourceException;
@@ -30,19 +30,19 @@ public class InternalConnectionProvider implements ConnectionProvider
         }
     }
 
-    @Override public @NotNull Optional<HikariDataSource> dataSource()
+    @Override public @NonNull Optional<HikariDataSource> dataSource()
     {
         return Optional.ofNullable(dataSource);
     }
 
     @Override
-    public void connect(@NotNull String url, @NotNull String username, @NotNull String password) throws IllegalStateException, SQLException
+    public void connect(@NonNull String url, @NonNull String username, @NonNull String password) throws IllegalStateException, SQLException
     {
         connect(url, username, password, true);
     }
 
     @Override
-    public void connect(@NotNull String url, @NotNull String username, @NotNull String password, boolean generateSchema) throws IllegalStateException, SQLException
+    public void connect(@NonNull String url, @NonNull String username, @NonNull String password, boolean generateSchema) throws IllegalStateException, SQLException
     {
         Objects.requireNonNull(url, "Connection string must not be null");
 

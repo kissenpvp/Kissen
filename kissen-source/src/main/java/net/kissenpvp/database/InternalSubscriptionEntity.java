@@ -2,28 +2,28 @@ package net.kissenpvp.database;
 
 import net.kissenpvp.api.database.PersistableEntity;
 import net.kissenpvp.api.database.SubscriptionEntity;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 
 
 public abstract class InternalSubscriptionEntity<P, X, T extends PersistableEntity<X>> extends InternalPersistableEntity<P> implements SubscriptionEntity<P, X, T>
 {
-    private final @NotNull P id;
-    private final @NotNull X parentId;
+    private final @NonNull P id;
+    private final @NonNull X parentId;
 
-    public InternalSubscriptionEntity(@NotNull P id, @NotNull X parentId)
+    public InternalSubscriptionEntity(@NonNull P id, @NonNull X parentId)
     {
         this.id = id;
         this.parentId = parentId;
     }
 
-    @Override public @NotNull P id()
+    @Override public @NonNull P id()
     {
         return id;
     }
 
-    @Override public @NotNull X parentId()
+    @Override public @NonNull X parentId()
     {
         return parentId;
     }

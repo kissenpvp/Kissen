@@ -4,8 +4,8 @@ import com.google.gson.*;
 import net.kissenpvp.api.localization.LocaleRepository;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.translation.TranslationStore;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,14 +61,14 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      * @return a collector that maps string keys to {@link MessageFormat} instances based on their
      * string representations in the input entries
      */
-    private static @NotNull Collector<Map.Entry<String, JsonElement>, ?, Map<String, MessageFormat>> jsonCollector()
+    private static @NonNull Collector<Map.Entry<String, JsonElement>, ?, Map<String, MessageFormat>> jsonCollector()
     {
         return Collectors.toMap(Map.Entry::getKey, entry -> new MessageFormat(entry.getValue().getAsString()));
     }
 
     @Override public @Nullable MessageFormat register(
-            @NotNull String key,
-            @NotNull MessageFormat format
+            @NonNull String key,
+            @NonNull MessageFormat format
     ) throws NullPointerException
     {
         Objects.requireNonNull(key, "The key cannot be null.");
@@ -77,7 +77,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         return defaultMessages.put(key, format);
     }
 
-    @Override public @NotNull Key key()
+    @Override public @NonNull Key key()
     {
         return Key.key("kissen", plugin().getName());
     }
@@ -144,7 +144,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      * @param file the file to process; must not be null
      * @throws NullPointerException if the provided file is null
      */
-    private void loadFile(@NotNull File file) throws NullPointerException
+    private void loadFile(@NonNull File file) throws NullPointerException
     {
         Objects.requireNonNull(file, "The file cannot be null.");
 
@@ -178,7 +178,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      * representing the fully populated message data
      * @throws NullPointerException if the provided file is null
      */
-    private @NotNull Map<String, MessageFormat> readFile(@NotNull File file) throws NullPointerException
+    private @NonNull Map<String, MessageFormat> readFile(@NonNull File file) throws NullPointerException
     {
         Objects.requireNonNull(file, "The file cannot be null.");
 
@@ -206,7 +206,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      * fails
      * @throws NullPointerException if the provided file is null
      */
-    private @NotNull Optional<JsonObject> readJson(@NotNull File file) throws NullPointerException
+    private @NonNull Optional<JsonObject> readJson(@NonNull File file) throws NullPointerException
     {
         Objects.requireNonNull(file, "The file cannot be null.");
 
@@ -237,5 +237,5 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      * @throws NullPointerException if the provided locale name is null
      * @see net.kyori.adventure.translation.Translator#parseLocale(String)
      */
-    protected abstract @NotNull Optional<Locale> locale(@NotNull String localeName) throws NullPointerException;
+    protected abstract @NonNull Optional<Locale> locale(@NonNull String localeName) throws NullPointerException;
 }

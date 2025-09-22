@@ -2,17 +2,17 @@ package net.kissenpvp.api.localization;
 
 import net.kissenpvp.api.base.KissenPlugin;
 import net.kyori.adventure.key.Key;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.text.MessageFormat;
 
 public interface LocaleRepository
 {
-    @NotNull KissenPlugin plugin();
+    @NonNull KissenPlugin plugin();
 
-    @Nullable MessageFormat register(@NotNull String key, @NotNull MessageFormat format) throws NullPointerException;
+    @Nullable MessageFormat register(@NonNull String key, @NonNull MessageFormat format) throws NullPointerException;
 
-    @NotNull Key key();
+    @NonNull Key key();
 
 }

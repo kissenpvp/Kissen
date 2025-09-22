@@ -1,7 +1,7 @@
 package net.kissenpvp.api.network.actor;
 
 import net.kissenpvp.api.database.PersistableEntity;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.UUID;
 
@@ -20,7 +20,7 @@ public interface OperatorInfo extends PersistableEntity<UUID>
      *
      * @return a non-null string representing the operator's name.
      */
-    @NotNull String name();
+    @NonNull String name();
 
     /**
      * Retrieves the operational level of the operator.

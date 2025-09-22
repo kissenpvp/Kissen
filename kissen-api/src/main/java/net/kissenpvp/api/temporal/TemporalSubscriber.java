@@ -1,6 +1,6 @@
 package net.kissenpvp.api.temporal;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Represents an entity that subscribes to or is associated with a {@link TemporalObject}.
@@ -22,5 +22,5 @@ public interface TemporalSubscriber
      *
      * @return the non-null {@link TemporalObject} associated with the implementing entity
      */
-    @NotNull TemporalObject temporal();
+    @NonNull TemporalObject temporal();
 }

@@ -7,7 +7,7 @@ import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalSubscriptionEntity;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -27,17 +27,17 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
     private final WritableTemporalObject temporalObject;
 
     public InternalRankSubscription(
-            @NotNull String id,
-            @NotNull String parentId,
-            @NotNull UUID playerId
+            @NonNull String id,
+            @NonNull String parentId,
+            @NonNull UUID playerId
     ) throws NullPointerException
     {
         this(id, parentId, playerId, new InternalWritableTemporalObject());
     }
 
     public InternalRankSubscription(
-            @NotNull String id, @NotNull String parentId, @NotNull UUID playerId,
-            @NotNull WritableTemporalObject temporalObject
+            @NonNull String id, @NonNull String parentId, @NonNull UUID playerId,
+            @NonNull WritableTemporalObject temporalObject
     ) throws NullPointerException
     {
         super(id, parentId);
@@ -48,7 +48,7 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
         this.temporalObject = temporalObject;
     }
 
-    @Override public @NotNull Optional<Rank> parent()
+    @Override public @NonNull Optional<Rank> parent()
     {
         return KissenCore.getInstance().rankRepository().find(parentId()).join();
     }
@@ -58,7 +58,7 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
         return Objects.hash(id(), parentId(), playerId);
     }
 
-    @Override public @NotNull PlayerClient player() throws IllegalStateException
+    @Override public @NonNull PlayerClient player() throws IllegalStateException
     {
         Optional<PlayerClient> player = KissenCore.getInstance().playerRepository().find(playerId).join();
         if (player.isEmpty())
@@ -70,7 +70,7 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
     }
 
     @Override
-    public @NotNull WritableTemporalObject temporal()
+    public @NonNull WritableTemporalObject temporal()
     {
         return temporalObject;
     }

@@ -7,8 +7,8 @@ import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.punishment.InternalPunishment;
 import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
+
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -36,12 +36,12 @@ import java.util.concurrent.CompletableFuture;
 public class InternalPunishmentRepository extends InternalCachedRepository<Integer, Punishment>
 {
 
-    public InternalPunishmentRepository(@NotNull DataSource dataSource) throws NullPointerException
+    public InternalPunishmentRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
     }
 
-    @Override protected @NotNull CompletableFuture<Optional<Punishment>> findUncached(@NotNull Integer id) throws NullPointerException
+    @Override protected @NonNull CompletableFuture<Optional<Punishment>> findUncached(@NonNull Integer id) throws NullPointerException
     {
         String sql = "SELECT punishment_type, time_span, message FROM ksvp_punishment WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
@@ -51,7 +51,7 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         }));
     }
 
-    @Override protected @NotNull CompletableFuture<@UnmodifiableView Collection<Punishment>> findAllUncached(@NotNull Iterable<Integer> id) throws NullPointerException
+    @Override protected @NonNull CompletableFuture< Collection<Punishment>> findAllUncached(@NonNull Iterable<Integer> id) throws NullPointerException
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, punishment_type, time_span, message FROM ksvp_punishment WHERE id IN (" + placeHolders + ");";
@@ -67,13 +67,13 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         }));
     }
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<Punishment>> findAll()
+    @Override public @NonNull CompletableFuture< Collection<Punishment>> findAll()
     {
         String sql = "SELECT id, punishment_type, time_span, message FROM ksvp_punishment;";
         return CompletableFuture.supplyAsync(() -> query(sql, this::collectResults));
     }
 
-    @Override public @NotNull CompletableFuture<Boolean> has(@NotNull Integer id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull Integer id) throws NullPointerException
     {
         String sql = "SELECT id FROM ksvp_punishment WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
@@ -83,7 +83,7 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         }));
     }
 
-    @Override protected @NotNull InternalPunishment toCachedEntity(@NotNull Integer id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    @Override protected @NonNull InternalPunishment toCachedEntity(@NonNull Integer id, @NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -93,19 +93,19 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         return new InternalPunishment(id, type, timeSpan);
     }
 
-    @Override protected @NotNull InternalPunishment toCachedEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    @Override protected @NonNull InternalPunishment toCachedEntity(@NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         return toCachedEntity(resultSet.getInt("id"), resultSet);
     }
 
-    @Override public @NotNull CompletableFuture<Void> save(@NotNull Punishment id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Void> save(@NonNull Punishment id) throws NullPointerException
     {
         Objects.requireNonNull(id, "The punishment cannot be null.");
 
         return saveAll(Collections.singleton(id));
     }
 
-    @Override public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<Punishment> id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<Punishment> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "The punishment iterable cannot be null.");
 
@@ -133,7 +133,7 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
      * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
      * @throws NullPointerException If either {@code statement} or {@code punishment} is null.
      */
-    private void addBatch(@NotNull PreparedStatement statement, @NotNull Punishment punishment) throws SQLException, NullPointerException
+    private void addBatch(@NonNull PreparedStatement statement, @NonNull Punishment punishment) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(punishment, "The punishment cannot be null.");

@@ -1,7 +1,7 @@
 package net.kissenpvp.api.network.actor;
 
 import net.kyori.adventure.audience.Audience;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Represents an entity capable of receiving.
@@ -24,5 +24,5 @@ public interface MessageReceiver
      *
      * @return a non-null {@link Audience} representing the communication interface for this receiver.
      */
-    @NotNull Audience audience();
+    @NonNull Audience audience();
 }

@@ -1,6 +1,6 @@
 package net.kissenpvp.api.temporal;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -26,7 +26,7 @@ public interface TemporalObject
      * @return an {@link Optional} containing the expiry time as an {@link Instant},
      * or an empty {@link Optional} if the expiry time is not defined
      */
-    @NotNull Optional<Instant> expiry();
+    @NonNull Optional<Instant> expiry();
 
     boolean expired();
 
@@ -39,5 +39,5 @@ public interface TemporalObject
      *
      * @return a non-null {@link Instant} representing the start time of the temporal object
      */
-    @NotNull Instant start();
+    @NonNull Instant start();
 }

@@ -15,9 +15,9 @@ import net.kissenpvp.temporal.InternalWritableTemporalObject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -40,13 +40,13 @@ import java.util.concurrent.CompletableFuture;
  */
 public class InternalPunishmentSubscriptionRepository extends InternalRepository<String, PunishmentSubscription> implements PunishmentSubscriptionRepository
 {
-    public InternalPunishmentSubscriptionRepository(@NotNull DataSource dataSource) throws NullPointerException
+    public InternalPunishmentSubscriptionRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
     }
 
     @Override
-    public @NotNull InternalPunishmentSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    public @NonNull InternalPunishmentSubscription toEntity(@NonNull String id, @NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -73,7 +73,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
 
     @Override
-    public @NotNull InternalPunishmentSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException,
+    public @NonNull InternalPunishmentSubscription toEntity(@NonNull ResultSet resultSet) throws SQLException,
             NullPointerException
     {
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -81,7 +81,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         return toEntity(resultSet.getString("id"), resultSet);
     }
 
-    @Override public @NotNull CompletableFuture<@NotNull Optional<PunishmentSubscription>> find(@NotNull String id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<@NonNull Optional<PunishmentSubscription>> find(@NonNull String id) throws NullPointerException
     {
         String sql = "SELECT link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, statement ->
@@ -91,7 +91,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         })));
     }
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<PunishmentSubscription>> findAll(@NotNull Iterable<String> id) throws NullPointerException
+    @Override public @NonNull CompletableFuture< Collection<PunishmentSubscription>> findAll(@NonNull Iterable<String> id) throws NullPointerException
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription WHERE id IN (" + placeHolders + ")";
@@ -107,13 +107,13 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         })));
     }
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<PunishmentSubscription>> findAll()
+    @Override public @NonNull CompletableFuture< Collection<PunishmentSubscription>> findAll()
     {
         String sql = "SELECT id, link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription;";
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, this::collectResults)));
     }
 
-    @Override public @NotNull CompletableFuture<Boolean> has(@NotNull String id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id) throws NullPointerException
     {
         String sql = "SELECT id FROM ksvp_punishment_subscription WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement -> {
@@ -123,7 +123,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PunishmentSubscription> id) throws NullPointerException
+    public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<PunishmentSubscription> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "The iterable of subscriptions cannot be null.");
 
@@ -154,8 +154,8 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
      * @throws NullPointerException If the {@link PreparedStatement} or {@link PunishmentSubscription} is null.
      */
     private void addBatch(
-            @NotNull PreparedStatement statement,
-            @NotNull PunishmentSubscription subscription
+            @NonNull PreparedStatement statement,
+            @NonNull PunishmentSubscription subscription
     ) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
@@ -200,7 +200,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
      * @throws NullPointerException If the provided {@link PreparedStatement} is null.
      */
     private void expectedExpiry(
-            @NotNull PreparedStatement statement,
+            @NonNull PreparedStatement statement,
             @Nullable LocalDateTime expiry
     ) throws SQLException, NullPointerException
     {
@@ -218,7 +218,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PlayerClient>> findTargets(@NotNull UUID linkId)
+    public @NonNull CompletableFuture<@NonNull  Collection<PlayerClient>> findTargets(@NonNull UUID linkId)
     {
         String sql = "SELECT id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE " +
                 "link_id = ?;";
@@ -241,7 +241,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<UUID>> findTargetIds(@NotNull UUID linkId)
+    public @NonNull CompletableFuture<@NonNull  Collection<UUID>> findTargetIds(@NonNull UUID linkId)
     {
         String sql = "SELECT id FROM ksvp_player WHERE link_id = ?;";
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
@@ -262,15 +262,15 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PunishmentSubscription>> findSubscriptions(@NotNull UUID linkId)
+    public @NonNull CompletableFuture<@NonNull  Collection<PunishmentSubscription>> findSubscriptions(@NonNull UUID linkId)
     {
         String sql = "SELECT * FROM ksvp_punishment_subscription WHERE link_id = ?;";
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, retrieveSubscriptions(linkId))));
     }
 
     @Override
-    public @NotNull CompletableFuture<@NotNull @UnmodifiableView Collection<PunishmentSubscription>> findSubscriptionsByUserId(
-            @NotNull UUID userId
+    public @NonNull CompletableFuture<@NonNull  Collection<PunishmentSubscription>> findSubscriptionsByUserId(
+            @NonNull UUID userId
     )
     {
         String sql = "SELECT ps.* FROM ksvp_punishment_subscription ps JOIN ksvp_player p ON ps.link_id = p.link_id " +
@@ -278,7 +278,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, retrieveSubscriptions(userId))));
     }
 
-    private @NotNull QueryExecutor<Collection<PunishmentSubscription>> retrieveSubscriptions(UUID uuid)
+    private @NonNull QueryExecutor<Collection<PunishmentSubscription>> retrieveSubscriptions(UUID uuid)
     {
         return (statement ->
         {
@@ -296,12 +296,12 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         });
     }
 
-    private static @NotNull LocalDateTime toDateTime(@NotNull Instant instant)
+    private static @NonNull LocalDateTime toDateTime(@NonNull Instant instant)
     {
         return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
     }
 
-    private static void operator(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription
+    private static void operator(@NonNull PreparedStatement statement, @NonNull PunishmentSubscription subscription
     ) throws SQLException
     {
         UUID operator = ((InternalPunishmentSubscription) subscription).rawOperator();

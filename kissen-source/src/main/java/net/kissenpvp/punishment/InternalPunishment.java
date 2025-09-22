@@ -5,8 +5,8 @@ import net.kissenpvp.api.punishment.PunishmentType;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
 import net.kissenpvp.database.InternalPersistableEntity;
 import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -18,13 +18,13 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
     private TimeSpan timeSpan;
     private @Nullable Component defaultMessage;
 
-    public InternalPunishment(int id, @NotNull PunishmentType punishmentType, @NotNull TimeSpan timeSpan)
+    public InternalPunishment(int id, @NonNull PunishmentType punishmentType, @NonNull TimeSpan timeSpan)
     {
         this(id, punishmentType, timeSpan, null);
     }
 
     public InternalPunishment(
-            int id, @NotNull PunishmentType punishmentType, @NotNull TimeSpan timeSpan,
+            int id, @NonNull PunishmentType punishmentType, @NonNull TimeSpan timeSpan,
             @Nullable Component defaultMessage
     )
     {
@@ -39,7 +39,7 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
         overrideSignature();
     }
 
-    @Override public @NotNull Integer id()
+    @Override public @NonNull Integer id()
     {
         return id;
     }
@@ -49,29 +49,29 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
         return Objects.hash(punishmentType, timeSpan, defaultMessage);
     }
 
-    @Override public @NotNull TimeSpan timeSpan()
+    @Override public @NonNull TimeSpan timeSpan()
     {
         return timeSpan;
     }
 
-    @Override public void timeSpan(@NotNull TimeSpan timeSpan)
+    @Override public void timeSpan(@NonNull TimeSpan timeSpan)
     {
         Objects.requireNonNull(timeSpan, "TimeSpan cannot be null.");
         this.timeSpan = timeSpan;
     }
 
-    @Override public @NotNull PunishmentType punishmentType()
+    @Override public @NonNull PunishmentType punishmentType()
     {
         return punishmentType;
     }
 
-    @Override public void punishmentType(@NotNull PunishmentType punishmentType)
+    @Override public void punishmentType(@NonNull PunishmentType punishmentType)
     {
         Objects.requireNonNull(punishmentType, "PunishmentType cannot be null.");
         this.punishmentType = punishmentType;
     }
 
-    @Override public @NotNull Optional<Component> defaultMessage()
+    @Override public @NonNull Optional<Component> defaultMessage()
     {
         return Optional.ofNullable(this.defaultMessage);
     }

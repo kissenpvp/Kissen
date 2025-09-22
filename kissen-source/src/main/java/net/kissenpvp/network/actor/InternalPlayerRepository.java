@@ -3,8 +3,8 @@ package net.kissenpvp.network.actor;
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.database.InternalCachedRepository;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
+
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -41,13 +41,13 @@ import java.util.stream.Stream;
 public abstract class InternalPlayerRepository extends InternalCachedRepository<UUID, PlayerClient> implements PlayerRepository
 {
 
-    public InternalPlayerRepository(@NotNull DataSource dataSource) throws NullPointerException
+    public InternalPlayerRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
 
     }
 
-    @Override protected @NotNull CompletableFuture<Optional<PlayerClient>> findUncached(@NotNull UUID id) throws NullPointerException
+    @Override protected @NonNull CompletableFuture<Optional<PlayerClient>> findUncached(@NonNull UUID id) throws NullPointerException
     {
         String sql = "SELECT link_id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
@@ -57,7 +57,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         })));
     }
 
-    @Override protected @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllUncached(@NotNull Iterable<UUID> id) throws NullPointerException
+    @Override protected @NonNull CompletableFuture< Collection<PlayerClient>> findAllUncached(@NonNull Iterable<UUID> id) throws NullPointerException
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, link_id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE id IN (" + placeHolders + ");";
@@ -72,7 +72,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         }));
     }
 
-    @Override public @NotNull CompletableFuture<Boolean> has(@NotNull UUID id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull UUID id) throws NullPointerException
     {
         String sql = "SELECT id FROM ksvp_player WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
@@ -82,18 +82,18 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         }));
     }
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAll()
+    @Override public @NonNull CompletableFuture< Collection<PlayerClient>> findAll()
     {
         String sql = "SELECT id, link_id, username, first_login, last_login, time_played, locale FROM ksvp_player;";
         return CompletableFuture.supplyAsync(() -> query(sql, this::collectResults));
     }
 
-    @Override public @NotNull CompletableFuture<@NotNull Optional<PlayerClient>> findByName(@NotNull String name) throws NullPointerException
+    @Override public @NonNull CompletableFuture<@NonNull Optional<PlayerClient>> findByName(@NonNull String name) throws NullPointerException
     {
         return findByName(name, true);
     }
 
-    @Override public @NotNull CompletableFuture<@NotNull Optional<UUID>> findLinkId(@NotNull UUID uuid) throws NullPointerException
+    @Override public @NonNull CompletableFuture<@NonNull Optional<UUID>> findLinkId(@NonNull UUID uuid) throws NullPointerException
     {
         String sql = "SELECT link_id FROM ksvp_player WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
@@ -111,7 +111,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         }))));
     }
 
-    @Override public @NotNull CompletableFuture<@NotNull Optional<PlayerClient>> findByName(@NotNull String name, boolean utilizeCache) throws NullPointerException
+    @Override public @NonNull CompletableFuture<@NonNull Optional<PlayerClient>> findByName(@NonNull String name, boolean utilizeCache) throws NullPointerException
     {
         if(utilizeCache)
         {
@@ -135,7 +135,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     }
 
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByName(@NotNull Iterable<String> name, boolean utilizeCache) throws NullPointerException
+    @Override public @NonNull CompletableFuture< Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name, boolean utilizeCache) throws NullPointerException
     {
         if (!utilizeCache)
         {
@@ -164,7 +164,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         return CompletableFuture.completedFuture(Collections.unmodifiableCollection(cached));
     }
 
-    private @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByNameUncached(@NotNull Iterable<String> name)
+    private @NonNull CompletableFuture< Collection<PlayerClient>> findAllByNameUncached(@NonNull Iterable<String> name)
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(name), "?"));
         String sql = "SELECT id, link_id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE username IN (" + placeHolders + ");";
@@ -180,18 +180,18 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         }));
     }
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByName(@NotNull Iterable<String> name) throws NullPointerException
+    @Override public @NonNull CompletableFuture< Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name) throws NullPointerException
     {
         return findAllByName(name, true);
     }
 
-    @Override protected @NotNull PlayerClient toCachedEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    @Override protected @NonNull PlayerClient toCachedEntity(@NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         return toCachedEntity(UUID.fromString(resultSet.getString("id")), resultSet);
     }
 
     @Override
-    public boolean cached(@NotNull String name) throws NullPointerException
+    public boolean cached(@NonNull String name) throws NullPointerException
     {
         Collection<PlayerClient> cachedPlayers = cachedEntries().values();
         for (PlayerClient playerClient : cachedPlayers)
@@ -205,7 +205,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PlayerClient> id) throws NullPointerException
+    public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<PlayerClient> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "id cannot be null");
         String sql = "INSERT INTO ksvp_player (id, link_id, username, locale) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, username = ?, last_login = ?, time_played = ?, locale = ?;";
@@ -254,7 +254,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
      * @throws SQLException         if an error occurs while interacting with the {@link PreparedStatement}
      * @throws NullPointerException if the provided {@link PreparedStatement} or {@link PlayerClient} is null
      */
-    private void addBatch(@NotNull PreparedStatement statement, @NotNull PlayerClient playerClient) throws SQLException, NullPointerException
+    private void addBatch(@NonNull PreparedStatement statement, @NonNull PlayerClient playerClient) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(playerClient, "The player client cannot be null.");

@@ -1,6 +1,6 @@
 package net.kissenpvp.base;
 
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.event.Level;
 
@@ -15,7 +15,7 @@ public class LoggingOutputStream extends OutputStream
     private Logger logger;
     private Level level;
 
-    public LoggingOutputStream(@NotNull Logger logger, @NotNull Level level) throws NullPointerException
+    public LoggingOutputStream(@NonNull Logger logger, @NonNull Level level) throws NullPointerException
     {
         Objects.requireNonNull(logger, "Logger cannot be null");
         Objects.requireNonNull(level, "LogLevel cannot be null");
@@ -26,24 +26,24 @@ public class LoggingOutputStream extends OutputStream
         this.byteArrayOutputStream = new ByteArrayOutputStream();
     }
 
-    public @NotNull Level level()
+    public @NonNull Level level()
     {
         return level;
     }
 
-    public void level(@NotNull Level level) throws NullPointerException
+    public void level(@NonNull Level level) throws NullPointerException
     {
         Objects.requireNonNull(level, "LogLevel cannot be null");
 
         this.level = level;
     }
 
-    public @NotNull Logger logger()
+    public @NonNull Logger logger()
     {
         return logger;
     }
 
-    public void logger(@NotNull Logger logger) throws NullPointerException
+    public void logger(@NonNull Logger logger) throws NullPointerException
     {
         Objects.requireNonNull(logger, "Logger cannot be null");
 

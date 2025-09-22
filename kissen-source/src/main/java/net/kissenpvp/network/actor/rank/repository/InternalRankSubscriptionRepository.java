@@ -6,9 +6,9 @@ import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRankSubscription;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.UnmodifiableView;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -33,17 +33,17 @@ import java.util.concurrent.CompletableFuture;
  */
 public class InternalRankSubscriptionRepository extends InternalRepository<String, RankSubscription> implements Repository<String, RankSubscription>
 {
-    public InternalRankSubscriptionRepository(@NotNull DataSource dataSource) throws NullPointerException
+    public InternalRankSubscriptionRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
     }
 
-    private static @NotNull LocalDateTime toDateTime(@NotNull Instant instant)
+    private static @NonNull LocalDateTime toDateTime(@NonNull Instant instant)
     {
         return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
     }
 
-    @Override public @NotNull CompletableFuture<@NotNull Optional<RankSubscription>> find(@NotNull String id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<@NonNull Optional<RankSubscription>> find(@NonNull String id) throws NullPointerException
     {
         String sql = "SELECT rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
@@ -53,7 +53,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         }))));
     }
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<RankSubscription>> findAll(@NotNull Iterable<String> id) throws NullPointerException
+    @Override public @NonNull CompletableFuture< Collection<RankSubscription>> findAll(@NonNull Iterable<String> id) throws NullPointerException
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id IN (" + placeHolders + ")";
@@ -69,13 +69,13 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         }));
     }
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<RankSubscription>> findAll()
+    @Override public @NonNull CompletableFuture< Collection<RankSubscription>> findAll()
     {
         String sql = "SELECT id, rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription";
         return CompletableFuture.supplyAsync(() -> query(sql, this::collectResults));
     }
 
-    @Override public @NotNull CompletableFuture<Boolean> has(@NotNull String id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id) throws NullPointerException
     {
         return CompletableFuture.supplyAsync(() -> query("SELECT id FROM ksvp_rank_subscription WHERE id = ?;", (statement ->
         {
@@ -84,7 +84,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         })));
     }
 
-    @Override public @NotNull RankSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    @Override public @NonNull RankSubscription toEntity(@NonNull String id, @NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(id, "The rank subscription ID cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -99,13 +99,13 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         return new InternalRankSubscription(id, resultSet.getString("rank_id"), playerId, temporal);
     }
 
-    @Override public @NotNull RankSubscription toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    @Override public @NonNull RankSubscription toEntity(@NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
         return toEntity(resultSet.getString("id"), resultSet);
     }
 
-    @Override public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<RankSubscription> id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<RankSubscription> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "The rank subscriptions cannot be null.");
 
@@ -150,7 +150,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
      * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
      * @throws NullPointerException If the provided {@link PreparedStatement} is null.
      */
-    private void expectedExpiry(@NotNull PreparedStatement statement, @Nullable LocalDateTime expiry) throws SQLException, NullPointerException
+    private void expectedExpiry(@NonNull PreparedStatement statement, @Nullable LocalDateTime expiry) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
 
