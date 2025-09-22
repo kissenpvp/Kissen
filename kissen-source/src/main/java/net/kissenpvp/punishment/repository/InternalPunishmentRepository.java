@@ -51,7 +51,7 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
         {
             statement.setInt(1, id);
-            return collectResults(statement).stream().findFirst();
+            return collectResults(id, statement).stream().findFirst();
         }));
     }
 

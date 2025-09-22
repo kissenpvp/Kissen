@@ -45,7 +45,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             statement.setString(1, id);
-            return collectResults(statement).stream().findFirst();
+            return collectResults(id, statement).stream().findFirst();
         })));
     }
 

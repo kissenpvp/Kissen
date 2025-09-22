@@ -61,7 +61,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(id));
-            return collectResults(statement).stream().findFirst();
+            return collectResults(id, statement).stream().findFirst();
         })));
     }
 

@@ -94,7 +94,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, statement ->
         {
             statement.setString(1, id);
-            return collectResults(statement).stream().findFirst();
+            return collectResults(id, statement).stream().findFirst();
         })));
     }
 

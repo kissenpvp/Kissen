@@ -57,14 +57,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
         {
             statement.setString(1, id);
-            try (ResultSet resultSet = statement.executeQuery())
-            {
-                if (!resultSet.next())
-                {
-                    return Optional.empty();
-                }
-                return Optional.of(toEntity(resultSet));
-            }
+            return collectResults(id, statement).stream().findFirst();
         }))));
     }
 

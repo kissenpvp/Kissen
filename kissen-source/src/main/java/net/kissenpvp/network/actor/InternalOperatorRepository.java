@@ -49,7 +49,7 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, statement ->
         {
             statement.setString(1, String.valueOf(id));
-            return collectResults(statement).stream().findFirst();
+            return collectResults(id, statement).stream().findFirst();
         })));
     }
 

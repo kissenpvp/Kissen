@@ -52,6 +52,19 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
         return Collections.unmodifiableCollection(collection);
     }
 
+    protected @NotNull Collection<T> collectResults(@NotNull P id, @NotNull PreparedStatement statement) throws SQLException
+    {
+        Collection<T> collection = new HashSet<>();
+        try(ResultSet resultSet = statement.executeQuery())
+        {
+            while(resultSet.next())
+            {
+                collection.add(toEntity(id, resultSet));
+            }
+        }
+        return Collections.unmodifiableCollection(collection);
+    }
+
     /**
      * Checks if the given {@link PreparedStatement} has any results when executed.
      * <p>
