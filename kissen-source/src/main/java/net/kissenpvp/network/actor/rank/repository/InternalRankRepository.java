@@ -5,9 +5,10 @@ import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRank;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnmodifiableView;
 
 import java.sql.*;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -35,30 +36,66 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
      */
     public InternalRankRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super(
-                "ksvp_rank",
-                connection,
-                "SELECT priority FROM ksvp_rank WHERE id = ?;",
-                "SELECT * FROM ksvp_rank;",
-                "SELECT * FROM ksvp_rank WHERE id IN (%s);"
-        );
+        super(connection);
     }
 
-    @Override
-    protected @NotNull Rank toCachedEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    @Override protected @NotNull CompletableFuture<Optional<Rank>> findUncached(@NotNull String id) throws NullPointerException
     {
-        Objects.requireNonNull(resultSet, "The result set cannot be null.");
-        return toEntity(resultSet.getString("id"), resultSet);
+        String sql = "SELECT priority FROM ksvp_rank WHERE id = ?;";
+        return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
+        {
+            statement.setString(1, id);
+            return collectResults(statement).stream().findFirst();
+        })));
     }
 
-    @Override
-    protected @NotNull Rank toCachedEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException,
-            NullPointerException
+    @Override protected @NotNull CompletableFuture<@UnmodifiableView Collection<Rank>> findAllUncached(@NotNull Iterable<String> id) throws NullPointerException
     {
-        Objects.requireNonNull(id, "The id cannot be null.");
-        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+        String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
+        String sql = "SELECT id, priority FROM ksvp_rank WHERE id IN (" + placeHolders + ");";
+        return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
+        {
+            int index = 1;
+            for (String current : id)
+            {
+                statement.setString(index++, current);
+            }
 
-        return new InternalRank(id, resultSet.getInt("priority"));
+            Collection<Rank> rankCollection = new HashSet<>();
+            try (ResultSet resultSet = statement.executeQuery())
+            {
+                while (resultSet.next())
+                {
+                    rankCollection.add(toEntity(resultSet));
+                }
+            }
+            return Collections.unmodifiableCollection(rankCollection);
+        })));
+    }
+
+    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<Rank>> findAll()
+    {
+        return CompletableFuture.supplyAsync(() -> query("SELECT id, priority FROM ksvp_rank;", (statement ->
+        {
+            Collection<Rank> rankCollection = new HashSet<>();
+            try (ResultSet resultSet = statement.executeQuery())
+            {
+                while(resultSet.next())
+                {
+                    rankCollection.add(toEntity(resultSet));
+                }
+            }
+            return Collections.unmodifiableCollection(rankCollection);
+        })));
+    }
+
+    @Override public @NotNull CompletableFuture<Boolean> has(@NotNull String id) throws NullPointerException
+    {
+        return CompletableFuture.supplyAsync(() -> query("SELECT id FROM ksvp_rank WHERE id = ?;", (statement ->
+        {
+            statement.setString(1, id);
+            return hasResult(statement);
+        })));
     }
 
     @Override public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<Rank> id) throws NullPointerException
@@ -66,16 +103,31 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         Objects.requireNonNull(id, "The iterable of ranks cannot be null.");
 
         String sql = "INSERT INTO ksvp_rank (id, priority) VALUES (?, ?) ON DUPLICATE KEY UPDATE priority = ?;";
-
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (Rank rank : id)
             {
-                addBatch(statement, rank);
+                batch(statement, rank);
+                statement.addBatch();
             }
             statement.executeBatch();
             return null;
         })));
+    }
+
+    @Override
+    protected @NotNull Rank toCachedEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    {
+        return toEntity(resultSet.getString("id"), resultSet);
+    }
+
+    @Override
+    protected @NotNull Rank toCachedEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    {
+        Objects.requireNonNull(id, "The id cannot be null.");
+        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+
+        return new InternalRank(id, resultSet.getInt("priority"));
     }
 
     /**
@@ -88,8 +140,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
      * @throws SQLException         if an error occurs while setting parameters or adding the batch
      * @throws NullPointerException if the provided statement or rank is null
      */
-    private void addBatch(@NotNull PreparedStatement statement, @NotNull Rank rank) throws SQLException,
-            NullPointerException
+    private void batch(@NotNull PreparedStatement statement, @NotNull Rank rank) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(rank, "The rank cannot be null.");
@@ -98,6 +149,5 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         setDual(statement, 2, 3, Types.INTEGER, rank.priority());
 
         overrideSignature(rank);
-        statement.addBatch();
     }
 }

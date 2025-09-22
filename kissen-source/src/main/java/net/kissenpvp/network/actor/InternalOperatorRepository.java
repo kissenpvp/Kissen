@@ -3,12 +3,13 @@ package net.kissenpvp.network.actor;
 import net.kissenpvp.api.network.actor.OperatorInfo;
 import net.kissenpvp.database.InternalRepository;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnmodifiableView;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -39,22 +40,53 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
      */
     public InternalOperatorRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_operators",
-                connection,
-                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators" +
-                        " o JOIN ksvp_player p ON o.id = p.id WHERE o.id = ?;",
-                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators" +
-                        " o JOIN ksvp_player p ON o.id = p.id;",
-                "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators" +
-                        " o JOIN ksvp_player p ON o.id = p.id WHERE o.id IN (%s);"
-        );
+        super(connection);
+    }
+
+    @Override public @NotNull CompletableFuture<@NotNull Optional<OperatorInfo>> find(@NotNull UUID id) throws NullPointerException
+    {
+        String sql = "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id = ?;";
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, statement ->
+        {
+            statement.setString(1, String.valueOf(id));
+            return collectResults(statement).stream().findFirst();
+        })));
+    }
+
+    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<OperatorInfo>> findAll(@NotNull Iterable<UUID> id) throws NullPointerException
+    {
+        String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
+        String sql = "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id IN (" + placeHolders + ");";
+        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        {
+            int index = 1;
+            for (UUID current : id)
+            {
+                statement.setString(index++, String.valueOf(current));
+            }
+
+            return collectResults(statement);
+        }));
+    }
+
+    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<OperatorInfo>> findAll()
+    {
+        String sql = "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id;";
+        return CompletableFuture.supplyAsync(() -> query(sql, this::collectResults));
+    }
+
+    @Override public @NotNull CompletableFuture<Boolean> has(@NotNull UUID id) throws NullPointerException
+    {
+        String sql = "SELECT id FROM ksvp_operators WHERE id = ?;";
+        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        {
+            statement.setString(1, String.valueOf(id));
+            return hasResult(statement);
+        }));
     }
 
     @Override
-    public abstract @NotNull OperatorInfo toEntity(
-            @NotNull UUID id,
-            @NotNull ResultSet resultSet
-    ) throws SQLException, NullPointerException;
+    public abstract @NotNull OperatorInfo toEntity(@NotNull UUID id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException;
 
     @Override
     public @NotNull OperatorInfo toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
@@ -65,8 +97,7 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
     @Override
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<OperatorInfo> id) throws NullPointerException
     {
-        String sql = "INSERT INTO ksvp_operators (id, operator_level, can_bypass_player_limit) VALUES (?, ?, ?) ON " +
-                "DUPLICATE KEY UPDATE operator_level = ?, can_bypass_player_limit = ?;";
+        String sql = "INSERT INTO ksvp_operators (id, operator_level, can_bypass_player_limit) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE operator_level = ?, can_bypass_player_limit = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (OperatorInfo operatorInfo : id)

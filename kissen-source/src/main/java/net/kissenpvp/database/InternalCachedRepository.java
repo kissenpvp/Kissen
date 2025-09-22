@@ -32,23 +32,27 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
     private final static Logger log = LoggerFactory.getLogger(InternalCachedRepository.class);
     private final Map<P, T> cachedEntries;
 
-    public InternalCachedRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery, @NotNull String findAllQuery, @NotNull String findAllByIdQuery) throws NullPointerException
+    public InternalCachedRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super(table, connection, findQuery, findAllQuery, findAllByIdQuery);
+        super(connection);
         this.cachedEntries = new HashMap<>();
     }
 
-    @Override public @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    protected abstract @NotNull CompletableFuture<Optional<T>> findUncached(@NotNull P id) throws NullPointerException;
+
+    protected abstract @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAllUncached(@NotNull Iterable<P> id) throws NullPointerException;
+
+    @Override public @NotNull final T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         return cache(toCachedEntity(id, resultSet));
     }
 
-    @Override public @NotNull T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    @Override public @NotNull final T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         return cache(toCachedEntity(resultSet));
     }
 
-    @Override public @NotNull CompletableFuture<@Nullable T> find(@NotNull P id)
+    @Override public @NotNull CompletableFuture<@NotNull Optional<T>> find(@NotNull P id)
     {
         return find(id, true);
     }
@@ -58,15 +62,15 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
         return findAll(id, true);
     }
 
-    @Override public @NotNull CompletableFuture<T> find(@NotNull P id, boolean utilizeCache) throws NullPointerException
+    @Override public @NotNull CompletableFuture<@NotNull Optional<T>> find(@NotNull P id, boolean utilizeCache) throws NullPointerException
     {
         Objects.requireNonNull(id, "The identifier cannot be null.");
 
         if (utilizeCache && cachedEntries.containsKey(id))
         {
-            return CompletableFuture.completedFuture(cachedEntries.get(id));
+            return CompletableFuture.completedFuture(Optional.of(cachedEntries.get(id)));
         }
-        return super.find(id);
+        return findUncached(id);
     }
 
     @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id, boolean utilizeCache) throws NullPointerException
@@ -75,7 +79,7 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
 
         if (!utilizeCache)
         {
-            return super.findAll(id);
+            return findAllUncached(id);
         }
 
         Collection<T> cached = new ArrayList<>();
@@ -93,7 +97,7 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
 
         if (!uncached.isEmpty())
         {
-            return super.findAll(uncached).thenApply(list ->
+            return findAllUncached(uncached).thenApply(list ->
             {
                 Stream<T> currentlyCached = cached.stream();
                 return Stream.concat(list.stream(), currentlyCached).toList();

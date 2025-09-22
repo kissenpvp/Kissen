@@ -49,40 +49,11 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
      */
     public InternalPunishmentSubscriptionRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super("ksvp_punishment_subscription", connection,
-                "SELECT link_id, parent_id, operator_id, start_time, expiry, expected_expiry, message FROM " +
-                        "ksvp_punishment_subscription WHERE id = ?;",
-                "SELECT id, link_id, parent_id, operator_id, start_time, expiry, expected_expiry, message FROM " +
-                        "ksvp_punishment_subscription;",
-                "SELECT id, link_id, parent_id, operator_id, start_time, expiry, expected_expiry, message FROM " +
-                        "ksvp_punishment_subscription WHERE id IN (?);");
-    }
-
-    private static @NotNull LocalDateTime toDateTime(@NotNull Instant instant)
-    {
-        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-    }
-
-    private static void operator(
-            @NotNull PreparedStatement statement,
-            @NotNull PunishmentSubscription subscription
-    ) throws SQLException
-    {
-        UUID operator = ((InternalPunishmentSubscription) subscription).rawOperator();
-        if (Objects.nonNull(operator))
-        {
-            statement.setString(5, String.valueOf(operator));
-            return;
-        }
-
-        statement.setNull(5, Types.VARCHAR);
+        super(connection);
     }
 
     @Override
-    public @NotNull InternalPunishmentSubscription toEntity(
-            @NotNull String id,
-            @NotNull ResultSet resultSet
-    ) throws SQLException, NullPointerException
+    public @NotNull InternalPunishmentSubscription toEntity(@NotNull String id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(id, "The id cannot be null.");
         Objects.requireNonNull(resultSet, "The result set cannot be null.");
@@ -117,14 +88,53 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         return toEntity(resultSet.getString("id"), resultSet);
     }
 
+    @Override public @NotNull CompletableFuture<@NotNull Optional<PunishmentSubscription>> find(@NotNull String id) throws NullPointerException
+    {
+        String sql = "SELECT link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription WHERE id = ?;";
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, statement ->
+        {
+            statement.setString(1, id);
+            return collectResults(statement).stream().findFirst();
+        })));
+    }
+
+    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<PunishmentSubscription>> findAll(@NotNull Iterable<String> id) throws NullPointerException
+    {
+        String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
+        String sql = "SELECT id, link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription WHERE id IN (" + placeHolders + ")";
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, statement ->
+        {
+            int index = 1;
+            for (String current : id)
+            {
+                statement.setString(index++, current);
+            }
+
+            return collectResults(statement);
+        })));
+    }
+
+    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<PunishmentSubscription>> findAll()
+    {
+        String sql = "SELECT id, link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription;";
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, this::collectResults)));
+    }
+
+    @Override public @NotNull CompletableFuture<Boolean> has(@NotNull String id) throws NullPointerException
+    {
+        String sql = "SELECT id FROM ksvp_punishment_subscription WHERE id = ?;";
+        return CompletableFuture.supplyAsync(() -> query(sql, statement -> {
+            statement.setString(1, id);
+            return hasResult(statement);
+        }));
+    }
+
     @Override
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PunishmentSubscription> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "The iterable of subscriptions cannot be null.");
 
-        String sql = "INSERT INTO ksvp_punishment_subscription (id, link_id, parent_id, parent_signature, " +
-                "operator_id, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON " +
-                "DUPLICATE KEY UPDATE link_id = ?, parent_signature = ?, expiry = ?, message = ?; ";
+        String sql = "INSERT INTO ksvp_punishment_subscription (id, link_id, parent_id, parent_signature,  operator_id, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, parent_signature = ?, expiry = ?, message = ?; ";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (PunishmentSubscription subscription : id)
@@ -291,5 +301,23 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
                 return Collections.unmodifiableCollection(subscriptions);
             }
         });
+    }
+
+    private static @NotNull LocalDateTime toDateTime(@NotNull Instant instant)
+    {
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
+
+    private static void operator(@NotNull PreparedStatement statement, @NotNull PunishmentSubscription subscription
+    ) throws SQLException
+    {
+        UUID operator = ((InternalPunishmentSubscription) subscription).rawOperator();
+        if (Objects.nonNull(operator))
+        {
+            statement.setString(5, String.valueOf(operator));
+            return;
+        }
+
+        statement.setNull(5, Types.VARCHAR);
     }
 }

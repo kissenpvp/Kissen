@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -29,7 +30,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * or {@code null} if no entity is found; never null
      * @throws NullPointerException if the provided identifier is null
      */
-    @NotNull CompletableFuture<@Nullable T> find(@NotNull P id) throws NullPointerException;
+    @NotNull CompletableFuture<@NotNull Optional<T>> find(@NotNull P id) throws NullPointerException;
 
     /**
      * Retrieves a collection of entities corresponding to the specified identifiers asynchronously.
@@ -83,13 +84,4 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * @throws NullPointerException if the provided iterable or any of its elements are null
      */
     @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<T> id) throws NullPointerException;
-
-    /**
-     * Retrieves the name of the table associated with this repository.
-     * The table name is used to perform operations on the underlying
-     * database, such as queries and updates.
-     *
-     * @return the name of the table as a non-null string
-     */
-    @NotNull String table();
 }

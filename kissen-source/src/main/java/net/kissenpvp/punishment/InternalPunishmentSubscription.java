@@ -107,15 +107,14 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
             return KissenCore.getInstance().console();
         }
 
-        Actor actor = KissenCore.getInstance().playerRepository().find(operator).join();
-        if (Objects.isNull(actor))
+        Optional<PlayerClient> actor = KissenCore.getInstance().playerRepository().find(operator).join();
+        if (actor.isEmpty())
         {
-            String message = "The player with the id %s was not found in the database but is bound to the punishment " +
-                    "subscription %s.";
+            String message = "The player with the id %s was not found in the database but is bound to the punishment subscription %s.";
             throw new IllegalStateException(String.format(message, operator, id()));
         }
 
-        return actor;
+        return actor.get();
     }
 
     @Override
@@ -127,7 +126,7 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     @Override
     public @NotNull Optional<Punishment> parent()
     {
-        return Optional.ofNullable(KissenCore.getInstance().punishmentRepository().find(parentId()).join());
+        return KissenCore.getInstance().punishmentRepository().find(parentId()).join();
     }
 
     @Override

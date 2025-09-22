@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -34,7 +35,7 @@ public interface CachedRepository<P, T extends PersistableEntity<P>> extends Rep
      * @throws NullPointerException if the provided identifier is null
      * @see #findAll(Iterable, boolean)
      */
-    @NotNull CompletableFuture<@Nullable T> find(@NotNull P id, boolean utilizeCache) throws NullPointerException;
+    @NotNull CompletableFuture<@NotNull Optional<T>> find(@NotNull P id, boolean utilizeCache) throws NullPointerException;
 
     /**
      * Retrieves a collection of entities corresponding to the specified identifiers asynchronously.
@@ -50,10 +51,7 @@ public interface CachedRepository<P, T extends PersistableEntity<P>> extends Rep
      * @throws NullPointerException if the provided iterable or any of its elements are null
      * @see #find(Object, boolean)
      */
-    @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(
-            @NotNull Iterable<P> id,
-            boolean utilizeCache
-    ) throws NullPointerException;
+    @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id, boolean utilizeCache) throws NullPointerException;
 
     /**
      * Checks whether the entity associated with the specified identifier is currently cached.

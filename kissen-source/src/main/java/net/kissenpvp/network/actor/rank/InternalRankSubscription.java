@@ -50,7 +50,7 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
 
     @Override public @NotNull Optional<Rank> parent()
     {
-        return Optional.ofNullable(KissenCore.getInstance().rankRepository().find(parentId()).join());
+        return KissenCore.getInstance().rankRepository().find(parentId()).join();
     }
 
     @Override public int signature()
@@ -60,14 +60,13 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
 
     @Override public @NotNull PlayerClient player() throws IllegalStateException
     {
-        PlayerClient player = KissenCore.getInstance().playerRepository().find(playerId).join();
-        if (Objects.isNull(player))
+        Optional<PlayerClient> player = KissenCore.getInstance().playerRepository().find(playerId).join();
+        if (player.isEmpty())
         {
-            String message = "The player with the id %s was not found in the database but is bound to a rank " +
-                    "subscription.";
+            String message = "The player with the id %s was not found in the database but is bound to a rank subscription.";
             throw new IllegalStateException(String.format(message, playerId));
         }
-        return player;
+        return player.get();
     }
 
     @Override

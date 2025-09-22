@@ -4,17 +4,16 @@ import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.database.InternalCachedRepository;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.sql.*;
-import java.time.Instant;
+import java.sql.Date;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * Represents an abstract repository responsible for managing and persisting instances of
@@ -52,22 +51,110 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
      */
     public InternalPlayerRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super(
-                "ksvp_player",
-                connection,
-                "SELECT link_id, username FROM ksvp_player WHERE id = ?;",
-                "SELECT * FROM ksvp_player",
-                "SELECT * FROM ksvp_player WHERE id IN (%s);"
-        );
+        super(connection);
+
     }
 
-    @Override
-    public @NotNull @UnmodifiableView PlayerClient toEntity(@NotNull ResultSet resultSet) throws SQLException,
-            NullPointerException
+    @Override public @NotNull CompletableFuture<@NotNull Optional<PlayerClient>> findByName(@NotNull String name) throws NullPointerException
     {
-        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+        return findByName(name, true);
+    }
 
-        return this.toEntity(UUID.fromString(resultSet.getString("id")), resultSet);
+    @Override public @NotNull CompletableFuture<@NotNull Optional<UUID>> findLinkId(@NotNull UUID uuid) throws NullPointerException
+    {
+        String sql = "SELECT link_id FROM ksvp_player WHERE id = ?;";
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        {
+            statement.setString(1, String.valueOf(uuid));
+            try (ResultSet resultSet = statement.executeQuery())
+            {
+                if (!resultSet.next())
+                {
+                    return Optional.empty();
+                }
+
+                return Optional.of(UUID.fromString(resultSet.getString("link_id")));
+            }
+        }))));
+    }
+
+    @Override public @NotNull CompletableFuture<@NotNull Optional<PlayerClient>> findByName(@NotNull String name, boolean utilizeCache) throws NullPointerException
+    {
+        if(utilizeCache)
+        {
+            for(PlayerClient playerClient : cachedEntries().values())
+            {
+                if(!Objects.equals(name, playerClient.username()))
+                {
+                    continue;
+                }
+
+                return CompletableFuture.completedFuture(Optional.of(playerClient));
+            }
+        }
+
+        String sql = "SELECT id, link_id, username, first_login, last_login, time_played, locale  FROM ksvp_player WHERE username = ?;";
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        {
+            statement.setString(1, name);
+            return collectResults(statement).stream().findFirst();
+        }))));
+    }
+
+
+    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByName(@NotNull Iterable<String> name, boolean utilizeCache) throws NullPointerException
+    {
+        if (!utilizeCache)
+        {
+            return findAllByNameUncached(name);
+        }
+
+        Collection<PlayerClient> cached = new ArrayList<>();
+        Collection<String> uncached = new ArrayList<>();
+
+        Collection<PlayerClient> cachedEntries = cachedEntries().values();
+        for (String currentId : name)
+        {
+            Stream<PlayerClient> playerClient = cachedEntries.stream();
+            Predicate<PlayerClient> nameEquals = player -> Objects.equals(player.username(), currentId);
+            playerClient.filter(nameEquals).findFirst().ifPresentOrElse((cached::add), () -> uncached.add(currentId));
+        }
+
+        if (!uncached.isEmpty())
+        {
+            return findAllByNameUncached(uncached).thenApply(list ->
+            {
+                Stream<PlayerClient> currentlyCached = cached.stream();
+                return Stream.concat(list.stream(), currentlyCached).toList();
+            });
+        }
+        return CompletableFuture.completedFuture(Collections.unmodifiableCollection(cached));
+    }
+
+    private @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByNameUncached(@NotNull Iterable<String> name)
+    {
+        String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(name), "?"));
+        String sql = "SELECT id, link_id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE username IN (" + placeHolders + ");";
+        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        {
+            int index = 1;
+            for(String current : name)
+            {
+                statement.setString(index++, current);
+            }
+
+            return collectResults(statement);
+        }));
+    }
+
+    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByName(@NotNull Iterable<String> name) throws NullPointerException
+    {
+        return findAllByName(name, true);
+    }
+
+    @Override protected @NotNull PlayerClient toCachedEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException
+    {
+        return toCachedEntity(UUID.fromString(resultSet.getString("id")), resultSet);
     }
 
     @Override
@@ -85,80 +172,10 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     }
 
     @Override
-    public @NotNull CompletableFuture<@Nullable PlayerClient> find(@NotNull UUID id) throws NullPointerException
-    {
-        return find(id, true);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@Nullable PlayerClient> findByName(@NotNull String name) throws NullPointerException
-    {
-        return findByName(name, true);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAll(@NotNull Iterable<UUID> id)
-    {
-        return super.findAll(id, true);
-    }
-
-    @Override
-    public @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllByName(@NotNull Iterable<String> name) throws NullPointerException
-    {
-        return findAllByName(name, true);
-    }
-
-    /**
-     * Handles the first join logic for a player.
-     * <p>
-     * If the player has never joined before,
-     * their first and last login times are updated in the database. If the player has already joined,
-     * an {@link IllegalStateException} is thrown. The logic is executed asynchronously.
-     *
-     * @param client the {@link PlayerClient} representing the player whose first join status is to be handled; must
-     *               not be null
-     * @return a {@link CompletableFuture} that completes when the operation is finished, or exceptionally if an
-     * error occurs
-     * @throws NullPointerException if the provided {@link PlayerClient} is null
-     */
-    public @NotNull CompletableFuture<Void> firstJoin(@NotNull PlayerClient client) throws NullPointerException
-    {
-        return CompletableFuture.supplyAsync(() ->
-        {
-            boolean neverJoined = Objects.equals(Boolean.TRUE, query("SELECT first_login FROM ksvp_player WHERE id = " +
-                    "? AND first_login = ?;", (statement ->
-            {
-                statement.setString(1, String.valueOf(client.id()));
-                statement.setNull(2, Types.DATE);
-                try (ResultSet resultSet = statement.executeQuery())
-                {
-                    return resultSet.next();
-                }
-            })));
-
-            if (neverJoined)
-            {
-                Date now = Date.valueOf(Instant.now().atZone(ZoneId.systemDefault()).toLocalDate());
-                return query("UPDATE ksvp_player SET first_login = ?, last_login = ? WHERE id = ?;", (statement ->
-                {
-                    statement.setDate(1, now);
-                    statement.setDate(2, now);
-                    statement.setString(3, String.valueOf(client.id()));
-                    statement.executeUpdate();
-                    return null;
-                }));
-            }
-
-            throw new IllegalStateException("Player has already joined before.");
-        });
-    }
-
-    @Override
     public @NotNull CompletableFuture<Void> saveAll(@NotNull Iterable<PlayerClient> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "id cannot be null");
-        String sql = "INSERT INTO ksvp_player (id, link_id, username, locale) VALUES (?, ?, ?, ?) ON DUPLICATE KEY " +
-                "UPDATE link_id = ?, username = ?, last_login = ?, time_played = ?, locale = ?;";
+        String sql = "INSERT INTO ksvp_player (id, link_id, username, locale) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, username = ?, last_login = ?, time_played = ?, locale = ?;";
 
         return CompletableFuture.supplyAsync(() ->
         {
@@ -204,10 +221,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
      * @throws SQLException         if an error occurs while interacting with the {@link PreparedStatement}
      * @throws NullPointerException if the provided {@link PreparedStatement} or {@link PlayerClient} is null
      */
-    private void addBatch(
-            @NotNull PreparedStatement statement,
-            @NotNull PlayerClient playerClient
-    ) throws SQLException, NullPointerException
+    private void addBatch(@NotNull PreparedStatement statement, @NotNull PlayerClient playerClient) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
         Objects.requireNonNull(playerClient, "The player client cannot be null.");

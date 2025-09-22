@@ -5,16 +5,10 @@ import net.kissenpvp.api.database.PersistableEntity;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.UnmodifiableView;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import java.util.stream.StreamSupport;
 
 /**
  * Represents an abstract repository for handling persistence of entities with a specific primary key type.
@@ -27,32 +21,72 @@ import java.util.stream.StreamSupport;
  */
 public abstract class InternalRepository<P, T extends PersistableEntity<P>> extends KissenRepository<P, T>
 {
-    private final String findQuery, findAllQuery, findAllByIdQuery;
 
-    public InternalRepository(
-            @NotNull String table, @NotNull Connection connection, @NotNull String findQuery,
-            @NotNull String findAllQuery, @NotNull String findAllByIdQuery
-    ) throws NullPointerException
+    public InternalRepository(@NotNull Connection connection) throws NullPointerException
     {
-        super(table, connection);
-        Objects.requireNonNull(findQuery, "The find query cannot be null.");
-
-        if (table.isBlank() || table.length() > 64 || !table.matches("^[a-zA-Z_][a-zA-Z0-9_$]{0,63}$"))
-        {
-            String message = "The chosen table name %s, is not valid for a database table.";
-            throw new IllegalArgumentException(String.format(message, table));
-        }
-
-        this.findQuery = findQuery;
-        this.findAllQuery = findAllQuery;
-        this.findAllByIdQuery = findAllByIdQuery;
+        super(connection);
     }
 
-    @Contract(value = "_, null -> null; _, !null -> !null", pure = true)
-    protected static <X, Y> @Nullable Y convertSafely(
-            @NotNull Function<X, Y> function,
-            @Nullable X value
-    ) throws NullPointerException
+    /**
+     * Collects all results from the provided {@link PreparedStatement}'s {@link ResultSet} and maps them
+     * into entities of type {@code T}.
+     * <p>
+     * Each row in the {@link ResultSet} is converted into an entity
+     * using the {@link #toEntity(ResultSet)} method implemented in a subclass. The results are returned as
+     * an unmodifiable collection.
+     *
+     * @param statement the {@link PreparedStatement} to execute, must not be null
+     * @return an unmodifiable collection of entities of type {@code T}, never null
+     * @throws SQLException if an error occurs while executing the query or accessing the {@link ResultSet}
+     */
+    protected @NotNull Collection<T> collectResults(@NotNull PreparedStatement statement) throws SQLException
+    {
+        Collection<T> collection = new HashSet<>();
+        try(ResultSet resultSet = statement.executeQuery())
+        {
+            while(resultSet.next())
+            {
+                collection.add(toEntity(resultSet));
+            }
+        }
+        return Collections.unmodifiableCollection(collection);
+    }
+
+    /**
+     * Checks if the given {@link PreparedStatement} has any results when executed.
+     * <p>
+     * This method executes the provided statement as a query and determines
+     * whether the result set contains at least one row.
+     *
+     * @param statement the {@link PreparedStatement} to execute, must not be null
+     * @return {@code true} if the query executed by the {@link PreparedStatement} contains at least one row;
+     *         {@code false} otherwise
+     * @throws SQLException if an error occurs during the execution of the query or while processing the result set
+     */
+    protected static boolean hasResult(@NotNull PreparedStatement statement) throws SQLException
+    {
+        try(ResultSet resultSet = statement.executeQuery())
+        {
+            return resultSet.next();
+        }
+    }
+
+    /**
+     * Safely converts a given input value of type {@code X} to a corresponding output value of type {@code Y}
+     * using the provided {@link Function}.
+     * <p>
+     * If the input value is null, the method will return null; otherwise,
+     * it applies the given function to the input value.
+     *
+     * @param function the function used to convert the input value to the output value; must not be null
+     * @param value    the input value of type {@code X} to be converted; may be null
+     * @param <X>      the type of the input value
+     * @param <Y>      the type of the output value
+     * @return the converted value of type {@code Y} if the input value is not null,
+     *         or null if the input value is null
+     * @throws NullPointerException if the provided function is null
+     */
+    @Contract(value = "_, null -> null; _, !null -> !null", pure = true) protected static <X, Y> @Nullable Y convertSafely(@NotNull Function<X, Y> function, @Nullable X value) throws NullPointerException
     {
         Objects.requireNonNull(function, "The function cannot be null.");
 
@@ -79,10 +113,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      * @throws SQLException         if an error occurs while interacting with the {@link PreparedStatement}
      * @throws NullPointerException if the {@link PreparedStatement} is null
      */
-    protected static void setDual(
-            @NotNull PreparedStatement statement, int index, int secondIndex, int sqlType,
-            @Nullable Object value
-    ) throws SQLException, NullPointerException
+    protected static void setDual(@NotNull PreparedStatement statement, int index, int secondIndex, int sqlType, @Nullable Object value) throws SQLException, NullPointerException
     {
         Objects.requireNonNull(statement, "The prepared statement cannot be null.");
 
@@ -95,84 +126,6 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
 
         statement.setNull(index, sqlType);
         statement.setNull(secondIndex, sqlType);
-    }
-
-    @Override public @NotNull CompletableFuture<@Nullable T> find(@NotNull P id) throws NullPointerException
-    {
-        Objects.requireNonNull(id, "The identifier cannot be null.");
-
-        return CompletableFuture.supplyAsync(() -> query(findQuery, (statement ->
-        {
-            statement.setObject(1, id);
-
-            try (ResultSet resultSet = statement.executeQuery())
-            {
-                if (!resultSet.next())
-                {
-                    return null;
-                }
-
-                return toEntity(id, resultSet);
-            }
-        })));
-    }
-
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id) throws NullPointerException
-    {
-        Objects.requireNonNull(id, "The identifier cannot be null.");
-
-        List<P> primaryKeys = StreamSupport.stream(id.spliterator(), false).toList();
-
-        if (primaryKeys.isEmpty())
-        {
-            return CompletableFuture.completedFuture(Collections.emptyList());
-        }
-
-        String placeholders = String.join(",", Collections.nCopies(primaryKeys.size(), "?"));
-        return CompletableFuture.supplyAsync(() -> query(String.format(findAllByIdQuery, placeholders), statement ->
-        {
-            int index = 1;
-            for (P current : primaryKeys)
-            {
-                statement.setObject(index++, current);
-            }
-
-            try (ResultSet resultSet = statement.executeQuery())
-            {
-                return toEntities(resultSet);
-            }
-        }));
-    }
-
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll()
-    {
-        return CompletableFuture.supplyAsync(() -> query(findAllQuery, (statement ->
-        {
-            try (ResultSet resultSet = statement.executeQuery())
-            {
-                return toEntities(resultSet);
-            }
-        })));
-    }
-
-    @Override public @NotNull CompletableFuture<Boolean> has(@NotNull P id) throws NullPointerException
-    {
-        Objects.requireNonNull(id, "The identifier cannot be null.");
-
-        return CompletableFuture.supplyAsync(() -> query("SELECT id FROM " + table() + " WHERE id = ?;", (statement ->
-        {
-            statement.setObject(1, id);
-            try (ResultSet resultSet = statement.executeQuery())
-            {
-                return resultSet.next();
-            }
-        })));
-    }
-
-    @Override public @NotNull CompletableFuture<Void> save(@NotNull T id) throws NullPointerException
-    {
-        Objects.requireNonNull(id, "The entity cannot be null.");
-        return saveAll(Collections.singleton(id));
     }
 
     protected void overrideSignature(@NotNull T entity) throws NullPointerException
@@ -195,8 +148,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
      * @throws NullPointerException if either {@code id} or {@code resultSet} is null
      */
-    public abstract @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException,
-            NullPointerException;
+    public abstract @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException;
 
     /**
      * Converts a single row of the provided {@code ResultSet} into an entity.
@@ -207,30 +159,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      * @return an unmodifiable view of the entity created from the current row in the {@code ResultSet}, never null
      * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
      * @throws NullPointerException if the {@code ResultSet} is null
-     * @see #toEntities(ResultSet)
      * @see #toEntity(Object, ResultSet)
      */
     public abstract @NotNull T toEntity(@NotNull ResultSet resultSet) throws SQLException, NullPointerException;
-
-    /**
-     * Converts all rows of the provided {@code ResultSet} into a collection of entities.
-     * Each row in the {@code ResultSet} is processed and transformed into an entity
-     * using the {@link #toEntity(ResultSet)} method.
-     *
-     * @param resultSet the {@code ResultSet} containing rows of data to be converted into entities, must not be null
-     * @return an unmodifiable collection of entities created from the rows in the {@code ResultSet}, never null
-     * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
-     * @throws NullPointerException if the {@code ResultSet} is null
-     * @see #toEntity(ResultSet)
-     */
-    private @NotNull @UnmodifiableView Collection<T> toEntities(@NotNull ResultSet resultSet) throws SQLException,
-            NullPointerException
-    {
-        List<T> data = new ArrayList<>();
-        while (resultSet.next())
-        {
-            data.add(toEntity(resultSet));
-        }
-        return Collections.unmodifiableList(data);
-    }
 }
