@@ -55,6 +55,31 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
 
     }
 
+    @Override protected @NotNull CompletableFuture<Optional<PlayerClient>> findUncached(@NotNull UUID id) throws NullPointerException
+    {
+        String sql = "SELECT link_id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE id = ?;";
+        return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
+        {
+            statement.setString(1, String.valueOf(id));
+            return collectResults(statement).stream().findFirst();
+        })));
+    }
+
+    @Override protected @NotNull CompletableFuture<@UnmodifiableView Collection<PlayerClient>> findAllUncached(@NotNull Iterable<UUID> id) throws NullPointerException
+    {
+        String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
+        String sql = "SELECT id, link_id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE id IN (" + placeHolders + ");";
+        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        {
+            int index = 1;
+            for (UUID current : id)
+            {
+                statement.setString(index++, String.valueOf(current));
+            }
+            return collectResults(statement);
+        }));
+    }
+
     @Override public @NotNull CompletableFuture<Boolean> has(@NotNull UUID id) throws NullPointerException
     {
         String sql = "SELECT id FROM ksvp_player WHERE id = ?;";
