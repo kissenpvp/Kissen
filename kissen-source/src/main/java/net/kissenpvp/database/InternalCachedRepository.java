@@ -32,22 +32,13 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
     private final static Logger log = LoggerFactory.getLogger(InternalCachedRepository.class);
     private final Map<P, T> cachedEntries;
 
-    public InternalCachedRepository(
-            @NotNull String table,
-            @NotNull Connection connection,
-            @NotNull String findQuery,
-            @NotNull String findAllQuery,
-            @NotNull String findAllByIdQuery
-    ) throws NullPointerException
+    public InternalCachedRepository(@NotNull String table, @NotNull Connection connection, @NotNull String findQuery, @NotNull String findAllQuery, @NotNull String findAllByIdQuery) throws NullPointerException
     {
         super(table, connection, findQuery, findAllQuery, findAllByIdQuery);
         this.cachedEntries = new HashMap<>();
     }
 
-    @Override public @NotNull T toEntity(
-            @NotNull P id,
-            @NotNull ResultSet resultSet
-    ) throws SQLException, NullPointerException
+    @Override public @NotNull T toEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException
     {
         return cache(toCachedEntity(id, resultSet));
     }
@@ -78,10 +69,7 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
         return super.find(id);
     }
 
-    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(
-            @NotNull Iterable<P> id,
-            boolean utilizeCache
-    ) throws NullPointerException
+    @Override public @NotNull CompletableFuture<@UnmodifiableView Collection<T>> findAll(@NotNull Iterable<P> id, boolean utilizeCache) throws NullPointerException
     {
         Objects.requireNonNull(id, "The identifier cannot be null.");
 
@@ -163,10 +151,7 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
      * @throws NullPointerException If any of the parameters is null, or if a required value in {@link ResultSet} is
      *                              missing.
      */
-    protected abstract @NotNull T toCachedEntity(
-            @NotNull P id,
-            @NotNull ResultSet resultSet
-    ) throws SQLException, NullPointerException;
+    protected abstract @NotNull T toCachedEntity(@NotNull P id, @NotNull ResultSet resultSet) throws SQLException, NullPointerException;
 
     /**
      * Converts a {@link ResultSet} retrieved from the database into an entity object of type {@code T}.
@@ -178,8 +163,9 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
      * @throws SQLException         If an SQL error occurs while reading from the {@link ResultSet}.
      * @throws NullPointerException If the provided {@link ResultSet} is null or if a required value is missing.
      */
-    protected abstract @NotNull T toCachedEntity(@NotNull ResultSet resultSet) throws SQLException,
-            NullPointerException;
+    protected abstract @NotNull T toCachedEntity(
+            @NotNull ResultSet resultSet
+    ) throws SQLException, NullPointerException;
 
     /**
      * Caches the given entity in the repository's internal cache.
