@@ -40,11 +40,9 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
         Objects.requireNonNull(databaseModule.playerRepository(), "playerRepository cannot be null!");
         Objects.requireNonNull(databaseModule.operatorRepository(), "operatorRepository cannot be null!");
         Objects.requireNonNull(databaseModule.punishmentRepository(), "punishmentRepository cannot be null!");
-        Objects.requireNonNull(databaseModule.punishmentSubscriptionRepository(), "punishmentSubscriptionRepository " +
-                "cannot be null!");
+        Objects.requireNonNull(databaseModule.punishmentSubscriptionRepository(), "punishmentSubscriptionRepository " + "cannot be null!");
         Objects.requireNonNull(databaseModule.rankRepository(), "rankRepository cannot be null!");
-        Objects.requireNonNull(databaseModule.rankSubscriptionRepository(), "rankSubscriptionRepository cannot be " +
-                "null!");
+        Objects.requireNonNull(databaseModule.rankSubscriptionRepository(), "rankSubscriptionRepository cannot be " + "null!");
 
         this.databaseModule = databaseModule;
     }
