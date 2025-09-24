@@ -24,10 +24,11 @@ CREATE TABLE IF NOT EXISTS ksvp_operators (
 );
 
 CREATE TABLE IF NOT EXISTS ksvp_player_data (
-    id VARCHAR(36) NOT NULL,
-    plugin VARCHAR(255) NOT NULL,
-    content JSON NOT NULL,
-    PRIMARY KEY (id, plugin),
+    id VARCHAR(36) NOT NULL,,
+    plugin VARCHAR(36) NOT NULL,
+    property_key VARCHAR(16) NOT NULL
+    property_value JSON NOT NULL,
+    PRIMARY KEY (id, plugin, property_key),
     FOREIGN KEY (id) REFERENCES ksvp_player(id) ON DELETE CASCADE
 );
 
