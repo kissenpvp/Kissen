@@ -11,19 +11,21 @@ import java.util.concurrent.CompletableFuture;
 public class PlayerPropertyMap extends HashMap<String, JsonObject> implements PlayerProperties
 {
     private final PropertyRepository repository;
+    private final PlayerClient player;
     private int saved;
 
-    public PlayerPropertyMap(@NonNull PropertyRepository repository, @NonNull Map<String, JsonObject> map)
+    public PlayerPropertyMap(@NonNull PlayerClient player, @NonNull PropertyRepository repository, @NonNull Map<String, JsonObject> map)
     {
         super(map);
         this.repository = repository;
+        this.player = player;
 
         saved = hashCode();
     }
 
     @Override public @NonNull PlayerClient player()
     {
-        return repository.player();
+        return player;
     }
 
     @Override public boolean unsaved()
@@ -40,7 +42,7 @@ public class PlayerPropertyMap extends HashMap<String, JsonObject> implements Pl
             properties.add(property);
         }
 
-        return repository().put(properties).thenRun(() -> saved = hashCode());
+        return repository().put(player, properties).thenRun(() -> saved = hashCode());
     }
 
     public @NonNull PropertyRepository repository()

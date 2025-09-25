@@ -16,17 +16,15 @@ import java.util.concurrent.CompletableFuture;
 
 public class PropertyRepository extends SQLExecutor
 {
-    private final PlayerClient player;
     private final KissenPlugin plugin;
 
-    public PropertyRepository(@NonNull PlayerClient player, @NonNull KissenPlugin plugin, @NonNull DataSource dataSource) throws NullPointerException
+    public PropertyRepository(@NonNull KissenPlugin plugin, @NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
-        this.player = player;
         this.plugin = plugin;
     }
 
-    public @NonNull CompletableFuture<Void> put(@NonNull Iterable<PlayerProperty> playerProperty)
+    public @NonNull CompletableFuture<Void> put(@NonNull PlayerClient player, @NonNull Iterable<PlayerProperty> playerProperty)
     {
         String sql = "INSERT INTO ksvp_player_data (id, plugin, property_key, property_value) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE property_value = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
@@ -46,7 +44,7 @@ public class PropertyRepository extends SQLExecutor
         }));
     }
 
-    public @NonNull CompletableFuture<PlayerProperties> find()
+    public @NonNull CompletableFuture<PlayerProperties> find(@NonNull PlayerClient player)
     {
         String sql = "SELECT property_key, property_value FROM ksvp_player_data WHERE id = ? AND plugin = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
@@ -61,11 +59,11 @@ public class PropertyRepository extends SQLExecutor
                 map.put(resultSet.getString("property_key"), value);
             }
 
-            return new PlayerPropertyMap(PropertyRepository.this, map);
+            return new PlayerPropertyMap(player, PropertyRepository.this, map);
         }));
     }
 
-    public @NonNull CompletableFuture<Void> remove(@NonNull Iterable<PlayerProperty> playerProperty)
+    public @NonNull CompletableFuture<Void> remove(@NonNull PlayerClient player, @NonNull Iterable<PlayerProperty> playerProperty)
     {
         String sql = "DELETE FROM ksvp_player_data WHERE id = ? AND plugin = ? AND property_key = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
@@ -86,10 +84,5 @@ public class PropertyRepository extends SQLExecutor
     public @NonNull KissenPlugin plugin()
     {
         return plugin;
-    }
-
-    public @NonNull PlayerClient player()
-    {
-        return player;
     }
 }
