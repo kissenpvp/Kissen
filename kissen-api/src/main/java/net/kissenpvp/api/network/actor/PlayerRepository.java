@@ -5,7 +5,6 @@ import net.kissenpvp.api.database.CachedRepository;
 import net.kissenpvp.api.database.Repository;
 import org.jspecify.annotations.NonNull;
 
-
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -79,7 +78,7 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
      * @throws NullPointerException if the provided iterable or any of its elements are {@code null}.
      * @see #findAllByName(Iterable, boolean)
      */
-    @NonNull CompletableFuture< Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name) throws NullPointerException;
+    @NonNull CompletableFuture<Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name) throws NullPointerException;
 
     /**
      * Performs an asynchronous search for all {@link PlayerClient} instances
@@ -96,7 +95,7 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
      * matching the provided names; the collection will be empty if no matches are found.
      * @throws NullPointerException if the provided iterable is {@code null} or contains {@code null} elements.
      */
-    @NonNull CompletableFuture< Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name, boolean utilizeCache) throws NullPointerException;
+    @NonNull CompletableFuture<Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name, boolean utilizeCache) throws NullPointerException;
 
     /**
      * Determines if the data associated with the specified player's name is currently cached.
@@ -110,5 +109,18 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
      */
     boolean cached(@NonNull String name) throws NullPointerException;
 
+    /**
+     * Retrieves the {@link PlayerProperties} associated with a given {@link PlayerClient} and {@link KissenPlugin}.
+     * <p>
+     * This method returns the properties of a player, encapsulated in a {@link PlayerProperties} object,
+     * which represents a key-value structure of player-specific data.
+     * The association is determined based on the provided plugin and player client.
+     *
+     * @param kissenPlugin the plugin for which the player properties are to be retrieved; must not be {@code null}.
+     * @param playerClient the player client whose properties are being queried; must not be {@code null}.
+     * @return a {@link PlayerProperties} instance representing the properties of the specified player;
+     * never {@code null}.
+     * @throws NullPointerException if either {@code kissenPlugin} or {@code playerClient} is {@code null}.
+     */
     @NonNull PlayerProperties playerProperties(@NonNull KissenPlugin kissenPlugin, @NonNull PlayerClient playerClient);
 }
