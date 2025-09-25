@@ -7,8 +7,9 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class PlayerPropertyMap extends HashMap<String, JsonObject> implements PlayerProperties
+public class PlayerPropertyMap extends ConcurrentHashMap<String, JsonObject> implements PlayerProperties
 {
     private final PropertyRepository repository;
     private final PlayerClient player;

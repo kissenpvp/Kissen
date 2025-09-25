@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 public class PropertyRepository extends SQLExecutor
 {
     private final KissenPlugin plugin;
+    private final Map<PlayerClient, PlayerProperties> cache = new HashMap<>();
 
     public PropertyRepository(@NonNull KissenPlugin plugin, @NonNull DataSource dataSource) throws NullPointerException
     {
@@ -46,6 +47,11 @@ public class PropertyRepository extends SQLExecutor
 
     public @NonNull CompletableFuture<PlayerProperties> find(@NonNull PlayerClient player)
     {
+        if(cache.containsKey(player))
+        {
+            return CompletableFuture.completedFuture(cache.get(player));
+        }
+
         String sql = "SELECT property_key, property_value FROM ksvp_player_data WHERE id = ? AND plugin = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
         {
@@ -59,7 +65,10 @@ public class PropertyRepository extends SQLExecutor
                 map.put(resultSet.getString("property_key"), value);
             }
 
-            return new PlayerPropertyMap(player, PropertyRepository.this, map);
+
+            PlayerPropertyMap propertyMap = new PlayerPropertyMap(player, PropertyRepository.this, map);
+            cache.put(player, propertyMap);
+            return propertyMap;
         }));
     }
 
