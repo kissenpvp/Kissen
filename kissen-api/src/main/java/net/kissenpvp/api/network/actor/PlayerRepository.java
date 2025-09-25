@@ -4,7 +4,6 @@ import net.kissenpvp.api.base.KissenPlugin;
 import net.kissenpvp.api.database.CachedRepository;
 import net.kissenpvp.api.database.Repository;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 
 import java.util.Collection;
@@ -111,5 +110,5 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
      */
     boolean cached(@NonNull String name) throws NullPointerException;
 
-    @NonNull PlayerProperties playerRepository(@NonNull KissenPlugin kissenPlugin, @NonNull PlayerClient playerClient);
+    @NonNull PlayerProperties playerProperties(@NonNull KissenPlugin kissenPlugin, @NonNull PlayerClient playerClient);
 }

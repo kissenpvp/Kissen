@@ -248,7 +248,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         });
     }
 
-    @Override public @NonNull PlayerProperties playerRepository(@NonNull KissenPlugin kissenPlugin, @NonNull PlayerClient playerClient)
+    @Override public @NonNull PlayerProperties playerProperties(@NonNull KissenPlugin kissenPlugin, @NonNull PlayerClient playerClient)
     {
         PropertyRepository repository = properties.computeIfAbsent(kissenPlugin, (plugin) -> new PropertyRepository(plugin, dataSource()));
         return repository.find(playerClient).join();
