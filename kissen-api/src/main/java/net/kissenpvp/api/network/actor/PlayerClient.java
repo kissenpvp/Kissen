@@ -58,4 +58,6 @@ public interface PlayerClient extends Actor, PersistableEntity<UUID>
             @NonNull Punishment punishment,
             @Nullable Component message
     ) throws NullPointerException;
+
+    @NonNull PlayerProperties persistentProperties();
 }
