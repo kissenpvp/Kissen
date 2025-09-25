@@ -13,7 +13,7 @@ public class PlayerPropertyMap extends HashMap<String, JsonObject> implements Pl
     private final PropertyRepository repository;
     private int saved;
 
-    public PlayerPropertyMap(@NonNull PlayerClient player, @NonNull PropertyRepository repository, @NonNull Map<String, JsonObject> map)
+    public PlayerPropertyMap(@NonNull PropertyRepository repository, @NonNull Map<String, JsonObject> map)
     {
         super(map);
         this.repository = repository;
@@ -23,7 +23,7 @@ public class PlayerPropertyMap extends HashMap<String, JsonObject> implements Pl
 
     @Override public @NonNull PlayerClient player()
     {
-        return repository.getPlayer();
+        return repository.player();
     }
 
     @Override public boolean unsaved()

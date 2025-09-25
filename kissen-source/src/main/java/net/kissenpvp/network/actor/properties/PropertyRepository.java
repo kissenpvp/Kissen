@@ -61,7 +61,7 @@ public class PropertyRepository extends SQLExecutor
                 map.put(resultSet.getString("property_key"), value);
             }
 
-            return new PlayerPropertyMap(player, PropertyRepository.this, map);
+            return new PlayerPropertyMap(PropertyRepository.this, map);
         }));
     }
 
@@ -83,12 +83,12 @@ public class PropertyRepository extends SQLExecutor
         }));
     }
 
-    public @NonNull KissenPlugin getPlugin()
+    public @NonNull KissenPlugin plugin()
     {
         return plugin;
     }
 
-    public @NonNull PlayerClient getPlayer()
+    public @NonNull PlayerClient player()
     {
         return player;
     }
