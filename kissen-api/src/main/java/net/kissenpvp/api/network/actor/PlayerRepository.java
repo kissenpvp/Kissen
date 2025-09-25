@@ -1,5 +1,6 @@
 package net.kissenpvp.api.network.actor;
 
+import net.kissenpvp.api.base.KissenPlugin;
 import net.kissenpvp.api.database.CachedRepository;
 import net.kissenpvp.api.database.Repository;
 import org.jspecify.annotations.NonNull;
@@ -109,4 +110,6 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
      * @throws NullPointerException if the provided name is {@code null}.
      */
     boolean cached(@NonNull String name) throws NullPointerException;
+
+    @NonNull PlayerProperties playerRepository(@NonNull KissenPlugin kissenPlugin, @NonNull PlayerClient playerClient);
 }
