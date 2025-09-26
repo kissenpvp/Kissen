@@ -25,7 +25,7 @@ import java.util.UUID;
 
 public abstract class KissenCore implements Kissen, RepositoryHolder
 {
-    private static final Path UUID_FILE_PATH = Path.of(".unique");
+    private static final Path UUID_FILE_PATH = Path.of(".server_uid");
 
     private UUID serverUid;
 
