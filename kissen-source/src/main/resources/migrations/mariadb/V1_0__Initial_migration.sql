@@ -23,15 +23,6 @@ CREATE TABLE IF NOT EXISTS ksvp_operators (
     FOREIGN KEY (id) REFERENCES ksvp_player(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS ksvp_player_data (
-    id VARCHAR(36) NOT NULL,,
-    plugin VARCHAR(36) NOT NULL,
-    property_key VARCHAR(16) NOT NULL
-    property_value JSON NOT NULL,
-    PRIMARY KEY (id, plugin, property_key),
-    FOREIGN KEY (id) REFERENCES ksvp_player(id) ON DELETE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS ksvp_punishment (
     id INT PRIMARY KEY NOT NULL,
     punishment_type TINYINT NOT NULL,

@@ -7,7 +7,6 @@ import java.io.File;
 
 public interface KissenPlugin
 {
-
     @Subst("plugin_identifier") @NonNull String getName();
 
     @NonNull File getDataFolder();

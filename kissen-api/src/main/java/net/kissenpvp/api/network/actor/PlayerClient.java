@@ -1,6 +1,5 @@
 package net.kissenpvp.api.network.actor;
 
-import net.kissenpvp.api.base.KissenPlugin;
 import net.kissenpvp.api.database.PersistableEntity;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
@@ -59,6 +58,4 @@ public interface PlayerClient extends Actor, PersistableEntity<UUID>
             @NonNull Punishment punishment,
             @Nullable Component message
     ) throws NullPointerException;
-
-    @NonNull PlayerProperties persistentProperties(@NonNull KissenPlugin plugin) throws NullPointerException;
 }

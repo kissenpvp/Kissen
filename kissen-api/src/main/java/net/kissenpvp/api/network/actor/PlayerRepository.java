@@ -108,19 +108,4 @@ public interface PlayerRepository extends CachedRepository<UUID, PlayerClient>
      * @throws NullPointerException if the provided name is {@code null}.
      */
     boolean cached(@NonNull String name) throws NullPointerException;
-
-    /**
-     * Retrieves the {@link PlayerProperties} associated with a given {@link PlayerClient} and {@link KissenPlugin}.
-     * <p>
-     * This method returns the properties of a player, encapsulated in a {@link PlayerProperties} object,
-     * which represents a key-value structure of player-specific data.
-     * The association is determined based on the provided plugin and player client.
-     *
-     * @param kissenPlugin the plugin for which the player properties are to be retrieved; must not be {@code null}.
-     * @param playerClient the player client whose properties are being queried; must not be {@code null}.
-     * @return a {@link PlayerProperties} instance representing the properties of the specified player;
-     * never {@code null}.
-     * @throws NullPointerException if either {@code kissenPlugin} or {@code playerClient} is {@code null}.
-     */
-    @NonNull PlayerProperties playerProperties(@NonNull KissenPlugin kissenPlugin, @NonNull PlayerClient playerClient);
 }

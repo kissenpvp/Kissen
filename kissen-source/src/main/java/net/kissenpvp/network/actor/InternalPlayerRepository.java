@@ -2,10 +2,8 @@ package net.kissenpvp.network.actor;
 
 import net.kissenpvp.api.base.KissenPlugin;
 import net.kissenpvp.api.network.actor.PlayerClient;
-import net.kissenpvp.api.network.actor.PlayerProperties;
 import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.database.InternalCachedRepository;
-import net.kissenpvp.network.actor.properties.PropertyRepository;
 import org.jspecify.annotations.NonNull;
 
 
@@ -44,12 +42,9 @@ import java.util.stream.Stream;
 public abstract class InternalPlayerRepository extends InternalCachedRepository<UUID, PlayerClient> implements PlayerRepository
 {
 
-    private final Map<KissenPlugin, PropertyRepository> properties;
-
     public InternalPlayerRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
-        properties = new HashMap<>();
     }
 
     @Override protected @NonNull CompletableFuture<Optional<PlayerClient>> findUncached(@NonNull UUID id) throws NullPointerException
@@ -246,12 +241,6 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
                 return null;
             }));
         });
-    }
-
-    @Override public @NonNull PlayerProperties playerProperties(@NonNull KissenPlugin kissenPlugin, @NonNull PlayerClient playerClient)
-    {
-        PropertyRepository repository = properties.computeIfAbsent(kissenPlugin, (plugin) -> new PropertyRepository(plugin, dataSource()));
-        return repository.find(playerClient).join();
     }
 
     /**
