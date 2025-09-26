@@ -12,9 +12,10 @@ CREATE TABLE IF NOT EXISTS ksvp_player (
 );
 
 CREATE TABLE IF NOT EXISTS ksvp_player_data (
+    server_uid UUID NOT NULL UNIQUE,
     id UUID NOT NULL,
     player_data BLOB NOT NULL,
-    PRIMARY KEY (id),
+    PRIMARY KEY (server, id),
     FOREIGN KEY (id) REFERENCES ksvp_player(id) ON DELETE CASCADE
 );
 

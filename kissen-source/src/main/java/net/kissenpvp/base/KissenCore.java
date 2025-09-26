@@ -13,12 +13,23 @@ import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.UUID;
 
 public abstract class KissenCore implements Kissen, RepositoryHolder
 {
+    private static final Path UUID_FILE_PATH = Path.of(".unique");
+
+    private UUID serverUid;
+
+    private static final Logger log = LoggerFactory.getLogger(KissenCore.class);
     private static KissenCore instance;
     private GlobalLocaleRegistry localeRegistry;
     private InternalRepositoryHolder databaseModule;
@@ -57,7 +68,34 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
         instance = this;
         localeRegistry = new InternalGlobalLocaleRegistry();
 
+        try
+        {
+            serverUid = loadOrCreateServerUid();
+        }
+        catch (IOException exception)
+        {
+            log.warn("Can't create serverid.txt directory!", exception);
+        }
+
+
         started = true;
+    }
+
+    private static @NonNull UUID loadOrCreateServerUid() throws IOException
+    {
+        if (Files.notExists(UUID_FILE_PATH)) {
+            UUID newUUID = UUID.randomUUID();
+            Files.writeString(
+                    UUID_FILE_PATH,
+                    newUUID.toString(),
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE
+            );
+            return newUUID;
+        }
+
+        String content = Files.readString(UUID_FILE_PATH).trim();
+        return UUID.fromString(content);
     }
 
     @Override public @NonNull GlobalLocaleRegistry localeRegistry()
@@ -98,5 +136,10 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
     @Override public @NonNull Repository<String, RankSubscription> rankSubscriptionRepository()
     {
         return databaseModule.rankSubscriptionRepository();
+    }
+
+    @Override public @NonNull UUID serverUid()
+    {
+        return serverUid;
     }
 }

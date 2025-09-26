@@ -2,6 +2,7 @@ package net.kissenpvp.network.actor;
 
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.PlayerRepository;
+import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalCachedRepository;
 import org.jspecify.annotations.NonNull;
 
@@ -274,17 +275,22 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
      * @param uuid the unique identifier of the player whose properties are being saved; must not be null
      * @param data the byte array representation of the properties to be stored; must not be null
      * @return a {@link CompletableFuture} that completes when the operation is successfully executed
-     * @throws NullPointerException if the provided UUID or the data byte array is null
-     * @throws IllegalStateException if an exception occurs while executing*/
-    public @NonNull CompletableFuture<Void> saveProperties(@NonNull UUID uuid, byte[] data)
+     * @throws NullPointerException  if the provided UUID or the data byte array is null
+     * @throws IllegalStateException if an exception occurs while executing
+     */
+    public @NonNull CompletableFuture<Void> saveProperties(@NonNull UUID uuid, byte[] data) throws NullPointerException
     {
-        String sql = "INSERT INTO ksvp_player_data (id, player_data) VALUES (?, ?) ON DUPLICATE KEY UPDATE player_data = ?;";
+        Objects.requireNonNull(uuid, "The uuid cannot be null!");
+
+        String sql = "INSERT INTO ksvp_player_data (server_uid, id, player_data) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE player_data = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
         {
-            statement.setString(1, uuid.toString());
+            statement.setString(1, String.valueOf(KissenCore.getInstance().serverUid()));
+
+            statement.setString(2, String.valueOf(uuid));
             Blob blob = new SerialBlob(data);
-            statement.setBlob(2, blob);
             statement.setBlob(3, blob);
+            statement.setBlob(4, blob);
             statement.executeUpdate();
             return null;
         }));
@@ -301,12 +307,16 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
      *         or an empty {@link Optional} if no properties are found
      * @throws NullPointerException if the provided UUID is null
      */
-    public @NonNull CompletableFuture<Optional<Blob>> findProperties(@NonNull UUID uuid)
+    public @NonNull CompletableFuture<Optional<Blob>> findProperties(@NonNull UUID uuid) throws NullPointerException
     {
-        String sql = "SELECT player_data FROM ksvp_player_data WHERE id = ?;";
+        Objects.requireNonNull(uuid, "The uuid cannot be null!");
+
+        String sql = "SELECT player_data FROM ksvp_player_data WHERE server_uid = ? AND id = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
         {
-            statement.setString(1, uuid.toString());
+            statement.setString(1, String.valueOf(KissenCore.getInstance().serverUid()));
+
+            statement.setString(2, String.valueOf(uuid));
             try(ResultSet resultSet = statement.executeQuery()) {
 
                 if(!resultSet.next())
