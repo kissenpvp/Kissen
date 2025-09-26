@@ -29,25 +29,4 @@ public interface Actor extends NetworkEntity
      * @return a non-null string representing the unique username of the actor.
      */
     @NonNull String username();
-
-    /**
-     * Retrieves the locale associated with the actor.
-     * <p>
-     * The locale represents the
-     * language and regional preferences of the actor, which can be used for tasks
-     * such as localization or formatting messages shown to this actor.
-     *
-     * @return a non-null {@link Locale} representing the actor's language and regional preferences.
-     */
-    @NonNull Locale locale();
-
-    /**
-     * Determines if the actor has elevated permissions.
-     * <p>
-     * This method is used to check whether the actor possesses operational authority,
-     * commonly referred to as "op" status.
-     *
-     * @return {@code true} if the actor has elevated permissions, otherwise {@code false}.
-     */
-    boolean isOp();
 }

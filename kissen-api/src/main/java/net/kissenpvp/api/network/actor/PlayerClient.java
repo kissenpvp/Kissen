@@ -3,12 +3,10 @@ package net.kissenpvp.api.network.actor;
 import net.kissenpvp.api.database.PersistableEntity;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
-import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -35,27 +33,7 @@ public interface PlayerClient extends Actor, PersistableEntity<UUID>
      */
     @NonNull UUID linkId();
 
-    /**
-     * Retrieves the timestamp of the player's most recent login. This value represents
-     * the moment when the player last accessed the system and is guaranteed to be non-null.
-     *
-     * @return a non-null {@link Instant} representing the timestamp of the player's last login.
-     */
-    @NonNull Instant lastLogin();
-
-    /**
-     * Retrieves the total amount of time the player has actively spent in the server.
-     * This is represented by a {@link DefinedTimeSpan}, encapsulating the duration
-     * and period of time played.
-     *
-     * @return a non-null {@link DefinedTimeSpan} representing the player's total active time in the system.
-     */
-    @NonNull DefinedTimeSpan timePlayed();
-
     @NonNull PunishmentSubscription punish(@NonNull Punishment punishment) throws NullPointerException;
 
-    @NonNull PunishmentSubscription punish(
-            @NonNull Punishment punishment,
-            @Nullable Component message
-    ) throws NullPointerException;
+    @NonNull PunishmentSubscription punish(@NonNull Punishment punishment, @Nullable Component message) throws NullPointerException;
 }
