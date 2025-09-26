@@ -15,6 +15,13 @@ CREATE TABLE IF NOT EXISTS ksvp_player (
     FOREIGN KEY (link_id) REFERENCES ksvp_identity(link_id)
 );
 
+CREATE TABLE IF NOT EXISTS ksvp_player_data (
+    id VARCHAR(36) NOT NULL,
+    player_data BLOB NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES ksvp_player(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS ksvp_operators (
     id VARCHAR(36) NOT NULL,
     operator_level INT NOT NULL,

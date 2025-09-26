@@ -8,6 +8,7 @@ import org.jspecify.annotations.NonNull;
 
 
 import javax.sql.DataSource;
+import javax.sql.rowset.serial.SerialBlob;
 import java.sql.*;
 import java.sql.Date;
 import java.time.ZoneId;
@@ -273,5 +274,60 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
 
         overrideSignature(playerClient);
         statement.addBatch();
+    }
+
+    /**
+     * Saves the specified properties data for a player identified by the given UUID.
+     * <p>
+     * The data is stored in the database as a {@link Blob}. If a record already exists
+     * for the given UUID, it is updated with the new data. The operation is performed
+     * asynchronously.
+     *
+     * @param uuid the unique identifier of the player whose properties are being saved; must not be null
+     * @param data the byte array representation of the properties to be stored; must not be null
+     * @return a {@link CompletableFuture} that completes when the operation is successfully executed
+     * @throws NullPointerException if the provided UUID or the data byte array is null
+     * @throws IllegalStateException if an exception occurs while executing*/
+    public @NonNull CompletableFuture<Void> saveProperties(@NonNull UUID uuid, byte[] data)
+    {
+        String sql = "INSERT INTO ksvp_player_data (id, player_data) VALUES (?, ?) ON DUPLICATE KEY UPDATE player_data = ?;";
+        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        {
+            statement.setString(1, uuid.toString());
+            Blob blob = new SerialBlob(data);
+            statement.setBlob(2, blob);
+            statement.setBlob(3, blob);
+            statement.executeUpdate();
+            return null;
+        }));
+    }
+
+    /**
+     * Retrieves the properties associated with the given player UUID as a {@link Blob}.
+     * <p>
+     * If no properties are found for the provided UUID, an empty {@link Optional} is returned.
+     * The operation is performed asynchronously.
+     *
+     * @param uuid the unique identifier of the player whose properties are to be retrieved; must not be null
+     * @return a {@link CompletableFuture} that completes with an {@link Optional} containing the retrieved {@link Blob},
+     *         or an empty {@link Optional} if no properties are found
+     * @throws NullPointerException if the provided UUID is null
+     */
+    public @NonNull CompletableFuture<Optional<Blob>> findProperties(@NonNull UUID uuid)
+    {
+        String sql = "SELECT player_data FROM ksvp_player_data WHERE id = ?;";
+        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        {
+            statement.setString(1, uuid.toString());
+            try(ResultSet resultSet = statement.executeQuery()) {
+
+                if(!resultSet.next())
+                {
+                    return Optional.empty();
+                }
+
+                return Optional.of(resultSet.getBlob("player_data"));
+            }
+        }));
     }
 }
