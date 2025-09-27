@@ -203,7 +203,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     }
 
     @Override
-    public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<PlayerClient> id) throws NullPointerException
+    public @NonNull CompletableFuture<Void> saveAllCached(@NonNull Iterable<PlayerClient> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "id cannot be null");
         String sql = "INSERT INTO ksvp_player (id, link_id, username) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, username = ?;";
