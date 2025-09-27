@@ -5,7 +5,7 @@ import net.kissenpvp.api.database.RepositoryHolder;
 import net.kissenpvp.api.network.actor.OperatorInfo;
 import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.api.network.actor.rank.Rank;
-import net.kissenpvp.api.network.actor.rank.RankSubscription;
+import net.kissenpvp.api.network.actor.rank.RankSubscriptionRepository;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import org.jspecify.annotations.NonNull;
@@ -18,7 +18,7 @@ public record InternalRepositoryHolder(@NonNull PlayerRepository playerRepositor
                                        @NonNull Repository<Integer, Punishment> punishmentRepository,
                                        @NonNull PunishmentSubscriptionRepository punishmentSubscriptionRepository,
                                        @NonNull Repository<String, Rank> rankRepository,
-                                       @NonNull Repository<String, RankSubscription> rankSubscriptionRepository
+                                       @NonNull RankSubscriptionRepository rankSubscriptionRepository
 ) implements RepositoryHolder
 {
 
@@ -26,8 +26,7 @@ public record InternalRepositoryHolder(@NonNull PlayerRepository playerRepositor
             @NonNull PlayerRepository playerRepository, @NonNull Repository<UUID,
                     OperatorInfo> operatorRepository, @NonNull Repository<Integer, Punishment> punishmentRepository,
             @NonNull PunishmentSubscriptionRepository punishmentSubscriptionRepository,
-            @NonNull Repository<String, Rank> rankRepository, @NonNull Repository<String,
-                    RankSubscription> rankSubscriptionRepository
+            @NonNull Repository<String, Rank> rankRepository, @NonNull RankSubscriptionRepository rankSubscriptionRepository
     )
     {
         this.playerRepository = playerRepository;
@@ -57,7 +56,7 @@ public record InternalRepositoryHolder(@NonNull PlayerRepository playerRepositor
         private Repository<Integer, Punishment> punishmentRepository;
         private PunishmentSubscriptionRepository punishmentSubscriptionRepository;
         private Repository<String, Rank> rankRepository;
-        private Repository<String, RankSubscription> rankSubscriptionRepository;
+        private RankSubscriptionRepository rankSubscriptionRepository;
 
         public InternalRepositoryHolder.@NonNull RepositoryHolderBuilder playerRepository(@NonNull PlayerRepository playerRepository) throws NullPointerException
         {
@@ -106,7 +105,7 @@ public record InternalRepositoryHolder(@NonNull PlayerRepository playerRepositor
             return this;
         }
 
-        public InternalRepositoryHolder.@NonNull RepositoryHolderBuilder rankSubscriptionRepository(@NonNull Repository<String, RankSubscription> rankSubscriptionRepository) throws NullPointerException
+        public InternalRepositoryHolder.@NonNull RepositoryHolderBuilder rankSubscriptionRepository(@NonNull RankSubscriptionRepository rankSubscriptionRepository) throws NullPointerException
         {
             Objects.requireNonNull(rankSubscriptionRepository, "rankSubscriptionRepository cannot be null!");
 
