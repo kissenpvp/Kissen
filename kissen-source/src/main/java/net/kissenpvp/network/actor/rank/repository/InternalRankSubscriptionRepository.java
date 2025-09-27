@@ -1,7 +1,8 @@
 package net.kissenpvp.network.actor.rank.repository;
 
-import net.kissenpvp.api.database.Repository;
+import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
+import net.kissenpvp.api.network.actor.rank.RankSubscriptionRepository;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.database.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRankSubscription;
@@ -31,7 +32,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Bebdor augustus irilieres cesarius, Ivo Quiring
  */
-public class InternalRankSubscriptionRepository extends InternalRepository<String, RankSubscription> implements Repository<String, RankSubscription>
+public class InternalRankSubscriptionRepository extends InternalRepository<String, RankSubscription> implements RankSubscriptionRepository
 {
     public InternalRankSubscriptionRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
@@ -163,5 +164,43 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         }
 
         statement.setNull(6, Types.TIMESTAMP);
+    }
+
+    @Override public @NonNull CompletableFuture<@NonNull Optional<RankSubscription>> findActive(@NonNull PlayerClient player)
+    {
+        String sql = "SELECT id, rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE player_id = ? AND (expiry IS NULL OR expiry > NOW()) ORDER BY start_time DESC LIMIT 1;";
+
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        {
+            statement.setString(1, String.valueOf(player.id()));
+            try(ResultSet resultSet = statement.executeQuery())
+            {
+                if(!resultSet.next())
+                {
+                    return Optional.empty();
+                }
+
+                return Optional.of(toEntity(resultSet));
+            }
+        }))));
+    }
+
+    @Override public @NonNull CompletableFuture<@NonNull List<RankSubscription>> findHistory(@NonNull PlayerClient player)
+    {
+        String sql = "SELECT id, rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE player_id = ? ORDER BY start_time DESC;";
+        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        {
+            statement.setString(1, String.valueOf(player.id()));
+
+            List<RankSubscription> history = new ArrayList<>();
+            try(ResultSet resultSet = statement.executeQuery())
+            {
+                while(resultSet.next())
+                {
+                    history.add(toEntity(resultSet));
+                }
+            }
+            return Collections.unmodifiableList(history);
+        }))));
     }
 }

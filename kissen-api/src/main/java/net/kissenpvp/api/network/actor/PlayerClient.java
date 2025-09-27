@@ -1,12 +1,14 @@
 package net.kissenpvp.api.network.actor;
 
 import net.kissenpvp.api.database.PersistableEntity;
+import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -36,4 +38,8 @@ public interface PlayerClient extends Actor, PersistableEntity<UUID>
     @NonNull PunishmentSubscription punish(@NonNull Punishment punishment) throws NullPointerException;
 
     @NonNull PunishmentSubscription punish(@NonNull Punishment punishment, @Nullable Component message) throws NullPointerException;
+
+    @NonNull List<RankSubscription> rankHistory();
+
+    @NonNull RankSubscription rank();
 }

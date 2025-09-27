@@ -124,7 +124,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
             }
         }
 
-        String sql = "SELECT id, username  FROM ksvp_player WHERE username = ?;";
+        String sql = "SELECT id, username FROM ksvp_player WHERE username = ?;";
         return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
         {
             statement.setString(1, name);

@@ -126,6 +126,18 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
         return true;
     }
 
+    @Override public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<T> id) throws NullPointerException
+    {
+        return saveAllCached(id).thenRun(() -> {
+            for(T updated : id)
+            {
+                this.cachedEntries.put(updated.id(), updated);
+            }
+        });
+    }
+
+    public abstract @NonNull CompletableFuture<Void> saveAllCached(@NonNull Iterable<T> id) throws NullPointerException;
+
     /**
      * Retrieves an unmodifiable view of the current cached entries in the repository.
      * The returned map consists of the primary keys and their associated entities.

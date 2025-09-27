@@ -98,14 +98,7 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         return toCachedEntity(resultSet.getInt("id"), resultSet);
     }
 
-    @Override public @NonNull CompletableFuture<Void> save(@NonNull Punishment id) throws NullPointerException
-    {
-        Objects.requireNonNull(id, "The punishment cannot be null.");
-
-        return saveAll(Collections.singleton(id));
-    }
-
-    @Override public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<Punishment> id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Void> saveAllCached(@NonNull Iterable<Punishment> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "The punishment iterable cannot be null.");
 

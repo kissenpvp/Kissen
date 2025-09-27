@@ -90,7 +90,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         })));
     }
 
-    @Override public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<Rank> id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Void> saveAllCached(@NonNull Iterable<Rank> id) throws NullPointerException
     {
         Objects.requireNonNull(id, "The iterable of ranks cannot be null.");
 
