@@ -1,6 +1,8 @@
 package net.kissenpvp.network.actor.rank;
 
-public class DummyRank extends InternalRank
+import net.kissenpvp.api.network.actor.rank.DefaultRank;
+
+public class DummyRank extends InternalRank implements DefaultRank
 {
     public DummyRank()
     {

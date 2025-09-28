@@ -1,8 +1,8 @@
 package net.kissenpvp.network.actor.rank;
 
 import net.kissenpvp.api.network.actor.PlayerClient;
+import net.kissenpvp.api.network.actor.rank.DefaultSubscription;
 import net.kissenpvp.api.network.actor.rank.Rank;
-import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;
 import net.kissenpvp.temporal.timespan.PermanentTimeSpan;
@@ -10,7 +10,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.Optional;
 
-public class DummyRankSubscription implements RankSubscription
+public class DummyRankSubscription implements DefaultSubscription
 {
     private static final Rank DUMMY_RANK = new DummyRank();
 
