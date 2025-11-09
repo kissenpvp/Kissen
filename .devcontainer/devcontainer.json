@@ -1,0 +1,15 @@
+{
+  "name": "Kissen",
+  "build": { "dockerfile": "Dockerfile", "context": "." },
+  "workspaceFolder": "/home/kissen/Kissen",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/kissen/Kissen,type=bind,consistency=cached",
+  "remoteUser": "kissen",
+  "overrideCommand": false,
+  "init": true,
+  "customizations": {
+    "jetbrains": {
+      "plugins": []
+    }
+  },
+  "postStartCommand": "sudo chown -R $(id -u):$(id -g) ~/Kissen"
+}
