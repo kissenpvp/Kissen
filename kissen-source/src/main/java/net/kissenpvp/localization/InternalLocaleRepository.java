@@ -1,5 +1,6 @@
 package net.kissenpvp.localization;
 
+import com.google.common.base.Preconditions;
 import com.google.gson.*;
 import net.kissenpvp.api.localization.LocaleRepository;
 import net.kyori.adventure.key.Key;
@@ -71,8 +72,8 @@ public abstract class InternalLocaleRepository implements LocaleRepository
             @NonNull MessageFormat format
     ) throws NullPointerException
     {
-        Objects.requireNonNull(key, "The key cannot be null.");
-        Objects.requireNonNull(format, "The message format cannot be null.");
+        Preconditions.checkNotNull(key, "The key cannot be null.");
+        Preconditions.checkNotNull(format, "The message format cannot be null.");
 
         return defaultMessages.put(key, format);
     }
@@ -146,7 +147,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      */
     private void loadFile(@NonNull File file) throws NullPointerException
     {
-        Objects.requireNonNull(file, "The file cannot be null.");
+        Preconditions.checkNotNull(file, "The file cannot be null.");
 
         String fileName = file.getName();
         String localeName = fileName.substring(0, fileName.length() - 5);
@@ -180,7 +181,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      */
     private @NonNull Map<String, MessageFormat> readFile(@NonNull File file) throws NullPointerException
     {
-        Objects.requireNonNull(file, "The file cannot be null.");
+        Preconditions.checkNotNull(file, "The file cannot be null.");
 
         JsonObject object = readJson(file).orElse(new JsonObject());
 
@@ -208,7 +209,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      */
     private @NonNull Optional<JsonObject> readJson(@NonNull File file) throws NullPointerException
     {
-        Objects.requireNonNull(file, "The file cannot be null.");
+        Preconditions.checkNotNull(file, "The file cannot be null.");
 
         try (FileReader fileReader = new FileReader(file, StandardCharsets.UTF_8))
         {

@@ -1,12 +1,12 @@
 package net.kissenpvp.network.actor;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.OperatorInfo;
 import net.kissenpvp.database.InternalRepository;
 import org.jspecify.annotations.NonNull;
 
 
 import javax.sql.DataSource;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -27,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Ivo Quiring
  */
+@Deprecated(forRemoval = true)
 public abstract class InternalOperatorRepository extends InternalRepository<UUID, OperatorInfo>
 {
     public InternalOperatorRepository(@NonNull DataSource dataSource) throws NullPointerException
@@ -36,8 +37,10 @@ public abstract class InternalOperatorRepository extends InternalRepository<UUID
 
     @Override public @NonNull CompletableFuture<@NonNull Optional<OperatorInfo>> find(@NonNull UUID id) throws NullPointerException
     {
+        Preconditions.checkNotNull(id, "Id cannot be null.");
+
         String sql = "SELECT o.id, p.username AS username, o.operator_level, o.can_bypass_player_limit FROM ksvp_operators o JOIN ksvp_player p ON o.id = p.id WHERE o.id = ?;";
-        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, statement ->
+        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, statement ->
         {
             statement.setString(1, String.valueOf(id));
             return collectResults(id, statement).stream().findFirst();

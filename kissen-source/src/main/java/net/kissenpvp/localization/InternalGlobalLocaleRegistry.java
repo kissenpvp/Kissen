@@ -1,5 +1,6 @@
 package net.kissenpvp.localization;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.base.KissenPlugin;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
 import net.kissenpvp.api.localization.LocaleRepository;
@@ -29,7 +30,7 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
 
     public void register(@NonNull KissenPlugin plugin) throws NullPointerException
     {
-        Objects.requireNonNull(plugin, "plugin cannot be null");
+        Preconditions.checkNotNull(plugin, "plugin cannot be null");
 
         repositories.put(plugin, new InternalLocaleRepository()
         {
@@ -54,7 +55,7 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
     public @NonNull LocaleRepository localeRepository(@NonNull KissenPlugin plugin) throws NullPointerException,
             IllegalArgumentException
     {
-        Objects.requireNonNull(plugin, "plugin cannot be null");
+        Preconditions.checkNotNull(plugin, "plugin cannot be null");
 
         if (!repositories.containsKey(plugin))
         {

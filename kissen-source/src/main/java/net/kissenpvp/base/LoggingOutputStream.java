@@ -17,8 +17,8 @@ public class LoggingOutputStream extends OutputStream
 
     public LoggingOutputStream(@NonNull Logger logger, @NonNull Level level) throws NullPointerException
     {
-        Objects.requireNonNull(logger, "Logger cannot be null");
-        Objects.requireNonNull(level, "LogLevel cannot be null");
+        Preconditions.checkNotNull(logger, "Logger cannot be null");
+        Preconditions.checkNotNull(level, "LogLevel cannot be null");
 
         this.logger = logger;
         this.level = level;
@@ -33,7 +33,7 @@ public class LoggingOutputStream extends OutputStream
 
     public void level(@NonNull Level level) throws NullPointerException
     {
-        Objects.requireNonNull(level, "LogLevel cannot be null");
+        Preconditions.checkNotNull(level, "LogLevel cannot be null");
 
         this.level = level;
     }
@@ -45,7 +45,7 @@ public class LoggingOutputStream extends OutputStream
 
     public void logger(@NonNull Logger logger) throws NullPointerException
     {
-        Objects.requireNonNull(logger, "Logger cannot be null");
+        Preconditions.checkNotNull(logger, "Logger cannot be null");
 
         this.logger = logger;
     }

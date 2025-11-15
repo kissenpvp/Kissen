@@ -1,5 +1,6 @@
 package net.kissenpvp.database;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.database.KissenRepository;
 import net.kissenpvp.api.database.PersistableEntity;
 import org.jspecify.annotations.NonNull;
@@ -100,7 +101,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      */
     protected static <X, Y> @Nullable Y convertSafely(@NonNull Function<X, Y> function, @Nullable X value) throws NullPointerException
     {
-        Objects.requireNonNull(function, "The function cannot be null.");
+        Preconditions.checkNotNull(function, "The function cannot be null.");
 
         if (Objects.isNull(value))
         {
@@ -127,7 +128,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
      */
     protected static void setDual(@NonNull PreparedStatement statement, int index, int secondIndex, int sqlType, @Nullable Object value) throws SQLException, NullPointerException
     {
-        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
+        Preconditions.checkNotNull(statement, "The prepared statement cannot be null.");
 
         if (Objects.nonNull(value))
         {
@@ -142,7 +143,7 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
 
     protected void overrideSignature(@NonNull T entity) throws NullPointerException
     {
-        Objects.requireNonNull(entity, "The entity cannot be null.");
+        Preconditions.checkNotNull(entity, "The entity cannot be null.");
         if (entity instanceof InternalPersistableEntity<?> persistable)
         {
             persistable.overrideSignature();

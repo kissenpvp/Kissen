@@ -1,5 +1,6 @@
 package net.kissenpvp.network.actor.rank.repository;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.network.actor.rank.RankSubscriptionRepository;
@@ -47,7 +48,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     @Override public @NonNull CompletableFuture<@NonNull Optional<RankSubscription>> find(@NonNull String id) throws NullPointerException
     {
         String sql = "SELECT rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, id);
             return collectResults(id, statement).stream().findFirst();
@@ -87,8 +88,8 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
 
     @Override public @NonNull RankSubscription toEntity(@NonNull String id, @NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
-        Objects.requireNonNull(id, "The rank subscription ID cannot be null.");
-        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+        Preconditions.checkNotNull(id, "The rank subscription ID cannot be null.");
+        Preconditions.checkNotNull(resultSet, "The result set cannot be null.");
 
         UUID playerId = UUID.fromString(resultSet.getString("player_id"));
 
@@ -102,13 +103,13 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
 
     @Override public @NonNull RankSubscription toEntity(@NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
-        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+        Preconditions.checkNotNull(resultSet, "The result set cannot be null.");
         return toEntity(resultSet.getString("id"), resultSet);
     }
 
     @Override public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<RankSubscription> id) throws NullPointerException
     {
-        Objects.requireNonNull(id, "The rank subscriptions cannot be null.");
+        Preconditions.checkNotNull(id, "The rank subscriptions cannot be null.");
 
         String sql = "INSERT INTO ksvp_rank_subscription (id, rank_id, player_id, start_time, expiry,  expected_expiry) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE rank_id = ?, player_id = ?, expiry = ?;";
 
@@ -153,7 +154,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
      */
     private void expectedExpiry(@NonNull PreparedStatement statement, @Nullable LocalDateTime expiry) throws SQLException, NullPointerException
     {
-        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
+        Preconditions.checkNotNull(statement, "The prepared statement cannot be null.");
 
         if (Objects.nonNull(expiry))
         {
@@ -170,7 +171,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     {
         String sql = "SELECT id, rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE player_id = ? AND (expiry IS NULL OR expiry > NOW()) ORDER BY start_time DESC LIMIT 1;";
 
-        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(player.id()));
             try(ResultSet resultSet = statement.executeQuery())
@@ -188,7 +189,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     @Override public @NonNull CompletableFuture<@NonNull List<RankSubscription>> findHistory(@NonNull PlayerClient player)
     {
         String sql = "SELECT id, rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE player_id = ? ORDER BY start_time DESC;";
-        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(player.id()));
 

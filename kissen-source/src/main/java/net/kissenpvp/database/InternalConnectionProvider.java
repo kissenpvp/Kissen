@@ -1,5 +1,6 @@
 package net.kissenpvp.database;
 
+import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import net.kissenpvp.api.database.ConnectionProvider;
@@ -45,7 +46,7 @@ public class InternalConnectionProvider implements ConnectionProvider
     @Override
     public void connect(@NonNull String url, @NonNull String username, @NonNull String password, boolean generateSchema) throws IllegalStateException, SQLException
     {
-        Objects.requireNonNull(url, "Connection string must not be null");
+        Preconditions.checkNotNull(url, "Connection string must not be null");
 
         if (Objects.nonNull(dataSource))
         {

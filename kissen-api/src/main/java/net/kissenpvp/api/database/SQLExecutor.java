@@ -1,5 +1,6 @@
 package net.kissenpvp.api.database;
 
+import com.google.common.base.Preconditions;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -9,7 +10,6 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Objects;
 
 public class SQLExecutor
 {
@@ -20,7 +20,7 @@ public class SQLExecutor
 
     public SQLExecutor(@NonNull DataSource dataSource) throws NullPointerException
     {
-        Objects.requireNonNull(dataSource, "The dataSource cannot be null.");
+        Preconditions.checkNotNull(dataSource, "The dataSource cannot be null.");
         this.dataSource = dataSource;
     }
 
@@ -60,7 +60,7 @@ public class SQLExecutor
      */
     protected <X> @Nullable X unsafeQuery(@NonNull String sql, @NonNull QueryExecutor<X> queryExecutor) throws SQLException, NullPointerException
     {
-        Objects.requireNonNull(sql, "The SQL string cannot be null.");
+        Preconditions.checkNotNull(sql, "The SQL string cannot be null.");
 
         try (Connection connection = dataSource().getConnection()) {
             //noinspection SqlSourceToSinkFlow

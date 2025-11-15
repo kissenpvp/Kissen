@@ -1,5 +1,6 @@
 package net.kissenpvp.temporal;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
@@ -31,7 +32,7 @@ public class InternalWritableTemporalObject implements WritableTemporalObject
             @Nullable Instant expectedExpiry
     ) throws NullPointerException
     {
-        Objects.requireNonNull(start, "Start must be not null");
+        Preconditions.checkNotNull(start, "Start must be not null");
 
         this.start = start;
         this.expiry = expiry;

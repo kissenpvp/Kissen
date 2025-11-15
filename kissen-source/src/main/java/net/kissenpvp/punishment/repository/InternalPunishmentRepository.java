@@ -1,5 +1,6 @@
 package net.kissenpvp.punishment.repository;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentType;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
@@ -85,8 +86,8 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
 
     @Override protected @NonNull InternalPunishment toCachedEntity(@NonNull Integer id, @NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
-        Objects.requireNonNull(id, "The id cannot be null.");
-        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+        Preconditions.checkNotNull(id, "The id cannot be null.");
+        Preconditions.checkNotNull(resultSet, "The result set cannot be null.");
 
         PunishmentType type = PunishmentType.fromOrdinal(resultSet.getInt("punishment_type"));
         InternalDefinedTimeSpan timeSpan = new InternalDefinedTimeSpan(resultSet.getLong("time_span"));
@@ -100,7 +101,7 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
 
     @Override public @NonNull CompletableFuture<Void> saveAllCached(@NonNull Iterable<Punishment> id) throws NullPointerException
     {
-        Objects.requireNonNull(id, "The punishment iterable cannot be null.");
+        Preconditions.checkNotNull(id, "The punishment iterable cannot be null.");
 
         String sql = "INSERT INTO ksvp_punishment (id, punishment_type, time_span, message) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE punishment_type = ?, time_span = ?, message = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
@@ -128,8 +129,8 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
      */
     private void addBatch(@NonNull PreparedStatement statement, @NonNull Punishment punishment) throws SQLException, NullPointerException
     {
-        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
-        Objects.requireNonNull(punishment, "The punishment cannot be null.");
+        Preconditions.checkNotNull(statement, "The prepared statement cannot be null.");
+        Preconditions.checkNotNull(punishment, "The punishment cannot be null.");
 
         statement.setInt(1, punishment.id());
 

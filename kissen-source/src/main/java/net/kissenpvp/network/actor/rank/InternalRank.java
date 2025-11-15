@@ -1,5 +1,6 @@
 package net.kissenpvp.network.actor.rank;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.temporal.TemporalObject;
 import net.kissenpvp.database.InternalPersistableEntity;
@@ -22,7 +23,7 @@ public class InternalRank extends InternalPersistableEntity<String> implements R
 
     public InternalRank(@NonNull String id, int priority, @NonNull TemporalObject temporal) throws NullPointerException
     {
-        Objects.requireNonNull(id, "Id cannot be null");
+        Preconditions.checkNotNull(id, "Id cannot be null");
 
         this.id = id;
         this.priority = priority;

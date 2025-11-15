@@ -36,12 +36,12 @@ public record InternalRepositoryHolder(@NonNull PlayerRepository playerRepositor
         this.rankRepository = rankRepository;
         this.rankSubscriptionRepository = rankSubscriptionRepository;
 
-        Objects.requireNonNull(playerRepository, "playerRepository cannot be null!");
-        Objects.requireNonNull(operatorRepository, "operatorRepository cannot be null!");
-        Objects.requireNonNull(punishmentRepository, "punishmentRepository cannot be null!");
-        Objects.requireNonNull(punishmentSubscriptionRepository, "punishmentSubscriptionRepository cannot be null!");
-        Objects.requireNonNull(rankRepository, "rankRepository cannot be null!");
-        Objects.requireNonNull(rankSubscriptionRepository, "rankSubscriptionRepository cannot be null!");
+        Preconditions.checkNotNull(playerRepository, "playerRepository cannot be null!");
+        Preconditions.checkNotNull(operatorRepository, "operatorRepository cannot be null!");
+        Preconditions.checkNotNull(punishmentRepository, "punishmentRepository cannot be null!");
+        Preconditions.checkNotNull(punishmentSubscriptionRepository, "punishmentSubscriptionRepository cannot be null!");
+        Preconditions.checkNotNull(rankRepository, "rankRepository cannot be null!");
+        Preconditions.checkNotNull(rankSubscriptionRepository, "rankSubscriptionRepository cannot be null!");
     }
 
     public static RepositoryHolderBuilder builder()
@@ -60,7 +60,7 @@ public record InternalRepositoryHolder(@NonNull PlayerRepository playerRepositor
 
         public InternalRepositoryHolder.@NonNull RepositoryHolderBuilder playerRepository(@NonNull PlayerRepository playerRepository) throws NullPointerException
         {
-            Objects.requireNonNull(playerRepository, "playerRepository cannot be null!");
+            Preconditions.checkNotNull(playerRepository, "playerRepository cannot be null!");
 
             this.playerRepository = playerRepository;
             return this;
@@ -71,7 +71,7 @@ public record InternalRepositoryHolder(@NonNull PlayerRepository playerRepositor
                         OperatorInfo> operatorRepository
         ) throws NullPointerException
         {
-            Objects.requireNonNull(operatorRepository, "operatorRepository cannot be null!");
+            Preconditions.checkNotNull(operatorRepository, "operatorRepository cannot be null!");
 
             this.operatorRepository = operatorRepository;
             return this;
@@ -79,7 +79,7 @@ public record InternalRepositoryHolder(@NonNull PlayerRepository playerRepositor
 
         public InternalRepositoryHolder.@NonNull RepositoryHolderBuilder punishmentRepository(@NonNull Repository<Integer, Punishment> punishmentRepository) throws NullPointerException
         {
-            Objects.requireNonNull(punishmentRepository, "punishmentRepository cannot be null!");
+            Preconditions.checkNotNull(punishmentRepository, "punishmentRepository cannot be null!");
 
             this.punishmentRepository = punishmentRepository;
             return this;
@@ -87,7 +87,7 @@ public record InternalRepositoryHolder(@NonNull PlayerRepository playerRepositor
 
         public InternalRepositoryHolder.@NonNull RepositoryHolderBuilder punishmentSubscriptionRepository(@NonNull PunishmentSubscriptionRepository punishmentSubscriptionRepository) throws NullPointerException
         {
-            Objects.requireNonNull(punishmentSubscriptionRepository, "punishmentSubscriptionRepository cannot be " +
+            Preconditions.checkNotNull(punishmentSubscriptionRepository, "punishmentSubscriptionRepository cannot be " +
                     "null!");
 
             this.punishmentSubscriptionRepository = punishmentSubscriptionRepository;
@@ -99,7 +99,7 @@ public record InternalRepositoryHolder(@NonNull PlayerRepository playerRepositor
                         Rank> rankRepository
         ) throws NullPointerException
         {
-            Objects.requireNonNull(rankRepository, "rankRepository cannot be null!");
+            Preconditions.checkNotNull(rankRepository, "rankRepository cannot be null!");
 
             this.rankRepository = rankRepository;
             return this;
@@ -107,7 +107,7 @@ public record InternalRepositoryHolder(@NonNull PlayerRepository playerRepositor
 
         public InternalRepositoryHolder.@NonNull RepositoryHolderBuilder rankSubscriptionRepository(@NonNull RankSubscriptionRepository rankSubscriptionRepository) throws NullPointerException
         {
-            Objects.requireNonNull(rankSubscriptionRepository, "rankSubscriptionRepository cannot be null!");
+            Preconditions.checkNotNull(rankSubscriptionRepository, "rankSubscriptionRepository cannot be null!");
 
             this.rankSubscriptionRepository = rankSubscriptionRepository;
             return this;

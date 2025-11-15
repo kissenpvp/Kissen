@@ -1,5 +1,6 @@
 package net.kissenpvp.network.actor;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.base.KissenCore;
@@ -94,7 +95,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     @Override public @NonNull CompletableFuture<@NonNull Optional<UUID>> findLinkId(@NonNull UUID uuid) throws NullPointerException
     {
         String sql = "SELECT link_id FROM ksvp_player WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(uuid));
             try (ResultSet resultSet = statement.executeQuery())
@@ -125,7 +126,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         }
 
         String sql = "SELECT id, username FROM ksvp_player WHERE username = ?;";
-        return CompletableFuture.supplyAsync(() -> Objects.requireNonNull(query(sql, (statement ->
+        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, name);
             return collectResults(statement).stream().findFirst();
@@ -205,7 +206,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     @Override
     public @NonNull CompletableFuture<Void> saveAllCached(@NonNull Iterable<PlayerClient> id) throws NullPointerException
     {
-        Objects.requireNonNull(id, "id cannot be null");
+        Preconditions.checkNotNull(id, "id cannot be null");
         String sql = "INSERT INTO ksvp_player (id, link_id, username) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, username = ?;";
 
         return CompletableFuture.supplyAsync(() ->
@@ -255,8 +256,8 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
      */
     private void addBatch(@NonNull PreparedStatement statement, @NonNull PlayerClient playerClient) throws SQLException, NullPointerException
     {
-        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
-        Objects.requireNonNull(playerClient, "The player client cannot be null.");
+        Preconditions.checkNotNull(statement, "The prepared statement cannot be null.");
+        Preconditions.checkNotNull(playerClient, "The player client cannot be null.");
 
         statement.setString(1, String.valueOf(playerClient.id()));
         setDual(statement, 2, 4, Types.VARCHAR, String.valueOf(playerClient.linkId()));
@@ -280,7 +281,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
      */
     public @NonNull CompletableFuture<Void> saveProperties(@NonNull UUID uuid, byte[] data) throws NullPointerException
     {
-        Objects.requireNonNull(uuid, "The uuid cannot be null!");
+        Preconditions.checkNotNull(uuid, "The uuid cannot be null!");
 
         String sql = "INSERT INTO ksvp_player_data (server_uid, id, player_data) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE player_data = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
@@ -309,7 +310,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
      */
     public @NonNull CompletableFuture<Optional<Blob>> findProperties(@NonNull UUID uuid) throws NullPointerException
     {
-        Objects.requireNonNull(uuid, "The uuid cannot be null!");
+        Preconditions.checkNotNull(uuid, "The uuid cannot be null!");
 
         String sql = "SELECT player_data FROM ksvp_player_data WHERE server_uid = ? AND id = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->

@@ -1,5 +1,6 @@
 package net.kissenpvp.punishment;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.Actor;
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.punishment.Punishment;
@@ -46,9 +47,9 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     ) throws NullPointerException
     {
         super(id, parent);
-        Objects.requireNonNull(id, "Id cannot be null.");
-        Objects.requireNonNull(linkId, "LinkId cannot be null.");
-        Objects.requireNonNull(temporalObject, "TimeSpan cannot be null.");
+        Preconditions.checkNotNull(id, "Id cannot be null.");
+        Preconditions.checkNotNull(linkId, "LinkId cannot be null.");
+        Preconditions.checkNotNull(temporalObject, "TimeSpan cannot be null.");
 
         if (id.length() > 8)
         {

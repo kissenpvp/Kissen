@@ -1,5 +1,6 @@
 package net.kissenpvp.punishment;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentType;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
@@ -26,10 +27,9 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
     public InternalPunishment(
             int id, @NonNull PunishmentType punishmentType, @NonNull TimeSpan timeSpan,
             @Nullable Component defaultMessage
-    )
-    {
-        Objects.requireNonNull(punishmentType, "PunishmentType cannot be null.");
-        Objects.requireNonNull(timeSpan, "TimeSpan cannot be null.");
+    ) {
+        Preconditions.checkNotNull(punishmentType, "PunishmentType cannot be null.");
+        Preconditions.checkNotNull(timeSpan, "TimeSpan cannot be null.");
 
         this.id = id;
         this.punishmentType = punishmentType;
@@ -56,7 +56,7 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
 
     @Override public void timeSpan(@NonNull TimeSpan timeSpan)
     {
-        Objects.requireNonNull(timeSpan, "TimeSpan cannot be null.");
+        Preconditions.checkNotNull(timeSpan, "TimeSpan cannot be null.");
         this.timeSpan = timeSpan;
     }
 
@@ -67,7 +67,7 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
 
     @Override public void punishmentType(@NonNull PunishmentType punishmentType)
     {
-        Objects.requireNonNull(punishmentType, "PunishmentType cannot be null.");
+        Preconditions.checkNotNull(punishmentType, "PunishmentType cannot be null.");
         this.punishmentType = punishmentType;
     }
 

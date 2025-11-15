@@ -1,5 +1,6 @@
 package net.kissenpvp.network.actor.rank;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
@@ -42,7 +43,7 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
     {
         super(id, parentId);
 
-        Objects.requireNonNull(playerId, "The player id cannot be null.");
+        Preconditions.checkNotNull(playerId, "The player id cannot be null.");
 
         this.playerId = playerId;
         this.temporalObject = temporalObject;

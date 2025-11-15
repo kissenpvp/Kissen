@@ -39,6 +39,9 @@ subprojects {
         // GSON
         compileOnly("com.google.code.gson:gson:2.13.1")
 
+        // Preconditions
+        compileOnly("com.google.guava:guava:33.5.0-jre")
+
         // Testing
         testImplementation(platform("org.junit:junit-bom:5.13.4"))
         testImplementation("org.junit.jupiter:junit-jupiter")

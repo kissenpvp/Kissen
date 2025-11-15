@@ -1,18 +1,15 @@
 package net.kissenpvp.api.database;
 
+import com.google.common.base.Preconditions;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 public abstract class KissenRepository<P, T extends PersistableEntity<P>> extends SQLExecutor implements Repository<P, T>
 {
@@ -23,7 +20,7 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> extend
 
     @Override public @NonNull CompletableFuture<Void> save(@NonNull T id) throws NullPointerException
     {
-        Objects.requireNonNull(id, "The entity cannot be null.");
+        Preconditions.checkNotNull(id, "The entity cannot be null.");
 
         return saveAll(Collections.singleton(id));
     }
@@ -50,4 +47,25 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> extend
         return i;
     }
 
+    /**
+     * Helper method for validating that a reference is not {@code null}.
+     * <p>
+     * This behaves like {@link java.util.Objects#requireNonNull(Object)}, but throws a
+     * {@link java.util.concurrent.CompletionException} instead. This is useful in
+     * asynchronous repository operations where exceptions should be wrapped in
+     * {@code CompletionException}.
+     *
+     * @param <X> the type of the object reference
+     * @param obj the object that must not be {@code null}
+     * @return the non-null {@code obj}
+     * @throws CompletionException if {@code obj} is {@code null}
+     */
+    protected <X> @NonNull X assumeNotNull(@Nullable X obj) throws CompletionException
+    {
+        if(Objects.isNull(obj))
+        {
+            throw new CompletionException(new NullPointerException());
+        }
+        return obj;
+    }
 }

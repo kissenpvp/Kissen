@@ -1,5 +1,6 @@
 package net.kissenpvp.network.actor.rank.repository;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.database.InternalCachedRepository;
 import net.kissenpvp.database.InternalRepository;
@@ -92,7 +93,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
 
     @Override public @NonNull CompletableFuture<Void> saveAllCached(@NonNull Iterable<Rank> id) throws NullPointerException
     {
-        Objects.requireNonNull(id, "The iterable of ranks cannot be null.");
+        Preconditions.checkNotNull(id, "The iterable of ranks cannot be null.");
 
         String sql = "INSERT INTO ksvp_rank (id, priority) VALUES (?, ?) ON DUPLICATE KEY UPDATE priority = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
@@ -116,8 +117,8 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
     @Override
     protected @NonNull Rank toCachedEntity(@NonNull String id, @NonNull ResultSet resultSet) throws SQLException, NullPointerException
     {
-        Objects.requireNonNull(id, "The id cannot be null.");
-        Objects.requireNonNull(resultSet, "The result set cannot be null.");
+        Preconditions.checkNotNull(id, "The id cannot be null.");
+        Preconditions.checkNotNull(resultSet, "The result set cannot be null.");
 
         return new InternalRank(id, resultSet.getInt("priority"));
     }
@@ -134,8 +135,8 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
      */
     private void batch(@NonNull PreparedStatement statement, @NonNull Rank rank) throws SQLException, NullPointerException
     {
-        Objects.requireNonNull(statement, "The prepared statement cannot be null.");
-        Objects.requireNonNull(rank, "The rank cannot be null.");
+        Preconditions.checkNotNull(statement, "The prepared statement cannot be null.");
+        Preconditions.checkNotNull(rank, "The rank cannot be null.");
 
         statement.setString(1, rank.id());
         setDual(statement, 2, 3, Types.INTEGER, rank.priority());

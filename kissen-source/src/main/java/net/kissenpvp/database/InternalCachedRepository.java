@@ -1,5 +1,6 @@
 package net.kissenpvp.database;
 
+import com.google.common.base.Preconditions;
 import net.kissenpvp.api.database.CachedRepository;
 import net.kissenpvp.api.database.PersistableEntity;
 import org.jspecify.annotations.NonNull;
@@ -62,7 +63,7 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
 
     @Override public @NonNull CompletableFuture<@NonNull Optional<T>> find(@NonNull P id, boolean utilizeCache) throws NullPointerException
     {
-        Objects.requireNonNull(id, "The identifier cannot be null.");
+        Preconditions.checkNotNull(id, "The identifier cannot be null.");
 
         if (utilizeCache && cachedEntries.containsKey(id))
         {
@@ -73,7 +74,7 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
 
     @Override public @NonNull CompletableFuture< Collection<T>> findAll(@NonNull Iterable<P> id, boolean utilizeCache) throws NullPointerException
     {
-        Objects.requireNonNull(id, "The identifier cannot be null.");
+        Preconditions.checkNotNull(id, "The identifier cannot be null.");
 
         if (!utilizeCache)
         {
@@ -107,14 +108,14 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
 
     @Override public boolean cached(@NonNull P id) throws NullPointerException
     {
-        Objects.requireNonNull(id, "The identifier cannot be null.");
+        Preconditions.checkNotNull(id, "The identifier cannot be null.");
 
         return cachedEntries.containsKey(id);
     }
 
     @Override public boolean cachedAll(@NonNull Iterable<P> id) throws NullPointerException
     {
-        Objects.requireNonNull(id, "The identifier iterable cannot be null.");
+        Preconditions.checkNotNull(id, "The identifier iterable cannot be null.");
 
         for (P currentId : id)
         {
@@ -191,7 +192,7 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
      */
     private @NonNull T cache(@NonNull T entity) throws NullPointerException
     {
-        Objects.requireNonNull(entity, "The entity cannot be null.");
+        Preconditions.checkNotNull(entity, "The entity cannot be null.");
 
         T overridden = cachedEntries.put(entity.id(), entity);
         log.debug("Cached entity: {} (replaced previous: {})", entity, overridden);
