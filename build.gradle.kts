@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "net.kissenpvp"
-version = "1.0-SNAPSHOT"
+version = "1.0.0-SNAPSHOT"
 
 val adventureVersion = "4.20.0"
 
@@ -21,33 +21,6 @@ subprojects {
         maven("https://repo.kissenpvp.net/snapshots")
     }
 
-    dependencies {
-        // Annotations
-        annotationProcessor("org.jspecify:jspecify:1.0.0")
-
-        // Database
-        implementation("org.flywaydb:flyway-core:11.11.0")
-        implementation("org.flywaydb:flyway-mysql:11.11.0")
-
-        // SLF4j
-        compileOnly("org.slf4j:slf4j-api:2.0.17")
-
-        // AdventureAPI
-        compileOnly(platform("net.kyori:adventure-bom:$adventureVersion"))
-        compileOnly("net.kyori:adventure-api")
-        compileOnly("net.kyori:adventure-text-serializer-gson:4.22.0")
-
-        // GSON
-        compileOnly("com.google.code.gson:gson:2.13.1")
-
-        // Preconditions
-        api("com.google.guava:guava:33.5.0-jre")
-
-        // Testing
-        testImplementation(platform("org.junit:junit-bom:5.13.4"))
-        testImplementation("org.junit.jupiter:junit-jupiter")
-        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    }
 
     extensions.configure<JavaPluginExtension> {
         toolchain {
