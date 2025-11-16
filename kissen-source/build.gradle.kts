@@ -1,10 +1,12 @@
 group = "net.kissenpvp"
 version = "1.0.0-SNAPSHOT"
 
-dependencies {
-    implementation(project(":kissen-api"))
+val adventureVersion = "4.25.0"
 
-    implementation("com.zaxxer:HikariCP:7.0.2")
+dependencies {
+    implementation(project(":kissen-api")) // depends on api
+
+    implementation("com.zaxxer:HikariCP:7.0.2") // only for source
 
     // Testing
     testImplementation(platform("org.junit:junit-bom:5.13.4"))
