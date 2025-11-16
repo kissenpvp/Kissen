@@ -6,7 +6,6 @@ import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.database.RepositoryHolder;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
 import net.kissenpvp.api.network.actor.ConsoleClient;
-import net.kissenpvp.api.network.actor.OperatorInfo;
 import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.network.actor.rank.RankSubscriptionRepository;
@@ -50,7 +49,6 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
     protected void databaseModule(@NonNull InternalRepositoryHolder databaseModule)
     {
         Preconditions.checkNotNull(databaseModule.playerRepository(), "playerRepository cannot be null.");
-        Preconditions.checkNotNull(databaseModule.operatorRepository(), "operatorRepository cannot be null.");
         Preconditions.checkNotNull(databaseModule.punishmentRepository(), "punishmentRepository cannot be null.");
         Preconditions.checkNotNull(databaseModule.punishmentSubscriptionRepository(), "punishmentSubscriptionRepository cannot be null.");
         Preconditions.checkNotNull(databaseModule.rankRepository(), "rankRepository cannot be null.");
@@ -112,11 +110,6 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
     @Override public @NonNull PlayerRepository playerRepository()
     {
         return databaseModule.playerRepository();
-    }
-
-    @Override public @NonNull Repository<UUID, OperatorInfo> operatorRepository()
-    {
-        return databaseModule.operatorRepository();
     }
 
     @Override public @NonNull Repository<Integer, Punishment> punishmentRepository()
