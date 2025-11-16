@@ -28,7 +28,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * or {@code null} if no entity is found; never null
      * @throws NullPointerException if the provided identifier is null
      */
-    @NonNull CompletableFuture<@NonNull Optional<T>> find(@NonNull P id) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Optional<T>> find(@NonNull P id);
 
     /**
      * Retrieves a collection of entities corresponding to the specified identifiers asynchronously.
@@ -39,7 +39,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * the collection of entities corresponding to the provided identifiers; never null
      * @throws NullPointerException if the given iterable or any of its elements are null
      */
-    @NonNull CompletableFuture<@NonNull Collection<T>> findAll(@NonNull Iterable<P> id) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Collection<T>> findAll(@NonNull Iterable<P> id);
 
     /**
      * Retrieves all entities from the repository asynchronously.
@@ -61,7 +61,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * or {@code false} otherwise
      * @throws NullPointerException if the provided identifier is null
      */
-    @NonNull CompletableFuture<@NonNull Boolean> has(@NonNull P id) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Boolean> has(@NonNull P id);
 
     /**
      * Persists the given entity to the underlying storage asynchronously.
@@ -71,7 +71,7 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * @return a {@link CompletableFuture} that completes with {@code null} when the entity is persisted successfully
      * @throws NullPointerException if the provided entity is null
      */
-    @NonNull CompletableFuture<Void> save(@NonNull T id) throws NullPointerException;
+    @NonNull CompletableFuture<Void> save(@NonNull T id);
 
     /**
      * Persists all the provided entities to the underlying storage asynchronously.
@@ -81,5 +81,5 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * @return a {@link CompletableFuture} that completes with {@code null} when all entities are persisted successfully
      * @throws NullPointerException if the provided iterable or any of its elements are null
      */
-    @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<T> id) throws NullPointerException;
+    @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<T> id);
 }

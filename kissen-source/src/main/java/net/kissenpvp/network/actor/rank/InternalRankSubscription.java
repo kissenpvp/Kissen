@@ -10,7 +10,6 @@ import net.kissenpvp.database.InternalSubscriptionEntity;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;
 import org.jspecify.annotations.NonNull;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,11 +51,6 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
     @Override public @NonNull Optional<Rank> parent()
     {
         return KissenCore.getInstance().rankRepository().find(parentId()).join();
-    }
-
-    @Override public int signature()
-    {
-        return Objects.hash(id(), parentId(), playerId);
     }
 
     @Override public @NonNull PlayerClient player() throws IllegalStateException

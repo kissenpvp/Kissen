@@ -141,15 +141,6 @@ public abstract class InternalRepository<P, T extends PersistableEntity<P>> exte
         statement.setNull(secondIndex, sqlType);
     }
 
-    protected void overrideSignature(@NonNull T entity) throws NullPointerException
-    {
-        Preconditions.checkNotNull(entity, "The entity cannot be null.");
-        if (entity instanceof InternalPersistableEntity<?> persistable)
-        {
-            persistable.overrideSignature();
-        }
-    }
-
     /**
      * Converts a single row of the provided {@code ResultSet} into an entity.
      * This method is expected to be implemented by subclasses to define the mapping logic from the {@code ResultSet}

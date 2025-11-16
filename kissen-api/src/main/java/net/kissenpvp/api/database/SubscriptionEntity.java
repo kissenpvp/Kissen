@@ -38,15 +38,4 @@ public interface SubscriptionEntity<P, X, T extends PersistableEntity<X>> extend
      * @return the identifier of the parent entity of type {@code X}; never null
      */
     @NonNull X parentId();
-
-    /**
-     * Computes a derived signature of the associated parent entity's state.
-     * This can be used to track changes or to verify the consistency between
-     * the subscription entity and its parent.
-     *
-     * @return an int representing the calculated state signature of the parent entity
-     * if the parent does not exist it will return 0.
-     */
-    int parentSignature();
-
 }

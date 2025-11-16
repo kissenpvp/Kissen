@@ -82,7 +82,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         })));
     }
 
-    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id)
     {
         return CompletableFuture.supplyAsync(() -> query("SELECT id FROM ksvp_rank WHERE id = ?;", (statement ->
         {
@@ -100,7 +100,8 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         {
             for (Rank rank : id)
             {
-                batch(statement, rank);
+                statement.setString(1, rank.id());
+                setDual(statement, 2, 3, Types.INTEGER, rank.priority());
                 statement.addBatch();
             }
             statement.executeBatch();
@@ -121,26 +122,5 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         Preconditions.checkNotNull(resultSet, "The result set cannot be null.");
 
         return new InternalRank(id, resultSet.getInt("priority"));
-    }
-
-    /**
-     * Adds a {@link Rank} entity as a batch operation to the given {@link PreparedStatement}.
-     * The method populates the prepared statement parameters with the rank's properties, such as ID, priority,
-     * prefix, and suffix.
-     *
-     * @param statement the prepared statement to which the rank data will be added as a batch must not be null
-     * @param rank      the rank entity whose data will be added to the prepared statement, must not be null
-     * @throws SQLException         if an error occurs while setting parameters or adding the batch
-     * @throws NullPointerException if the provided statement or rank is null
-     */
-    private void batch(@NonNull PreparedStatement statement, @NonNull Rank rank) throws SQLException, NullPointerException
-    {
-        Preconditions.checkNotNull(statement, "The prepared statement cannot be null.");
-        Preconditions.checkNotNull(rank, "The rank cannot be null.");
-
-        statement.setString(1, rank.id());
-        setDual(statement, 2, 3, Types.INTEGER, rank.priority());
-
-        overrideSignature(rank);
     }
 }

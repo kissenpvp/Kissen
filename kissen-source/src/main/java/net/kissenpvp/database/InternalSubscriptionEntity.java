@@ -7,7 +7,7 @@ import org.jspecify.annotations.NonNull;
 import java.util.Objects;
 
 
-public abstract class InternalSubscriptionEntity<P, X, T extends PersistableEntity<X>> extends InternalPersistableEntity<P> implements SubscriptionEntity<P, X, T>
+public abstract class InternalSubscriptionEntity<P, X, T extends PersistableEntity<X>> implements SubscriptionEntity<P, X, T>
 {
     private final @NonNull P id;
     private final @NonNull X parentId;
@@ -26,11 +26,6 @@ public abstract class InternalSubscriptionEntity<P, X, T extends PersistableEnti
     @Override public @NonNull X parentId()
     {
         return parentId;
-    }
-
-    @Override public int parentSignature()
-    {
-        return parent().map(PersistableEntity::signature).orElse(0);
     }
 
     @Override public boolean equals(Object o)

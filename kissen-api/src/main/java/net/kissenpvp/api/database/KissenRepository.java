@@ -18,8 +18,7 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> extend
         super(dataSource);
     }
 
-    @Override public @NonNull CompletableFuture<Void> save(@NonNull T id) throws NullPointerException
-    {
+    @Override public @NonNull CompletableFuture<Void> save(@NonNull T id) {
         Preconditions.checkNotNull(id, "The entity cannot be null.");
 
         return saveAll(Collections.singleton(id));

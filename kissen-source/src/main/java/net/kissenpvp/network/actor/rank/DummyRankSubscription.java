@@ -36,24 +36,9 @@ public class DummyRankSubscription implements DefaultSubscription
         return "dummy";
     }
 
-    @Override public int parentSignature()
-    {
-        return 0;
-    }
-
     @Override public @NonNull String id()
     {
         return "dummy";
-    }
-
-    @Override public int signature()
-    {
-        return 0;
-    }
-
-    @Override public boolean unsaved()
-    {
-        return false;
     }
 
     @Override public @NonNull WritableTemporalObject temporal()

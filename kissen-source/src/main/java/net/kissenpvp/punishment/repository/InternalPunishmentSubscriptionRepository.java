@@ -83,7 +83,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         return toEntity(resultSet.getString("id"), resultSet);
     }
 
-    @Override public @NonNull CompletableFuture<@NonNull Optional<PunishmentSubscription>> find(@NonNull String id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<@NonNull Optional<PunishmentSubscription>> find(@NonNull String id)
     {
         String sql = "SELECT link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, statement ->
@@ -93,7 +93,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         })));
     }
 
-    @Override public @NonNull CompletableFuture< Collection<PunishmentSubscription>> findAll(@NonNull Iterable<String> id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Collection<PunishmentSubscription>> findAll(@NonNull Iterable<String> id)
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription WHERE id IN (" + placeHolders + ")";
@@ -109,27 +109,28 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         })));
     }
 
-    @Override public @NonNull CompletableFuture< Collection<PunishmentSubscription>> findAll()
+    @Override public @NonNull CompletableFuture<Collection<PunishmentSubscription>> findAll()
     {
         String sql = "SELECT id, link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription;";
         return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, this::collectResults)));
     }
 
-    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id)
     {
         String sql = "SELECT id FROM ksvp_punishment_subscription WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> query(sql, statement -> {
+        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        {
             statement.setString(1, id);
             return hasResult(statement);
         }));
     }
 
     @Override
-    public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<PunishmentSubscription> id) throws NullPointerException
+    public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<PunishmentSubscription> id)
     {
         Preconditions.checkNotNull(id, "The iterable of subscriptions cannot be null.");
 
-        String sql = "INSERT INTO ksvp_punishment_subscription (id, link_id, parent_id, parent_signature,  operator_id, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, parent_signature = ?, expiry = ?, message = ?; ";
+        String sql = "INSERT INTO ksvp_punishment_subscription (id, link_id, parent_id,  operator_id, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, expiry = ?, message = ?; ";
         return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
         {
             for (PunishmentSubscription subscription : id)
@@ -155,10 +156,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
      * @throws SQLException         If an issue occurs while setting values in the {@link PreparedStatement}.
      * @throws NullPointerException If the {@link PreparedStatement} or {@link PunishmentSubscription} is null.
      */
-    private void addBatch(
-            @NonNull PreparedStatement statement,
-            @NonNull PunishmentSubscription subscription
-    ) throws SQLException, NullPointerException
+    private void addBatch(@NonNull PreparedStatement statement, @NonNull PunishmentSubscription subscription) throws SQLException, NullPointerException
     {
         Preconditions.checkNotNull(statement, "The prepared statement cannot be null.");
         Preconditions.checkNotNull(subscription, "The subscription cannot be null.");
@@ -166,25 +164,22 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         statement.setString(1, subscription.id());
 
         LocalDateTime date = toDateTime(subscription.temporal().start());
-        LocalDateTime expiry =
-                subscription.temporal().expiry().map(InternalPunishmentSubscriptionRepository::toDateTime).orElse(null);
+        LocalDateTime expiry = subscription.temporal().expiry().map(InternalPunishmentSubscriptionRepository::toDateTime).orElse(null);
         Optional<String> message = subscription.message().map(JSONComponentSerializer.json()::serialize);
 
-        setDual(statement, 2, 10, Types.VARCHAR, String.valueOf(subscription.linkId()));
+        setDual(statement, 2, 9, Types.VARCHAR, String.valueOf(subscription.linkId()));
         statement.setInt(3, subscription.parentId());
-        setDual(statement, 4, 11, Types.INTEGER, subscription.parentSignature());
 
-        operator(statement, subscription); // populates slot 5
+        operator(statement, subscription); // populates slot 4
 
         // we cannot use setTimestamp because the java.sql.TimeStamp class is very old
         // https://stackoverflow.com/a/73967623
-        statement.setObject(6, date, Types.TIMESTAMP);
+        statement.setObject(5, date, Types.TIMESTAMP);
 
-        setDual(statement, 7, 12, Types.TIMESTAMP, expiry);
-        expectedExpiry(statement, expiry); // populates slot 8
-        setDual(statement, 9, 13, Types.VARCHAR, message.orElse(null));
+        setDual(statement, 6, 10, Types.TIMESTAMP, expiry);
+        expectedExpiry(statement, expiry); // populates slot 7
+        setDual(statement, 8, 11, Types.VARCHAR, message.orElse(null));
 
-        overrideSignature(subscription);
         statement.addBatch();
     }
 
@@ -201,10 +196,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
      * @throws SQLException         If an error occurs while interacting with the {@link PreparedStatement}.
      * @throws NullPointerException If the provided {@link PreparedStatement} is null.
      */
-    private void expectedExpiry(
-            @NonNull PreparedStatement statement,
-            @Nullable LocalDateTime expiry
-    ) throws SQLException, NullPointerException
+    private void expectedExpiry(@NonNull PreparedStatement statement, @Nullable LocalDateTime expiry) throws SQLException, NullPointerException
     {
         Preconditions.checkNotNull(statement, "The prepared statement cannot be null.");
 
@@ -212,7 +204,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         {
             // we cannot use setTimestamp because the java.sql.TimeStamp class is very old
             // https://stackoverflow.com/a/73967623
-            statement.setObject(8, expiry, Types.TIMESTAMP);
+            statement.setObject(7, expiry, Types.TIMESTAMP);
             return;
         }
 
@@ -220,7 +212,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
 
     @Override
-    public @NonNull CompletableFuture<@NonNull  Collection<PlayerClient>> findTargets(@NonNull UUID linkId)
+    public @NonNull CompletableFuture<@NonNull Collection<PlayerClient>> findTargets(@NonNull UUID linkId)
     {
         String sql = "SELECT id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE " +
                 "link_id = ?;";
@@ -243,7 +235,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
 
     @Override
-    public @NonNull CompletableFuture<@NonNull  Collection<UUID>> findTargetIds(@NonNull UUID linkId)
+    public @NonNull CompletableFuture<@NonNull Collection<UUID>> findTargetIds(@NonNull UUID linkId)
     {
         String sql = "SELECT id FROM ksvp_player WHERE link_id = ?;";
         return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
@@ -264,14 +256,14 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     }
 
     @Override
-    public @NonNull CompletableFuture<@NonNull  Collection<PunishmentSubscription>> findSubscriptions(@NonNull UUID linkId)
+    public @NonNull CompletableFuture<@NonNull Collection<PunishmentSubscription>> findSubscriptions(@NonNull UUID linkId)
     {
         String sql = "SELECT * FROM ksvp_punishment_subscription WHERE link_id = ?;";
         return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, retrieveSubscriptions(linkId))));
     }
 
     @Override
-    public @NonNull CompletableFuture<@NonNull  Collection<PunishmentSubscription>> findSubscriptionsByUserId(
+    public @NonNull CompletableFuture<@NonNull Collection<PunishmentSubscription>> findSubscriptionsByUserId(
             @NonNull UUID userId
     )
     {
@@ -303,13 +295,12 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
     }
 
-    private static void operator(@NonNull PreparedStatement statement, @NonNull PunishmentSubscription subscription
-    ) throws SQLException
+    private static void operator(@NonNull PreparedStatement statement, @NonNull PunishmentSubscription subscription) throws SQLException
     {
         UUID operator = ((InternalPunishmentSubscription) subscription).rawOperator();
         if (Objects.nonNull(operator))
         {
-            statement.setString(5, String.valueOf(operator));
+            statement.setString(4, String.valueOf(operator));
             return;
         }
 

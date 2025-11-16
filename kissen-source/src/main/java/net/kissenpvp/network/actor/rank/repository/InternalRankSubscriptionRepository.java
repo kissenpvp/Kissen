@@ -45,7 +45,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
     }
 
-    @Override public @NonNull CompletableFuture<@NonNull Optional<RankSubscription>> find(@NonNull String id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<@NonNull Optional<RankSubscription>> find(@NonNull String id)
     {
         String sql = "SELECT rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
@@ -55,7 +55,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         }))));
     }
 
-    @Override public @NonNull CompletableFuture< Collection<RankSubscription>> findAll(@NonNull Iterable<String> id) throws NullPointerException
+    @Override public @NonNull CompletableFuture< Collection<RankSubscription>> findAll(@NonNull Iterable<String> id)
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id IN (" + placeHolders + ")";
@@ -77,7 +77,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         return CompletableFuture.supplyAsync(() -> query(sql, this::collectResults));
     }
 
-    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id)
     {
         return CompletableFuture.supplyAsync(() -> query("SELECT id FROM ksvp_rank_subscription WHERE id = ?;", (statement ->
         {
@@ -107,7 +107,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
         return toEntity(resultSet.getString("id"), resultSet);
     }
 
-    @Override public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<RankSubscription> id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<RankSubscription> id)
     {
         Preconditions.checkNotNull(id, "The rank subscriptions cannot be null.");
 
@@ -131,7 +131,6 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
                 setDual(statement, 5, 9, Types.BIGINT, expiry);
                 expectedExpiry(statement, expiry);
 
-                overrideSignature(subscription);
                 statement.addBatch();
             }
             statement.executeBatch();

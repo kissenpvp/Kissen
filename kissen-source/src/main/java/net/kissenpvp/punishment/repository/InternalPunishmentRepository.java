@@ -16,7 +16,6 @@ import java.sql.*;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -74,7 +73,7 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         return CompletableFuture.supplyAsync(() -> query(sql, this::collectResults));
     }
 
-    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull Integer id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull Integer id)
     {
         String sql = "SELECT id FROM ksvp_punishment WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
@@ -149,7 +148,6 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
 
         setDual(statement, 4, 7, Types.VARCHAR, message.orElse(null));
 
-        overrideSignature(punishment);
         statement.addBatch();
     }
 }

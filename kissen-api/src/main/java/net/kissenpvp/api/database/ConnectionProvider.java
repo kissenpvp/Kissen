@@ -47,7 +47,7 @@ public interface ConnectionProvider
             @NonNull String url,
             @NonNull String username,
             @NonNull String password
-    ) throws IllegalStateException, SQLException, NullPointerException;
+    ) throws IllegalStateException, SQLException;
 
 
     /**
@@ -69,7 +69,7 @@ public interface ConnectionProvider
             @NonNull String username,
             @NonNull String password,
             boolean generateSchema
-    ) throws IllegalStateException, SQLException, NullPointerException;
+    ) throws IllegalStateException, SQLException;
 
     /**
      * Closes the currently established database connection.

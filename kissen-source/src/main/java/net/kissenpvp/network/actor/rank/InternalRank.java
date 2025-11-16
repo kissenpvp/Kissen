@@ -1,16 +1,16 @@
 package net.kissenpvp.network.actor.rank;
 
 import com.google.common.base.Preconditions;
+import net.kissenpvp.api.database.PersistableEntity;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.temporal.TemporalObject;
-import net.kissenpvp.database.InternalPersistableEntity;
 import net.kissenpvp.temporal.InternalTemporalObject;
 import net.kissenpvp.temporal.timespan.PermanentTimeSpan;
 import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
 
-public class InternalRank extends InternalPersistableEntity<String> implements Rank
+public class InternalRank implements PersistableEntity<String>, Rank
 {
     private final String id;
     private int priority;
@@ -43,11 +43,6 @@ public class InternalRank extends InternalPersistableEntity<String> implements R
     @Override public void priority(int priority)
     {
         this.priority = priority;
-    }
-
-    @Override public int signature()
-    {
-        return Objects.hash(id, priority);
     }
 
     @Override public boolean equals(Object o)

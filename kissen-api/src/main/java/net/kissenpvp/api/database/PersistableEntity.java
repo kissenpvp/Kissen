@@ -19,21 +19,4 @@ public interface PersistableEntity<P>
      * @return the unique identifier of this entity; never null
      */
     @NonNull P id();
-
-    /**
-     * Computes a deterministic fingerprint of the entity's current state.
-     * Use this value to detect modifications and verify state consistency.
-     * <p>
-     * Implementations typically derive this value by hashing the entity's relevant attributes.
-     *
-     * @return an int representing the entity's current-state
-     */
-    int signature();
-
-    /**
-     * Determines whether the entity has changes which have not been saved yet.
-     *
-     * @return {@code true} if the entity has unsaved changes, {@code false} otherwise
-     */
-    boolean unsaved();
 }

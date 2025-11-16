@@ -119,12 +119,6 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
     }
 
     @Override
-    public int signature()
-    {
-        return Objects.hash(linkId, temporalObject, message);
-    }
-
-    @Override
     public @NonNull Optional<Punishment> parent()
     {
         return KissenCore.getInstance().punishmentRepository().find(parentId()).join();

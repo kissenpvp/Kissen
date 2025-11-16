@@ -1,10 +1,10 @@
 package net.kissenpvp.punishment;
 
 import com.google.common.base.Preconditions;
+import net.kissenpvp.api.database.PersistableEntity;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentType;
 import net.kissenpvp.api.temporal.timespan.TimeSpan;
-import net.kissenpvp.database.InternalPersistableEntity;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -12,7 +12,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 
-public class InternalPunishment extends InternalPersistableEntity<Integer> implements Punishment
+public class InternalPunishment implements PersistableEntity<Integer>, Punishment
 {
     private final Integer id;
     private PunishmentType punishmentType;
@@ -35,18 +35,11 @@ public class InternalPunishment extends InternalPersistableEntity<Integer> imple
         this.punishmentType = punishmentType;
         this.timeSpan = timeSpan;
         this.defaultMessage = defaultMessage;
-
-        overrideSignature();
     }
 
     @Override public @NonNull Integer id()
     {
         return id;
-    }
-
-    @Override public int signature()
-    {
-        return Objects.hash(punishmentType, timeSpan, defaultMessage);
     }
 
     @Override public @NonNull TimeSpan timeSpan()

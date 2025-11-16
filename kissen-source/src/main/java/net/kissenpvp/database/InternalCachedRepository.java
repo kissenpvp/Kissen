@@ -61,7 +61,7 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
         return findAll(id, true);
     }
 
-    @Override public @NonNull CompletableFuture<@NonNull Optional<T>> find(@NonNull P id, boolean utilizeCache) throws NullPointerException
+    @Override public @NonNull CompletableFuture<@NonNull Optional<T>> find(@NonNull P id, boolean utilizeCache)
     {
         Preconditions.checkNotNull(id, "The identifier cannot be null.");
 
@@ -72,7 +72,7 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
         return findUncached(id);
     }
 
-    @Override public @NonNull CompletableFuture< Collection<T>> findAll(@NonNull Iterable<P> id, boolean utilizeCache) throws NullPointerException
+    @Override public @NonNull CompletableFuture< Collection<T>> findAll(@NonNull Iterable<P> id, boolean utilizeCache)
     {
         Preconditions.checkNotNull(id, "The identifier cannot be null.");
 
@@ -106,14 +106,14 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
         return CompletableFuture.completedFuture(Collections.unmodifiableCollection(cached));
     }
 
-    @Override public boolean cached(@NonNull P id) throws NullPointerException
+    @Override public boolean cached(@NonNull P id)
     {
         Preconditions.checkNotNull(id, "The identifier cannot be null.");
 
         return cachedEntries.containsKey(id);
     }
 
-    @Override public boolean cachedAll(@NonNull Iterable<P> id) throws NullPointerException
+    @Override public boolean cachedAll(@NonNull Iterable<P> id)
     {
         Preconditions.checkNotNull(id, "The identifier iterable cannot be null.");
 
@@ -127,7 +127,7 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
         return true;
     }
 
-    @Override public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<T> id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<T> id)
     {
         return saveAllCached(id).thenRun(() -> {
             for(T updated : id)
@@ -146,8 +146,8 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
      * @return An unmodifiable view of the map containing the cached entries, where the keys are of type {@code P}
      * (representing primary keys) and the values are of type {@code T} (representing entities).
      * The returned map is not null and is a snapshot of the current caches state.
-     * @see #cached(Object)
-     * @see #cachedAll(Iterable)
+     * @see CachedRepository#cached(Object)
+     * @see CachedRepository#cachedAll(Iterable)
      */
     protected  @NonNull Map<P, T> cachedEntries()
     {

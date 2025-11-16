@@ -35,9 +35,9 @@ public interface PlayerClient extends Actor, PersistableEntity<UUID>
      */
     @NonNull UUID linkId();
 
-    @NonNull PunishmentSubscription punish(@NonNull Punishment punishment) throws NullPointerException;
+    @NonNull PunishmentSubscription punish(@NonNull Punishment punishment);
 
-    @NonNull PunishmentSubscription punish(@NonNull Punishment punishment, @Nullable Component message) throws NullPointerException;
+    @NonNull PunishmentSubscription punish(@NonNull Punishment punishment, @Nullable Component message);
 
     @NonNull List<RankSubscription> rankHistory();
 

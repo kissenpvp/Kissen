@@ -71,7 +71,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         }));
     }
 
-    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull UUID id) throws NullPointerException
+    @Override public @NonNull CompletableFuture<Boolean> has(@NonNull UUID id)
     {
         String sql = "SELECT id FROM ksvp_player WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> query(sql, statement ->
@@ -87,12 +87,12 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         return CompletableFuture.supplyAsync(() -> query(sql, this::collectResults));
     }
 
-    @Override public @NonNull CompletableFuture<@NonNull Optional<PlayerClient>> findByName(@NonNull String name) throws NullPointerException
+    @Override public @NonNull CompletableFuture<@NonNull Optional<PlayerClient>> findByName(@NonNull String name)
     {
         return findByName(name, true);
     }
 
-    @Override public @NonNull CompletableFuture<@NonNull Optional<UUID>> findLinkId(@NonNull UUID uuid) throws NullPointerException
+    @Override public @NonNull CompletableFuture<@NonNull Optional<UUID>> findLinkId(@NonNull UUID uuid)
     {
         String sql = "SELECT link_id FROM ksvp_player WHERE id = ?;";
         return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
@@ -110,7 +110,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         }))));
     }
 
-    @Override public @NonNull CompletableFuture<@NonNull Optional<PlayerClient>> findByName(@NonNull String name, boolean utilizeCache) throws NullPointerException
+    @Override public @NonNull CompletableFuture<@NonNull Optional<PlayerClient>> findByName(@NonNull String name, boolean utilizeCache)
     {
         if(utilizeCache)
         {
@@ -134,7 +134,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     }
 
 
-    @Override public @NonNull CompletableFuture< Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name, boolean utilizeCache) throws NullPointerException
+    @Override public @NonNull CompletableFuture< Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name, boolean utilizeCache)
     {
         if (!utilizeCache)
         {
@@ -179,7 +179,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         }));
     }
 
-    @Override public @NonNull CompletableFuture< Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name) throws NullPointerException
+    @Override public @NonNull CompletableFuture< Collection<PlayerClient>> findAllByName(@NonNull Iterable<String> name)
     {
         return findAllByName(name, true);
     }
@@ -190,7 +190,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     }
 
     @Override
-    public boolean cached(@NonNull String name) throws NullPointerException
+    public boolean cached(@NonNull String name)
     {
         Collection<PlayerClient> cachedPlayers = cachedEntries().values();
         for (PlayerClient playerClient : cachedPlayers)
@@ -262,8 +262,6 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         statement.setString(1, String.valueOf(playerClient.id()));
         setDual(statement, 2, 4, Types.VARCHAR, String.valueOf(playerClient.linkId()));
         setDual(statement, 3, 5, Types.VARCHAR, playerClient.username());
-
-        overrideSignature(playerClient);
     }
 
     /**

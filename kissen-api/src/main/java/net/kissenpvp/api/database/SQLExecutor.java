@@ -18,7 +18,7 @@ public class SQLExecutor
     private final DataSource dataSource;
 
 
-    public SQLExecutor(@NonNull DataSource dataSource) throws NullPointerException
+    public SQLExecutor(@NonNull DataSource dataSource)
     {
         Preconditions.checkNotNull(dataSource, "The dataSource cannot be null.");
         this.dataSource = dataSource;
@@ -35,7 +35,7 @@ public class SQLExecutor
      * @throws IllegalStateException if an exception occurs while executing the query
      * @throws NullPointerException  if the SQL query or the {@code QueryExecutor} is null
      */
-    protected <X> @Nullable X query(@NonNull String sql, @NonNull QueryExecutor<X> queryExecutor) throws IllegalStateException, NullPointerException
+    protected <X> @Nullable X query(@NonNull String sql, @NonNull QueryExecutor<X> queryExecutor) throws IllegalStateException
     {
         try
         {
@@ -58,7 +58,7 @@ public class SQLExecutor
      * @throws SQLException         if an error occurs while executing the SQL query
      * @throws NullPointerException if the SQL query or the {@code QueryExecutor} is null
      */
-    protected <X> @Nullable X unsafeQuery(@NonNull String sql, @NonNull QueryExecutor<X> queryExecutor) throws SQLException, NullPointerException
+    protected <X> @Nullable X unsafeQuery(@NonNull String sql, @NonNull QueryExecutor<X> queryExecutor) throws SQLException
     {
         Preconditions.checkNotNull(sql, "The SQL string cannot be null.");
 

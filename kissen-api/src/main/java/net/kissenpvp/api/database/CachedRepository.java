@@ -33,7 +33,7 @@ public interface CachedRepository<P, T extends PersistableEntity<P>> extends Rep
      * @throws NullPointerException if the provided identifier is null
      * @see #findAll(Iterable, boolean)
      */
-    @NonNull CompletableFuture<@NonNull Optional<T>> find(@NonNull P id, boolean utilizeCache) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Optional<T>> find(@NonNull P id, boolean utilizeCache);
 
     /**
      * Retrieves a collection of entities corresponding to the specified identifiers asynchronously.
@@ -49,7 +49,7 @@ public interface CachedRepository<P, T extends PersistableEntity<P>> extends Rep
      * @throws NullPointerException if the provided iterable or any of its elements are null
      * @see #find(Object, boolean)
      */
-    @NonNull CompletableFuture<@NonNull Collection<T>> findAll(@NonNull Iterable<P> id, boolean utilizeCache) throws NullPointerException;
+    @NonNull CompletableFuture<@NonNull Collection<T>> findAll(@NonNull Iterable<P> id, boolean utilizeCache);
 
     /**
      * Checks whether the entity associated with the specified identifier is currently cached.
@@ -59,7 +59,7 @@ public interface CachedRepository<P, T extends PersistableEntity<P>> extends Rep
      * @throws NullPointerException if the provided identifier is null
      * @see #cachedAll(Iterable)
      */
-    boolean cached(@NonNull P id) throws NullPointerException;
+    boolean cached(@NonNull P id);
 
     /**
      * Checks whether all entities associated with the specified identifiers are currently cached.
@@ -69,6 +69,6 @@ public interface CachedRepository<P, T extends PersistableEntity<P>> extends Rep
      * @throws NullPointerException if the provided iterable or any of its elements are null
      * @see #cached(Object)
      */
-    boolean cachedAll(@NonNull Iterable<P> id) throws NullPointerException;
+    boolean cachedAll(@NonNull Iterable<P> id);
 
 }

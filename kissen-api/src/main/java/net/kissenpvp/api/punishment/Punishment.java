@@ -39,7 +39,7 @@ public interface Punishment extends PersistableEntity<Integer>
      * @param timeSpan the {@link TimeSpan} to be associated with this punishment; must not be null
      * @throws NullPointerException if the provided {@link TimeSpan} is null
      */
-    void timeSpan(@NonNull TimeSpan timeSpan) throws NullPointerException;
+    void timeSpan(@NonNull TimeSpan timeSpan);
 
     /**
      * Retrieves the type of the punishment represented by this instance.
@@ -58,7 +58,7 @@ public interface Punishment extends PersistableEntity<Integer>
      * @param punishmentType the {@link PunishmentType} to be associated with this punishment; must not be null
      * @throws NullPointerException if the provided {@link PunishmentType} is null
      */
-    void punishmentType(@NonNull PunishmentType punishmentType) throws NullPointerException;
+    void punishmentType(@NonNull PunishmentType punishmentType);
 
     /**
      * Retrieves the default message associated with this {@link Punishment}.
