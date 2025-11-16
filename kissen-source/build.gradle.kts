@@ -4,7 +4,6 @@ version = "1.0.0-SNAPSHOT"
 dependencies {
     implementation(project(":kissen-api"))
     implementation("com.zaxxer:HikariCP:7.0.2")
-
 }
 
 tasks.jar {

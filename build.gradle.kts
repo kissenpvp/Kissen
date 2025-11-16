@@ -13,6 +13,7 @@ val adventureVersion = "4.20.0"
 
 subprojects {
     apply(plugin = "java")
+    apply(plugin = "java-library")
     apply(plugin = "maven-publish")
 
     repositories {
@@ -40,7 +41,7 @@ subprojects {
         compileOnly("com.google.code.gson:gson:2.13.1")
 
         // Preconditions
-        implementation("com.google.guava:guava:33.5.0-jre")
+        api("com.google.guava:guava:33.5.0-jre")
 
         // Testing
         testImplementation(platform("org.junit:junit-bom:5.13.4"))
