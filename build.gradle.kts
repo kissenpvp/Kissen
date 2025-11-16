@@ -40,7 +40,7 @@ subprojects {
         compileOnly("com.google.code.gson:gson:2.13.1")
 
         // Preconditions
-        compileOnly("com.google.guava:guava:33.5.0-jre")
+        implementation("com.google.guava:guava:33.5.0-jre")
 
         // Testing
         testImplementation(platform("org.junit:junit-bom:5.13.4"))
@@ -50,7 +50,7 @@ subprojects {
 
     extensions.configure<JavaPluginExtension> {
         toolchain {
-            languageVersion = JavaLanguageVersion.of(25)
+            languageVersion = JavaLanguageVersion.of(21)
         }
     }
 
