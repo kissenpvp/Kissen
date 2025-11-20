@@ -2,7 +2,12 @@ package net.kissenpvp.api.base;
 
 
 import net.kissenpvp.api.database.ConnectionProvider;
+import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
+import net.kissenpvp.api.network.actor.PlayerRepository;
+import net.kissenpvp.api.network.actor.rank.Rank;
+import net.kissenpvp.api.punishment.Punishment;
+import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import org.jspecify.annotations.NonNull;
 
 import java.util.UUID;
@@ -32,4 +37,13 @@ public interface Kissen {
      * @return a randomly generated unique server UID
      */
     @NonNull UUID serverUid();
+
+
+    PlayerRepository playerRepository();
+
+    Repository<String, Rank> rankRepository();
+
+    Repository<Integer, Punishment> punishmentRepository();
+
+    PunishmentSubscriptionRepository punishmentSubscriptionRepository();
 }

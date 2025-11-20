@@ -1,16 +1,8 @@
 package net.kissenpvp.base;
 
-import com.google.common.base.Preconditions;
 import net.kissenpvp.api.base.Kissen;
-import net.kissenpvp.api.database.Repository;
-import net.kissenpvp.api.database.RepositoryHolder;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
 import net.kissenpvp.api.network.actor.ConsoleClient;
-import net.kissenpvp.api.network.actor.PlayerRepository;
-import net.kissenpvp.api.network.actor.rank.Rank;
-import net.kissenpvp.api.network.actor.rank.RankSubscriptionRepository;
-import net.kissenpvp.api.punishment.Punishment;
-import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -23,7 +15,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.UUID;
 
-public abstract class KissenCore implements Kissen, RepositoryHolder
+public abstract class KissenCore implements Kissen
 {
     private static final Path UUID_FILE_PATH = Path.of(".server_uid");
 
@@ -32,7 +24,6 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
     private static final Logger log = LoggerFactory.getLogger(KissenCore.class);
     private static KissenCore instance;
     private GlobalLocaleRegistry localeRegistry;
-    private InternalRepositoryHolder databaseModule;
     private boolean started;
 
     public static @NonNull KissenCore getInstance()
@@ -46,24 +37,8 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
 
     public abstract ConsoleClient console();
 
-    protected void databaseModule(@NonNull InternalRepositoryHolder databaseModule)
-    {
-        Preconditions.checkNotNull(databaseModule.playerRepository(), "playerRepository cannot be null.");
-        Preconditions.checkNotNull(databaseModule.punishmentRepository(), "punishmentRepository cannot be null.");
-        Preconditions.checkNotNull(databaseModule.punishmentSubscriptionRepository(), "punishmentSubscriptionRepository cannot be null.");
-        Preconditions.checkNotNull(databaseModule.rankRepository(), "rankRepository cannot be null.");
-        Preconditions.checkNotNull(databaseModule.rankSubscriptionRepository(), "rankSubscriptionRepository cannot be null.");
-
-        this.databaseModule = databaseModule;
-    }
-
     protected void init()
     {
-        if (!Objects.nonNull(databaseModule))
-        {
-            throw new IllegalStateException("Cannot start Kissen without a database!");
-        }
-
         instance = this;
         localeRegistry = new InternalGlobalLocaleRegistry();
 
@@ -105,31 +80,6 @@ public abstract class KissenCore implements Kissen, RepositoryHolder
     @Override public boolean started()
     {
         return started;
-    }
-
-    @Override public @NonNull PlayerRepository playerRepository()
-    {
-        return databaseModule.playerRepository();
-    }
-
-    @Override public @NonNull Repository<Integer, Punishment> punishmentRepository()
-    {
-        return databaseModule.punishmentRepository();
-    }
-
-    @Override public @NonNull PunishmentSubscriptionRepository punishmentSubscriptionRepository()
-    {
-        return databaseModule.punishmentSubscriptionRepository();
-    }
-
-    @Override public @NonNull Repository<String, Rank> rankRepository()
-    {
-        return databaseModule.rankRepository();
-    }
-
-    @Override public @NonNull RankSubscriptionRepository rankSubscriptionRepository()
-    {
-        return databaseModule.rankSubscriptionRepository();
     }
 
     @Override public @NonNull UUID serverUid()
