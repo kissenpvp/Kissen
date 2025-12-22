@@ -19,14 +19,6 @@ CREATE TABLE IF NOT EXISTS ksvp_player_data (
     FOREIGN KEY (id) REFERENCES ksvp_player(id) ON DELETE CASCADE
 ) COMMENT = "This table stores server specific player data such as inventory and stats.";
 
-CREATE TABLE IF NOT EXISTS ksvp_operators (
-    id UUID NOT NULL,
-    operator_level INT NOT NULL,
-    can_bypass_player_limit BOOLEAN NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (id) REFERENCES ksvp_player(id) ON DELETE CASCADE
-) COMMENT = "This table stores operators and their permissions.";
-
 CREATE TABLE IF NOT EXISTS ksvp_punishment (
     id INT PRIMARY KEY NOT NULL,
     punishment_type TINYINT NOT NULL,
