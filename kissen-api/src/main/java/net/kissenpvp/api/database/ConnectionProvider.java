@@ -27,16 +27,46 @@ public interface ConnectionProvider
      */
     @NonNull Optional<DataSource> dataSource();
 
-
+    /**
+     * Establishes a connection to a database using HikariCP.
+     * <p>
+     * This method initializes and opens a new database connection pool.
+     * It must not be called while an existing connection is active; attempting
+     * to do so will result in an {@link IllegalStateException}.
+     *
+     * @param url the JDBC URL of the database to connect to
+     * @param username the username used for database authentication
+     * @param password the password used for database authentication
+     * @throws IllegalStateException if a connection has already been established
+     */
     void connect(
             @NonNull String url,
             @NonNull String username,
             @NonNull String password
     ) throws IllegalStateException;
 
-    void setupFlyway(Flyway flyway) throws IllegalStateException;
+    /**
+     * Configures Flyway for database migrations.
+     * <p>
+     * This method applies the required Flyway settings
+     * It must not be called after Flyway has already been configured or initialized.
+     *
+     * @param flyway the Flyway instance to configure
+     * @throws IllegalStateException if flyway has already been set up, or the database connection is not established
+     */
+    void setupFlyway(@NonNull Flyway flyway) throws IllegalStateException;
 
-    void setupFlyway(Flyway flyway, boolean generateSchema) throws IllegalStateException;
+    /**
+     * Configures Flyway for database migrations.
+     * <p>
+     * This method applies the required Flyway settings and optionally applies the migrations.
+     * It must not be called after Flyway has already been configured or initialized.
+     *
+     * @param flyway the Flyway instance to configure
+     * @param generateSchema whether the database schema should be generated if it does not exist
+     * @throws IllegalStateException if flyway has already been set up, or the database connection is not established
+     */
+    void setupFlyway(@NonNull Flyway flyway, boolean generateSchema) throws IllegalStateException;
 
     /**
      * Closes the currently established database connection.

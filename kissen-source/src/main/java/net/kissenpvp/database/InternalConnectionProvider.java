@@ -63,6 +63,7 @@ public class InternalConnectionProvider implements ConnectionProvider
     public void setupFlyway(@NonNull Flyway flyway, boolean generateSchema)
     {
         Preconditions.checkNotNull(flyway, "Flyway must not be null.");
+        Preconditions.checkArgument(Objects.isNull(this.flyway), "Flyway has already been initialized.");
 
         if(!isConnected())
         {
