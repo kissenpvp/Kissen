@@ -8,7 +8,6 @@ import org.flywaydb.core.Flyway;
 import org.jspecify.annotations.NonNull;
 
 import javax.sql.DataSource;
-import java.sql.SQLException;
 import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,7 +16,6 @@ public class InternalConnectionProvider implements ConnectionProvider
 {
     private Flyway flyway;
 
-    private HikariConfig config;
     private HikariDataSource dataSource;
 
     public InternalConnectionProvider() throws MissingResourceException
@@ -47,7 +45,7 @@ public class InternalConnectionProvider implements ConnectionProvider
             throw new IllegalStateException("The connection has already been opened.");
         }
 
-        config = new HikariConfig();
+        HikariConfig config = new HikariConfig();
         config.setJdbcUrl(url);
         config.setUsername(username);
         config.setPassword(password);
