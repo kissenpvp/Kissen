@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS ksvp_punishment_subscription (
     PRIMARY KEY (id, link_id),
     FOREIGN KEY (link_id) REFERENCES ksvp_identity(link_id),
     FOREIGN KEY (parent_id) REFERENCES ksvp_punishment(id) ON DELETE SET NULL,
-    FOREIGN KEY (operator_id) REFERENCES ksvp_operators(id) ON DELETE SET NULL
+    FOREIGN KEY (operator_id) REFERENCES ksvp_player(id) ON DELETE SET NULL
 ) COMMENT = "This table stores punishment subscriptions which are applied to link ids.";
 
 CREATE TABLE IF NOT EXISTS ksvp_rank (
