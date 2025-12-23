@@ -38,13 +38,7 @@ public class InternalConnectionProvider implements ConnectionProvider
     }
 
     @Override
-    public void connect(@NonNull String url, @NonNull String username, @NonNull String password) throws IllegalStateException, SQLException
-    {
-        connect(url, username, password, true);
-    }
-
-    @Override
-    public void connect(@NonNull String url, @NonNull String username, @NonNull String password, boolean generateSchema) throws IllegalStateException, SQLException
+    public void connect(@NonNull String url, @NonNull String username, @NonNull String password) throws IllegalStateException
     {
         Preconditions.checkNotNull(url, "Connection string must not be null");
 
@@ -59,14 +53,28 @@ public class InternalConnectionProvider implements ConnectionProvider
         config.setPassword(password);
         config.setMaximumPoolSize(10);
         dataSource = new HikariDataSource(config);
+    }
 
-        String location = "classpath:migrations/mariadb";
-        flyway = Flyway.configure().dataSource(dataSource).locations(location).load();
+    @Override
+    public void setupFlyway(@NonNull Flyway flyway) throws IllegalStateException
+    {
+        setupFlyway(flyway, false);
+    }
 
-        if (generateSchema)
+    @Override
+    public void setupFlyway(@NonNull Flyway flyway, boolean generateSchema)
+    {
+        Preconditions.checkNotNull(flyway, "Flyway must not be null.");
+
+        if(!isConnected())
         {
-            generateSchema();
+            throw new IllegalStateException("Cannot setup flyway before being connected.");
         }
+
+        this.flyway = flyway;
+        if (!generateSchema) { return; }
+
+        generateSchema();
     }
 
     public void generateSchema()
