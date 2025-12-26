@@ -119,7 +119,7 @@ public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>
 
         for (P currentId : id)
         {
-            if (cached(currentId))
+            if (!cached(currentId))
             {
                 return false;
             }
