@@ -5,7 +5,7 @@ import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.network.actor.rank.RankSubscriptionRepository;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
-import net.kissenpvp.database.InternalRepository;
+import net.kissenpvp.database.mariadb.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRankSubscription;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;
 import org.jspecify.annotations.NonNull;

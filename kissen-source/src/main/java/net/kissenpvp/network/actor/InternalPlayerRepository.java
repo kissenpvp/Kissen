@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.base.KissenCore;
-import net.kissenpvp.database.InternalCachedRepository;
+import net.kissenpvp.database.mariadb.InternalCachedRepository;
 import org.jspecify.annotations.NonNull;
 
 

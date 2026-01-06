@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentType;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
-import net.kissenpvp.database.InternalCachedRepository;
+import net.kissenpvp.database.mariadb.InternalCachedRepository;
 import net.kissenpvp.punishment.InternalPunishment;
 import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;

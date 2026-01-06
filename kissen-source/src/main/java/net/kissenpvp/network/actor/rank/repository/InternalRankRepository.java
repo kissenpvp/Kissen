@@ -2,8 +2,8 @@ package net.kissenpvp.network.actor.rank.repository;
 
 import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.rank.Rank;
-import net.kissenpvp.database.InternalCachedRepository;
-import net.kissenpvp.database.InternalRepository;
+import net.kissenpvp.database.mariadb.InternalCachedRepository;
+import net.kissenpvp.database.mariadb.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRank;
 import org.jspecify.annotations.NonNull;
 

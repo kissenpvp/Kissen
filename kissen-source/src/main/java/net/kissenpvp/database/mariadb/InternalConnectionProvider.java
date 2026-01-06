@@ -1,4 +1,4 @@
-package net.kissenpvp.database;
+package net.kissenpvp.database.mariadb;
 
 import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
