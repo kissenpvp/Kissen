@@ -1,0 +1,47 @@
+package net.kissenpvp.database;
+
+import net.kissenpvp.base.KissenCore;
+import org.jspecify.annotations.NonNull;
+
+import java.util.concurrent.*;
+
+public class AsyncDatabaseQueue implements net.kissenpvp.api.database.DatabaseQueue
+{
+    private final ExecutorService executorService;
+
+    public static <T> @NonNull CompletableFuture<T> submitTask(@NonNull Callable<T> task)
+    {
+        return KissenCore.getInstance().databaseQueue().submit(task);
+    }
+
+    public AsyncDatabaseQueue()
+    {
+        this.executorService = Executors.newSingleThreadExecutor();
+    }
+
+    @Override
+    public <T> @NonNull CompletableFuture<T> submit(@NonNull Callable<T> task)
+    {
+        CompletableFuture<T> future = new CompletableFuture<>();
+
+        service().submit(() -> {
+            try {
+                T result = task.call();
+                future.complete(result);
+            } catch (Exception e) {
+                future.completeExceptionally(e);
+            }
+        });
+
+        return future;
+    }
+
+    public void shutdown() {
+        service().shutdown();
+    }
+
+    protected @NonNull ExecutorService service()
+    {
+        return executorService;
+    }
+}

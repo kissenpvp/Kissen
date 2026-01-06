@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.base.KissenCore;
+import net.kissenpvp.database.AsyncDatabaseQueue;
 import net.kissenpvp.database.mariadb.InternalCachedRepository;
 import org.jspecify.annotations.NonNull;
 
@@ -49,7 +50,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     @Override protected @NonNull CompletableFuture<Optional<PlayerClient>> findUncached(@NonNull UUID id) throws NullPointerException
     {
         String sql = "SELECT username FROM ksvp_player WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(id));
             return collectResults(id, statement).stream().findFirst();
@@ -60,7 +61,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, username FROM ksvp_player WHERE id IN (" + placeHolders + ");";
-        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, statement ->
         {
             int index = 1;
             for (UUID current : id)
@@ -74,7 +75,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     @Override public @NonNull CompletableFuture<Boolean> has(@NonNull UUID id)
     {
         String sql = "SELECT id FROM ksvp_player WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, statement ->
         {
             statement.setString(1, String.valueOf(id));
             return hasResult(statement);
@@ -84,7 +85,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     @Override public @NonNull CompletableFuture< Collection<PlayerClient>> findAll()
     {
         String sql = "SELECT id, username FROM ksvp_player;";
-        return CompletableFuture.supplyAsync(() -> query(sql, this::collectResults));
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, this::collectResults));
     }
 
     @Override public @NonNull CompletableFuture<@NonNull Optional<PlayerClient>> findByName(@NonNull String name)
@@ -95,7 +96,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     @Override public @NonNull CompletableFuture<@NonNull Optional<UUID>> findLinkId(@NonNull UUID uuid)
     {
         String sql = "SELECT link_id FROM ksvp_player WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(uuid));
             try (ResultSet resultSet = statement.executeQuery())
@@ -126,7 +127,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         }
 
         String sql = "SELECT id, username FROM ksvp_player WHERE username = ?;";
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, name);
             return collectResults(statement).stream().findFirst();
@@ -167,7 +168,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(name), "?"));
         String sql = "SELECT id, username FROM ksvp_player WHERE username IN (" + placeHolders + ");";
-        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, statement ->
         {
             int index = 1;
             for(String current : name)
@@ -209,7 +210,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         Preconditions.checkNotNull(id, "id cannot be null");
         String sql = "INSERT INTO ksvp_player (id, link_id, username) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, username = ?;";
 
-        return CompletableFuture.supplyAsync(() ->
+        return AsyncDatabaseQueue.submitTask(() ->
         {
 
             // we need to insert missing link ids before
@@ -282,7 +283,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         Preconditions.checkNotNull(uuid, "The uuid cannot be null!");
 
         String sql = "INSERT INTO ksvp_player_data (server_uid, id, player_data) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE player_data = ?;";
-        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, statement ->
         {
             statement.setString(1, String.valueOf(KissenCore.getInstance().serverUid()));
 
@@ -311,7 +312,7 @@ public abstract class InternalPlayerRepository extends InternalCachedRepository<
         Preconditions.checkNotNull(uuid, "The uuid cannot be null!");
 
         String sql = "SELECT player_data FROM ksvp_player_data WHERE server_uid = ? AND id = ?;";
-        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, statement ->
         {
             statement.setString(1, String.valueOf(KissenCore.getInstance().serverUid()));
 

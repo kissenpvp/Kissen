@@ -8,6 +8,7 @@ import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.base.KissenCore;
+import net.kissenpvp.database.AsyncDatabaseQueue;
 import net.kissenpvp.database.mariadb.InternalCachedRepository;
 import net.kissenpvp.database.mariadb.InternalRepository;
 import net.kissenpvp.network.actor.InternalPlayerRepository;
@@ -86,7 +87,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     @Override public @NonNull CompletableFuture<@NonNull Optional<PunishmentSubscription>> find(@NonNull String id)
     {
         String sql = "SELECT link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, statement ->
         {
             statement.setString(1, id);
             return collectResults(id, statement).stream().findFirst();
@@ -97,7 +98,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription WHERE id IN (" + placeHolders + ")";
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, statement ->
         {
             int index = 1;
             for (String current : id)
@@ -112,13 +113,13 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     @Override public @NonNull CompletableFuture<Collection<PunishmentSubscription>> findAll()
     {
         String sql = "SELECT id, link_id, parent_id, parent_signature, operator_id, start_time, expiry, expected_expiry, message FROM ksvp_punishment_subscription;";
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, this::collectResults)));
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, this::collectResults)));
     }
 
     @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id)
     {
         String sql = "SELECT id FROM ksvp_punishment_subscription WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, statement ->
         {
             statement.setString(1, id);
             return hasResult(statement);
@@ -131,7 +132,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         Preconditions.checkNotNull(id, "The iterable of subscriptions cannot be null.");
 
         String sql = "INSERT INTO ksvp_punishment_subscription (id, link_id, parent_id,  operator_id, start_time, expiry, expected_expiry, message) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE link_id = ?, expiry = ?, message = ?; ";
-        return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, (statement ->
         {
             for (PunishmentSubscription subscription : id)
             {
@@ -216,9 +217,8 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     {
         String sql = "SELECT id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE " +
                 "link_id = ?;";
-        InternalRepository<UUID, PlayerClient> playerRepository =
-                (InternalPlayerRepository) KissenCore.getInstance().playerRepository();
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
+        InternalRepository<UUID, PlayerClient> playerRepository = (InternalPlayerRepository) KissenCore.getInstance().playerRepository();
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(linkId));
 
@@ -238,7 +238,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     public @NonNull CompletableFuture<@NonNull Collection<UUID>> findTargetIds(@NonNull UUID linkId)
     {
         String sql = "SELECT id FROM ksvp_player WHERE link_id = ?;";
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, (statement ->
         {
 
             statement.setString(1, String.valueOf(linkId));
@@ -259,7 +259,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     public @NonNull CompletableFuture<@NonNull Collection<PunishmentSubscription>> findSubscriptions(@NonNull UUID linkId)
     {
         String sql = "SELECT * FROM ksvp_punishment_subscription WHERE link_id = ?;";
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, retrieveSubscriptions(linkId))));
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, retrieveSubscriptions(linkId))));
     }
 
     @Override
@@ -269,7 +269,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     {
         String sql = "SELECT ps.* FROM ksvp_punishment_subscription ps JOIN ksvp_player p ON ps.link_id = p.link_id " +
                 "WHERE p.id = ?;";
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, retrieveSubscriptions(userId))));
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, retrieveSubscriptions(userId))));
     }
 
     private @NonNull QueryExecutor<Collection<PunishmentSubscription>> retrieveSubscriptions(UUID uuid)
