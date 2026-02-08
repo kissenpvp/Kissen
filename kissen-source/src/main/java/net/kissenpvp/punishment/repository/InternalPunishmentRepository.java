@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentType;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
+import net.kissenpvp.database.AsyncDatabaseQueue;
 import net.kissenpvp.database.mariadb.InternalCachedRepository;
 import net.kissenpvp.punishment.InternalPunishment;
 import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
@@ -44,7 +45,7 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
     @Override protected @NonNull CompletableFuture<Optional<Punishment>> findUncached(@NonNull Integer id) throws NullPointerException
     {
         String sql = "SELECT punishment_type, time_span, message FROM ksvp_punishment WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, statement ->
         {
             statement.setInt(1, id);
             return collectResults(id, statement).stream().findFirst();
@@ -55,7 +56,7 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, punishment_type, time_span, message FROM ksvp_punishment WHERE id IN (" + placeHolders + ");";
-        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, statement ->
         {
             int index = 1;
             for (int current : id)
@@ -70,13 +71,13 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
     @Override public @NonNull CompletableFuture< Collection<Punishment>> findAll()
     {
         String sql = "SELECT id, punishment_type, time_span, message FROM ksvp_punishment;";
-        return CompletableFuture.supplyAsync(() -> query(sql, this::collectResults));
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, this::collectResults));
     }
 
     @Override public @NonNull CompletableFuture<Boolean> has(@NonNull Integer id)
     {
         String sql = "SELECT id FROM ksvp_punishment WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, statement ->
         {
             statement.setInt(1, id);
             return hasResult(statement);
@@ -103,7 +104,7 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         Preconditions.checkNotNull(id, "The punishment iterable cannot be null.");
 
         String sql = "INSERT INTO ksvp_punishment (id, punishment_type, time_span, message) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE punishment_type = ?, time_span = ?, message = ?;";
-        return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, (statement ->
         {
             for (Punishment punishment : id)
             {

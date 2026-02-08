@@ -5,6 +5,7 @@ import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.network.actor.rank.RankSubscriptionRepository;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
+import net.kissenpvp.database.AsyncDatabaseQueue;
 import net.kissenpvp.database.mariadb.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRankSubscription;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;
@@ -48,7 +49,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     @Override public @NonNull CompletableFuture<@NonNull Optional<RankSubscription>> find(@NonNull String id)
     {
         String sql = "SELECT rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, id);
             return collectResults(id, statement).stream().findFirst();
@@ -59,7 +60,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE id IN (" + placeHolders + ")";
-        return CompletableFuture.supplyAsync(() -> query(sql, statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, statement ->
         {
             int index = 1;
             for (String current : id)
@@ -74,12 +75,12 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     @Override public @NonNull CompletableFuture< Collection<RankSubscription>> findAll()
     {
         String sql = "SELECT id, rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription";
-        return CompletableFuture.supplyAsync(() -> query(sql, this::collectResults));
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, this::collectResults));
     }
 
     @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id)
     {
-        return CompletableFuture.supplyAsync(() -> query("SELECT id FROM ksvp_rank_subscription WHERE id = ?;", (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query("SELECT id FROM ksvp_rank_subscription WHERE id = ?;", (statement ->
         {
             statement.setString(1, id);
             return hasResult(statement);
@@ -113,7 +114,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
 
         String sql = "INSERT INTO ksvp_rank_subscription (id, rank_id, player_id, start_time, expiry,  expected_expiry) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE rank_id = ?, player_id = ?, expiry = ?;";
 
-        return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, (statement ->
         {
             for (RankSubscription subscription : id)
             {
@@ -170,7 +171,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     {
         String sql = "SELECT id, rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE player_id = ? AND (expiry IS NULL OR expiry > NOW()) ORDER BY start_time DESC LIMIT 1;";
 
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(player.id()));
             try(ResultSet resultSet = statement.executeQuery())
@@ -188,7 +189,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
     @Override public @NonNull CompletableFuture<@NonNull List<RankSubscription>> findHistory(@NonNull PlayerClient player)
     {
         String sql = "SELECT id, rank_id, player_id, start_time, expiry, expected_expiry FROM ksvp_rank_subscription WHERE player_id = ? ORDER BY start_time DESC;";
-        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(player.id()));
 

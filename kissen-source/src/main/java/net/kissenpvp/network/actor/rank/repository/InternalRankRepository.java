@@ -2,6 +2,7 @@ package net.kissenpvp.network.actor.rank.repository;
 
 import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.rank.Rank;
+import net.kissenpvp.database.AsyncDatabaseQueue;
 import net.kissenpvp.database.mariadb.InternalCachedRepository;
 import net.kissenpvp.database.mariadb.InternalRepository;
 import net.kissenpvp.network.actor.rank.InternalRank;
@@ -35,7 +36,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
     @Override protected @NonNull CompletableFuture<Optional<Rank>> findUncached(@NonNull String id) throws NullPointerException
     {
         String sql = "SELECT priority FROM ksvp_rank WHERE id = ?;";
-        return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, (statement ->
         {
             statement.setString(1, id);
             return collectResults(id, statement).stream().findFirst();
@@ -46,7 +47,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
     {
         String placeHolders = String.join(", ", Collections.nCopies(computeIterableSize(id), "?"));
         String sql = "SELECT id, priority FROM ksvp_rank WHERE id IN (" + placeHolders + ");";
-        return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, (statement ->
         {
             int index = 1;
             for (String current : id)
@@ -68,7 +69,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
 
     @Override public @NonNull CompletableFuture< Collection<Rank>> findAll()
     {
-        return CompletableFuture.supplyAsync(() -> query("SELECT id, priority FROM ksvp_rank;", (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query("SELECT id, priority FROM ksvp_rank;", (statement ->
         {
             Collection<Rank> rankCollection = new HashSet<>();
             try (ResultSet resultSet = statement.executeQuery())
@@ -84,7 +85,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
 
     @Override public @NonNull CompletableFuture<Boolean> has(@NonNull String id)
     {
-        return CompletableFuture.supplyAsync(() -> query("SELECT id FROM ksvp_rank WHERE id = ?;", (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query("SELECT id FROM ksvp_rank WHERE id = ?;", (statement ->
         {
             statement.setString(1, id);
             return hasResult(statement);
@@ -96,7 +97,7 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         Preconditions.checkNotNull(id, "The iterable of ranks cannot be null.");
 
         String sql = "INSERT INTO ksvp_rank (id, priority) VALUES (?, ?) ON DUPLICATE KEY UPDATE priority = ?;";
-        return CompletableFuture.supplyAsync(() -> query(sql, (statement ->
+        return AsyncDatabaseQueue.submitTask(() -> query(sql, (statement ->
         {
             for (Rank rank : id)
             {

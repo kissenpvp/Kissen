@@ -3,6 +3,7 @@ package net.kissenpvp.base;
 import net.kissenpvp.api.base.Kissen;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
 import net.kissenpvp.api.network.actor.ConsoleClient;
+import net.kissenpvp.database.AsyncDatabaseQueue;
 import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -26,6 +27,8 @@ public abstract class KissenCore implements Kissen
     private GlobalLocaleRegistry localeRegistry;
     private boolean started;
 
+    private AsyncDatabaseQueue databaseQueue;
+
     public static @NonNull KissenCore getInstance()
     {
         if (Objects.isNull(instance))
@@ -41,6 +44,7 @@ public abstract class KissenCore implements Kissen
     {
         instance = this;
         localeRegistry = new InternalGlobalLocaleRegistry();
+        databaseQueue = new AsyncDatabaseQueue();
 
         try
         {
@@ -50,7 +54,6 @@ public abstract class KissenCore implements Kissen
         {
             log.warn("Can't create serverid.txt directory!", exception);
         }
-
 
         started = true;
     }
@@ -70,6 +73,11 @@ public abstract class KissenCore implements Kissen
 
         String content = Files.readString(UUID_FILE_PATH).trim();
         return UUID.fromString(content);
+    }
+
+    @Override public @NonNull AsyncDatabaseQueue databaseQueue()
+    {
+        return databaseQueue;
     }
 
     @Override public @NonNull GlobalLocaleRegistry localeRegistry()
