@@ -1,6 +1,7 @@
 package net.kissenpvp.network.actor.rank.repository;
 
 import com.google.common.base.Preconditions;
+import net.kissenpvp.api.database.DeletableRepository;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.database.AsyncDatabaseQueue;
 import net.kissenpvp.database.mariadb.InternalCachedRepository;
@@ -26,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Bebdor augustus irilieres cesarius, Ivo Quiring
  */
-public class InternalRankRepository extends InternalCachedRepository<String, Rank>
+public class InternalRankRepository extends InternalCachedRepository<String, Rank> implements DeletableRepository<String>
 {
     public InternalRankRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
@@ -123,5 +124,29 @@ public class InternalRankRepository extends InternalCachedRepository<String, Ran
         Preconditions.checkNotNull(resultSet, "The result set cannot be null.");
 
         return new InternalRank(id, resultSet.getInt("priority"));
+    }
+
+    @Override
+    public @NonNull CompletableFuture<Void> delete(@NonNull String entry)
+    {
+        return deleteAll(Collections.singleton(entry));
+    }
+
+    @Override
+    public @NonNull CompletableFuture<Void> deleteAll(@NonNull Iterable<String> iterable)
+    {
+        Preconditions.checkNotNull(iterable, "Iterable must not be null.");
+
+        String sql = "DELETE FROM ksvp_rank WHERE id = ?";
+        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement) -> {
+
+            for(String current : iterable)
+            {
+                statement.setString(1, current);
+                statement.addBatch();
+            }
+            statement.executeBatch();
+            return null;
+        })));
     }
 }

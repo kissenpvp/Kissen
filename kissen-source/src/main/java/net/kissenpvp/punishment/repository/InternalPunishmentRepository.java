@@ -1,6 +1,7 @@
 package net.kissenpvp.punishment.repository;
 
 import com.google.common.base.Preconditions;
+import net.kissenpvp.api.database.DeletableRepository;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentType;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
@@ -34,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
  * @see Punishment
  * @see net.kissenpvp.api.punishment.PunishmentSubscription
  */
-public class InternalPunishmentRepository extends InternalCachedRepository<Integer, Punishment>
+public class InternalPunishmentRepository extends InternalCachedRepository<Integer, Punishment> implements DeletableRepository<Integer>
 {
 
     public InternalPunishmentRepository(@NonNull DataSource dataSource) throws NullPointerException
@@ -150,5 +151,28 @@ public class InternalPunishmentRepository extends InternalCachedRepository<Integ
         setDual(statement, 4, 7, Types.VARCHAR, message.orElse(null));
 
         statement.addBatch();
+    }
+
+    @Override
+    public @NonNull CompletableFuture<Void> delete(@NonNull Integer entry)
+    {
+        return deleteAll(Collections.singleton(entry));
+    }
+
+    @Override
+    public @NonNull CompletableFuture<Void> deleteAll(@NonNull Iterable<Integer> iterable)
+    {
+        String sql = "DELETE FROM ksvp_punishment WHERE id = ?;";
+        return CompletableFuture.supplyAsync(() -> assumeNotNull(query(sql, (statement) -> {
+
+            cachedEntries().clear(); // clear cached entries to reindex (might be better to just delete required, but this might lead to synchronization of entries if an entry could not be deleted)
+            for(int current : iterable)
+            {
+                statement.setInt(1, current);
+                statement.addBatch();
+            }
+            statement.executeBatch();
+            return null;
+        })));
     }
 }
