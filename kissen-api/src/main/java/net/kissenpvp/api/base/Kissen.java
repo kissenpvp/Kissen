@@ -2,6 +2,7 @@ package net.kissenpvp.api.base;
 
 
 import net.kissenpvp.api.database.ConnectionProvider;
+import net.kissenpvp.api.database.DatabaseQueue;
 import net.kissenpvp.api.database.Repository;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
 import net.kissenpvp.api.network.actor.PlayerRepository;
@@ -38,12 +39,13 @@ public interface Kissen {
      */
     @NonNull UUID serverUid();
 
+    @NonNull DatabaseQueue databaseQueue();
 
-    PlayerRepository playerRepository();
+    @NonNull PlayerRepository playerRepository();
 
-    Repository<String, Rank> rankRepository();
+    @NonNull Repository<String, Rank> rankRepository();
 
-    Repository<Integer, Punishment> punishmentRepository();
+    @NonNull Repository<Integer, Punishment> punishmentRepository();
 
-    PunishmentSubscriptionRepository punishmentSubscriptionRepository();
+    @NonNull PunishmentSubscriptionRepository punishmentSubscriptionRepository();
 }

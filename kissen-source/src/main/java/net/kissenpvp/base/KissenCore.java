@@ -75,7 +75,7 @@ public abstract class KissenCore implements Kissen
         return UUID.fromString(content);
     }
 
-    public @NonNull AsyncDatabaseQueue databaseQueue()
+    @Override public @NonNull AsyncDatabaseQueue databaseQueue()
     {
         return databaseQueue;
     }
