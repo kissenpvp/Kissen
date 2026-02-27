@@ -25,11 +25,14 @@ public class AsyncDatabaseQueue implements net.kissenpvp.api.database.DatabaseQu
         CompletableFuture<T> future = new CompletableFuture<>();
 
         service().submit(() -> {
-            try {
+            try
+            {
                 T result = task.call();
                 future.complete(result);
-            } catch (Exception e) {
-                future.completeExceptionally(e);
+            }
+            catch (Exception exception)
+            {
+                future.completeExceptionally(exception);
             }
         });
 
