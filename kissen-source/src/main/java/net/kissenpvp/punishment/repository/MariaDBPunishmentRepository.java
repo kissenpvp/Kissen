@@ -6,7 +6,7 @@ import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentType;
 import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import net.kissenpvp.database.AsyncDatabaseQueue;
-import net.kissenpvp.database.mariadb.InternalCachedRepository;
+import net.kissenpvp.database.mariadb.MariaDBCachedRepository;
 import net.kissenpvp.punishment.InternalPunishment;
 import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
@@ -31,14 +31,14 @@ import java.util.concurrent.CompletableFuture;
  * into {@link InternalPunishment} entities, and handling serialized data like timespans and default messages.
  *
  * @author Ivo Quiring
- * @see InternalCachedRepository
+ * @see MariaDBCachedRepository
  * @see Punishment
  * @see net.kissenpvp.api.punishment.PunishmentSubscription
  */
-public class InternalPunishmentRepository extends InternalCachedRepository<Integer, Punishment> implements DeletableRepository<Integer>
+public class MariaDBPunishmentRepository extends MariaDBCachedRepository<Integer, Punishment> implements DeletableRepository<Integer>
 {
 
-    public InternalPunishmentRepository(@NonNull DataSource dataSource) throws NullPointerException
+    public MariaDBPunishmentRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
     }

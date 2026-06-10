@@ -9,9 +9,9 @@ import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.AsyncDatabaseQueue;
-import net.kissenpvp.database.mariadb.InternalCachedRepository;
-import net.kissenpvp.database.mariadb.InternalRepository;
-import net.kissenpvp.network.actor.InternalPlayerRepository;
+import net.kissenpvp.database.mariadb.MariaDBCachedRepository;
+import net.kissenpvp.database.mariadb.MariaDBRepository;
+import net.kissenpvp.network.actor.MariaDBPlayerRepository;
 import net.kissenpvp.punishment.InternalPunishmentSubscription;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;
 import net.kyori.adventure.text.Component;
@@ -36,13 +36,13 @@ import java.util.concurrent.CompletableFuture;
  * timespan for subscriptions.
  *
  * @author Ivo Quiring
- * @see InternalCachedRepository
+ * @see MariaDBCachedRepository
  * @see PunishmentSubscription
  * @see Punishment
  */
-public class InternalPunishmentSubscriptionRepository extends InternalRepository<String, PunishmentSubscription> implements PunishmentSubscriptionRepository
+public class MariaDBPunishmentSubscriptionRepository extends MariaDBRepository<String, PunishmentSubscription> implements PunishmentSubscriptionRepository
 {
-    public InternalPunishmentSubscriptionRepository(@NonNull DataSource dataSource) throws NullPointerException
+    public MariaDBPunishmentSubscriptionRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
     }
@@ -165,7 +165,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
         statement.setString(1, subscription.id());
 
         LocalDateTime date = toDateTime(subscription.temporal().start());
-        LocalDateTime expiry = subscription.temporal().expiry().map(InternalPunishmentSubscriptionRepository::toDateTime).orElse(null);
+        LocalDateTime expiry = subscription.temporal().expiry().map(MariaDBPunishmentSubscriptionRepository::toDateTime).orElse(null);
         Optional<String> message = subscription.message().map(JSONComponentSerializer.json()::serialize);
 
         setDual(statement, 2, 9, Types.VARCHAR, String.valueOf(subscription.linkId()));
@@ -217,7 +217,7 @@ public class InternalPunishmentSubscriptionRepository extends InternalRepository
     {
         String sql = "SELECT id, username, first_login, last_login, time_played, locale FROM ksvp_player WHERE " +
                 "link_id = ?;";
-        InternalRepository<UUID, PlayerClient> playerRepository = (InternalPlayerRepository) KissenCore.getInstance().playerRepository();
+        MariaDBRepository<UUID, PlayerClient> playerRepository = (MariaDBPlayerRepository) KissenCore.getInstance().playerRepository();
         return AsyncDatabaseQueue.submitTask(() -> assumeNotNull(query(sql, (statement ->
         {
             statement.setString(1, String.valueOf(linkId));

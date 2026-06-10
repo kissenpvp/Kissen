@@ -12,13 +12,13 @@ import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
 
-public class InternalConnectionProvider implements ConnectionProvider
+public class MariaDBConnectionProvider implements ConnectionProvider
 {
     private Flyway flyway;
 
     private HikariDataSource dataSource;
 
-    public InternalConnectionProvider() throws MissingResourceException
+    public MariaDBConnectionProvider() throws MissingResourceException
     {
         try
         {

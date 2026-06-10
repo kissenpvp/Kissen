@@ -5,7 +5,7 @@ import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.PlayerRepository;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.AsyncDatabaseQueue;
-import net.kissenpvp.database.mariadb.InternalCachedRepository;
+import net.kissenpvp.database.mariadb.MariaDBCachedRepository;
 import org.jspecify.annotations.NonNull;
 
 
@@ -39,10 +39,10 @@ import java.util.stream.Stream;
  *
  * @author Ivo Quiring
  */
-public abstract class InternalPlayerRepository extends InternalCachedRepository<UUID, PlayerClient> implements PlayerRepository
+public abstract class MariaDBPlayerRepository extends MariaDBCachedRepository<UUID, PlayerClient> implements PlayerRepository
 {
 
-    public InternalPlayerRepository(@NonNull DataSource dataSource) throws NullPointerException
+    public MariaDBPlayerRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
     }

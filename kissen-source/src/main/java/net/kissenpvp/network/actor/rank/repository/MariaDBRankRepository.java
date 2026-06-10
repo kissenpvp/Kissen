@@ -4,8 +4,8 @@ import com.google.common.base.Preconditions;
 import net.kissenpvp.api.database.DeletableRepository;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.database.AsyncDatabaseQueue;
-import net.kissenpvp.database.mariadb.InternalCachedRepository;
-import net.kissenpvp.database.mariadb.InternalRepository;
+import net.kissenpvp.database.mariadb.MariaDBCachedRepository;
+import net.kissenpvp.database.mariadb.MariaDBRepository;
 import net.kissenpvp.network.actor.rank.InternalRank;
 import org.jspecify.annotations.NonNull;
 
@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * A repository implementation for managing rank-related entities in the database.
- * {@code InternalRankRepository} extends {@link InternalRepository} and provides
+ * {@code InternalRankRepository} extends {@link MariaDBRepository} and provides
  * additional methods specific to rank objects. It retrieves, transforms, and
  * persists rank data using predefined schemas and queries.
  *
@@ -27,9 +27,9 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Bebdor augustus irilieres cesarius, Ivo Quiring
  */
-public class InternalRankRepository extends InternalCachedRepository<String, Rank> implements DeletableRepository<String>
+public class MariaDBRankRepository extends MariaDBCachedRepository<String, Rank> implements DeletableRepository<String>
 {
-    public InternalRankRepository(@NonNull DataSource dataSource) throws NullPointerException
+    public MariaDBRankRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
     }

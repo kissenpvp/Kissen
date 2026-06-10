@@ -20,9 +20,9 @@ import java.util.function.Function;
  * @param <P> the type of the primary key
  * @param <T> the type of the entity to be persisted, which must extend {@link PersistableEntity}
  */
-public abstract class InternalRepository<P, T extends PersistableEntity<P>> extends KissenRepository<P, T>
+public abstract class MariaDBRepository<P, T extends PersistableEntity<P>> extends KissenRepository<P, T>
 {
-    public InternalRepository(@NonNull DataSource dataSource) throws NullPointerException
+    public MariaDBRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
     }

@@ -6,7 +6,7 @@ import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.network.actor.rank.RankSubscriptionRepository;
 import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.database.AsyncDatabaseQueue;
-import net.kissenpvp.database.mariadb.InternalRepository;
+import net.kissenpvp.database.mariadb.MariaDBRepository;
 import net.kissenpvp.network.actor.rank.InternalRankSubscription;
 import net.kissenpvp.temporal.InternalWritableTemporalObject;
 import org.jspecify.annotations.NonNull;
@@ -34,9 +34,9 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Bebdor augustus irilieres cesarius, Ivo Quiring
  */
-public class InternalRankSubscriptionRepository extends InternalRepository<String, RankSubscription> implements RankSubscriptionRepository
+public class MariaDBRankSubscriptionRepository extends MariaDBRepository<String, RankSubscription> implements RankSubscriptionRepository
 {
-    public InternalRankSubscriptionRepository(@NonNull DataSource dataSource) throws NullPointerException
+    public MariaDBRankSubscriptionRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
     }
@@ -121,7 +121,7 @@ public class InternalRankSubscriptionRepository extends InternalRepository<Strin
                 statement.setString(1, subscription.id());
 
                 LocalDateTime start = toDateTime(subscription.temporal().start());
-                LocalDateTime expiry = subscription.temporal().expiry().map(InternalRankSubscriptionRepository::toDateTime).orElse(null);
+                LocalDateTime expiry = subscription.temporal().expiry().map(MariaDBRankSubscriptionRepository::toDateTime).orElse(null);
 
                 setDual(statement, 2, 7, Types.VARCHAR, subscription.parentId());
                 setDual(statement, 3, 8, Types.VARCHAR, String.valueOf(subscription.player().id()));

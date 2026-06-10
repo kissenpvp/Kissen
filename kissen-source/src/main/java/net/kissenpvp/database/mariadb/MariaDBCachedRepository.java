@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 /**
- * An abstract base class that extends {@link InternalRepository} and introduces a caching mechanism for entities.
+ * An abstract base class that extends {@link MariaDBRepository} and introduces a caching mechanism for entities.
  * This class is responsible for managing the persistence and retrieval of entity objects from a database while
  * maintaining
  * an internal cache for performance optimization.
@@ -25,13 +25,13 @@ import java.util.stream.Stream;
  * @param <T> The type of entity managed by the repository. Must extend {@link PersistableEntity}.
  * @author Ivo Quiring
  */
-public abstract class InternalCachedRepository<P, T extends PersistableEntity<P>> extends InternalRepository<P, T> implements CachedRepository<P, T>
+public abstract class MariaDBCachedRepository<P, T extends PersistableEntity<P>> extends MariaDBRepository<P, T> implements CachedRepository<P, T>
 {
 
-    private final static Logger log = LoggerFactory.getLogger(InternalCachedRepository.class);
+    private final static Logger log = LoggerFactory.getLogger(MariaDBCachedRepository.class);
     private final Map<P, T> cachedEntries;
 
-    public InternalCachedRepository(@NonNull DataSource dataSource) throws NullPointerException
+    public MariaDBCachedRepository(@NonNull DataSource dataSource) throws NullPointerException
     {
         super(dataSource);
         this.cachedEntries = new HashMap<>();
