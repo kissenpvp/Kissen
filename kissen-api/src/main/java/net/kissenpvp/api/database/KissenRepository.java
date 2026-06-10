@@ -63,7 +63,7 @@ public abstract class KissenRepository<P, T extends PersistableEntity<P>> extend
     {
         if(Objects.isNull(obj))
         {
-            throw new CompletionException(new NullPointerException());
+            throw new CompletionException(new NullPointerException("The assumed not null object is null."));
         }
         return obj;
     }
