@@ -42,6 +42,20 @@ public interface Repository<P, T extends PersistableEntity<P>>
     @NonNull CompletableFuture<@NonNull Collection<T>> findAll(@NonNull Iterable<P> id);
 
     /**
+     * Retrieves a collection of entities corresponding to the specified identifiers asynchronously.
+     * The returned collection is unmodifiable, ensuring that it cannot be altered after retrieval.
+     *
+     * @param id an iterable containing the identifiers of the entities to retrieve; must not be null
+     * @return a {@link CompletableFuture} that completes with an unmodifiable view of
+     * the collection of entities corresponding to the provided identifiers; never null
+     * @throws NullPointerException if the given iterable or any of its elements are null
+     */
+    default @NonNull CompletableFuture<@NonNull Collection<T>> findAll(@NonNull Collection<P> id)
+    {
+        return findAll((Iterable<P>) id);
+    }
+
+    /**
      * Retrieves all entities from the repository asynchronously.
      * The entities are returned as a collection that is unmodifiable, ensuring that
      * the collection cannot be altered after retrieval.
@@ -82,4 +96,17 @@ public interface Repository<P, T extends PersistableEntity<P>>
      * @throws NullPointerException if the provided iterable or any of its elements are null
      */
     @NonNull CompletableFuture<Void> saveAll(@NonNull Iterable<T> id);
+
+    /**
+     * Persists all the provided entities to the underlying storage asynchronously.
+     * This method ensures that each entity in the given iterable is saved successfully.
+     *
+     * @param id an iterable containing the entities to be saved must not be null
+     * @return a {@link CompletableFuture} that completes with {@code null} when all entities are persisted successfully
+     * @throws NullPointerException if the provided iterable or any of its elements are null
+     */
+    default @NonNull CompletableFuture<Void> saveAll(@NonNull Collection<T> id)
+    {
+        return saveAll((Iterable<T>) id);
+    }
 }
