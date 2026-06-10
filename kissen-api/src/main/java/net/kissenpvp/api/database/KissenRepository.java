@@ -13,7 +13,7 @@ import java.util.concurrent.CompletionException;
 
 public abstract class KissenRepository<P, T extends PersistableEntity<P>> extends SQLExecutor implements Repository<P, T>
 {
-    public KissenRepository(@NonNull DataSource dataSource) throws NullPointerException
+    public KissenRepository(@NonNull DataSource dataSource)
     {
         super(dataSource);
     }
