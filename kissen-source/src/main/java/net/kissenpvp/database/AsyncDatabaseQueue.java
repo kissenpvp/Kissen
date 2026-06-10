@@ -1,11 +1,12 @@
 package net.kissenpvp.database;
 
+import net.kissenpvp.api.database.DatabaseQueue;
 import net.kissenpvp.base.KissenCore;
 import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.*;
 
-public class AsyncDatabaseQueue implements net.kissenpvp.api.database.DatabaseQueue
+public class AsyncDatabaseQueue implements DatabaseQueue
 {
     private final ExecutorService executorService;
 
