@@ -2,6 +2,7 @@ package net.kissenpvp.api.network.actor.rank;
 
 import net.kissenpvp.api.database.PersistableEntity;
 import net.kissenpvp.api.temporal.TemporalSubscriber;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Represents a rank entity.
@@ -28,4 +29,14 @@ public interface Rank extends PersistableEntity<String>, TemporalSubscriber
      * @param priority the priority value to be assigned to the rank; must be an integer
      */
     void priority(int priority);
+
+    /**
+     * Determines whether this rank has a higher priority than the given rank.
+     * <p>
+     * Note! This ranks priority must be greater than the others. If they are the same, it will return {@code false}
+     *
+     * @param other the rank to compare against
+     * @return {@code true} if this rank has a higher priority than the given rank; {@code false} otherwise
+     */
+    boolean hasPriority(@NonNull Rank other);
 }

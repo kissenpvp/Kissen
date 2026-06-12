@@ -45,6 +45,12 @@ public class InternalRank implements PersistableEntity<String>, Rank
         this.priority = priority;
     }
 
+    @Override
+    public boolean hasPriority(@NonNull Rank that)
+    {
+        return priority > that.priority();
+    }
+
     @Override public boolean equals(Object o)
     {
         if (o == null || getClass() != o.getClass()) { return false; }
