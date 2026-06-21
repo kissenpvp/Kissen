@@ -56,7 +56,7 @@ public class MariaDBConnectionProvider implements ConnectionProvider
             throw new IllegalStateException("The connection has already been opened.");
         }
 
-        registry().subscribe(getSubscriptionId(), url, username, password);
+        registry().subscribe(getSubscriptionId(), url, username);
     }
 
     @Override
