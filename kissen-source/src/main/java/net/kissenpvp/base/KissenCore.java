@@ -4,6 +4,7 @@ import net.kissenpvp.api.base.Kissen;
 import net.kissenpvp.api.localization.GlobalLocaleRegistry;
 import net.kissenpvp.api.network.actor.ConsoleClient;
 import net.kissenpvp.database.AsyncDatabaseQueue;
+import net.kissenpvp.database.ConnectionRegistry;
 import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -28,6 +29,7 @@ public abstract class KissenCore implements Kissen
     private boolean started;
 
     private AsyncDatabaseQueue databaseQueue;
+    private ConnectionRegistry connectionRegistry;
 
     public static @NonNull KissenCore getInstance()
     {
@@ -93,5 +95,10 @@ public abstract class KissenCore implements Kissen
     @Override public @NonNull UUID serverUid()
     {
         return serverUid;
+    }
+
+    public @NonNull ConnectionRegistry getConnectionRegistry()
+    {
+        return connectionRegistry;
     }
 }

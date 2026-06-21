@@ -1,9 +1,9 @@
 package net.kissenpvp.database.mariadb;
 
 import com.google.common.base.Preconditions;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import net.kissenpvp.api.database.ConnectionProvider;
+import net.kissenpvp.base.KissenCore;
+import net.kissenpvp.database.ConnectionRegistry;
 import org.flywaydb.core.Flyway;
 import org.jspecify.annotations.NonNull;
 
@@ -11,18 +11,24 @@ import javax.sql.DataSource;
 import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 public class MariaDBConnectionProvider implements ConnectionProvider
 {
     private Flyway flyway;
+    private final UUID subscriptionId;
 
-    private HikariDataSource dataSource;
+    private static @NonNull ConnectionRegistry registry()
+    {
+        return KissenCore.getInstance().getConnectionRegistry();
+    }
 
     public MariaDBConnectionProvider() throws MissingResourceException
     {
         try
         {
             Class.forName("com.mysql.cj.jdbc.Driver");
+            subscriptionId = UUID.randomUUID();
         }
         catch (ClassNotFoundException classNotFoundException)
         {
@@ -32,7 +38,12 @@ public class MariaDBConnectionProvider implements ConnectionProvider
 
     @Override public @NonNull Optional<DataSource> dataSource()
     {
-        return Optional.ofNullable(dataSource);
+        if(registry().isSubscribed(getSubscriptionId()))
+        {
+            return Optional.of(registry().getSubscription(getSubscriptionId()));
+        }
+
+        return Optional.empty();
     }
 
     @Override
@@ -40,17 +51,12 @@ public class MariaDBConnectionProvider implements ConnectionProvider
     {
         Preconditions.checkNotNull(url, "Connection string must not be null");
 
-        if (Objects.nonNull(dataSource))
+        if (registry().isSubscribed(getSubscriptionId()))
         {
             throw new IllegalStateException("The connection has already been opened.");
         }
 
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(url);
-        config.setUsername(username);
-        config.setPassword(password);
-        config.setMaximumPoolSize(10);
-        dataSource = new HikariDataSource(config);
+        registry().subscribe(getSubscriptionId(), url, username, password);
     }
 
     @Override
@@ -88,21 +94,21 @@ public class MariaDBConnectionProvider implements ConnectionProvider
 
     @Override public void disconnect() throws IllegalStateException
     {
-        if (Objects.isNull(dataSource))
+        if (!registry().isSubscribed(getSubscriptionId()))
         {
             throw new IllegalStateException("The connection has not been opened yet.");
         }
 
-        dataSource.close();
+        registry().unsubscribe(getSubscriptionId());
     }
 
     private boolean isConnected()
     {
-        if (Objects.nonNull(dataSource))
-        {
-            return !dataSource.isClosed();
-        }
+        return registry().isSubscribed(getSubscriptionId());
+    }
 
-        return false;
+    private @NonNull UUID getSubscriptionId()
+    {
+        return subscriptionId;
     }
 }
