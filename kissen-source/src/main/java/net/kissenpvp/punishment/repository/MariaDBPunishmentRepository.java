@@ -4,11 +4,10 @@ import com.google.common.base.Preconditions;
 import net.kissenpvp.api.database.DeletableRepository;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentType;
-import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import net.kissenpvp.database.AsyncDatabaseQueue;
 import net.kissenpvp.database.mariadb.MariaDBCachedRepository;
 import net.kissenpvp.punishment.InternalPunishment;
-import net.kissenpvp.temporal.timespan.InternalDefinedTimeSpan;
+import net.kissenpvp.api.temporal.timespan.DefinedTimeSpan;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.jspecify.annotations.NonNull;
 
@@ -91,7 +90,7 @@ public class MariaDBPunishmentRepository extends MariaDBCachedRepository<Integer
         Preconditions.checkNotNull(resultSet, "The result set cannot be null.");
 
         PunishmentType type = PunishmentType.fromOrdinal(resultSet.getInt("punishment_type"));
-        InternalDefinedTimeSpan timeSpan = new InternalDefinedTimeSpan(resultSet.getLong("time_span"));
+        DefinedTimeSpan timeSpan = new DefinedTimeSpan(resultSet.getLong("time_span"));
         return new InternalPunishment(id, type, timeSpan);
     }
 

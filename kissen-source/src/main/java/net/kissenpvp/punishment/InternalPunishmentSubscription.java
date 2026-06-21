@@ -51,7 +51,7 @@ public class InternalPunishmentSubscription extends InternalSubscriptionEntity<S
         Preconditions.checkNotNull(linkId, "LinkId cannot be null.");
         Preconditions.checkNotNull(temporalObject, "TimeSpan cannot be null.");
 
-        if (id.length() > 8)
+        if (id.length() > 4)
         {
             throw new IllegalArgumentException("Id cannot be longer than 4 characters!");
         }

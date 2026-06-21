@@ -6,14 +6,13 @@ import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.punishment.Punishment;
 import net.kissenpvp.api.punishment.PunishmentSubscription;
 import net.kissenpvp.api.punishment.PunishmentSubscriptionRepository;
-import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.AsyncDatabaseQueue;
 import net.kissenpvp.database.mariadb.MariaDBCachedRepository;
 import net.kissenpvp.database.mariadb.MariaDBRepository;
 import net.kissenpvp.network.actor.MariaDBPlayerRepository;
 import net.kissenpvp.punishment.InternalPunishmentSubscription;
-import net.kissenpvp.temporal.InternalWritableTemporalObject;
+import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
@@ -70,7 +69,7 @@ public class MariaDBPunishmentSubscriptionRepository extends MariaDBRepository<S
         Instant expectedExpiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate(
                 "expected_expiry"));
 
-        WritableTemporalObject temporal = new InternalWritableTemporalObject(start, expiry, expectedExpiry);
+        WritableTemporalObject temporal = new WritableTemporalObject(start, expiry, expectedExpiry);
 
         return new InternalPunishmentSubscription(id, parentId, linkId, operatorId, temporal, message);
     }

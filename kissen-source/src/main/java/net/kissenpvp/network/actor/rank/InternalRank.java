@@ -3,9 +3,8 @@ package net.kissenpvp.network.actor.rank;
 import com.google.common.base.Preconditions;
 import net.kissenpvp.api.database.PersistableEntity;
 import net.kissenpvp.api.network.actor.rank.Rank;
-import net.kissenpvp.api.temporal.TemporalObject;
-import net.kissenpvp.temporal.InternalTemporalObject;
-import net.kissenpvp.temporal.timespan.PermanentTimeSpan;
+import net.kissenpvp.api.temporal.DefinedTemporalObject;
+import net.kissenpvp.api.temporal.timespan.PermanentTimeSpan;
 import org.jspecify.annotations.NonNull;
 
 import java.util.Objects;
@@ -14,14 +13,14 @@ public class InternalRank implements PersistableEntity<String>, Rank
 {
     private final String id;
     private int priority;
-    private TemporalObject temporal;
+    private DefinedTemporalObject temporal;
 
     public InternalRank(@NonNull String id, int priority) throws NullPointerException
     {
-        this(id, priority, InternalTemporalObject.toTemporal(new PermanentTimeSpan()));
+        this(id, priority, DefinedTemporalObject.toTemporal(new PermanentTimeSpan()));
     }
 
-    public InternalRank(@NonNull String id, int priority, @NonNull TemporalObject temporal) throws NullPointerException
+    public InternalRank(@NonNull String id, int priority, @NonNull DefinedTemporalObject temporal) throws NullPointerException
     {
         Preconditions.checkNotNull(id, "Id cannot be null");
 
@@ -63,7 +62,7 @@ public class InternalRank implements PersistableEntity<String>, Rank
         return Objects.hashCode(id);
     }
 
-    @Override public @NonNull TemporalObject temporal()
+    @Override public @NonNull DefinedTemporalObject temporal()
     {
         return temporal;
     }

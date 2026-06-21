@@ -1,6 +1,4 @@
-package net.kissenpvp.temporal.timespan;
-
-import net.kissenpvp.api.temporal.timespan.TimeSpan;
+package net.kissenpvp.api.temporal.timespan;
 
 /**
  * Represents a permanent time span that does not have a defined duration or end point.

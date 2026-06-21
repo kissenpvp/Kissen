@@ -24,6 +24,5 @@ public interface WritableTemporalSubscriber extends TemporalSubscriber
      *
      * @return the non-null {@link WritableTemporalObject} associated with the implementing entity
      */
-    @Override
-    @NonNull WritableTemporalObject temporal();
+    @Override @NonNull WritableTemporalObject temporal();
 }

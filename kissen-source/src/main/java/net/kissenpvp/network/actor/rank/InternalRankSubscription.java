@@ -4,10 +4,9 @@ import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.rank.Rank;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
-import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.base.KissenCore;
 import net.kissenpvp.database.InternalSubscriptionEntity;
-import net.kissenpvp.temporal.InternalWritableTemporalObject;
+import net.kissenpvp.api.temporal.WritableTemporalObject;
 import org.jspecify.annotations.NonNull;
 
 import java.util.Optional;
@@ -32,7 +31,7 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
             @NonNull UUID playerId
     ) throws NullPointerException
     {
-        this(id, parentId, playerId, new InternalWritableTemporalObject());
+        this(id, parentId, playerId, new WritableTemporalObject());
     }
 
     public InternalRankSubscription(
@@ -55,6 +54,7 @@ public class InternalRankSubscription extends InternalSubscriptionEntity<String,
 
     @Override public @NonNull PlayerClient player() throws IllegalStateException
     {
+        //TODO use online player if possible
         Optional<PlayerClient> player = KissenCore.getInstance().playerRepository().find(playerId).join();
         if (player.isEmpty())
         {

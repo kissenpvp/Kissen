@@ -4,11 +4,10 @@ import com.google.common.base.Preconditions;
 import net.kissenpvp.api.network.actor.PlayerClient;
 import net.kissenpvp.api.network.actor.rank.RankSubscription;
 import net.kissenpvp.api.network.actor.rank.RankSubscriptionRepository;
-import net.kissenpvp.api.temporal.WritableTemporalObject;
 import net.kissenpvp.database.AsyncDatabaseQueue;
 import net.kissenpvp.database.mariadb.MariaDBRepository;
 import net.kissenpvp.network.actor.rank.InternalRankSubscription;
-import net.kissenpvp.temporal.InternalWritableTemporalObject;
+import net.kissenpvp.api.temporal.WritableTemporalObject;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -97,7 +96,7 @@ public class MariaDBRankSubscriptionRepository extends MariaDBRepository<String,
         Instant start = resultSet.getDate("start_time").toInstant(); // expected to be not null
         Instant expiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate("expiry"));
         Instant expectedExpiry = convertSafely(date -> Instant.ofEpochMilli(date.getTime()), resultSet.getDate("expected_expiry"));
-        WritableTemporalObject temporal = new InternalWritableTemporalObject(start, expiry, expectedExpiry);
+        WritableTemporalObject temporal = new WritableTemporalObject(start, expiry, expectedExpiry);
 
         return new InternalRankSubscription(id, resultSet.getString("rank_id"), playerId, temporal);
     }

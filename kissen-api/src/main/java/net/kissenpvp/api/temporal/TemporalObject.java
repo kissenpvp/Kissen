@@ -28,6 +28,11 @@ public interface TemporalObject
      */
     @NonNull Optional<Instant> expiry();
 
+    /**
+     * Returns whether this temporal object is expired.
+     *
+     * @return a boolean indicating whether it has been expired; false if it's not expired;
+     */
     boolean expired();
 
     /**
