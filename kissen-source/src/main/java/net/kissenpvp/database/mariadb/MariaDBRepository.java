@@ -22,7 +22,7 @@ import java.util.function.Function;
  */
 public abstract class MariaDBRepository<P, T extends PersistableEntity<P>> extends KissenRepository<P, T>
 {
-    public MariaDBRepository(@NonNull DataSource dataSource) throws NullPointerException
+    public MariaDBRepository(@NonNull DataSource dataSource)
     {
         super(dataSource);
     }
@@ -97,9 +97,8 @@ public abstract class MariaDBRepository<P, T extends PersistableEntity<P>> exten
      * @param <Y>      the type of the output value
      * @return the converted value of type {@code Y} if the input value is not null,
      *         or null if the input value is null
-     * @throws NullPointerException if the provided function is null
      */
-    protected static <X, Y> @Nullable Y convertSafely(@NonNull Function<X, Y> function, @Nullable X value) throws NullPointerException
+    protected static <X, Y> @Nullable Y convertSafely(@NonNull Function<X, Y> function, @Nullable X value)
     {
         Preconditions.checkNotNull(function, "The function cannot be null.");
 
@@ -124,9 +123,8 @@ public abstract class MariaDBRepository<P, T extends PersistableEntity<P>> exten
      * @param sqlType     the SQL type, defined in {@link java.sql.Types}, used to set the value or null
      * @param value       the value to be set; can be null in which case SQL null will be inserted
      * @throws SQLException         if an error occurs while interacting with the {@link PreparedStatement}
-     * @throws NullPointerException if the {@link PreparedStatement} is null
      */
-    protected static void setDual(@NonNull PreparedStatement statement, int index, int secondIndex, int sqlType, @Nullable Object value) throws SQLException, NullPointerException
+    protected static void setDual(@NonNull PreparedStatement statement, int index, int secondIndex, int sqlType, @Nullable Object value) throws SQLException
     {
         Preconditions.checkNotNull(statement, "The prepared statement cannot be null.");
 
@@ -150,9 +148,8 @@ public abstract class MariaDBRepository<P, T extends PersistableEntity<P>> exten
      * @param resultSet the {@code ResultSet} containing the row to be converted into an entity, must not be null
      * @return the entity created from the specified {@code id} and the current row in the {@code ResultSet}, never null
      * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
-     * @throws NullPointerException if either {@code id} or {@code resultSet} is null
      */
-    public abstract @NonNull T toEntity(@NonNull P id, @NonNull ResultSet resultSet) throws SQLException, NullPointerException;
+    public abstract @NonNull T toEntity(@NonNull P id, @NonNull ResultSet resultSet) throws SQLException;
 
     /**
      * Converts a single row of the provided {@code ResultSet} into an entity.
@@ -162,8 +159,7 @@ public abstract class MariaDBRepository<P, T extends PersistableEntity<P>> exten
      * @param resultSet the {@code ResultSet} containing the row to be converted into an entity, must not be null
      * @return an unmodifiable view of the entity created from the current row in the {@code ResultSet}, never null
      * @throws SQLException         if an error occurs while accessing the {@code ResultSet}
-     * @throws NullPointerException if the {@code ResultSet} is null
      * @see #toEntity(Object, ResultSet)
      */
-    public abstract @NonNull T toEntity(@NonNull ResultSet resultSet) throws SQLException, NullPointerException;
+    public abstract @NonNull T toEntity(@NonNull ResultSet resultSet) throws SQLException;
 }
