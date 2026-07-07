@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.jspecify.annotations.NonNull;
 
 import javax.sql.DataSource;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -29,8 +30,14 @@ import java.util.UUID;
  */
 public class ConnectionRegistry
 {
-    private Map<RegistryKey, HikariDataSource> registry;
-    private Map<UUID, RegistryKey> subscriptions ;
+    private final Map<RegistryKey, HikariDataSource> registry;
+    private final Map<UUID, RegistryKey> subscriptions ;
+
+    public ConnectionRegistry()
+    {
+        this.registry = new HashMap<>();
+        this.subscriptions = new HashMap<>();
+    }
 
     /**
      * Checks whether the instance is associated with a connection.
