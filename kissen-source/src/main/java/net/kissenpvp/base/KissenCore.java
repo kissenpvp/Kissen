@@ -47,6 +47,7 @@ public abstract class KissenCore implements Kissen
         instance = this;
         localeRegistry = new InternalGlobalLocaleRegistry();
         databaseQueue = new AsyncDatabaseQueue();
+        connectionRegistry = new ConnectionRegistry();
 
         try
         {
