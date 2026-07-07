@@ -183,7 +183,7 @@ public class ConnectionRegistry
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(registryKey.url());
         config.setUsername(registryKey.user());
-        config.setUsername(password);
+        config.setPassword(password);
         config.setMaximumPoolSize(10);
 
         HikariDataSource hikariSource = new HikariDataSource(config);
