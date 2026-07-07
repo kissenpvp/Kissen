@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.gson.*;
 import net.kissenpvp.api.localization.LocaleRepository;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationStore;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -101,9 +102,11 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         if (defaultMessages.isEmpty())
         {
             log.info("Plugin {} has got no translations registered. Skip loading files...", plugin().getName());
+            return;
         }
 
         translationStore = TranslationStore.messageFormat(key());
+        GlobalTranslator.translator().addSource(translationStore);
 
         File file = new File(plugin().getDataFolder(), "lang");
         String absolutePath = file.getAbsolutePath();
@@ -117,8 +120,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         if (!file.isDirectory())
         {
             log.warn(
-                    "Expected {} to be a directory but found a file. This prevents translation files from being " +
-                            "loaded.",
+                    "Expected {} to be a directory but found a file. This prevents translation files from being loaded.",
                     absolutePath
             );
             return;
