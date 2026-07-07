@@ -87,15 +87,16 @@ public class ConnectionRegistry
      * @param instance the unique identifier of the instance to subscribe; must not be null
      * @param url the database connection URL; must not be null
      * @param user the database username; must not be null
+     * @param password the database password; must not be null
      */
-    public void subscribe(@NonNull UUID instance, @NonNull String url, @NonNull String user)
+    public void subscribe(@NonNull UUID instance, @NonNull String url, @NonNull String user, String password)
     {
         Preconditions.checkNotNull(instance, "InstanceId must not be null");
 
         RegistryKey registryKey = new RegistryKey(url, user);
         if(!registry.containsKey(registryKey))
         {
-            create(registryKey);
+            create(registryKey, password);
         }
 
         subscribe(instance, registryKey);
@@ -168,9 +169,10 @@ public class ConnectionRegistry
      * exists for the given key, an exception is thrown and no changes are made.
      *
      * @param registryKey the registry key containing connection configuration; must not be null
+     * @param password the password of the database
      * @throws IllegalStateException if a {@link DataSource} already exists for the given key
      */
-    private void create(@NonNull RegistryKey registryKey)
+    private void create(@NonNull RegistryKey registryKey, String password)
     {
         if(registry.containsKey(registryKey))
         {
@@ -181,6 +183,7 @@ public class ConnectionRegistry
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(registryKey.url());
         config.setUsername(registryKey.user());
+        config.setUsername(password);
         config.setMaximumPoolSize(10);
 
         HikariDataSource hikariSource = new HikariDataSource(config);
