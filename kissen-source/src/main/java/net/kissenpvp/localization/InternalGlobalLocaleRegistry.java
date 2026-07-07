@@ -28,7 +28,25 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
         initialized = true;
     }
 
-    public void register(@NonNull KissenPlugin plugin) throws NullPointerException
+    @Override
+    public @NonNull LocaleRepository localeRepository(@NonNull KissenPlugin plugin) throws IllegalArgumentException
+    {
+        Preconditions.checkNotNull(plugin, "plugin cannot be null");
+
+        if (!repositories.containsKey(plugin))
+        {
+            if (initialized)
+            {
+                String message = "The plugin %s has not registered a locale repository before initialization.";
+                throw new IllegalArgumentException(String.format(message, plugin));
+            }
+            register(plugin);
+        }
+
+        return repositories.get(plugin);
+    }
+
+    private void register(@NonNull KissenPlugin plugin) throws NullPointerException
     {
         Preconditions.checkNotNull(plugin, "plugin cannot be null");
 
@@ -49,23 +67,5 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
                 return plugin;
             }
         });
-    }
-
-    @Override
-    public @NonNull LocaleRepository localeRepository(@NonNull KissenPlugin plugin) throws IllegalArgumentException
-    {
-        Preconditions.checkNotNull(plugin, "plugin cannot be null");
-
-        if (!repositories.containsKey(plugin))
-        {
-            if (!initialized)
-            {
-                String message = "The plugin %s has not registered a locale repository.";
-                throw new IllegalArgumentException(String.format(message, plugin));
-            }
-            register(plugin);
-        }
-
-        return repositories.get(plugin);
     }
 }
