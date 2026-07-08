@@ -101,6 +101,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      */
     public void load()
     {
+        System.out.println("HALLO");
         if (defaultMessages.isEmpty())
         {
             log.info("Plugin {} has got no translations registered. Skip loading files...", plugin().getName());
@@ -154,8 +155,15 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      */
     private void insertDefault()
     {
-        translationStore.registerAll(Locale.ENGLISH, defaultMessages);
-        log.info("No locale files where detected. Adding default translations.");
+        try
+        {
+            System.out.println("Ayo");
+            translationStore.registerAll(Locale.ENGLISH, defaultMessages);
+            log.info("No locale files where detected. Adding default translations.");
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     /**
