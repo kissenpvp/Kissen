@@ -5,7 +5,7 @@ import net.kissenpvp.api.localization.GlobalLocaleRegistry;
 import net.kissenpvp.api.network.actor.ConsoleClient;
 import net.kissenpvp.database.AsyncDatabaseQueue;
 import net.kissenpvp.database.ConnectionRegistry;
-import net.kissenpvp.localization.InternalGlobalLocaleRegistry;
+import net.kissenpvp.localization.GlobalLocaleRegistryImpl;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,7 @@ public abstract class KissenCore implements Kissen
     protected void init()
     {
         instance = this;
-        localeRegistry = new InternalGlobalLocaleRegistry();
+        localeRegistry = new GlobalLocaleRegistryImpl();
         databaseQueue = new AsyncDatabaseQueue();
         connectionRegistry = new ConnectionRegistry();
 

@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collector;
@@ -33,9 +32,9 @@ import java.util.stream.Collectors;
  *
  * @author Ivo Quiring
  */
-public abstract class InternalLocaleRepository implements LocaleRepository
+public abstract class LocaleRepositoryImpl implements LocaleRepository
 {
-    private static final Logger log = LoggerFactory.getLogger(InternalLocaleRepository.class);
+    private static final Logger log = LoggerFactory.getLogger(LocaleRepositoryImpl.class);
 
     private final Map<String, MessageFormat> defaultMessages;
 
@@ -50,7 +49,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
      * are locally known and a {@code HashMap} to store default messages
      * associated with localization keys.
      */
-    public InternalLocaleRepository()
+    public LocaleRepositoryImpl()
     {
         locallyKnown = new HashSet<>();
         defaultMessages = new HashMap<>();

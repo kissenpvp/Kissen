@@ -11,15 +11,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
+public class GlobalLocaleRegistryImpl implements GlobalLocaleRegistry
 {
-    private static final Logger log = LoggerFactory.getLogger(InternalGlobalLocaleRegistry.class);
+    private static final Logger log = LoggerFactory.getLogger(GlobalLocaleRegistryImpl.class);
     private final Set<Locale> locales;
-    private final Map<KissenPlugin, InternalLocaleRepository> repositories;
+    private final Map<KissenPlugin, LocaleRepositoryImpl> repositories;
 
     private boolean initialized = false;
 
-    public InternalGlobalLocaleRegistry()
+    public GlobalLocaleRegistryImpl()
     {
         locales = new HashSet<>();
         repositories = new HashMap<>();
@@ -27,7 +27,7 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
 
     public void initialize()
     {
-        repositories.values().forEach(InternalLocaleRepository::load);
+        repositories.values().forEach(LocaleRepositoryImpl::load);
         initialized = true;
     }
 
@@ -53,7 +53,7 @@ public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
     {
         Preconditions.checkNotNull(plugin, "plugin cannot be null");
 
-        repositories.put(plugin, new InternalLocaleRepository()
+        repositories.put(plugin, new LocaleRepositoryImpl()
         {
             @Override protected @NonNull Optional<Locale> locale(@NonNull String localeName)
             {
