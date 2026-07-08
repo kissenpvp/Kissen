@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collector;
@@ -79,9 +80,10 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         return defaultMessages.put(key, format);
     }
 
-    @Override public @NonNull Key key()
+    @SuppressWarnings("PatternValidation") @Override public @NonNull Key key()
     {
-        return Key.key("kissen", plugin().getName());
+        String pluginName = plugin().getName().toLowerCase(Locale.ROOT);
+        return Key.key("kissen", pluginName);
     }
 
     /**
@@ -111,10 +113,13 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         File file = new File(plugin().getDataFolder(), "lang");
         String absolutePath = file.getAbsolutePath();
 
-        if (!file.exists() && !file.mkdir())
+        try
+        {
+            Files.createDirectories(file.toPath());
+        }
+        catch (IOException ioException)
         {
             log.warn("Failed to create language directory at {}. Please check file permissions.", absolutePath);
-            return;
         }
 
         if (!file.isDirectory())
