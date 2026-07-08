@@ -6,11 +6,14 @@ import net.kissenpvp.api.localization.GlobalLocaleRegistry;
 import net.kissenpvp.api.localization.LocaleRepository;
 import net.kyori.adventure.translation.Translator;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class InternalGlobalLocaleRegistry implements GlobalLocaleRegistry
 {
+    private static final Logger log = LoggerFactory.getLogger(InternalGlobalLocaleRegistry.class);
     private final Set<Locale> locales;
     private final Map<KissenPlugin, InternalLocaleRepository> repositories;
 

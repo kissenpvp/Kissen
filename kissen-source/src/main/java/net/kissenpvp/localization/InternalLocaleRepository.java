@@ -113,13 +113,10 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         File file = new File(plugin().getDataFolder(), "lang");
         String absolutePath = file.getAbsolutePath();
 
-        try
+        if(!file.exists() || !file.mkdirs())
         {
-            Files.createDirectories(file.toPath());
-        }
-        catch (IOException ioException)
-        {
-            log.warn("Failed to create language directory at {}. Please check file permissions.", absolutePath);
+            insertDefault();
+            return;
         }
 
         if (!file.isDirectory())
@@ -128,6 +125,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
                     "Expected {} to be a directory but found a file. This prevents translation files from being loaded.",
                     absolutePath
             );
+            insertDefault();
             return;
         }
 
@@ -138,10 +136,26 @@ public abstract class InternalLocaleRepository implements LocaleRepository
             return;
         }
 
+        if(localeFiles.length == 0)
+        {
+            insertDefault();
+            return;
+        }
+
         for (File localeFile : localeFiles)
         {
             loadFile(localeFile);
         }
+    }
+
+    /**
+     * Populates the translation store with the default values.
+     * Is called when no files where found, the directory is non-existent, or the path is obstructed because of a file
+     */
+    private void insertDefault()
+    {
+        translationStore.registerAll(Locale.ENGLISH, defaultMessages);
+        log.info("No locale files where detected. Adding default translations.");
     }
 
     /**
@@ -164,8 +178,7 @@ public abstract class InternalLocaleRepository implements LocaleRepository
         if (optionalLocale.isEmpty())
         {
             log.warn(
-                    "Could not determine the locale for file {}. Please ensure the filename follows the correct " +
-                            "format.",
+                    "Could not determine the locale for file {}. Please ensure the filename follows the correct format.",
                     fileName
             );
             return;
