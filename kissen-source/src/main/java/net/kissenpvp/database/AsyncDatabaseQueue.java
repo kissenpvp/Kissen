@@ -25,23 +25,29 @@ public class AsyncDatabaseQueue implements DatabaseQueue
     {
         CompletableFuture<T> future = new CompletableFuture<>();
 
-        service().submit(() -> {
-            try
-            {
-                T result = task.call();
-                future.complete(result);
-            }
-            catch (Exception exception)
-            {
-                future.completeExceptionally(exception);
-            }
-        });
+        try (ExecutorService service = service())
+        {
+            service.submit(() -> {
+                try
+                {
+                    T result = task.call();
+                    future.complete(result);
+                }
+                catch (Exception exception)
+                {
+                    future.completeExceptionally(exception);
+                }
+            });
+        }
 
         return future;
     }
 
     public void shutdown() {
-        service().shutdown();
+        try (ExecutorService service = service())
+        {
+            service.shutdown();
+        }
     }
 
     protected @NonNull ExecutorService service()
