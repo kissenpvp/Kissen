@@ -61,6 +61,12 @@ public abstract class KissenCore implements Kissen
         started = true;
     }
 
+    /**
+     * Loads or creates a server uid
+     *
+     * @return a unique identifier
+     * @throws IOException when the file couldn't be read or written.
+     */
     private static @NonNull UUID loadOrCreateServerUid() throws IOException
     {
         if (Files.notExists(UUID_FILE_PATH)) {
